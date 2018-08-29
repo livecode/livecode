@@ -272,6 +272,16 @@ public:
 class MCContainer
 {
 public:
+    enum
+    {
+        /* A short path length of 6 has been chosen as it means an MCContainer
+         * occupies 64 bytes on 64-bit and 48 bytes on 32-bit. */
+        kShortPathLength = 6,
+        
+        /* The extension size to use for a long path, should be a power-of-two. */
+        kLongPathSegmentLength = 8,
+    };
+    
     MCContainer() = default;
     
     MCContainer(MCVariable *var) : m_path_length(0), m_variable(var) {}
@@ -305,11 +315,17 @@ public:
     }
     
 private:
+    /* If m_path_length <= 6 then m_short_path contains the path, otherwise
+     * m_long_path (a dynamically allocated vector) will contain it. */
     uindex_t m_path_length = 0;
     union
     {
-        MCNameRef m_short_path[4];
-        MCNameRef *m_long_path;
+        MCNameRef m_short_path[kShortPathLength];
+        struct
+        {
+            uindex_t m_long_path_capacity;
+            MCNameRef *m_long_path;
+        };
     };
 	MCVariable *m_variable = nullptr;
     

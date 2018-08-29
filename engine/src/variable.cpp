@@ -1040,8 +1040,15 @@ MCVarref *MCVariable::newvarref(void)
 
 MCContainer::~MCContainer(void)
 {
+    /* If the path_length < 6, then use fallthrough to release each element
+     * explicitly. This should compile to a 'jump' followed by straight thru
+     * execution on most archs. */
     switch(m_path_length)
     {
+    case 6:
+        MCValueRelease(m_short_path[5]);
+    case 5:
+        MCValueRelease(m_short_path[4]);
     case 4:
         MCValueRelease(m_short_path[3]);
     case 3:
@@ -1336,44 +1343,18 @@ public:
     {
     }
     
+    /* Append a value-ref to the path. If the value-ref is a sequence array then
+     * each element of the sequence will be added (as a value-ref); otherwise
+     * value is converted to a name and appended. */
     bool AppendValueRef(MCExecContext& ctxt, MCValueRef p_value)
     {
-        switch(MCValueGetTypeCode(p_value))
-        {
-            case kMCValueTypeCodeName:
-                return AppendNameRef((MCNameRef)p_value);
-            case kMCValueTypeCodeArray:
-                if (MCArrayIsSequence((MCArrayRef)p_value))
-                    return AppendValueSeq(ctxt, (MCArrayRef)p_value);
-                ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
-                return false;
-            default:
-                break;
-        }
-                
-        MCNewAutoNameRef t_name;
-        if (!ctxt.ConvertToName(p_value, &t_name))
-        {
-            ctxt.LegacyThrow(EE_VARIABLE_BADINDEX);
-            return false;
-        }
-        
-        return AppendNameRef(*t_name);
-    }
-    
-    bool AppendValueSeq(MCExecContext& ctxt, MCArrayRef p_seq)
-    {
-        uindex_t t_length = MCArrayGetCount(p_seq);
-        for(uindex_t t_index = 1; t_index <= t_length; t_index += 1)
-        {
-            MCValueRef t_value_fetched;
-            if (!MCArrayFetchValueAtIndex(p_seq, t_index, t_value_fetched))
-                return false;
-            
-            if (!AppendValueRef(ctxt, t_value_fetched))
-                return false;
-        }
-        return true;
+        MCValueTypeCode t_code = MCValueGetTypeCode(p_value);
+        if (t_code == kMCValueTypeCodeName)
+            return AppendNameRef((MCNameRef)p_value);
+        else if (t_code != kMCValueTypeCodeArray)
+            return AppendNonArrayRef(ctxt, p_value);
+        else
+            return AppendArrayRef(ctxt, (MCArrayRef)p_value);
     }
     
     bool AppendNameSpan(MCSpan<MCNameRef> p_path)
@@ -1385,27 +1366,77 @@ public:
     }
     
 private:
+    bool AppendNonArrayRef(MCExecContext& ctxt, MCValueRef p_value)
+    {
+        MCNewAutoNameRef t_name;
+        if (!ctxt.ConvertToName(p_value, &t_name))
+        {
+            ctxt.LegacyThrow(EE_VARIABLE_BADINDEX);
+            return false;
+        }
+        return AppendNameRef(*t_name);
+    }
+    
+    bool AppendArrayRef(MCExecContext& ctxt, MCArrayRef p_value)
+    {
+        if (!MCArrayIsSequence(p_value))
+        {
+            ctxt . LegacyThrow(EE_VARIABLE_BADINDEX);
+            return false;
+        }
+        
+        uindex_t t_length = MCArrayGetCount(p_value);
+        for(uindex_t t_index = 1; t_index <= t_length; t_index += 1)
+        {
+            MCValueRef t_value_fetched;
+            if (!MCArrayFetchValueAtIndex(p_value, t_index, t_value_fetched))
+                return false;
+            if (!AppendValueRef(ctxt, t_value_fetched))
+                return false;
+        }
+        return true;
+    }
+
     bool AppendNameRef(MCNameRef p_name)
     {
-        if (m_container.m_path_length < sizeof(m_container.m_short_path) / sizeof(m_container.m_short_path[0]))
+        if (m_container.m_path_length < MCContainer::kShortPathLength)
         {
             m_container.m_short_path[m_container.m_path_length++] = MCValueRetain(p_name);
+            return true;
         }
-        else if (m_container.m_path_length == sizeof(m_container.m_short_path) / sizeof(m_container.m_short_path[0]))
+        else if (m_container.m_path_length != MCContainer::kShortPathLength)
         {
-            MCNameRef *t_long_path;
-            if (!MCMemoryNewArray(sizeof(m_container.m_short_path) / sizeof(m_container.m_short_path[0]) + 1, t_long_path, m_container.m_path_length))
-                return false;
-            MCMemoryCopy(t_long_path, m_container.m_short_path, sizeof(m_container.m_short_path));
-            t_long_path[m_container.m_path_length - 1] = MCValueRetain(p_name);
-            m_container.m_long_path = t_long_path;
+            if (m_container.m_path_length == m_container.m_long_path_capacity)
+            {
+                if (!Extend())
+                    return false;
+            }
         }
         else
         {
-            if (!MCMemoryResizeArray(m_container.m_path_length + 1, m_container.m_long_path, m_container.m_path_length))
+            if (!Switch())
                 return false;
-            m_container.m_long_path[m_container.m_path_length - 1] = MCValueRetain(p_name);
         }
+        
+        m_container.m_long_path[m_container.m_path_length++] = MCValueRetain(p_name);
+        
+        return true;
+    }
+    
+    bool Extend(void)
+    {
+        return MCMemoryResizeArray(m_container.m_long_path_capacity + MCContainer::kLongPathSegmentLength, 
+                                   m_container.m_long_path,
+                                   m_container.m_long_path_capacity);
+    }
+    
+    bool Switch(void)
+    {
+        MCNameRef *t_long_path;
+        if (!MCMemoryNewArray(MCContainer::kLongPathSegmentLength, t_long_path))
+            return false;
+        MCMemoryCopy(t_long_path, m_container.m_short_path, sizeof(m_container.m_short_path));
+        m_container.m_long_path_capacity = MCContainer::kLongPathSegmentLength;
         return true;
     }
     
