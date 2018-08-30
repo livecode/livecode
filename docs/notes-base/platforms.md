@@ -60,7 +60,7 @@ Currently, the supported versions of Xcode are:
 * Xcode 6.2 and 7.2 on Mac OS X 10.10
 * Xcode 8.2 on MacOS X 10.11
 * Xcode 9.2 on MacOS 10.12 (Note: You need to upgrade to 10.12.6)
-* Xcode 9.4 on MacOS 10.13 (Note: You need to upgrade to 10.13.2)
+* Xcode 10.0 on MacOS 10.13 (Note: You need to upgrade to 10.13.4)
 
 It is also possible to set other versions of Xcode, to allow testing
 on a wider range of iOS simulators. For instance, on MacOS 10.12
@@ -73,7 +73,7 @@ We currently support deployment for the following versions of iOS:
 * 9.2
 * 10.2
 * 11.2
-* 11.4
+* 12.0
 
 ## Android
 
@@ -90,8 +90,8 @@ It will run on the following versions of Android:
 * 4.4 (KitKat)
 * 5.0-5.1 (Lollipop)
 * 6.0 (Marshmallow)
-* 7.0 (Nougat)
-* 8.0 (Oreo)
+* 7.x (Nougat)
+* 8.x (Oreo)
 
 To enable deployment to Android devices, you need to download the
 [Android SDK](https://developer.android.com/sdk/index.html#Other), and
