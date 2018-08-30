@@ -60,7 +60,7 @@ of the purchased product. It should be handled in the
 For Samsung Store (Android), you can query the properties:
 
 - title : title of the item purchased
-- <productId> : identifier of the purchased product
+- productId : identifier of the purchased product
 - price : price of purchased product
 - currencyUnit : currency unit of the product price
 - description : description of the item as specified in Samsung Seller
@@ -77,7 +77,7 @@ For Samsung Store (Android), you can query the properties:
 
 For Google Play Store (Android), you can query the properties :
 
-- <productId> : identifier of the purchased product
+- productId : identifier of the purchased product
 - packageName : application package for which the purchase originated
 - orderId : unique order identifier for the transaction. This
   corresponds to the Google Wallet Order ID
@@ -95,7 +95,7 @@ For Google Play Store (Android), you can query the properties :
 
 For Amazon Store (Android) you can query the properties : 
 
-- <productId> : identifier of the purchased product
+- productId : identifier of the purchased product
 - itemType : type of the purchased item, CONSUMABLE, ENTITLED or
   SUBSCRIPTION 
 - subscriptionPeriod : string indicating the start and end date for
@@ -108,7 +108,7 @@ For iTunes Store (iOS), you can query for the properties:
 
 - quantity : amount of product purchased. You can specify a value for
   this in <mobileStoreMakePurchase>
-- <productId> : identifier of the purchased product
+- productId : identifier of the purchased product
 - receipt : block of data that can be used to confirm the purchase from
   a remote server with the itunes store
 - purchaseDate : date the purchase/restore request was sent
