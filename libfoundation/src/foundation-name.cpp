@@ -18,6 +18,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "foundation-private.h"
 
+#include "foundation-string-hash.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF MCNameRef kMCEmptyName;
@@ -107,6 +109,38 @@ static void __MCNameIndexToNativeChars(index_t p_value, char_t r_chars[16], uind
         r_chars[t_next] = kDigits[t_offset + 1];
         r_chars[t_next - 1] = kDigits[t_offset];
     }
+}
+
+static hash_t __MCNameIndexHash(const char_t *p_chars, uindex_t p_char_count)
+{
+    MCHashCharsContext t_hash;
+    switch(p_char_count)
+    {
+    case 11:
+        t_hash.consume(*p_chars++);
+    case 10:
+        t_hash.consume(*p_chars++);
+    case 9:
+        t_hash.consume(*p_chars++);
+    case 8:
+        t_hash.consume(*p_chars++);
+    case 7:
+        t_hash.consume(*p_chars++);
+    case 6:
+        t_hash.consume(*p_chars++);
+    case 5:
+        t_hash.consume(*p_chars++);
+    case 4:
+        t_hash.consume(*p_chars++);
+    case 3:
+        t_hash.consume(*p_chars++);
+    case 2:
+        t_hash.consume(*p_chars++);
+    case 1:
+        t_hash.consume(*p_chars++);
+        break;
+    }
+    return t_hash;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -243,6 +277,92 @@ bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 }
 
 MC_DLLEXPORT_DEF
+bool MCNameCreateWithIndex(index_t p_index, MCNameRef& r_name)
+{
+    char_t t_chars[11];
+    uindex_t t_char_count;
+    __MCNameIndexToNativeChars(p_index, t_chars, t_char_count);
+    
+    // Compute the hash of the characters, up to case.
+    hash_t t_hash;
+    t_hash = __MCNameIndexHash(t_chars, t_char_count);
+    
+    // Reduce the hash to the size we store
+    t_hash &= kMCValueFlagsNameHashMask;
+    
+    // Calculate the index of the chain in the name table where this might be
+    // found. The capacity is always a power-of-two, so its just a mask op.
+    uindex_t t_index;
+    t_index = t_hash & (s_name_table_capacity - 1);
+    
+    // Search for the first representation of the would-be name's equivalence
+    // class.
+    __MCName *t_key_name;
+    t_key_name = s_name_table[t_index];
+    while(t_key_name != nil)
+    {
+        // If the string matches, then we are done - notice we compare the
+        // full hash first.
+        if (t_hash == __MCNameGetHash(t_key_name) &&
+            t_key_name -> key == t_key_name &&
+            MCStringIsEqualToNativeChars(t_key_name -> string, t_chars, t_char_count, kMCStringOptionCompareExact))
+        {
+            t_key_name -> references += 1;
+            r_name = t_key_name;
+            return true;
+        }
+        
+        // Next name must be the next one.
+        t_key_name = t_key_name -> next;
+    }
+    
+    // We haven't found an exact match, so we create a new name...
+    bool t_success;
+    t_success = true;
+    
+    // Allocate a name record.
+    __MCName *t_name;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeName, t_name);
+    
+    // Copy the string (as immutable).
+    if (t_success)
+        t_success = MCStringCreateWithNativeChars(t_chars, t_char_count, t_name -> string);
+    
+    // Now add the name to the table and fill in the rest of the fields.
+    if (t_success)
+    {
+        // To keep hashin efficient, we (try to) double the size of the
+        // table each time occupancy reaches capacity.
+        if (s_name_table_occupancy == s_name_table_capacity)
+        {
+            __MCNameGrowTable();
+            t_index = t_hash & (s_name_table_capacity - 1);
+        }
+        
+        // Increase occupancy.
+        s_name_table_occupancy += 1;
+        
+        t_name -> next = s_name_table[t_index];
+        t_name -> key = t_name;
+        s_name_table[t_index] = t_name;
+
+        // Record the hash (speeds up searching and such).
+        __MCNameSetHash(t_name, t_hash);
+        
+        // Return the new name.
+        r_name = t_name;
+    }
+    else
+    {
+        MCValueRelease(t_name -> string);
+        MCMemoryDelete(t_name);
+    }
+    
+    return t_success;
+}
+
+MC_DLLEXPORT_DEF
 bool MCNameCreateWithNativeChars(const char_t *p_chars, uindex_t p_count, MCNameRef& r_name)
 {
 	MCStringRef t_string;
@@ -263,15 +383,6 @@ bool MCNameCreateWithChars(const unichar_t *p_chars, uindex_t p_count, MCNameRef
 	if (!MCStringCreateWithChars(p_chars, p_count, t_string))
 		return false;
 	return MCNameCreateAndRelease(t_string, r_name);
-}
-
-MC_DLLEXPORT_DEF
-bool MCNameCreateWithIndex(index_t p_index, MCNameRef& r_name)
-{
-    char_t t_chars[16];
-    uindex_t t_char_count;
-    __MCNameIndexToNativeChars(p_index, t_chars, t_char_count);
-    return MCNameCreateWithNativeChars(t_chars, t_char_count, r_name);
 }
 
 MC_DLLEXPORT_DEF
@@ -326,13 +437,13 @@ MCNameRef MCNameLookupCaseless(MCStringRef p_string)
 MC_DLLEXPORT_DEF
 MCNameRef MCNameLookupIndex(index_t p_index)
 {
-    char_t t_chars[16];
+    char_t t_chars[11];
     uindex_t t_char_count;
     __MCNameIndexToNativeChars(p_index, t_chars, t_char_count);
     
     // Compute the hash of the characters, up to case.
     hash_t t_hash;
-    t_hash = MCHashNativeChars(t_chars, t_char_count);
+    t_hash = __MCNameIndexHash(t_chars, t_char_count);
     
     // Reduce the hash to the size we store
     t_hash &= kMCValueFlagsNameHashMask;
@@ -348,14 +459,12 @@ MCNameRef MCNameLookupIndex(index_t p_index)
     while(t_key_name != nil)
     {
         // If the string matches, then we are done - notice we compare the full
-        // hash first.
+        // hash first. As an index as a string consists of folded chars, we can
+        // use exact comparison.
         if (t_hash == __MCNameGetHash(t_key_name) &&
+            t_key_name->key == t_key_name &&
             MCStringIsEqualToNativeChars(t_key_name -> string, t_chars, t_char_count, kMCStringOptionCompareExact))
             break;
-        
-        // Otherwise skip all other members of the same equivalence class.
-        while(t_key_name -> next != nil && t_key_name -> key == t_key_name -> next -> key)
-            t_key_name = t_key_name -> next;
         
         // Next name must be the next one
         t_key_name = t_key_name -> next;
