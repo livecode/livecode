@@ -351,22 +351,48 @@ void MCWidget::recompute(void)
         MCwidgeteventmanager->event_recompute(this);
 }
 
-static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
+static bool lookup_name_for_prop(MCWidgetRef self, Properties p_which, MCNameRef& r_name)
 {
+    if (self == nil)
+    {
+        return false;
+    }
+    
     extern const LT factor_table[];
     extern const uint4 factor_table_size;
     for(uindex_t i = 0; i < factor_table_size; i++)
+    {
         if (factor_table[i] . type == TT_PROPERTY && factor_table[i] . which == p_which)
         {
-            r_name = MCNAME(factor_table[i] . token);
-            return;
+            MCNameRef t_name = MCNAME(factor_table[i] . token);
+            if (!MCWidgetHasProperty(self, t_name))
+            {
+                MCValueRelease(t_name);
+            }
+            else
+            {
+                r_name = t_name;
+                return true;
+            }
         }
+    }
 	
 	extern bool lookup_property_override_name(uint16_t p_property, MCNameRef &r_name);
-	if (lookup_property_override_name(p_which, r_name))
-		return;
+    MCNameRef t_name;
+    if (lookup_property_override_name(p_which, t_name))
+    {
+        if (!MCWidgetHasProperty(self, t_name))
+        {
+            MCValueRelease(t_name);
+        }
+        else
+        {
+            r_name = t_name;
+            return true;
+        }
+    }
 
-    assert(false);
+    return false;
 }
 
 bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue& r_value)
@@ -389,7 +415,8 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_LAYER:
 		case P_SCRIPT:
 		case P_PARENT_SCRIPT:
-		case P_NUMBER:
+        case P_SCRIPT_STATUS:
+        case P_NUMBER:
             		case P_FORE_PIXEL:
              case P_BACK_PIXEL:
              case P_HILITE_PIXEL:
@@ -471,10 +498,14 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     }
 
     MCNewAutoNameRef t_name_for_prop;
-    /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
+    if (lookup_name_for_prop(m_widget, p_which, &t_name_for_prop))
+    {
+        // Forward to the custom property handler
+        return getcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, nil, r_value);
+    }
     
-    // Forward to the custom property handler
-    return getcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, nil, r_value);
+    MCeerror -> add(EE_OBJECT_GETNOPROP, 0, 0);
+    return false;
 }
 
 bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, MCNameRef p_index, Boolean p_effective, MCExecValue p_value)
@@ -575,10 +606,14 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
     }
     
     MCNewAutoNameRef t_name_for_prop;
-    /* UNCHECKED */ lookup_name_for_prop(p_which, &t_name_for_prop);
+    if (lookup_name_for_prop(m_widget, p_which, &t_name_for_prop))
+    {
+        // Forward to the custom property handler
+        return setcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, nil, p_value);
+    }
     
-    // Forward to the custom property handler
-    return setcustomprop(ctxt, kMCEmptyName, *t_name_for_prop, nil, p_value);
+    MCeerror -> add(EE_OBJECT_SETNOPROP, 0, 0);
+    return false;
 }
 
 static bool is_custom_prop(MCWidgetRef self, MCNameRef p_set_name, MCNameRef p_prop_name, MCProperListRef p_path, bool p_is_get_operation)

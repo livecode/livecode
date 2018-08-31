@@ -4,6 +4,9 @@ private variable mTestMode
 
 property testMode get mTestMode set mTestMode
 
+private variable mAutoHilite
+property autoHilite get mAutoHilite set mAutoHilite
+
 public handler OnSave(out rProperties as Array)
    if mTestMode is "resolve" then
       resolve script object "this stack"

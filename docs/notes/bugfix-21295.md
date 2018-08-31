@@ -1,0 +1,1 @@
+# Fix synonym handling of widget properties

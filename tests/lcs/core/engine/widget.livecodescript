@@ -54,6 +54,7 @@ end TestWidgetBindErrorsDontEscape
 private command _DoTestWidgetScriptObjectAccess pMode
    set the testMode of widget "Test" to pMode
 
+   local tVar
    export widget "Test" to array tVar
 
    TestAssertErrorDialog "no script access allowed for" && pMode, \ 
@@ -115,3 +116,29 @@ on TestWidgetRetainRep
    delete stack "WidgetRetainRepTest"
    delete file tPath
 end TestWidgetRetainRep
+
+on TestWidgetEnginePropertyName
+   create stack "WidgetEnginePropertyNameTest"
+   set the defaultStack to "WidgetEnginePropertyNameTest"
+   
+   create widget "Test" as "com.livecode.lcs_tests.core.widget"
+
+   local tWidget
+   put it into tWidget
+
+   set the autoHilite of tWidget to "test"
+   TestAssert "engine property name round trip", the autoHilite of tWidget is "test"
+
+   TestAssert "engine property is not renamed to first alpha", \
+         "autoHilight" is not among the lines of the customKeys of tWidget
+
+   TestAssertThrow "engine property not implemented throws", \
+         "__TestEnginePropertyNameNotFound", \
+         the long id of me, \
+         "EE_OBJECT_SETNOPROP"
+end TestWidgetEnginePropertyName
+
+on __TestEnginePropertyNameNotFound
+   set the radioBehavior of widget "test" of stack "WidgetEnginePropertyNameTest" to true
+end __TestEnginePropertyNameNotFound
+
