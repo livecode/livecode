@@ -130,7 +130,7 @@ public:
         return hash_t();
     }
     
-    bool CreateWithNativePath(MCStringRef p_native_path)
+    bool CreateWithNativePath(MCStringRef p_native_path, bool p_has_extension)
     {
         MCAssert(m_type == kNone);
         if (m_static.CreateWithNativePath(p_native_path))

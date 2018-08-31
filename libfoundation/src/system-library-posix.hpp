@@ -60,21 +60,32 @@ public:
         return MCHashPointer(m_handle);
     }
     
-    bool CreateWithNativePath(MCStringRef p_native_path)
+    bool CreateWithNativePath(MCStringRef p_native_path, bool p_has_extension)
     {
-        MCAutoStringRefAsSysString t_sys_exe_path;
-        if (!t_sys_exe_path.Lock(p_native_path))
+        bool t_resolved = false;
+            
+        if (!p_has_extension && !t_resolved)
         {
-            return false;
+            t_resolved = ResolveExecutableWithExtension(p_native_path, MCSTR(".so"));
         }
-        
-        m_handle = dlopen(*t_sys_exe_path,
-                          RTLD_LAZY);
-        if (m_handle == nullptr)
+            
+        if (!t_resolved)
         {
-            MCLog("dlopen failed %s",dlerror());
-            /* TODO: dlerror message */
-            return __MCSLibraryThrowCreateWithNativePathFailed(p_native_path);
+            MCAutoStringRefAsSysString t_sys_exe_path;
+            if (!t_sys_exe_path.Lock(p_native_path))
+            {
+                return false;
+            }
+            
+            m_handle = dlopen(*t_sys_exe_path,
+                              RTLD_LAZY);
+            if (m_handle == nullptr)
+            {
+                MCLog("dlopen failed %s",dlerror());
+                /* TODO: dlerror message */
+                return __MCSLibraryThrowCreateWithNativePathFailed(p_native_path);
+            }
+            
         }
         
         return true;
@@ -114,4 +125,26 @@ public:
     
 protected:
     void *m_handle;
+    
+    bool
+    ResolveExecutableWithExtension(MCStringRef p_native_path, MCStringRef p_extension)
+    {
+        if (!MCStringEndsWith(p_native_path,
+                              p_extension,
+                              kMCStringOptionCompareCaseless))
+        {
+            MCAutoStringRef t_exe;
+            if (!MCStringFormat(&t_exe,
+                                "%@%@",
+                                p_native_path,
+                                p_extension))
+            {
+                return false;
+            }
+            
+            return __MCSLibraryHandlePosix::CreateWithNativePath(*t_exe, true);
+        }
+        
+        return false;
+    }
 };

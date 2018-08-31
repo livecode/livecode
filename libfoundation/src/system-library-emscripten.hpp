@@ -58,7 +58,7 @@ public:
         return MCHashPointer(nullptr);
     }
     
-    bool CreateWithNativePath(MCStringRef p_native_path)
+    bool CreateWithNativePath(MCStringRef p_native_path, bool p_has_extension)
     {
         return false;
     }

@@ -67,7 +67,7 @@ class __MCSLibraryHandleMac: public __MCSLibraryHandlePosix
 {
 public:
     bool
-    CreateWithNativePath(MCStringRef p_native_path)
+    CreateWithNativePath(MCStringRef p_native_path, bool p_has_extension)
     {
         /* We want to use dlopen's default search strategy for dylibs and
          * frameworks. To do this, we:
@@ -77,16 +77,29 @@ public:
          *       to the executable path within the bundle.
          * If either of these things do not occur, we just use the path
          * verbatim in the call to dlopen. */
-        MCAutoStringRef t_exe_path;
-        if (!ResolveFrameworkExecutable(p_native_path,
-                                        &t_exe_path) &&
-            !ResolveBundleExecutable(p_native_path,
-                                     &t_exe_path))
+        bool t_resolved = false;
+        
+        if (!t_resolved)
         {
-            t_exe_path = p_native_path;
+            t_resolved = ResolveFrameworkExecutable(p_native_path, p_has_extension);
         }
         
-        return __MCSLibraryHandlePosix::CreateWithNativePath(*t_exe_path);
+        if (!t_resolved)
+        {
+            t_resolved = ResolveBundleExecutable(p_native_path, p_has_extension);
+        }
+            
+        if (!p_has_extension && !t_resolved)
+        {
+            t_resolved = ResolveExecutableWithExtension(p_native_path, MCSTR(".dylib"));
+        }
+        
+        if (!t_resolved)
+        {
+             return __MCSLibraryHandlePosix::CreateWithNativePath(p_native_path, p_has_extension);
+        }
+        
+        return t_resolved;
     }
                          
     bool
@@ -136,19 +149,23 @@ private:
      * framework. A path matching this pattern is transformed to:
      *    <folder>/<leaf>.framework/<leaf>
      * So that we can use dlopen's default search behavior. */
-    static bool
-    ResolveFrameworkExecutable(MCStringRef p_native_path,
-                               MCStringRef& r_exe)
+    bool
+    ResolveFrameworkExecutable(MCStringRef p_native_path, bool p_has_extension)
     {
         const char *t_framework_ext = ".framework";
         
-        if (!MCStringEndsWithCString(p_native_path,
+        uindex_t t_last_component_end = MCStringGetLength(p_native_path);
+        if (MCStringEndsWithCString(p_native_path,
                                      reinterpret_cast<const char_t *>(t_framework_ext),
                                      kMCStringOptionCompareCaseless))
         {
+            t_last_component_end -= strlen(t_framework_ext);
+        }
+        else if (p_has_extension)
+        {
             return false;
         }
-
+        
         uindex_t t_last_component_start;
         if (MCStringLastIndexOfChar(p_native_path,
                                     '/',
@@ -166,29 +183,60 @@ private:
         // The last component length is the length of the string
         // minus the last component start minus the length of the
         // .framework extension
-        uindex_t t_last_component_length = MCStringGetLength(p_native_path)
-            - t_last_component_start - strlen(t_framework_ext);
+        uindex_t t_last_component_length = t_last_component_end - t_last_component_start;
+        
+        MCRange t_path_range = MCRangeMake(0, t_last_component_end);
         
         MCRange t_last_component_range =
                 MCRangeMake(t_last_component_start,
                             t_last_component_length);
         
-        return MCStringFormat(r_exe,
-                              "%@/%*@",
+        MCAutoStringRef t_exe;
+        if (MCStringFormat(&t_exe,
+                              "%*@.framework/%*@",
+                              &t_path_range,
                               p_native_path,
                               &t_last_component_range,
-                              p_native_path);
+                              p_native_path))
+        {
+            return __MCSLibraryHandlePosix::CreateWithNativePath(*t_exe, true);
+        }
+        
+        return false;
     }
     
     /* We consider any path which successfully resolves as a bundle to be such.
      * Note that bundle's will not search any system paths - only the cwd will
      * be used in the case of a relative path. */
-    static bool
-    ResolveBundleExecutable(MCStringRef p_native_path,
-                            MCStringRef& r_exe)
+    bool
+    ResolveBundleExecutable(MCStringRef p_native_path, bool p_has_extension)
     {
+        const char *t_bundle_ext = ".bundle";
+        MCAutoStringRef t_bundle_exe;
         MCAutoStringRefAsSysString t_sys_path;
-        if (!t_sys_path.Lock(p_native_path))
+        
+        if (!MCStringEndsWithCString(p_native_path,
+                                    reinterpret_cast<const char_t *>(t_bundle_ext),
+                                    kMCStringOptionCompareCaseless))
+        {
+            if (p_has_extension)
+            {
+                return false;
+            }
+            
+            if (!MCStringFormat(&t_bundle_exe,
+                               "%@.bundle",
+                               p_native_path))
+            {
+                return false;
+            }
+            
+            if (!t_sys_path.Lock(*t_bundle_exe))
+            {
+                return false;
+            }
+        }
+        else if (!t_sys_path.Lock(p_native_path))
         {
             return false;
         }
@@ -224,8 +272,14 @@ private:
             return false;
         }
         
-        return MCStringCreateWithSysString(t_sys_exe_path,
-                                           r_exe);
+        MCAutoStringRef t_exe;
+        if (MCStringCreateWithSysString(t_sys_exe_path,
+                                        &t_exe))
+        {
+            return __MCSLibraryHandlePosix::CreateWithNativePath(*t_exe, true);
+        }
+        
+        return false;
     }
 };
 

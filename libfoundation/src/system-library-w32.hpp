@@ -59,8 +59,13 @@ public:
         return MCHashPointer(static_cast<void *>(m_handle));
     }
     
-    bool CreateWithNativePath(MCStringRef p_native_path)
+    bool CreateWithNativePath(MCStringRef p_native_path, bool p_has_extension)
     {
+        if (!p_has_extension && ResolveDLLExecutable(p_native_path))
+        {
+            return true;
+        }
+        
         MCAutoStringRefAsWString t_wstring_path;
         if (!t_wstring_path.Lock(p_native_path))
         {
@@ -164,6 +169,32 @@ public:
     
 protected:
     HMODULE m_handle;
+    
+    bool
+    ResolveDLLExecutable(MCStringRef p_native_path)
+    {
+        const char *t_dll_ext = ".dll";
+        
+        if (!MCStringEndsWithCString(p_native_path,
+                                     reinterpret_cast<const char_t *>(t_dll_ext),
+                                     kMCStringOptionCompareCaseless))
+        {
+            MCAutoStringRef t_exe;
+            if (!MCStringFormat(&t_exe,
+                                "%@%s",
+                                p_native_path,
+                                t_dll_ext))
+            {
+                return false;
+            }
+            
+            return CreateWithNativePath(*t_exe, true);
+        }
+        else
+        {
+            return false;
+        }
+    }
 };
 
 typedef class __MCSLibraryHandleWin32 __MCSLibraryHandle;
