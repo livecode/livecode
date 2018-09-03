@@ -276,8 +276,6 @@ bool MCClipboard::AddText(MCStringRef p_string)
 
 bool MCClipboard::AddTextToItem(MCRawClipboardItem* p_item, MCStringRef p_string)
 {
-    AutoLock t_lock(this);
-    
     // For each text encoding that the underlying clipboard supports, encode the
     // text and add it.
     bool t_success = true;
