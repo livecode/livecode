@@ -296,7 +296,7 @@ public:
 			p_command_line->AppendSwitch(MC_CEF_HIDPI_SWITCH);
 	}
 
-	IMPLEMENT_REFCOUNTING(MCCefBrowserApp)
+	IMPLEMENT_REFCOUNTING(MCCefBrowserApp);
 };
 
 extern "C" int initialise_weak_link_cef(void);
@@ -985,7 +985,7 @@ public:
 	// CefRequestHandler interface
 	
 	// Called on UI thread
-	virtual bool OnBeforeBrowse(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request, bool p_is_redirect) OVERRIDE
+	virtual bool OnBeforeBrowse(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request, bool p_user_gesture, bool p_is_redirect) OVERRIDE
 	{
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
@@ -1249,7 +1249,7 @@ public:
 			p_model->Clear();
 	}
 	
-	IMPLEMENT_REFCOUNTING(MCCefBrowserClient)
+	IMPLEMENT_REFCOUNTING(MCCefBrowserClient);
 };
 
 bool MCCefBrowserBase::Initialize()
