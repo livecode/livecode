@@ -80,7 +80,7 @@ function buildICU {
 
 		android)
 			CONFIG_TYPE="Linux --with-cross-build=${HOST_ICU_DIR} --disable-tools"
-			export EXTRA_CFLAGS="-D__STDC_INT64__ -DU_HAVE_NL_LANGINFO_CODESET=0"
+			export EXTRA_CFLAGS="-D__STDC_INT64__ -DU_HAVE_NL_LANGINFO_CODESET=0 -Dstrtod_l=strtold_l"
 			export EXTRA_CXXFLAGS="${EXTRA_CFLAGS}"
 			;;
 		emscripten)
