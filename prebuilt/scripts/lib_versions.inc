@@ -19,3 +19,4 @@ readVersion OpenSSL
 readVersion ICU
 readVersion Curl
 readVersion CEF
+readVersion CEFChromium

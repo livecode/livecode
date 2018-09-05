@@ -6,22 +6,24 @@ source "${BASEDIR}/scripts/util.inc"
 
 # Grab the source for the library
 if [ "${ARCH}" == "x86" ] ; then
-  CEF_SRC="cef_binary_${CEF_VERSION}.${CEF_BUILDREVISION}_${PLATFORM}32"
+   CEF_DST="cef_binary_${CEF_VERSION}_${CEF_BUILDREVISION}_${PLATFORM}32"
+   CEF_SRC="cef_binary_${CEF_VERSION}%2B${CEF_BUILDREVISION}%2Bchromium-${CEFChromium_VERSION}_${PLATFORM}32.tar.bz2"
 elif [ "${ARCH}" == "x86_64" ] ; then
-  CEF_SRC="cef_binary_${CEF_VERSION}.${CEF_BUILDREVISION}_${PLATFORM}64"
+   CEF_DST="cef_binary_${CEF_VERSION}_${CEF_BUILDREVISION}_${PLATFORM}64"
+   CEF_SRC="cef_binary_${CEF_VERSION}%2B${CEF_BUILDREVISION}%2Bchromium-${CEFChromium_VERSION}_${PLATFORM}64.tar.bz2"
 else 
   echo "No binaries available for arch"
 fi
 
-CEF_TGZ="${CEF_SRC}.tar.bz2"
+CEF_TGZ="${CEF_DST}.tar.bz2"
 cd "${BUILDDIR}"
 
-if [ ! -d "$CEF_SRC" ] ; then
+if [ ! -d "$CEF_DST" ] ; then
 	if [ ! -e "$CEF_TGZ" ] ; then
 		echo "Fetching CEF source"
-		fetchUrl "http://opensource.spotify.com/cefbuilds/${CEF_TGZ}" "${CEF_TGZ}"
+		fetchUrl "http://opensource.spotify.com/cefbuilds/${CEF_SRC}" "${CEF_TGZ}"
 		if [ $? != 0 ] ; then
-			echo "    failed"
+			echo "downloading http://opensource.spotify.com/cefbuilds/${CEF_SRC} failed"
 			if [ -e "${CEF_TGZ}" ] ; then 
 				rm ${CEF_TGZ} 
 			fi
@@ -39,8 +41,8 @@ function buildCEF {
 	local ARCH=$2
 	
 	mkdir -p "${OUTPUT_DIR}/lib/${PLATFORM}/${ARCH}/CEF"
-	cp -av "${BUILDDIR}/${CEF_SRC}/Release/"* "${OUTPUT_DIR}/lib/${PLATFORM}/${ARCH}/CEF/"
-  cp -av "${BUILDDIR}/${CEF_SRC}/Resources/"* "${OUTPUT_DIR}/lib/${PLATFORM}/${ARCH}/CEF/"
+	cp -av "${BUILDDIR}/${CEF_DST}/Release/"* "${OUTPUT_DIR}/lib/${PLATFORM}/${ARCH}/CEF/"
+  cp -av "${BUILDDIR}/${CEF_DST}/Resources/"* "${OUTPUT_DIR}/lib/${PLATFORM}/${ARCH}/CEF/"
   strip --strip-unneeded "${OUTPUT_DIR}/lib/${PLATFORM}/${ARCH}/CEF/libcef.so"
 }
 
