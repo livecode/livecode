@@ -83,7 +83,7 @@ use com.livecode.library.widgetutils
 use com.livecode.foreign
 
 metadata author is "LiveCode"
-metadata version is "2.0.3"
+metadata version is "2.1.0"
 metadata title is "Tree View"
 metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1s-6.3-14.1-14.1-14.1c-6.4,0-11.8,4.3-13.5,10.1h-10v-16.1c8.4-1.8,14.8-9.3,14.8-18.3c0-10.4-8.4-18.8-18.8-18.8s-18.8,8.4-18.8,18.8c0,9,6.3,16.5,14.7,18.3v58.8h18c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1S160.2,249.7,152.4,249.7z M128.7,202h-7.5v-7.5h-7.5V187h7.5v-7.5h7.5v7.5h7.5v7.5h-7.5V202z"
 metadata _ide is "true"
@@ -123,6 +123,22 @@ of the widget, to select a row corresponding to tArray["key1"]["subkey2"]["subsu
 
 property hilitedElement			get getSelectedElement			set setSelectedElement
 metadata hilitedElement.label is "Hilited element"
+
+/**
+Syntax: set the hiliteNewElement of <widget> to {true|false}
+Syntax: get the hiliteNewElement of <widget>
+
+Summary: Automatically select new elements when created interactively.
+
+Description:
+If the <readOnly> property is false and the <hiliteNewElement> property is true,
+then when new array elements are added, they will be automatically selected.
+
+References: readOnly (property)
+**/
+
+property hiliteNewElement		get mHiliteNewElement		set mHiliteNewElement
+metadata hiliteNewElement.label is "Hilite new element"
 
 /**
 Name: foreColor
@@ -404,6 +420,8 @@ private variable mFrameBorder as Boolean
 
 private variable mSelectedElement as optional List
 private variable mFoldState as Array
+private variable mLastKeyAdded as optional String
+private variable mHiliteNewElement as Boolean
 
 private variable mFoldedArrowPath as Path
 private variable mUnfoldedArrowPath as Path
@@ -472,7 +490,7 @@ public handler OnCreate() returns nothing
 	initialiseScrollbar()	
 	
 	put false into mReadOnly
-    put false into mArrayStyle
+	put false into mArrayStyle
 
     put true into mSortNumeric
     put true into mSortAscending
@@ -489,7 +507,8 @@ public handler OnCreate() returns nothing
 	put false into mSeparatorDragging
 	
 	put the empty array into mFoldState
-	put the empty array into mData	
+	put the empty array into mData
+	put false into mHiliteNewElement
 end handler
 
 public handler OnSave(out rProperties as Array)
@@ -499,6 +518,7 @@ public handler OnSave(out rProperties as Array)
 	put mArrayStyle into rProperties["array style"]
 	put mSortAscending into rProperties["sort ascending"]
 	put mSortNumeric into rProperties["sort numeric"]
+	put mHiliteNewElement into rProperties["hilite new element"]
 
 	put mShowSeparator into rProperties["show separator"]
 	put mSeparatorRatio into rProperties["separator ratio"]
@@ -518,6 +538,10 @@ public handler OnLoad(in pProperties as Array)
 
 	if "sort numeric" is among the keys of pProperties then
 	  put pProperties["sort numeric"] into mSortNumeric
+	end if
+
+	if "hilite new element" is among the keys of pProperties then
+		put pProperties["hilite new element"] into mHiliteNewElement
 	end if
 
 	if "show separator" is among the keys of pProperties then
@@ -1494,12 +1518,20 @@ private handler createNewKey(inout xArray as Array)
 	end repeat
 	put tNew formatted as string into tNewKey
 	put "" into xArray[tNewKey]
+	put tNewKey into mLastKeyAdded
 end handler
 
 private handler addBaseLevelElement()
 	createNewKey(mData)
-	setArrayData(mData)	
+	if mHiliteNewElement then
+		put the empty list into mSelectedElement
+		push mLastKeyAdded onto mSelectedElement
+	end if
+	setArrayData(mData)
 	post "dataChanged"
+	if mHiliteNewElement then
+		post "hiliteChanged"
+	end if
 end handler
 
 // A handler of type NodeApply to pass into 'applyToNode' - adds a new key below the given path
@@ -1533,6 +1565,7 @@ private handler addKey(in pListElt as Integer, in pPath as List, in pLevel as In
 		put tElement into tArray[1 formatted as string]
 		put tArray into xArray[pPath[pLevel + 1]]
 		put false into xList[pListElt]["leaf"]
+		put 1 formatted as string into mLastKeyAdded
 	end if
 
 	unfoldKey(pListElt, pPath, pLevel, xList, xArray)
@@ -1589,7 +1622,12 @@ private handler addUnderPath(in pPath as List)
 		post "dataChanged"
 		put true into mRecalculate
 		put true into mUpdateSeparator
-		redraw all
+		if mHiliteNewElement then
+			push mLastKeyAdded onto pPath
+			selectPath(pPath)
+		else
+			redraw all
+		end if
 	end if
 end handler
 
