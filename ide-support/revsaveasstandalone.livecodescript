@@ -311,6 +311,10 @@ command revDoSaveAsStandalone pStack, pFolder, pSettings, @xStandalonePaths
       revOutputDirectories pFolder & slash
       put the result into tOutputFolder
       if there is no folder tOutputFolder then
+         if there is a file tOutputFolder then
+            throw "Cannot create a folder" && quote & tOutputFolder & quote && \
+                  ". This name is already taken. Please choose a different name."
+         end if
          create folder tOutputFolder
       end if
       
