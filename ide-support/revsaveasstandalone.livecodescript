@@ -311,11 +311,10 @@ command revDoSaveAsStandalone pStack, pFolder, pSettings, @xStandalonePaths
       revOutputDirectories pFolder & slash
       put the result into tOutputFolder
       if there is no folder tOutputFolder then
-         if there is a file tOutputFolder then
-            throw "Cannot create a folder" && quote & tOutputFolder & quote && \
-                  ". This name is already taken. Please choose a different name."
-         end if
          create folder tOutputFolder
+         if the result is not empty then
+            throw format("Cannot create a folder '%s'", tOutputFolder)
+         end if        
       end if
       
       local tBuildPlatforms, tPlatform
@@ -1126,7 +1125,8 @@ private command revOutputDirectories pFolder
    revStandaloneProgress "Checking directories..."
    if there is a folder (pFolder & sStandaloneSettingsA["name"]) then
       put 1 into tCount
-      repeat while there is a folder (pFolder & sStandaloneSettingsA["name"]&tCount)
+      repeat while there is a folder (pFolder & sStandaloneSettingsA["name"]&tCount) or \
+            there is a file (pFolder & sStandaloneSettingsA["name"]&tCount)
          add 1 to tCount
       end repeat
    end if
