@@ -18,8 +18,9 @@ If this causes problems for your stack, you can exit from the handler if
 standalone building is in progress:
 
 	on closeStack
-		if the mode of stack "revStandaloneProgress" > 0 then
-			exit closesStack
+		if the environment is "development" and \
+                    the mode of stack "revStandaloneProgress" > 0 then
+			exit closeStack
 		end if
 	end closeStack
 
