@@ -245,7 +245,7 @@ during the second, and so on:
 >*Note:* The *counterVariable* *myLine* is 0 in the final iteration of
 the loop as it is only once the *counterVariable* is less than or equal 
 to the *endValue* that the loop will perform its final iteration. To
-prevent the the loop one more iteration than desired, one could 
+prevent the loop executing one more iteration than desired, one could 
 compare the two and use <exit repeat> to end the iteration immediately. 
 For example:
 
