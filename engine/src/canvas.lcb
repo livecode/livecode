@@ -4052,7 +4052,6 @@ Description:	The blend mode used for drawing operations on <mCanvas> as a string
 - source over
 - source in
 - source out
-- source atop
 - destination over
 - destination in
 - destination out
