@@ -16,7 +16,7 @@ OS: ios, android
 Platforms: mobile
 
 Example:
-mobileSetKeyboardType "alphabet"
+mobileSetKeyboardType "default"
 
 Example:
 mobileSetKeyboardType "numeric"
@@ -25,8 +25,7 @@ Parameters:
 type (enum):
 The type of keyboard to use. One of:
 
--   "default": the default keyboard
--   "alphabet": the alphabetic keyboard
+-   "default": the alphabetic keyboard
 -   "numeric": the numeric keyboard with punctuation
 -   "url": the url entry keyboard (iOS only)
 -   "number": the number pad keyboard
