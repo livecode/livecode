@@ -25,7 +25,8 @@ Parameters:
 type (enum):
 The type of keyboard to use. One of:
 
--   "default": the alphabetic keyboard
+-   "default": the default keyboard
+-   "alphabet": the alphabetic keyboard
 -   "numeric": the numeric keyboard with punctuation
 -   "url": the url entry keyboard (iOS only)
 -   "number": the number pad keyboard
