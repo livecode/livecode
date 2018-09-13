@@ -246,7 +246,7 @@ widget will highlight the specified coordinates with a dot and dashed
 horizontal and vertical lines.
 
 >*Note:* If the x-axis values in the graph data are non-numeric,
->then the x-value of the point set must mathc one of those values.
+>then the x-value of the point set must match one of those values.
 
 Related: hilitedCoordinatesColor (property)
 */
