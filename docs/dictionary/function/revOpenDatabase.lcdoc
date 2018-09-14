@@ -219,6 +219,14 @@ revOpenDatabase() call when creating the database connection.
 The SQLite revOpenDatabase() call no longer requires 5 arguments and
 only requires a minimum of 2.
 
+>*Important:* To create and/or connect to a SQLite database on Linux,
+> you now need to update GCC to version 4.9. To do this on Ubuntu, 
+> use the following commands in a terminal:
+
+    sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+    sudo apt-get-update
+    sudo apt-get install gcc-.4.9 g++-4.9
+
 The version of the PostgreSQL library has been updated to 9.4.5.
 
 Changes:
