@@ -8,7 +8,7 @@ Syntax: print {<stack> | <card> |{marked| <number> |all} cards} [into <pageRect>
 
 Syntax: print {<stack> | <card> |{marked| <number> |all} cards} [from <topLeft> to <bottomRight>]
 
-Syntax: print break&gt;
+Syntax: print break
 
 Summary:
 Prints one or more <card|cards>.
