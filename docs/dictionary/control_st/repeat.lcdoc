@@ -242,6 +242,18 @@ during the second, and so on:
         put myLine
     end repeat
 
+>*Note:* The *counterVariable* *myLine* is 0 in the final iteration of
+the loop as it is only once the *counterVariable* is less than or equal 
+to the *endValue* that the loop will perform its final iteration. To
+prevent the loop executing one more iteration than desired, one could 
+compare the two and use <exit repeat> to end the iteration immediately. 
+For example:
+
+    repeat with myLine = 20 to 1 step -2
+        if myLine <= 1 then exit repeat
+        put myLine
+    end repeat
+
 
 >*Note:*  It is possible to change the *counterVariable* in a statement 
 in the loop. However, doing this is not recommended, because it makes 
@@ -313,8 +325,9 @@ variable inside a for each loop without affecting the
 iterations of the loop.
 
 References: wait (command), next repeat (control structure),
-round (function), iteration (glossary), array (glossary),
-chunk (glossary), conditional (glossary), container (glossary),
+exit repeat (control structure), round (function), 
+iteration (glossary), array (glossary), chunk (glossary), 
+conditional (glossary), container (glossary), 
 control structure (glossary), delimit (glossary), element (glossary),
 execute (glossary), field (glossary), function (glossary),
 integer (glossary), keyword (glossary), statement (glossary),
