@@ -1123,7 +1123,8 @@ end restoreStackToMessagePath
 private command revOutputDirectories pFolder
    local tTarget,tDirectory,tPlatforms,tCount,tOSXCount
    revStandaloneProgress "Checking directories..."
-   if there is a folder (pFolder & sStandaloneSettingsA["name"]) then
+   if there is a folder (pFolder & sStandaloneSettingsA["name"]) or \
+         there is a file (pFolder & sStandaloneSettingsA["name"]) then
       put 1 into tCount
       repeat while there is a folder (pFolder & sStandaloneSettingsA["name"]&tCount) or \
             there is a file (pFolder & sStandaloneSettingsA["name"]&tCount)
