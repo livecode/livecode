@@ -141,6 +141,23 @@ property hiliteNewElement		get mHiliteNewElement		set mHiliteNewElement
 metadata hiliteNewElement.label is "Hilite new element"
 
 /**
+Syntax: set the scrollHilitedElementIntoView of <widget> to {true|false}
+Syntax: get the scrollHilitedElementIntoView of <widget>
+
+Summary: Automatically scroll selected row into view.
+
+Description:
+If the <scrollHilitedElementIntoView> property is true, then when the 
+<hilitedElement> property changes the view will be scrolled such that the 
+selected row is visible.
+
+References: hilitedElement (property)
+**/
+
+property scrollHilitedElementIntoView		get mScrollHilitedElementIntoView		set mScrollHilitedElementIntoView
+metadata scrollHilitedElementIntoView.label is "Scroll hilited element into view"
+
+/**
 Name: foreColor
 
 Type: property
@@ -422,6 +439,7 @@ private variable mSelectedElement as optional List
 private variable mFoldState as Array
 private variable mLastKeyAdded as optional String
 private variable mHiliteNewElement as Boolean
+private variable mScrollHilitedElementIntoView as Boolean
 
 private variable mFoldedArrowPath as Path
 private variable mUnfoldedArrowPath as Path
@@ -509,6 +527,7 @@ public handler OnCreate() returns nothing
 	put the empty array into mFoldState
 	put the empty array into mData
 	put false into mHiliteNewElement
+	put false into mScrollHilitedElementIntoView
 end handler
 
 public handler OnSave(out rProperties as Array)
@@ -519,6 +538,7 @@ public handler OnSave(out rProperties as Array)
 	put mSortAscending into rProperties["sort ascending"]
 	put mSortNumeric into rProperties["sort numeric"]
 	put mHiliteNewElement into rProperties["hilite new element"]
+	put mScrollHilitedElementIntoView into rProperties["scroll hilited element into view"]
 
 	put mShowSeparator into rProperties["show separator"]
 	put mSeparatorRatio into rProperties["separator ratio"]
@@ -542,6 +562,10 @@ public handler OnLoad(in pProperties as Array)
 
 	if "hilite new element" is among the keys of pProperties then
 		put pProperties["hilite new element"] into mHiliteNewElement
+	end if
+
+	if "scroll hilited element into view" is among the keys of pProperties then
+		put pProperties["scroll hilited element into view"] into mScrollHilitedElementIntoView
 	end if
 
 	if "show separator" is among the keys of pProperties then
@@ -1060,7 +1084,7 @@ end handler
 // Clamp mViewTopPosition
 private handler ensureViewTopPosition()
 	variable tMinTop as Real
-    put 0 into tMinTop
+	put 0 into tMinTop
 
 	// Make sure we don't try to scroll above 0
 	if mViewTopPosition < tMinTop then 
@@ -1070,7 +1094,27 @@ private handler ensureViewTopPosition()
 		put mDataHeight - mViewHeight into mViewTopPosition
 	else if mDataHeight < mViewHeight then
 		put tMinTop into mViewTopPosition
-	end if	
+	end if
+end handler
+
+// Adjust mViewTopPosition to ensure pListElt is visible
+private handler ensureElementInView(in pListElt as Integer)
+	variable tViewCount as Integer
+	put the ceiling of (mViewHeight / mRowHeight) into tViewCount
+	if mReadOnly then
+		subtract 1 from pListElt
+		subtract 1 from mFirstDataItem
+	end if
+	if pListElt <= mFirstDataItem then
+		put (pListElt - 1) * mRowHeight into mViewTopPosition
+	else if pListElt >= (mFirstDataItem + tViewCount - 1) then
+		variable tTopOffset
+		put mViewHeight mod mRowHeight into tTopOffset
+		put (pListElt - tViewCount + 1) * mRowHeight - tTopOffset into mViewTopPosition
+		put 0 into mHoverRow
+		put "" into mHoverIcon
+	end if
+	updateParameters()
 end handler
 
 // Calculate mFirstDataItem from the view position
@@ -1079,9 +1123,9 @@ private handler updateFirstDataItem()
 	if mFirstDataItem < 1 then
 		put 1 into mFirstDataItem
 	end if
-    if mReadOnly then
-        add 1 to mFirstDataItem
-    end if  
+	if mReadOnly then
+		add 1 to mFirstDataItem
+	end if
 end handler
 
 -- This is called before painting if the private variable 
@@ -1498,6 +1542,9 @@ end handler
 private handler selectKey(in pListElt as Integer, in pPath as List, in pLevel as Integer, inout xList as List, inout xArray as Array)
 	put true into xList[pListElt]["selected"]
 	put pPath into mSelectedElement
+	if mScrollHilitedElementIntoView then
+		ensureElementInView(pListElt)
+	end if
 end handler
 
 // A handler of type NodeApply to pass into 'applyToNode' - removes the key on the given path
@@ -1653,16 +1700,22 @@ end handler
 
 // Select the key at the target path
 private handler selectPath(in pPath as List)
+	variable tPathNotAlreadySelected as Boolean
+	put mSelectedElement is not pPath into tPathNotAlreadySelected
+	
 	// Unselect the existing selection if applicable
-	if mSelectedElement is not nothing and mSelectedElement is not pPath then
+	if mSelectedElement is not nothing and tPathNotAlreadySelected then
 		applyToNode(unselectKey, mSelectedElement, 0, 1, mDataList, mData)
 	end if
 
-	if mSelectedElement is nothing or mSelectedElement is not pPath then
+	if mSelectedElement is nothing or tPathNotAlreadySelected or \
+			mScrollHilitedElementIntoView then
 		if not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
 			put nothing into mSelectedElement
-		end if	
-		post "hiliteChanged"
+		end if
+		if tPathNotAlreadySelected then
+			post "hiliteChanged"
+		end if
 		redraw all
 	end if
 end handler
@@ -1829,11 +1882,16 @@ private handler getSelectedElement() returns String
 end handler
 
 private handler setReadOnly(in pReadOnly as Boolean)
-    if pReadOnly is not mReadOnly then
-        put pReadOnly into mReadOnly
-        put true into mRecalculate
-        redraw all
-    end if
+	if pReadOnly is not mReadOnly then
+		put pReadOnly into mReadOnly
+		put true into mRecalculate
+		if pReadOnly then
+			subtract mRowHeight from mViewTopPosition
+		else
+			add mRowHeight to mViewTopPosition
+		end if
+		redraw all
+	end if
 end handler
 
 private handler setArrayStyle(in pArrayStyle as Boolean)
