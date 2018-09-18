@@ -39,6 +39,15 @@
 			},
 		],
 		[
+			'_type == "executable"',
+			{
+				'ldflags':
+				[
+					'-no-pie',
+				],
+			},
+		],
+		[
 			'server_mode == 0',
 			{
 				'defines':
