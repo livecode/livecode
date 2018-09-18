@@ -1,0 +1,1 @@
+# Fix effective working screenrect on Android when status bar is hidden
