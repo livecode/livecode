@@ -864,7 +864,7 @@ void MCFilesExecPerformOpenProcess(MCExecContext& ctxt, MCNameRef p_process, int
 		ctxt . SetTheResultToStaticCString("process is already open");
 		return;
 	}
-    MCS_startprocess(p_process, kMCEmptyString, (Open_mode)p_mode, p_elevated);
+    MCS_startprocess(p_process, NULL, (Open_mode)p_mode, p_elevated);
 	if (IO_findprocess(p_process, index))
     {
         // ENCODING what default encoding for the process?
