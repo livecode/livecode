@@ -11,18 +11,20 @@ few problems, for example:
 	
 As an attempt to improve this situation, the code that locks messages
 when closing and opening stacks for standalone builds has been removed.
-This means that where previously mainstacks would not receive openStack
-and closeStack messages during standalone build, they now do.
+This means that where previously mainstacks would not receive any of the 
+`(pre)open*` and `close*` messages (e.g. `preOpenStack`, `openStack`, 
+`openCard`, `closeStack` etc) during standalone build, they now do.
 
 If this causes problems for your stack, you can exit from the handler if 
 standalone building is in progress:
 
-	on closeStack
-		if the environment is "development" and \
-                    the mode of stack "revStandaloneProgress" > 0 then
-			exit closeStack
-		end if
-	end closeStack
+    on closeStack
+        if the environment is "development" and \
+          there is a stack "revStandaloneProgress" and \
+          the mode of stack "revStandaloneProgress" > 0 then
+            exit closeStack
+        end if
+    end closeStack
 
 ## LiveCode Builder
 
