@@ -942,7 +942,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          repeat for each line tEntry in tExternals
             -- Only copy across an external from the Runtime folder if we haven't
             -- already copied from a lcext.
-            if there is a file (tArchLibsBuildFolders[tArch] & slash & tArch & slash & "lib" & tEntry & ".so") then
+            if there is a file (tArchLibsBuildFolders[tArch] & slash & "lib" & tEntry & ".so") then
                next repeat
             end if
             put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tArch & slash & tEntry)) \
