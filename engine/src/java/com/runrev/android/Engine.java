@@ -334,10 +334,12 @@ public class Engine extends View implements EngineApi
 		}
 		catch ( UnsatisfiedLinkError e )
 		{
+            Log.i("revandroid", e.toString());
 			return null;
 		}
 		catch ( SecurityException e )
 		{
+            Log.i("revandroid", e.toString());
 			return null;
 		}
 	}
