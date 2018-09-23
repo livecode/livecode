@@ -358,6 +358,8 @@ class LibBrowserWebView extends WebView
 		
 		setWebChromeClient(m_chrome_client);
 		getSettings().setJavaScriptEnabled(true);
+        getSettings().setAllowFileAccessFromFileURLs(true);
+        getSettings().setAllowUniversalAccessFromFileURLs(true);
 		getSettings().setGeolocationEnabled(true);
 		getSettings().setDomStorageEnabled(true);
 		getSettings().setPluginState(WebSettings.PluginState.ON);
