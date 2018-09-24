@@ -100,6 +100,7 @@ function setCCForTarget {
 			CXX="${CXX_BASE} -arch ${ARCH}"
 			;;
 		linux)
+			PLATFORM_CC_FLAGS="-fPIC"
 			CC_BASE="gcc"
 			CXX_BASE="g++"
 			# When building with newer binutils (>= 2.26), new types of
@@ -117,11 +118,11 @@ function setCCForTarget {
 			echo "*DEBUG* CC_FLAGS: ${CC_FLAGS_X86_NORELAX}"
 			
 			if [ "${ARCH}" == "x86_64" ] ; then
-				CC="${CC_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
-				CXX="${CXX_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
+				CC="${CC_BASE} ${PLATFORM_CC_FLAGS} -m64 ${CC_FLAGS_X86_NORELAX}"
+				CXX="${CXX_BASE} ${PLATFORM_CC_FLAGS} -m64 ${CC_FLAGS_X86_NORELAX}"
 			elif [ "$1" == "x86" ] ; then
-				CC="${CC_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
-				CXX="${CXX_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
+				CC="${CC_BASE} ${PLATFORM_CC_FLAGS} -m32 ${CC_FLAGS_X86_NORELAX}"
+				CXX="${CXX_BASE} ${PLATFORM_CC_FLAGS} -m32 ${CC_FLAGS_X86_NORELAX}"
 			fi
 			;;
 		android)
