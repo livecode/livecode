@@ -2053,6 +2053,7 @@ MC_DLLEXPORT bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offs
 
 MC_DLLEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
 MC_DLLEXPORT bool MCNumberParse(MCStringRef string, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberParseInteger(MCStringRef string, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberParseUnicodeChars(const unichar_t *chars, uindex_t char_count, MCNumberRef& r_number);
     
 #if defined(__HAS_CORE_FOUNDATION__)

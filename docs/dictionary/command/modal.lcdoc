@@ -24,8 +24,8 @@ stack:
 Any stack reference.
 
 Description:
-Use the <modal> <command> to display a <stack> as a custom <modal dialog
-box>. 
+Use the <modal> <command> to display a <stack> as a custom 
+<modal dialog box>. 
 
 >*Important:*  When a <stack> is opened as <modal> its <location> is set
 > to the center of the <defaultStack> if the <defaultStack> is open and
@@ -56,10 +56,10 @@ are sent regardless of the setting of the <lockMessages> <property>.
 If the stack is already displayed as a modal dialog box, the <modal>
 <command> does not close and reopen it.
 
-The <modal> <command> pauses the running <handler> until the <modal
-dialog box> is dismissed (usually by clicking a button in the <modal
-dialog box>). To <return> information to the <handler> about which
-<button(keyword)> was clicked, in the <button(object)|button's>
+The <modal> <command> pauses the running <handler> until the 
+<modal dialog box> is dismissed (usually by clicking a button in the 
+<modal dialog box>). To <return> information to the <handler> about 
+which <button(keyword)> was clicked, in the <button(object)|button's>
 <script>, set a <global|global variable> or <custom property>. After the
 <dialog box> is dismissed, the <handler> can query this <variable> or
 <property> and act accordingly.
@@ -72,7 +72,7 @@ regardless of the current setting of the <tool> <property>.
 References: lock messages (command), ask (command),
 ask file with type (command), modeless (command), return (constant),
 tool (function), variable (glossary), editable window (glossary),
-property (glossary), dialog box (glossary), location (glossary),
+property (glossary), dialog box (glossary), location (property),
 execute (glossary), modal dialog box (glossary), command (glossary),
 global (glossary), Browse tool (glossary), custom property (glossary),
 message (glossary), current card (glossary), handler (glossary),

@@ -353,7 +353,7 @@ void MCPlatformHandleMouseMove(MCPlatformWindowRef p_window, MCPoint p_location)
 
 void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, uint32_t p_count)
 {
-	if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))
+    if (((MCScreenDC *)MCscreen) -> isbackdrop(p_window))
 	{
 		((MCScreenDC *)MCscreen) -> mousedowninbackdrop(p_button, p_count);
 		return;
@@ -392,8 +392,10 @@ void MCPlatformHandleMouseDown(MCPlatformWindowRef p_window, uint32_t p_button, 
 				MCdragimageid = 0;
 				MCdragimageoffset . x = 0;
 				MCdragimageoffset . y = 0;
-                MCdragboard->Clear();
-			}
+                // ensure the dragboard is bound correctly
+                MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
+                MCdragboard->Rebind(t_dragboard);
+            }
 			
 			t_target -> mdown(p_button + 1);
 		}
@@ -442,9 +444,6 @@ void MCPlatformHandleMouseUp(MCPlatformWindowRef p_window, uint32_t p_button, ui
 
 void MCPlatformHandleMouseDrag(MCPlatformWindowRef p_window, uint32_t p_button)
 {
-    MCAutoRefcounted<MCRawClipboard> t_dragboard(MCRawClipboard::CreateSystemDragboard());
-    MCdragboard->Rebind(t_dragboard);
-    
     MCdispatcher -> wmdrag(p_window);
 }
 

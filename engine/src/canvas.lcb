@@ -3315,7 +3315,34 @@ Summary:	The blend mode of an effect.
 
 mEffect:		An expression which evaluates to an effect.
 
-Description:	The blend mode of <mEffect> as a string. Can be any one of the standard canvas blend modes.
+Description:	The blend mode of <mEffect> as a string. Can be any one of:
+- clear
+- copy
+- source over
+- source in
+- source out
+- destination over
+- destination in
+- destination out
+- destination atop
+- xor
+- plus darker
+- plus lighter
+- multiply
+- screen
+- overlay
+- darken
+- lighten
+- color dodge
+- color burn
+- soft light
+- hard light
+- difference
+- exclusion
+- hue
+- saturation
+- color
+- luminosity
 
 Example:
 	// Create an effect with blend mode "source over"
@@ -4019,7 +4046,34 @@ Summary:	The current blend mode of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
 
-Description:	The blend mode used for drawing operations on <mCanvas> as a string.
+Description:	The blend mode used for drawing operations on <mCanvas> as a string. Can be any one of:
+- clear
+- copy
+- source over
+- source in
+- source out
+- destination over
+- destination in
+- destination out
+- destination atop
+- xor
+- plus darker
+- plus lighter
+- multiply
+- screen
+- overlay
+- darken
+- lighten
+- color edge
+- color burn
+- soft light
+- hard light
+- difference
+- exclusion
+- hue
+- saturation
+- color
+- luminosity
 
 Example:
 	// Use color dodge mode to draw on canvas

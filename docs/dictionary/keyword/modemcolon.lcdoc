@@ -5,9 +5,9 @@ Type: keyword
 Syntax: modem:
 
 Summary:
-Used with the <open file>, <read from file>, <write to file>, and <close
-file> <command|commands> to specify the modem <port> on <Mac OS|Mac OS
-systems>. 
+Used with the <open file>, <read from file>, <write to file>, and 
+<close file> <command|commands> to specify the modem <port> on 
+<Mac OS|Mac OS systems>. 
 
 Introduced: 1.0
 
@@ -35,13 +35,13 @@ To use the printer port on Mac OS systems, use the printer: <keyword>.
 (To use serial ports other than the built-in printer or modem port, use
 the <open driver> <command>.)
 
-To use serial ports on Windows systems, use the COM1: through <COM9:>
-<keyword|keywords>. 
+To use serial ports on Windows systems, use the <COMn:|COM1:> through 
+<COMn:|COM9:> <keyword|keywords>. 
 
 References: write to file (command), close file (command),
 open file (command), write to driver (command), open driver (command),
 read from file (command), keyword (glossary), property (glossary),
-command (glossary), Mac OS (glossary), port (glossary), COM9: (keyword),
+command (glossary), Mac OS (glossary), port (glossary), COMn: (keyword),
 serialControlString (property)
 
 Tags: networking

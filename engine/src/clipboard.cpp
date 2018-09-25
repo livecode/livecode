@@ -254,6 +254,10 @@ bool MCClipboard::AddText(MCStringRef p_string)
 
     AutoLock t_lock(this);
     
+    // Clear contents if the clipboard contains external data
+    if (m_clipboard->IsExternalData())
+        Clear();
+    
     // Clear contents to ensure that the clipboard does not end up
     // containing data from different copy events.
     // i.e. the HTML/RTF representation would be left untouched
@@ -272,12 +276,6 @@ bool MCClipboard::AddText(MCStringRef p_string)
 
 bool MCClipboard::AddTextToItem(MCRawClipboardItem* p_item, MCStringRef p_string)
 {
-    AutoLock t_lock(this);
-    
-    // Clear contents if the clipboard contains external data
-    if (m_clipboard->IsExternalData())
-        Clear();
-    
     // For each text encoding that the underlying clipboard supports, encode the
     // text and add it.
     bool t_success = true;

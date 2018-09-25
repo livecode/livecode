@@ -117,8 +117,9 @@ Description:
 <pPath> is a list of the keys which determine the row to be selected. For example, if tArray is the arrayData
 of the widget, to select a row corresponding to tArray["key1"]["subkey2"]["subsubkey5"], simply execute
 
-
 ``` set the hilitedElement of widget "Array Viewer" to "key1,subkey2,subsubkey5" ```
+
+Setting to an invalid path or to `empty` will unselect the currently selected row.
 **/
 
 property hilitedElement			get getSelectedElement			set setSelectedElement
@@ -1703,21 +1704,27 @@ private handler selectPath(in pPath as List)
 	variable tPathNotAlreadySelected as Boolean
 	put mSelectedElement is not pPath into tPathNotAlreadySelected
 	
+	variable tSelectedElement as optional List
+	put mSelectedElement into tSelectedElement
+
 	// Unselect the existing selection if applicable
 	if mSelectedElement is not nothing and tPathNotAlreadySelected then
 		applyToNode(unselectKey, mSelectedElement, 0, 1, mDataList, mData)
 	end if
 
-	if mSelectedElement is nothing or tPathNotAlreadySelected or \
-			mScrollHilitedElementIntoView then
+	if (mSelectedElement is nothing or tPathNotAlreadySelected or \
+			mScrollHilitedElementIntoView) and pPath is not the empty list then
 		if not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
 			put nothing into mSelectedElement
 		end if
-		if tPathNotAlreadySelected then
-			post "hiliteChanged"
-		end if
+	end if
+	
+	if tPathNotAlreadySelected and mSelectedElement is not tSelectedElement then
+		post "hiliteChanged"
 		redraw all
 	end if
+		
+	
 end handler
 
 // Unselect the key at the target path
@@ -1737,7 +1744,7 @@ end handler
 private handler applyToNode(in pHandler as NodeApply, in pPathToNode as List, in pLevel as Integer, in pStart as Integer, inout xList as List, inout xArray as Array) returns Boolean	
 	if pStart >= the number of elements in xList then
 		return false
-	end if	
+	end if
 
 	variable tKey as String
 	put element pLevel + 1 of pPathToNode into tKey

@@ -43,11 +43,11 @@ To get the location of the word or text group clicked, use the
 mouseChunk <function>.
 
 >*Important:*  Words are defined a little differently by the <mouseText>
-> <function> than the way they are used in <chunk expression|chunk
-> expressions>. A word, for purposes of the <mouseText>, is any text
-> delimited by spaces, tabs, returns, or punctuation. If the mouse
-> pointer is over a punctuation <character>, only that <character> is
-> returned. 
+> <function> than the way they are used in 
+> <chunk expression|chunk expressions>. A word, for purposes of the 
+> <mouseText>, is any text delimited by spaces, tabs, returns, or 
+> punctuation. If the mouse pointer is over a punctuation <character>, 
+> only that <character> is returned. 
 
 References: function (control structure), clickText (function),
 mouseCharChunk (function), handler (glossary), grouped text (glossary),

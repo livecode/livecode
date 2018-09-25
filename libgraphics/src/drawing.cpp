@@ -1731,13 +1731,13 @@ void MCGDrawingContext::ExecutePath(VisitorT& p_visitor)
                 
             case kMCGDrawingPathOpcodeSmoothCubicTo:
             {
-                MCGPoint t_a, t_b, t_point;
-                if (!Point(t_b) ||
+                MCGPoint t_a, t_point;
+                if (!Point(t_a) ||
                     !Point(t_point))
                 {
                     break;
                 }
-                p_visitor.PathSmoothCubicTo(t_b,
+                p_visitor.PathSmoothCubicTo(t_a,
                                             t_point);
             }
             break;

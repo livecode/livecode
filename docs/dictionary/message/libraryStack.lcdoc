@@ -5,8 +5,8 @@ Type: message
 Syntax: libraryStack
 
 Summary:
-Sent to a <stack> when it is placed in the <message path> by the <start
-using> <command>.
+Sent to a <stack> when it is placed in the <message path> by the 
+<start using> <command>.
 
 Associations: stack
 
