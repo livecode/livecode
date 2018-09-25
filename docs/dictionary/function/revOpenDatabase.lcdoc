@@ -114,7 +114,7 @@ cursorType (enum):
 
 
 sqliteOptions (enum):
-A comma delimited list contain one or me of the following (Note that the
+A comma-delimited list containing one or more items listed below (Note 
 order of the items in the options parameter is not important):
 
 -   "extensions": Enable loadable extensions for the connection.
