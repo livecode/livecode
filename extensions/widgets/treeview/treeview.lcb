@@ -1712,16 +1712,16 @@ private handler selectPath(in pPath as List)
 		applyToNode(unselectKey, mSelectedElement, 0, 1, mDataList, mData)
 	end if
 
-	if (mSelectedElement is nothing or tPathNotAlreadySelected or \
-			mScrollHilitedElementIntoView) and pPath is not the empty list then
-		if not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
-			put nothing into mSelectedElement
-		end if
-	end if
-	
-	if tPathNotAlreadySelected and mSelectedElement is not tSelectedElement then
-		post "hiliteChanged"
-		redraw all
+	if mSelectedElement is nothing or tPathNotAlreadySelected or \
+      mScrollHilitedElementIntoView then
+		if pPath is not the empty list and \
+         not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
+      		put nothing into mSelectedElement
+   		end if
+   		if tPathNotAlreadySelected then
+      		post "hiliteChanged"
+   		end if
+   		redraw all
 	end if
 		
 	
