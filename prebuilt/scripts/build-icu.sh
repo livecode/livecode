@@ -7,7 +7,7 @@ source "${BASEDIR}/scripts/util.inc"
 
 # Configuration flags
 ICU_CONFIG="--disable-shared --enable-static --prefix=/ --sbindir=/bin --with-data-packaging=archive --disable-samples --disable-tests --disable-extras"
-ICU_CFLAGS="-DU_USING_ICU_NAMESPACE=0 -DUNISTR_FROM_CHAR_EXPLICIT=explicit -DUNISTR_FROM_STRING_EXPLICIT=explicit"
+ICU_CFLAGS="-DUNISTR_FROM_CHAR_EXPLICIT=explicit -DUNISTR_FROM_STRING_EXPLICIT=explicit"
 
 ICU_VERSION_ALT=$(echo "${ICU_VERSION}" | sed 's/\./_/g')
 ICU_VERSION_MAJOR=$(echo "${ICU_VERSION}" | sed 's/\..*//g')
@@ -90,8 +90,6 @@ function buildICU {
 		ios)
 			CONFIG_TYPE=
 			CONFIG_FLAGS="--host=arm-apple-darwin --with-cross-build=${HOST_ICU_DIR} --disable-tools"
-			export EXTRA_CFLAGS="-DU_USING_ICU_NAMESPACE=1"
-			export EXTRA_CXXFLAGS="${EXTRA_CFLAGS}"
 			;;
 		win32)
 			CONFIG_TYPE="Cygwin/MSVC"
