@@ -80,7 +80,7 @@ function buildICU {
 
 		android)
 			CONFIG_TYPE="Linux --with-cross-build=${HOST_ICU_DIR} --disable-tools"
-			export EXTRA_CFLAGS="-D__STDC_INT64__ -DU_HAVE_NL_LANGINFO_CODESET=0"
+			export EXTRA_CFLAGS="-D__STDC_INT64__ -DU_HAVE_NL_LANGINFO_CODESET=0 -Dstrtod_l=strtold_l"
 			export EXTRA_CXXFLAGS="${EXTRA_CFLAGS}"
 			;;
 		emscripten)
@@ -90,6 +90,8 @@ function buildICU {
 		ios)
 			CONFIG_TYPE=
 			CONFIG_FLAGS="--host=arm-apple-darwin --with-cross-build=${HOST_ICU_DIR} --disable-tools"
+			export EXTRA_CFLAGS="-DU_USING_ICU_NAMESPACE=1"
+			export EXTRA_CXXFLAGS="${EXTRA_CFLAGS}"
 			;;
 		win32)
 			CONFIG_TYPE="Cygwin/MSVC"
