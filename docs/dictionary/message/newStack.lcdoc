@@ -36,8 +36,8 @@ The actual creation is not triggered by the <newStack> <message>, so
 prevent the <stack> from being created.
 
 References: create stack (command), pass (control structure),
-object (glossary), trap (glossary), templateStack (glossary),
-current card (glossary), message (glossary), message path (glossary),
+object (glossary), trap (glossary), current card (glossary), 
+message (glossary), message path (glossary), templateStack (keyword),
 deleteStack (message), stack (object), script (property)
 
 Tags: objects
