@@ -6,7 +6,7 @@ source "${BASEDIR}/scripts/lib_versions.inc"
 source "${BASEDIR}/scripts/util.inc"
 
 # Configuration flags
-ICU_CONFIG="ac_cv_namespace_ok=yes --disable-shared --enable-static --prefix=/ --sbindir=/bin --with-data-packaging=archive --disable-samples --disable-tests --disable-extras"
+ICU_CONFIG="--disable-shared --enable-static --prefix=/ --sbindir=/bin --with-data-packaging=archive --disable-samples --disable-tests --disable-extras"
 ICU_CFLAGS="-DU_USING_ICU_NAMESPACE=0 -DUNISTR_FROM_CHAR_EXPLICIT=explicit -DUNISTR_FROM_STRING_EXPLICIT=explicit"
 
 ICU_VERSION_ALT=$(echo "${ICU_VERSION}" | sed 's/\./_/g')
