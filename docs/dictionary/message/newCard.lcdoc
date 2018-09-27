@@ -37,8 +37,8 @@ prevent the <card> from being created.
 
 References: create card (command), paste (command), copy (command),
 clone (command), pass (control structure), object (glossary),
-trap (glossary), message (glossary), templateCard (glossary),
-tool (glossary), message path (glossary), card (keyword),
+trap (glossary), message (glossary), tool (glossary), 
+message path (glossary), card (keyword), templateCard (keyword),
 newBackground (message), script (property)
 
 Tags: objects
