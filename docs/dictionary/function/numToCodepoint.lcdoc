@@ -36,9 +36,8 @@ The <numToCodepoint> function takes the numerical identifier of a
 Unicode character and returns its textual form.
 
 Integers in the range 0x000000 to 0x10FFFF can be used to  identify
-Unicode characters. For example, the space character is 0x20 and A is
-
-0x41. 
+Unicode characters. For example, the space character is 0x20 and A 
+is 0x41. 
 
 
 The <numToCodepoint> function raises an exception if the given integer
