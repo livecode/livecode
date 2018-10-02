@@ -891,7 +891,8 @@ Boolean MCGroup::mup(uint2 which, bool p_release)
 	newkfocused = mfocused;
 	MCControl *oldfocused = mfocused;
 	// MH-2007-03-20: [[ Bug 705 ]] Selecting a radio button using pointer tool unhilites other radio buttons in the group with radiobehavior set.
-	if (tool != T_POINTER)
+    // PM-2018-09-21: [[ Bug 9711 ]] Ensure right-clicking on a grouped radio button does not change the hilite of the group
+	if (tool != T_POINTER && which == Button1)
 		radio(0, oldfocused);
 	mgrabbed = False;
 	if (!mfocused.IsValid() || mfocused->mup(which, p_release))
