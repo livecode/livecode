@@ -247,6 +247,23 @@ enum MCInterfaceKeyboardType : unsigned
     kMCInterfaceKeyboardTypeContact
 };
 
+
+enum MCInterfaceReturnKeyType : unsigned
+{
+    kMCInterfaceReturnKeyTypeNone,
+    kMCInterfaceReturnKeyTypeDefault,
+    kMCInterfaceReturnKeyTypeGo,
+    kMCInterfaceReturnKeyTypeGoogle,
+    kMCInterfaceReturnKeyTypeJoin,
+    kMCInterfaceReturnKeyTypeNext,
+    kMCInterfaceReturnKeyTypeRoute,
+    kMCInterfaceReturnKeyTypeSearch,
+    kMCInterfaceReturnKeyTypeSend,
+    kMCInterfaceReturnKeyTypeYahoo,
+    kMCInterfaceReturnKeyTypeDone,
+    kMCInterfaceReturnKeyTypeEmergencyCall
+};
+
 #endif // EXEC_INTERFACE_H
 
 //////////

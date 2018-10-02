@@ -132,6 +132,7 @@ MCPropertyInfo MCField::kProperties[] =
     DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_PAGE_RANGES, InterfaceFieldRanges, MCField, PageRanges)
     
     DEFINE_RW_OBJ_ENUM_PROPERTY(P_KEYBOARD_TYPE, InterfaceKeyboardType, MCField, KeyboardType)
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_RETURN_KEY_TYPE, InterfaceReturnKeyType, MCField, ReturnKeyType)
 
     DEFINE_RW_OBJ_NON_EFFECTIVE_OPTIONAL_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCField, TextAlign)
 	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCField, TextAlign)
@@ -261,6 +262,7 @@ MCField::MCField()
     m_recompute = false;
     
     keyboard_type = kMCInterfaceKeyboardTypeNone;
+    return_key_type = kMCInterfaceReturnKeyTypeNone;
 }
 
 MCField::MCField(const MCField &fref) : MCControl(fref)
@@ -278,6 +280,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
     cursor_movement = fref.cursor_movement;
     text_direction= fref.text_direction;
     keyboard_type = fref.keyboard_type;
+    return_key_type = fref.return_key_type;
     
 	if (fref.vscrollbar != NULL)
 	{
@@ -2567,6 +2570,7 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 // SN-2015-04-30: [[ Bug 15175 ]] TabAlignment flag added
 #define FIELD_EXTRA_TABALIGN        (1 << 1)
 #define FIELD_EXTRA_KEYBOARDTYPE    (1 << 2)
+#define FIELD_EXTRA_RETURNKEYTYPE    (1 << 3)
 
 IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
@@ -2595,6 +2599,12 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint
         t_flags |= FIELD_EXTRA_KEYBOARDTYPE;
         t_size += sizeof(int8_t);
     }
+    
+    if (return_key_type != kMCInterfaceReturnKeyTypeNone)
+    {
+        t_flags |= FIELD_EXTRA_RETURNKEYTYPE;
+        t_size += sizeof(int8_t);
+    }
 
 	IO_stat t_stat;
 	t_stat = p_stream . WriteTag(t_flags, t_size);
@@ -2615,7 +2625,12 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint
         t_stat = p_stream . WriteS8((int8_t)keyboard_type);
     }
     
-	if (t_stat == IO_NORMAL)
+    if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_RETURNKEYTYPE))
+    {
+        t_stat = p_stream . WriteS8((int8_t)return_key_type);
+    }
+    
+    if (t_stat == IO_NORMAL)
 		t_stat = MCObject::extendedsave(p_stream, p_part, p_version);
     
 	return t_stat;
@@ -2684,6 +2699,16 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
             }
         }
         
+        if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_RETURNKEYTYPE) != 0)
+        {
+            int8_t t_value;
+            t_stat = checkloadstat(p_stream . ReadS8(t_value));
+            if (t_stat == IO_NORMAL)
+            {
+                return_key_type =  static_cast<MCInterfaceReturnKeyType>(t_value);
+            }
+        }
+        
         if (t_stat == IO_NORMAL)
             t_stat = checkloadstat(p_stream . Skip(t_length));
         
@@ -2711,7 +2736,8 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
     bool t_has_extension;
     t_has_extension = text_direction != kMCTextDirectionAuto ||
                       nalignments != 0 ||
-                      keyboard_type != kMCInterfaceKeyboardTypeNone;
+                      keyboard_type != kMCInterfaceKeyboardTypeNone ||
+                      return_key_type != kMCInterfaceReturnKeyTypeNone;
     
     if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;

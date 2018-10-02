@@ -644,21 +644,32 @@ void MCScreenDC::openIME()
 }
 
 extern int32_t MCInterfaceAndroidKeyboardEnumFromMCExecEnum(MCInterfaceKeyboardType p_type);
+extern int32_t MCInterfaceAndroidReturnKeyTypeEnumFromMCExecEnum(MCInterfaceReturnKeyType p_type);
 void MCScreenDC::activateIME(Boolean activate)
 {
     int32_t t_keyboard_type = 0;
-    intenum_t t_type = kMCInterfaceKeyboardTypeNone;
+    intenum_t t_field_keyboard_type = kMCInterfaceKeyboardTypeNone;
+    
+    int32_t t_return_key_type = 0;
+    intenum_t t_field_return_key_type = kMCInterfaceReturnKeyTypeNone;
+    
     if (MCactivefield.IsValid())
     {
-        t_type = MCactivefield->getkeyboardtype();
+        t_field_keyboard_type = MCactivefield->getkeyboardtype();
+        t_field_return_key_type = MCactivefield->getreturnkeytype();
     }
     
-    if (t_type != kMCInterfaceKeyboardTypeNone)
+    if (t_field_keyboard_type != kMCInterfaceKeyboardTypeNone)
     {
-        t_keyboard_type = MCInterfaceAndroidKeyboardEnumFromMCExecEnum(static_cast<MCInterfaceKeyboardType>(t_type));
+        t_keyboard_type = MCInterfaceAndroidKeyboardEnumFromMCExecEnum(static_cast<MCInterfaceKeyboardType>(t_field_keyboard_type));
     }
     
-    MCAndroidEngineRemoteCall("setTextInputVisible", "vbi", nil, activate, t_keyboard_type);
+    if (t_field_return_key_type != kMCInterfaceReturnKeyTypeNone)
+    {
+        t_return_key_type = MCInterfaceAndroidReturnKeyTypeEnumFromMCExecEnum(static_cast<MCInterfaceReturnKeyType>(t_field_return_key_type));
+    }
+    
+    MCAndroidEngineRemoteCall("setTextInputVisible", "vbii", nil, activate, t_keyboard_type, t_return_key_type);
 }
 
 void MCScreenDC::closeIME()

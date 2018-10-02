@@ -124,6 +124,31 @@ static MCExecEnumTypeInfo _kMCInterfaceKeyboardTypeTypeInfo =
 
 MCExecEnumTypeInfo* kMCInterfaceKeyboardTypeTypeInfo = &_kMCInterfaceKeyboardTypeTypeInfo;
 
+static MCExecEnumTypeElementInfo _kMCInterfaceReturnKeyTypeElementInfo[] =
+{
+    { "", kMCInterfaceReturnKeyTypeNone, false},
+    { "default", kMCInterfaceReturnKeyTypeDefault, false},
+    { "go", kMCInterfaceReturnKeyTypeGo, false},
+    { "google", kMCInterfaceReturnKeyTypeGoogle, false},
+    { "join", kMCInterfaceReturnKeyTypeJoin, false},
+    { "next", kMCInterfaceReturnKeyTypeNext, false},
+    { "route", kMCInterfaceReturnKeyTypeRoute, false},
+    { "search", kMCInterfaceReturnKeyTypeSearch, false},
+    { "send", kMCInterfaceReturnKeyTypeSend, false},
+    { "yahoo", kMCInterfaceReturnKeyTypeYahoo, false},
+    { "done", kMCInterfaceReturnKeyTypeDone, false},
+    { "emergency call", kMCInterfaceReturnKeyTypeEmergencyCall, false}
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceReturnKeyTypeTypeInfo =
+{
+    "Interface.ReturnKeyType",
+    sizeof(_kMCInterfaceReturnKeyTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceReturnKeyTypeElementInfo
+};
+
+MCExecEnumTypeInfo* kMCInterfaceReturnKeyTypeTypeInfo = &_kMCInterfaceReturnKeyTypeTypeInfo;
+
 //////////
 
 static void MCInterfaceFieldRangesParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceFieldRanges& r_output)
@@ -1416,4 +1441,14 @@ void MCField::GetKeyboardType(MCExecContext& ctxt, intenum_t& r_type)
 void MCField::SetKeyboardType(MCExecContext& ctxt, intenum_t p_type)
 {
     keyboard_type = static_cast<MCInterfaceKeyboardType>(p_type);
+}
+
+void MCField::GetReturnKeyType(MCExecContext& ctxt, intenum_t& r_type)
+{
+    r_type = static_cast<intenum_t>(return_key_type);
+}
+
+void MCField::SetReturnKeyType(MCExecContext& ctxt, intenum_t p_type)
+{
+    return_key_type = static_cast<MCInterfaceReturnKeyType>(p_type);
 }

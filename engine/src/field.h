@@ -241,6 +241,7 @@ private:
     MCTextDirection text_direction;
     MCInterfaceFieldCursorMovement cursor_movement;
     MCInterfaceKeyboardType keyboard_type : 4;
+    MCInterfaceReturnKeyType return_key_type : 4;
 
     // MM-2014-08-11: [[ Bug 13149 ]] Used to flag if a recompute is required during the next draw.
     bool m_recompute : 1;
@@ -612,6 +613,7 @@ public:
     MCRectangle firstRectForCharacterRange(int32_t& si, int32_t& ei);
     
     MCInterfaceKeyboardType getkeyboardtype() { return keyboard_type; }
+    MCInterfaceReturnKeyType getreturnkeytype() { return return_key_type; }
 
     ////////// BIDIRECTIONAL SUPPORT
     
@@ -727,6 +729,8 @@ public:
     
     void GetKeyboardType(MCExecContext& ctxt, intenum_t& r_type);
     void SetKeyboardType(MCExecContext& ctxt, intenum_t p_type);
+    void GetReturnKeyType(MCExecContext& ctxt, intenum_t& r_type);
+    void SetReturnKeyType(MCExecContext& ctxt, intenum_t p_type);
     
     virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
     virtual void SetShowBorder(MCExecContext& ctxt, bool setting);

@@ -488,21 +488,6 @@ enum MCMiscStatusBarStyle
     kMCMiscStatusBarStyleSolid
 };
 
-enum MCMiscKeyboardReturnKey
-{
-    kMCMiscKeyboardReturnKeyDefault,
-    kMCMiscKeyboardReturnKeyGo,
-    kMCMiscKeyboardReturnKeyGoogle,
-    kMCMiscKeyboardReturnKeyJoin,
-    kMCMiscKeyboardReturnKeyNext,
-    kMCMiscKeyboardReturnKeyRoute,
-    kMCMiscKeyboardReturnKeySearch,
-    kMCMiscKeyboardReturnKeySend,
-    kMCMiscKeyboardReturnKeyYahoo,
-    kMCMiscKeyboardReturnKeyDone,
-    kMCMiscKeyboardReturnKeyEmergencyCall
-};
-
 ////////////////////////////////////////////////////////////////////////////////
 // From Url module
 

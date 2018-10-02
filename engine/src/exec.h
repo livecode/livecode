@@ -2833,6 +2833,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceFieldCursorMovementTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceTextDirectionTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceFieldTabAlignmentsTypeInfo;
 extern MCExecEnumTypeInfo* kMCInterfaceKeyboardTypeTypeInfo;
+extern MCExecEnumTypeInfo* kMCInterfaceReturnKeyTypeTypeInfo;
 
 ///////////
 
@@ -3997,7 +3998,6 @@ void MCSoundSetAudioCategory(MCExecContext &ctxt, intenum_t p_category);
 
 /////////////
 
-extern MCExecEnumTypeInfo* kMCMiscKeyboardReturnTypeTypeInfo;
 extern MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo;
 
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token);

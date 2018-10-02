@@ -276,7 +276,8 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     
     m_keyboard_display = kMCIPhoneKeyboardDisplayModeOver;
     m_keyboard_type = UIKeyboardTypeDefault;
-    
+    m_return_key_type = UIReturnKeyDefault;
+
 	// We are done (successfully) so return ourselves.
 	return self;
 }
@@ -913,7 +914,8 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
     m_keyboard_is_visible = false;
     
     [[[m_main_controller rootView] textView] setKeyboardType: m_keyboard_type];
-
+    [[[m_main_controller rootView] textView] setReturnKeyType: m_return_key_type];
+    
 }
 
 - (BOOL)isKeyboardVisible
@@ -1031,6 +1033,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 }
 
 extern UIKeyboardType MCInterfaceGetUIKeyboardTypeFromExecEnum(MCInterfaceKeyboardType p_type);
+extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceReturnKeyType p_type);
 
 - (void)activateKeyboard
 {
@@ -1048,6 +1051,17 @@ extern UIKeyboardType MCInterfaceGetUIKeyboardTypeFromExecEnum(MCInterfaceKeyboa
         {
             UIKeyboardType t_keyboard_type = MCInterfaceGetUIKeyboardTypeFromExecEnum(t_ktype);
             [[[m_main_controller rootView] textView] setKeyboardType: t_keyboard_type];
+        }
+        else
+        {
+            [[[m_main_controller rootView] textView] setKeyboardType: m_keyboard_type];
+        }
+        
+        MCInterfaceReturnKeyType t_rtype = MCactivefield->getreturnkeytype();
+        if (t_rtype != kMCInterfaceReturnKeyTypeNone)
+        {
+            UIReturnKeyType t_return_key_type = MCInterfaceGetUIReturnKeyTypeFromExecEnum(t_rtype);
+            [[[m_main_controller rootView] textView] setReturnKeyType:(UIReturnKeyType) t_return_key_type];
         }
         else
         {
@@ -1097,6 +1111,7 @@ extern UIKeyboardType MCInterfaceGetUIKeyboardTypeFromExecEnum(MCInterfaceKeyboa
 
 - (void)configureReturnKeyType: (UIReturnKeyType)p_new_type
 {
+    m_return_key_type = p_new_type;
 	[[[m_main_controller rootView] textView] setReturnKeyType: p_new_type];
 }
 

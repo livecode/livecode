@@ -618,29 +618,29 @@ bool MCSystemSetKeyboardType(intenum_t p_type)
     return  true;
 }
 
-static UIReturnKeyType MCMiscGetUIReturnKeyTypeFromMCExecEnum(MCMiscKeyboardReturnKey p_type)
+UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceReturnKeyType p_type)
 {
     switch(p_type)
     {
-        case kMCMiscKeyboardReturnKeyGo:
+        case kMCInterfaceReturnKeyTypeGo:
             return UIReturnKeyGo;
-        case kMCMiscKeyboardReturnKeyGoogle:
+        case kMCInterfaceReturnKeyTypeGoogle:
             return UIReturnKeyGoogle;
-        case kMCMiscKeyboardReturnKeyJoin:
+        case kMCInterfaceReturnKeyTypeJoin:
             return UIReturnKeyJoin;
-        case kMCMiscKeyboardReturnKeyNext:
+        case kMCInterfaceReturnKeyTypeNext:
             return UIReturnKeyNext;
-        case kMCMiscKeyboardReturnKeySearch:
+        case kMCInterfaceReturnKeyTypeSearch:
             return UIReturnKeySearch;
-        case kMCMiscKeyboardReturnKeySend:
+        case kMCInterfaceReturnKeyTypeSend:
             return UIReturnKeySend;
-        case kMCMiscKeyboardReturnKeyRoute:
+        case kMCInterfaceReturnKeyTypeRoute:
             return UIReturnKeyRoute;
-        case kMCMiscKeyboardReturnKeyYahoo:
+        case kMCInterfaceReturnKeyTypeYahoo:
             return UIReturnKeyYahoo;
-        case kMCMiscKeyboardReturnKeyDone:
+        case kMCInterfaceReturnKeyTypeDone:
             return UIReturnKeyDone;
-        case kMCMiscKeyboardReturnKeyEmergencyCall:
+        case kMCInterfaceReturnKeyTypeEmergencyCall:
             return UIReturnKeyEmergencyCall;
         default:
             return UIReturnKeyDefault;
@@ -649,7 +649,7 @@ static UIReturnKeyType MCMiscGetUIReturnKeyTypeFromMCExecEnum(MCMiscKeyboardRetu
 
 bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
 {
-    MCIPhoneSetReturnKeyType(MCMiscGetUIReturnKeyTypeFromMCExecEnum((MCMiscKeyboardReturnKey)p_type));
+    MCIPhoneSetReturnKeyType(MCInterfaceGetUIReturnKeyTypeFromExecEnum((MCInterfaceReturnKeyType)p_type));
                              
     return true;
 }

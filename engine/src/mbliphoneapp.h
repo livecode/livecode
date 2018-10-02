@@ -141,6 +141,7 @@ enum MCIPhoneKeyboardDisplayMode
 
     MCIPhoneKeyboardDisplayMode m_keyboard_display;
     UIKeyboardType m_keyboard_type;
+    UIReturnKeyType m_return_key_type;
 }
 
 //////////

@@ -1475,7 +1475,8 @@ const LT factor_table[] =
         {"result", TT_FUNCTION, F_RESULT},
         {"retainimage", TT_PROPERTY, P_RETAIN_IMAGE},
         {"retainpostscript", TT_PROPERTY, P_RETAIN_POSTSCRIPT},
-		{"revavailablehandlers", TT_PROPERTY, P_REV_AVAILABLE_HANDLERS},
+        {"returnkeytype", TT_PROPERTY, P_RETURN_KEY_TYPE},
+        {"revavailablehandlers", TT_PROPERTY, P_REV_AVAILABLE_HANDLERS},
 		{"revavailablevariables", TT_PROPERTY, P_REV_AVAILABLE_VARIABLES},
         {"revbehavioruses", TT_PROPERTY, P_REV_BEHAVIOR_USES},
 #ifdef MODE_DEVELOPMENT

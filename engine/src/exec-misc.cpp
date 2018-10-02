@@ -57,30 +57,6 @@ static MCExecEnumTypeInfo _kMCMiscStatusBarStyleTypeInfo =
 
 MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo = &_kMCMiscStatusBarStyleTypeInfo;
 
-static MCExecEnumTypeElementInfo _kMCMiscKeyboardReturnKeyElementInfo[] =
-{
-    { "default", kMCMiscKeyboardReturnKeyDefault, false},
-    { "go", kMCMiscKeyboardReturnKeyGo, false},
-    { "google", kMCMiscKeyboardReturnKeyGoogle, false},
-    { "join", kMCMiscKeyboardReturnKeyJoin, false},
-    { "next", kMCMiscKeyboardReturnKeyNext, false},
-    { "route", kMCMiscKeyboardReturnKeyRoute, false},
-    { "search", kMCMiscKeyboardReturnKeySearch, false},
-    { "send", kMCMiscKeyboardReturnKeySend, false},
-    { "yahoo", kMCMiscKeyboardReturnKeyYahoo, false},
-    { "done", kMCMiscKeyboardReturnKeyDone, false},
-    { "emergency call", kMCMiscKeyboardReturnKeyEmergencyCall, false}
-};
-
-static MCExecEnumTypeInfo _kMCMiscKeyboardReturnKeyTypeInfo =
-{
-    "Misc.KeyboardReturnKey",
-    sizeof(_kMCMiscKeyboardReturnKeyElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-    _kMCMiscKeyboardReturnKeyElementInfo
-};
-
-MCExecEnumTypeInfo* kMCMiscKeyboardReturnKeyTypeInfo = &_kMCMiscKeyboardReturnKeyTypeInfo;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token)

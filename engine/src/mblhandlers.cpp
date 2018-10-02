@@ -3009,30 +3009,30 @@ Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
-static MCMiscKeyboardReturnKey MCMiscKeyboardReturnKeyTypeFromString(MCStringRef p_string)
+static MCInterfaceReturnKeyType MCInterfaceReturnKeyTypeTypeFromString(MCStringRef p_string)
 {
     if (MCStringIsEqualToCString(p_string, "go", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyGo;
+        return kMCInterfaceReturnKeyTypeGo;
     else if (MCStringIsEqualToCString(p_string, "google", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyGoogle;
+        return kMCInterfaceReturnKeyTypeGoogle;
     else if (MCStringIsEqualToCString(p_string, "join", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyJoin;
+        return kMCInterfaceReturnKeyTypeJoin;
     else if (MCStringIsEqualToCString(p_string, "next", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyNext;
+        return kMCInterfaceReturnKeyTypeNext;
     else if (MCStringIsEqualToCString(p_string, "route", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyRoute;
+        return kMCInterfaceReturnKeyTypeRoute;
     else if (MCStringIsEqualToCString(p_string, "search", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeySearch;
+        return kMCInterfaceReturnKeyTypeSearch;
     else if (MCStringIsEqualToCString(p_string, "send", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeySend;
+        return kMCInterfaceReturnKeyTypeSend;
     else if (MCStringIsEqualToCString(p_string, "yahoo", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyYahoo;
+        return kMCInterfaceReturnKeyTypeYahoo;
     else if (MCStringIsEqualToCString(p_string, "done", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyDone;
+        return kMCInterfaceReturnKeyTypeDone;
     else if (MCStringIsEqualToCString(p_string, "emergency call", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyEmergencyCall;
+        return kMCInterfaceReturnKeyTypeEmergencyCall;
     else // default
-        return kMCMiscKeyboardReturnKeyDefault;
+        return kMCInterfaceReturnKeyTypeDefault;
 }
 
 Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters)
@@ -3040,14 +3040,14 @@ Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters
 	MCExecContext ctxt(nil, nil, nil);
     
     MCAutoStringRef t_keyboard_return_key_string;
-    MCMiscKeyboardReturnKey t_keyboard_return_key;
+    MCInterfaceReturnKeyType t_keyboard_return_key;
     bool t_success;
     
     t_success = MCParseParameters(p_parameters, "x", &(&t_keyboard_return_key_string));
     
     if (t_success)
     {
-        t_keyboard_return_key = MCMiscKeyboardReturnKeyTypeFromString(*t_keyboard_return_key_string);
+        t_keyboard_return_key = MCInterfaceReturnKeyTypeTypeFromString(*t_keyboard_return_key_string);
         MCMiscSetKeyboardReturnKey(ctxt, t_keyboard_return_key);
     }
     

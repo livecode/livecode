@@ -115,6 +115,7 @@ public class Engine extends View implements EngineApi
     private int m_default_text_editor_mode;
 
     private int m_default_ime_action;
+    private int m_ime_action;
     
     private SensorModule m_sensor_module;
     private DialogModule m_dialog_module;
@@ -170,6 +171,7 @@ public class Engine extends View implements EngineApi
         m_text_editor_visible = false;
 
         m_default_ime_action = EditorInfo.IME_FLAG_NO_ENTER_ACTION | EditorInfo.IME_ACTION_DONE;
+        m_ime_action = 0;
         
         // initialise modules
         m_sensor_module = new SensorModule(this);
@@ -601,7 +603,15 @@ public class Engine extends View implements EngineApi
 		
         outAttrs.actionLabel = null;
 		outAttrs.inputType = t_type;
-        outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | m_default_ime_action;
+        
+        if (m_ime_action != 0)
+        {
+            outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | m_ime_action;
+        }
+        else
+        {
+            outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | m_default_ime_action;
+        }
         
         return t_connection;
     }
@@ -677,7 +687,7 @@ public class Engine extends View implements EngineApi
 			imm.restartInput(this);
 	}
 
-	public void setTextInputVisible(boolean p_visible, int p_input_mode)
+	public void setTextInputVisible(boolean p_visible, int p_input_mode, int p_ime_action)
 	{
 		m_text_editor_visible = p_visible;
 		
@@ -687,12 +697,14 @@ public class Engine extends View implements EngineApi
 		if (p_visible)
         {
             m_text_editor_mode = p_input_mode;
+            m_ime_action = p_ime_action;
 			showKeyboard();
         }
 		else
         {
 			hideKeyboard();
             m_text_editor_mode = 0;
+            m_ime_action = 0;
         }
 	}
     

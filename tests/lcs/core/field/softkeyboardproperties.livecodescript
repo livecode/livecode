@@ -20,4 +20,7 @@ on TestKeyboardTypeRoundTrip
 	TestEnumPropRoundTrip "field", "keyboardType", ",default,numeric,url,number,phone,contact,email"
 end TestKeyboardTypeRoundTrip
 
+on TestReturnKeyTypeRoundTrip
+	TestEnumPropRoundTrip "field", "returnKeyType", ",default,go,google,join,next,route,search,send,yahoo,done,emergency call"
+end TestReturnKeyTypeRoundTrip
 

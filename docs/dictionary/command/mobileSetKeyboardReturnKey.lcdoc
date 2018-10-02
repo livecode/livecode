@@ -54,7 +54,10 @@ being focused, simply use the commands in an <openField> handler of the
 given field. The keyboard is only shown after this handler returns, so
 it is the ideal time to configure it.
 
+>**Note:** If a field has a non-empty <returnKeyType> that value will override
+> the the value set by <mobileSetKeyboardReturnKey>.
+
 References: mobileSetKeyboardType (command),
 keyboardDeactivated (message), keyboardActivated (message),
-openField (message)
+openField (message), returnKeyType (property)
 
