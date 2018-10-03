@@ -548,7 +548,12 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	flags &= ~(F_TAKE_FLAGS | F_VISIBLE);
 	flags |= sptr->flags & (F_TAKE_FLAGS | F_VISIBLE);
 	decorations = sptr->decorations;
-	rect = sptr->rect;
+    rect = sptr->rect;
+    
+    // sptr has not been closed so may still have a scroll while this stack has been closed
+    // so has had clearscroll called on it so scroll will be 0. applyscroll is called later.
+    rect.height += sptr->getscroll();
+    
 	minwidth = sptr->minwidth;
 	minheight = sptr->minheight;
 	maxwidth = sptr->maxwidth;
