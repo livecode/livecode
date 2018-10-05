@@ -35,8 +35,7 @@ Use the <option> <command> in a <mouseDown> <handler> to display the
 <menu> :
 
     on mouseDown
-    option stack "Help Menu"
-
+        option stack "Help Menu"
     end mouseDown
 
 

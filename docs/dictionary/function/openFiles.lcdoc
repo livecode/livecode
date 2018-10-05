@@ -7,8 +7,8 @@ Syntax: the openFiles
 Syntax: openFiles()
 
 Summary:
-<return|Returns> a list of <files> that have been opened with the <open
-file> <command>, but not yet closed with the <close file> <command>.
+<return|Returns> a list of <files> that have been opened with the 
+<open file> <command>, but not yet closed with the <close file> <command>.
 
 Introduced: 1.0
 
