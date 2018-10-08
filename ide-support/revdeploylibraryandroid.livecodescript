@@ -117,7 +117,7 @@ private function __ABIArch pABI
          return "armv6"
       case "armeabi-v7a"
          return "armv7"
-      case "arm64-v8"
+      case "arm64-v8a"
          return "arm64"
       case "x86"
       case "x86_64"
