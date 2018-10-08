@@ -1315,7 +1315,7 @@ static void *mobile_main(void *arg)
     t_options.app_code_path = nullptr;
 	if (!X_init(t_options))
 	{
-		MCLog("X_init failed");
+		MCLog("X_init failed %@", MCresult->getvalueref());
 
 		// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread to exit
 		// finish LiveCodeActivity
