@@ -1576,7 +1576,6 @@ function mapFilePath pPath
    
    local tPath
    local tBinariesFolder, tComponent, tSuffix
-   set the itemDelimiter to slash
    local tArch
    repeat for each item tItem in revSBPlatformArchitectures("Android")
       if pPath contains ("/" & __ArchABI(tItem) & "/") then
@@ -1596,6 +1595,7 @@ function mapFilePath pPath
       throw "Error: Android binaries folder" && tBinariesFolder && "could not be found"
    end if
    
+   set the itemDelimiter to slash
    put the last item of pPath into tComponent
    
    if the editionType is "community" then
