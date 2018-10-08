@@ -296,7 +296,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       
       put tBuildFolder & slash & "classes_app" into tClassesBuildFolder
-      put tBuildFolder & slash & "libs" into tLibsBuildFolder
+      put tBuildFolder & slash & "lib" into tLibsBuildFolder
       
       put tBuildFolder & slash & "res-build/res" into tResBuildFolder
       put tResBuildFolder & slash & "drawable" into tDrawableResBuildFolder
