@@ -827,16 +827,19 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
       end repeat
       
+      set the itemDelimiter to comma
       repeat for each item tArch in tArchs
          local tArchCodeResources
          filter pSettings["extension_code_resources"] \
                with ("*code/" & tArch & "-android*") into tArchCodeResources
+         
          repeat for each line tLib in tArchCodeResources
             local tSourceFile, tSourceName
             set the itemdelimiter to slash
             put item -1 of tLib into tSourceFile
             set the itemDelimiter to "."
             put item 1 to -2 of tSourceFile into tSourceName
+            set the itemDelimiter to comma
             
             if not(tSourceFile begins with "lib") then
                put "lib" before tSourceFile
@@ -845,7 +848,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
             put url ("binfile:" & tLib) into \
                   url ("binfile:" & tArchLibsBuildFolders[__ArchABI(tArch)] & slash & tSourceFile)
             
-            put return & tSourceName & ":./" & tSourceFile after pSettings["android,library"]
+            if (tSourceName & ":./" & tSourceFile) is not among the lines of pSettings["android,library"] then
+               put return & tSourceName & ":./" & tSourceFile after pSettings["android,library"]
+            end if
          end repeat
       end repeat
       
