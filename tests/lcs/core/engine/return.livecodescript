@@ -229,3 +229,21 @@ on TestReturnNested
                   the result is "ReturnValue" and \
                   it is "TheIt"
 end TestReturnNested
+
+on TestMessageMessagesResultMode
+   local tPath
+   put format("%s/../_trace.livecodescript", the filename of me) into tPath
+   start using stack tPath
+   set the traceReturn to true
+   set the traceStack to the long id of me
+   DoReturnValueInCommand "foobar"
+   local tIt, tResult
+   put it into tIt
+   put the result into tResult
+   TestDiagnostic "it" && tIt
+   TestDiagnostic "result" && tResult
+   TestAssert "result mode is not clobbered in messageHandled", tIt is "foobar"
+   set the traceStack to empty
+   stop using stack tPath
+end TestMessageMessagesResultMode
+

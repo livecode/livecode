@@ -208,6 +208,8 @@ void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCdebugresult"), MCresult);
 	MCtracereturn = False;
 	MCtraceabort = False;
+    
+    MCExecResultMode t_oldresultmode = MCresultmode;
 
 	Boolean oldcheck;
 	oldcheck = MCcheckstack;
@@ -246,6 +248,8 @@ void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 	 MCresult = oldresult;
 	 MCU_restoreprops(sp);
 	 MCexitall = exitall;
+     MCresultmode = t_oldresultmode;
+
 }
 
 void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos, uint2 id, MCStringRef p_info)
