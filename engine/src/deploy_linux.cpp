@@ -931,36 +931,41 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
+{
+    bool t_success;
+    t_success = true;
+    
+    // MW-2013-05-03: [[ Linux64 ]] Snoop the engine type from the ident field.
+    
+    MCDeployFileRef t_engine;
+    t_engine = NULL;
+    if (t_success && !MCDeployFileOpen(p_params . engine, kMCOpenFileModeRead, t_engine))
+        t_success = MCDeployThrow(kMCDeployErrorNoEngine);
+    
+    char t_ident[EI_NIDENT];
+    if (t_success && !MCDeployFileRead(t_engine, t_ident, EI_NIDENT))
+        t_success = MCDeployThrow(kMCDeployErrorLinuxNoHeader);
+    
+    if (t_success)
+    {
+        if (t_ident[EI_CLASS] == ELFCLASS32)
+            return MCDeployToELF<MCLinuxELF32Traits>(p_params, p_is_android);
+        else if (t_ident[EI_CLASS] == ELFCLASS64)
+            return MCDeployToELF<MCLinuxELF64Traits>(p_params, p_is_android);
+        
+        t_success = MCDeployThrow(kMCDeployErrorLinuxBadHeaderType);
+    }
+    
+    return t_success ? ES_NORMAL : ES_ERROR;
+}
+
 // This method attempts to build a Linux standalone using the given deployment
 // parameters.
 //
 Exec_stat MCDeployToLinux(const MCDeployParameters& p_params)
 {
-	bool t_success;
-	t_success = true;
-
-	// MW-2013-05-03: [[ Linux64 ]] Snoop the engine type from the ident field.
-	
-	MCDeployFileRef t_engine;
-	t_engine = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . engine, kMCOpenFileModeRead, t_engine))
-		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
-		
-	char t_ident[EI_NIDENT];
-	if (t_success && !MCDeployFileRead(t_engine, t_ident, EI_NIDENT))
-		t_success = MCDeployThrow(kMCDeployErrorLinuxNoHeader);
-		
-	if (t_success)
-	{
-		if (t_ident[EI_CLASS] == ELFCLASS32)
-			return MCDeployToELF<MCLinuxELF32Traits>(p_params, false);
-		else if (t_ident[EI_CLASS] == ELFCLASS64)
-			return MCDeployToELF<MCLinuxELF64Traits>(p_params, false);
-	
-		t_success = MCDeployThrow(kMCDeployErrorLinuxBadHeaderType);
-	}
-	
-	return t_success ? ES_NORMAL : ES_ERROR;
+    return MCDeployToELF(p_params, false);
 }
 
 // This method attempts to build an Android standalone using the given deployment
@@ -968,7 +973,7 @@ Exec_stat MCDeployToLinux(const MCDeployParameters& p_params)
 //
 Exec_stat MCDeployToAndroid(const MCDeployParameters& p_params)
 {
-	return MCDeployToELF<MCLinuxELF32Traits>(p_params, true);
+	return MCDeployToELF(p_params, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
