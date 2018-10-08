@@ -145,7 +145,7 @@ def exec_gyp(args):
 def process_env_options(opts):
     vars = ('OS', 'PLATFORM', 'GENERATOR_OUTPUT', 'FORMATS', 'DEPTH',
         'WIN_MSVS_VERSION', 'XCODE_TARGET_SDK', 'XCODE_HOST_SDK',
-        'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION',
+        'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION', 'ANDROID_LIB_PATH',
         'ANDROID_NDK_PLATFORM_VERSION', 'ANDROID_PLATFORM',
         'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS', 'LTO',
         'ANDROID_TOOLCHAIN', 'ANDROID_API_VERSION',
@@ -649,6 +649,13 @@ def validate_android_tools(opts):
     cflags = android_extra_cflags(target_arch)
     ldflags = android_extra_ldflags(target_arch)
 
+    if opts['ANDROID_LIB_PATH'] is None:
+        dir =guess_standalone_toolchain_dir_name(opts['TARGET_ARCH'])
+        if dir is None:
+            error('Android standalone toolchain not found for architecture {}'.format(opts['TARGET_ARCH']))
+        
+        opts['ANDROID_LIB_PATH'] = os.path.join(dir,triple,'lib')
+
     # All Android builds use Clang and make a lot of noise about unused
     # arguments (e.g. linker-specific arguments). Suppress them.
     cflags += ' -Qunused-arguments'
@@ -750,7 +757,7 @@ def configure_android(opts):
     export_opts(opts, ('ANDROID_BUILD_TOOLS', 'ANDROID_NDK',
                        'ANDROID_PLATFORM', 'ANDROID_SDK',
                        'ANDROID_NDK_VERSION', 'ANDROID_NDK_PLATFORM_VERSION',
-                       'ANDROID_API_VERSION',
+                       'ANDROID_API_VERSION', 'ANDROID_LIB_PATH',
                        'JAVA_SDK', 'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY',
                        'OBJDUMP', 'STRIP'))
     args = core_gyp_args(opts) + ['-Dtarget_arch=' + opts['TARGET_ARCH'],
