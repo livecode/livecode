@@ -49,23 +49,7 @@ MCSystemExecGetOperatingSystem (MCStringRef & r_string)
 extern "C" MC_DLLEXPORT_DEF void
 MCSystemExecGetArchitecture(MCStringRef & r_string)
 {
-    const char t_arch[] =
-#if defined(__X86__) || defined(__i386__)
-    "x86"
-#elif defined(__X86_64__)
-    "x86_64"
-#elif defined(__ARM64__)
-    "arm64"
-#elif defined(__ARM__)
-    "arm"
-#elif defined(__EMSCRIPTEN__)
-    "js"
-#else
-#  error "Unrecognized architecture"
-#endif
-    ;
-    
-    /* UNCHECKED */ MCStringCreateWithCString (t_arch, r_string);
+    /* UNCHECKED */ MCSInfoGetArchitecture(r_string);
 }
 
 /* ================================================================

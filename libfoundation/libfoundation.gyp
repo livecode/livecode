@@ -73,6 +73,7 @@
                 'include/system-library.h',
 				'include/system-random.h',
 				'include/system-stream.h',
+				'include/system-info.h',
 				
 				'src/foundation-private.h',
 				'src/foundation-unicode-private.h',
@@ -130,6 +131,7 @@
                 'src/system-library-w32.hpp',
 				'src/system-random.cpp',
 				'src/system-stream.cpp',
+				'src/system-info.cpp',
 				
 				'<(SHARED_INTERMEDIATE_DIR)/src/icudata-minimal.cpp',
 			],

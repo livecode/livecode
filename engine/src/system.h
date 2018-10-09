@@ -481,7 +481,6 @@ struct MCSystemInterface
 
 	virtual bool GetVersion(MCStringRef& r_string) = 0;
 	virtual bool GetMachine(MCStringRef& r_string) = 0;
-	virtual MCNameRef GetProcessor(void) = 0;
 	virtual bool GetAddress(MCStringRef& r_address) = 0;
 
 	virtual uint32_t GetProcessId(void) = 0;

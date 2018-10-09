@@ -194,12 +194,6 @@ MCEmscriptenSystem::GetMachine(MCStringRef & r_string)
 	return MCStringCopy(kMCEmptyString, r_string);
 }
 
-MCNameRef
-MCEmscriptenSystem::GetProcessor()
-{
-	return kMCEmptyName;
-}
-
 bool
 MCEmscriptenSystem::GetAddress(MCStringRef & r_address)
 {

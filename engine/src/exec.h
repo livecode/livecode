@@ -2975,7 +2975,7 @@ void MCEngineEvalBuildNumber(MCExecContext& ctxt, integer_t& r_build_number);
 void MCEngineEvalPlatform(MCExecContext& ctxt, MCNameRef& r_name);
 void MCEngineEvalEnvironment(MCExecContext& ctxt, MCNameRef& r_name);
 void MCEngineEvalMachine(MCExecContext& ctxt, MCStringRef& r_string);
-void MCEngineEvalProcessor(MCExecContext& ctxt, MCNameRef& r_name);
+void MCEngineEvalProcessor(MCExecContext& ctxt, MCStringRef& r_string);
 void MCEngineEvalSystemVersion(MCExecContext& ctxt, MCStringRef& r_string);
 
 void MCEngineEvalCommandNames(MCExecContext& ctxt, MCStringRef& r_string);

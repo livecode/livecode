@@ -50,15 +50,6 @@ bool MCAndroidSystem::GetMachine(MCStringRef& r_string)
 	return true;
 }
 
-MCNameRef MCAndroidSystem::GetProcessor(void)
-{
-#ifdef __i386__
-    return MCN_i386;
-#else
-    return MCN_arm;
-#endif
-}
-
 bool MCAndroidSystem::GetAddress(MCStringRef& r_address)
 {
 	extern MCStringRef MCcmd;

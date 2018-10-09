@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015-2016 LiveCode Ltd.
+Copyright (C) 2018 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -15,28 +15,12 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#ifndef __MCS_SYSTEM_H__
-#define __MCS_SYSTEM_H__
-#define __MCS_SYSTEM_H_INSIDE__
-
-#include <foundation.h>
-
-#ifdef __cplusplus
-#   include <foundation-auto.h>
+#if !defined(__MCS_SYSTEM_H_INSIDE__)
+#	error "Only <foundation-system.h> can be included directly"
 #endif
 
-extern "C" {
+/* ================================================================
+ * System information
+ * ================================================================ */
 
-#include <system-commandline.h>
-#include <system-file.h>
-#include <system-init.h>
-#include <system-library.h>
-#include <system-random.h>
-#include <system-stream.h>
-#include <system-error.h>
-#include <system-info.h>
-
-}
-
-#undef __MCS_SYSTEM_H_INSIDE__
-#endif /* !__MC_SYSTEM_H__ */
+MC_DLLEXPORT bool MCSInfoGetArchitecture(MCStringRef & r_string);

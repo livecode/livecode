@@ -157,9 +157,9 @@ void MCEngineEvalMachine(MCExecContext& ctxt, MCStringRef& r_string)
 	ctxt.Throw();
 }
 
-void MCEngineEvalProcessor(MCExecContext& ctxt, MCNameRef& r_name)
+void MCEngineEvalProcessor(MCExecContext& ctxt, MCStringRef& r_string)
 {
-    r_name = MCValueRetain(MCS_getprocessor());
+    r_string = MCValueRetain(MCS_getprocessor());
 }
 
 void MCEngineEvalSystemVersion(MCExecContext& ctxt, MCStringRef& r_string)
