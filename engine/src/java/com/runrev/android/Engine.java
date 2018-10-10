@@ -246,10 +246,10 @@ public class Engine extends View implements EngineApi
         });
     }
 	
-	public void nativeNotify(int p_callback, int p_context)
-	{
-		final int t_callback = p_callback;
-		final int t_context = p_context;
+	public void nativeNotify(long p_callback, long p_context)
+    {
+        final long t_callback = p_callback;
+		final long t_context = p_context;
 		post(new Runnable() {
 			public void run()
 			{
@@ -3800,7 +3800,7 @@ public class Engine extends View implements EngineApi
 	public static native void doResume();
 	public static native void doLowMemory();
 
-	public static native void doNativeNotify(int callback, int context);
+	public static native void doNativeNotify(long callback, long context);
 			 
 ////////////////////////////////////////////////////////////////////////////////
 
