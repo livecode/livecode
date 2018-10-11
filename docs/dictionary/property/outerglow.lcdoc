@@ -32,58 +32,34 @@ properties is by using the Graphic Effects card of the property
 inspector which has full control over each parameter. To control the
 effect by script use the following properties:
 
-outerglow["color"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The color of the glow, in the format
+outerglow["color"] - The color of the glow, in the format 
 red,green,blue where each value is between 0 and 255.
 
-outerglow["blendMode"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How the glow is blended with objects
+outerglow["blendMode"] - How the glow is blended with objects 
 behind it. This is one of the following values:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "normal" :
-the glow is laid over the background.
+* "normal": the glow is laid over the background.
+* "multiply": this results in a darkening effect
+* "colorDodge": this results in a lightening effect
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "multiply"
-: this results in a darkening effect
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-
-"colorDodge" : this results in a lightening effect
-
-outerglow["opacity"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How opaque the glow is. The value is
+outerglow["opacity"] - How opaque the glow is. The value is
 between 0 (fully transparent) and 255 (fully opaque).
 
-outerglow["filter"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Which algorithm is used to render the
+outerglow["filter"] - Which algorithm is used to render the
 glow. This is one of the following options:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"gaussian" :
-highest quality (and slowest)
+* "gaussian": highest quality (and slowest)
+* "box3pass": high quality.
+* "box2pass": medium quality
+* "box1pass": low quality (and fastest)
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"box3pass" :
-high quality.
+>*Note:* When using the "colorDodge" blend mode, it
+> is recommended that you set the filter mode to "gaussian".
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"box2pass" :
-medium quality
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"box1pass" :
-low quality (and fastest)
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;When using the "colorDodge" blend mode, it
-is recommended that you set the filter mode to "gaussian".
-
-outerglow["size"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The radius of the glow, i.e. how far from
+outerglow["size"] - The radius of the glow, i.e. how far from
 the edge of the object it extends to. This is between 0 and 255.
 
-outerglow["spread"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This controls where the effect begins to
+outerglow["spread"] - This controls where the effect begins to
 blend. This is between 0 and 255.
 
 References: innerShadow (property), innerGlow (property),
