@@ -3014,16 +3014,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
 		return MCStringCopy(MCNameGetString(MCN_unknown), r_string); //in case model name can't be read
     }
-	virtual MCNameRef GetProcessor(void)
-    {
-//get machine processor
-#ifdef __64_BIT__
-        return MCN_x86_64;
-#else
-        return MCN_x86;
-#endif
-    }
-	virtual bool GetAddress(MCStringRef& r_address)
+
+    virtual bool GetAddress(MCStringRef& r_address)
     {
         static struct utsname u;
         uname(&u);

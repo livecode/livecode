@@ -765,19 +765,6 @@ public:
         return MCStringCreateWithNativeChars((const char_t *)u.machine, MCCStringLength(u.machine), r_string);
     }
 
-    virtual MCNameRef GetProcessor(void)
-    {
-#if   defined(__X86_64__)
-        return MCN_x86_64;
-#elif defined(__ARM__)
-        return MCN_arm;
-#elif defined(__i386__)
-        return MCN_x86;
-#else
-#  error "One of __X86_64__, __ARM__ or __i386__ must be defined"
-#endif
-    }
-
     virtual bool GetAddress(MCStringRef& r_address)
     {
         struct utsname u;

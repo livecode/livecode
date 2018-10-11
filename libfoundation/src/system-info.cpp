@@ -1,5 +1,5 @@
 /*                                                                     -*-c++-*-
-Copyright (C) 2015-2016 LiveCode Ltd.
+Copyright (C) 2018 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -15,28 +15,26 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#ifndef __MCS_SYSTEM_H__
-#define __MCS_SYSTEM_H__
-#define __MCS_SYSTEM_H_INSIDE__
+#include "system-private.h"
 
-#include <foundation.h>
-
-#ifdef __cplusplus
-#   include <foundation-auto.h>
+MC_DLLEXPORT_DEF bool
+MCSInfoGetArchitecture(MCStringRef & r_string)
+{
+    const char t_arch[] =
+#if defined(__X86__) || defined(__i386__)
+    "x86"
+#elif defined(__X86_64__)
+    "x86_64"
+#elif defined(__ARM64__)
+    "arm64"
+#elif defined(__ARM__)
+    "arm"
+#elif defined(__EMSCRIPTEN__)
+    "js"
+#else
+#  error "Unrecognized architecture"
 #endif
-
-extern "C" {
-
-#include <system-commandline.h>
-#include <system-file.h>
-#include <system-init.h>
-#include <system-library.h>
-#include <system-random.h>
-#include <system-stream.h>
-#include <system-error.h>
-#include <system-info.h>
-
+    ;
+    
+    return MCStringCreateWithCString (t_arch, r_string);
 }
-
-#undef __MCS_SYSTEM_H_INSIDE__
-#endif /* !__MC_SYSTEM_H__ */

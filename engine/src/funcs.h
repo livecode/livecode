@@ -1241,7 +1241,7 @@ public:
     virtual ~MCPopulationVariance(){}
 };
 
-class MCProcessor : public MCConstantFunctionCtxt<MCNameRef, MCEngineEvalProcessor>
+class MCProcessor : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalProcessor>
 {
 public:
 };

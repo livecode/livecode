@@ -1315,7 +1315,7 @@ static void *mobile_main(void *arg)
     t_options.app_code_path = nullptr;
 	if (!X_init(t_options))
 	{
-		MCLog("X_init failed");
+		MCLog("X_init failed %@", MCresult->getvalueref());
 
 		// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread to exit
 		// finish LiveCodeActivity
@@ -2947,8 +2947,8 @@ private:
 	int m_options;
 };
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doNativeNotify(JNIEnv *env, jobject object, int p_callback, int p_context) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doNativeNotify(JNIEnv *env, jobject object, int p_callback, int p_context)
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doNativeNotify(JNIEnv *env, jobject object, jlong p_callback, jlong p_context) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doNativeNotify(JNIEnv *env, jobject object, jlong p_callback, jlong p_context)
 {
 	co_yield_to_engine_and_call((co_yield_callback_t)p_callback, (void *)p_context);
 }
@@ -2993,8 +2993,8 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		
 		MCRunOnMainThreadHelper *t_helper;
 		t_helper = new (nothrow) MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options);
-		MCAndroidEngineCall("nativeNotify", "vii", nil, MCRunOnMainThreadHelper::DispatchThunk, t_helper);
-		return true;
+		MCAndroidEngineCall("nativeNotify", "vjj", nil, reinterpret_cast<jlong>(MCRunOnMainThreadHelper::DispatchThunk), reinterpret_cast<jlong>(t_helper));
+        return true;
 	}
 	
 	// Unsafe and immediate -> queue and perform
@@ -3011,8 +3011,8 @@ bool android_run_on_main_thread(void *p_callback, void *p_callback_state, int p_
 		
 		MCRunOnMainThreadHelper *t_helper;
 		t_helper = new (nothrow) MCRunOnMainThreadHelper(p_callback, p_callback_state, p_options & ~kMCExternalRunOnMainThreadPost);
-		MCAndroidEngineCall("nativeNotify", "vii", nil, MCRunOnMainThreadHelper::DispatchThunk, t_helper);
-		return true;
+		MCAndroidEngineCall("nativeNotify", "vjj", nil, reinterpret_cast<jlong>(MCRunOnMainThreadHelper::DispatchThunk), reinterpret_cast<jlong>(t_helper));
+        return true;
 	}
 	
 	// Safe and immediate -> post to front of event queue

@@ -39,6 +39,7 @@
 #include "system.h"
 
 #include "foundation.h"
+#include "foundation-system.h"
 
 #if defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 #include "mblcontrol.h"
@@ -53,7 +54,6 @@
 
 extern bool MCSystemLaunchUrl(MCStringRef p_document);
 extern char *MCSystemGetVersion(void);
-extern MCNameRef MCSystemGetProcessor(void);
 extern char *MCSystemGetAddress(void);
 extern uint32_t MCSystemPerformTextConversion(const char *string, uint32_t string_length, char *buffer, uint32_t buffer_length, uint1 from_charset, uint1 to_charset);
 
@@ -555,9 +555,15 @@ bool MCS_getsystemversion(MCStringRef& r_string)
 	return MCsystem->GetVersion(r_string);
 }
 
-MCNameRef MCS_getprocessor(void)
+MCStringRef MCS_getprocessor(void)
 {
-	return MCsystem -> GetProcessor();
+    MCAutoStringRef t_arch;
+    if (!MCSInfoGetArchitecture(&t_arch))
+    {
+        return kMCEmptyString;
+    }
+    
+    return t_arch.Take();
 }
 
 bool MCS_getmachine(MCStringRef& r_string)

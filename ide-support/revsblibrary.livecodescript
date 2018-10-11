@@ -2528,18 +2528,29 @@ command revSBUpdateExtensionCodeInclusions pExtension, pPlatform, pArchs, pSDK, 
    if not revEnvironmentIsInstalled() and \
          tExtCodeFolder begins with revEnvironmentExtensionsPath() then
       -- include builds for other platforms
-      local tNonNativeExtCodeFolder
-      put revEnvironmentNonNativeBinariesPath(pPlatform, pSDK) & \
-            "/packaged_extensions/" & pExtension & "/code" into tNonNativeExtCodeFolder
-      if tNonNativeExtCodeFolder is not tExtCodeFolder and \
-            there is a folder tNonNativeExtCodeFolder then
-         put folders(tNonNativeExtCodeFolder) into tCodeFolders
-         filter tCodeFolders without ".*"
-         
-         repeat for each line tCodeFolder in tCodeFolders
-            __UpdateSettingsFromCodeFolder tNonNativeExtCodeFolder, tCodeFolder, pPlatform, pArchs, pSDK, xSettings
+      local tPlatforms
+      if pPlatform is "android" then
+         repeat for each item tItem in pArchs
+            appendToStringList pPlatform && tItem, tPlatforms
          end repeat
+      else
+         put pPlatform into tPlatforms
       end if
+      
+      repeat for each line tPlatform in tPlatforms
+         local tNonNativeExtCodeFolder
+         put revEnvironmentNonNativeBinariesPath(tPlatform, pSDK) & \
+               "/packaged_extensions/" & pExtension & "/code" into tNonNativeExtCodeFolder
+         if tNonNativeExtCodeFolder is not tExtCodeFolder and \
+               there is a folder tNonNativeExtCodeFolder then
+            put folders(tNonNativeExtCodeFolder) into tCodeFolders
+            filter tCodeFolders without ".*"
+            
+            repeat for each line tCodeFolder in tCodeFolders
+               __UpdateSettingsFromCodeFolder tNonNativeExtCodeFolder, tCodeFolder, pPlatform, pArchs, pSDK, xSettings
+            end repeat
+         end if
+      end repeat
    end if
 end revSBUpdateExtensionCodeInclusions
 

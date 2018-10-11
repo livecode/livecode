@@ -36,7 +36,6 @@ struct MCAndroidSystem: public MCSystemInterface
     
 	virtual bool GetVersion(MCStringRef& r_string);
 	virtual bool GetMachine(MCStringRef& r_string);
-	virtual MCNameRef GetProcessor(void);
 	virtual bool GetAddress(MCStringRef& r_address);
     
 	virtual uint32_t GetProcessId(void);

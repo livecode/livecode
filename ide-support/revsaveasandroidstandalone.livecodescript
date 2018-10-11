@@ -296,7 +296,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       
       put tBuildFolder & slash & "classes_app" into tClassesBuildFolder
-      put tBuildFolder & slash & "libs" into tLibsBuildFolder
+      put tBuildFolder & slash & "lib" into tLibsBuildFolder
       
       put tBuildFolder & slash & "res-build/res" into tResBuildFolder
       put tResBuildFolder & slash & "drawable" into tDrawableResBuildFolder
@@ -827,16 +827,19 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
       end repeat
       
+      set the itemDelimiter to comma
       repeat for each item tArch in tArchs
          local tArchCodeResources
          filter pSettings["extension_code_resources"] \
                with ("*code/" & tArch & "-android*") into tArchCodeResources
+         
          repeat for each line tLib in tArchCodeResources
             local tSourceFile, tSourceName
             set the itemdelimiter to slash
             put item -1 of tLib into tSourceFile
             set the itemDelimiter to "."
             put item 1 to -2 of tSourceFile into tSourceName
+            set the itemDelimiter to comma
             
             if not(tSourceFile begins with "lib") then
                put "lib" before tSourceFile
@@ -845,7 +848,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
             put url ("binfile:" & tLib) into \
                   url ("binfile:" & tArchLibsBuildFolders[__ArchABI(tArch)] & slash & tSourceFile)
             
-            put return & tSourceName & ":./" & tSourceFile after pSettings["android,library"]
+            if (tSourceName & ":./" & tSourceFile) is not among the lines of pSettings["android,library"] then
+               put return & tSourceName & ":./" & tSourceFile after pSettings["android,library"]
+            end if
          end repeat
       end repeat
       
@@ -937,7 +942,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          repeat for each line tEntry in tExternals
             -- Only copy across an external from the Runtime folder if we haven't
             -- already copied from a lcext.
-            if there is a file (tArchLibsBuildFolders[tArch] & slash & tArch & slash & "lib" & tEntry & ".so") then
+            if there is a file (tArchLibsBuildFolders[tArch] & slash & "lib" & tEntry & ".so") then
                next repeat
             end if
             put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tArch & slash & tEntry)) \
@@ -1576,7 +1581,6 @@ function mapFilePath pPath
    
    local tPath
    local tBinariesFolder, tComponent, tSuffix
-   set the itemDelimiter to slash
    local tArch
    repeat for each item tItem in revSBPlatformArchitectures("Android")
       if pPath contains ("/" & __ArchABI(tItem) & "/") then
@@ -1596,6 +1600,7 @@ function mapFilePath pPath
       throw "Error: Android binaries folder" && tBinariesFolder && "could not be found"
    end if
    
+   set the itemDelimiter to slash
    put the last item of pPath into tComponent
    
    if the editionType is "community" then

@@ -38,6 +38,7 @@
 				[
 					'<(android_lib_path)',
 					'-lstdc++',
+					'-landroid',
 				],
 
 			},
