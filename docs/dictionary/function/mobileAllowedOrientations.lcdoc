@@ -39,6 +39,10 @@ of the orientations the application supports.
 > landscape left and portrait upside-down are only supported on Android
 > 2.3 and later.
 
+>*Note:* The iPhone X model doesn’t currently support upside-down portrait 
+> mode. Other Apple iPad and iPhone devices continue to support both
+> standard and upside-down portait and landscape orientations.
+
 References: mobileSetAllowedOrientations (command),
 mobileLockOrientation (command), mobileUnlockOrientation (command),
 mobileDeviceOrientation (function), mobileOrientation (function),
