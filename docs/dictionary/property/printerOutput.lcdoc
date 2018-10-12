@@ -27,7 +27,7 @@ end if
 set the printerOutput to "device"
 
 Value (enum):
-The <printerOutput> can be one of the following values.The default value
+The <printerOutput> can be one of the following values. The default value
 depends on the printer driver
 
   	- Windows Vista uses XPS format.
@@ -53,8 +53,8 @@ of a print job.
 Setting the <printerOutput> to an invalid value will result in a script
 execution error.
 
-To have an effect, this property must be set before calling <open
-printing>. 
+To have an effect, this property must be set before calling 
+<open printing>. 
 
 References: open printing (command), answer printer (command)
 

@@ -5,9 +5,9 @@ Type: keyword
 Syntax: printer:
 
 Summary:
-Used with the <open file>, <read from file>, <write to file>, and <close
-file> <command|commands> to specify the printer <port> on <Mac OS|Mac OS
-systems>. 
+Used with the <open file>, <read from file>, <write to file>, and 
+<close file> <command|commands> to specify the printer <port> on 
+<Mac OS|Mac OS systems>. 
 
 Introduced: 1.0
 

@@ -34,8 +34,8 @@ monochrome.
 If the <printColors> is false then LiveCode will convert all colors in
 the data to be printed to greyscale before sending to the printer.
 
-To have an effect, this property must be set before calling <open
-printing>. 
+To have an effect, this property must be set before calling 
+<open printing>. 
 
 References: open printing (command), printerFeatures (property),
 printFontTable (property), printCommand (property)

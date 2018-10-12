@@ -31,13 +31,13 @@ substitutions for better results.
 Each line of the <printFontTable> corresponds to one screen <font> and
 contains the following <items>, separated by commas:
 
-        * The name of an X11 screen font
-        * The name of the PostScript font to use in its place for
-          printing 
-        * The name of the normal style for that font
-        * The name of the bold style for that font
-        * The name of the italic style for that font
-        * The name of the bold italic style for that font
+* The name of an X11 screen font
+* The name of the PostScript font to use in its place for
+printing 
+* The name of the normal style for that font
+* The name of the bold style for that font
+* The name of the italic style for that font
+* The name of the bold italic style for that font
 
 
 By default, the <printFontTable> <property> uses a mapping between the

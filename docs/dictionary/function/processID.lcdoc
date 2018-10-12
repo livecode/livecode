@@ -7,8 +7,8 @@ Syntax: the processID
 Syntax: processID()
 
 Summary:
-<return|Returns> the <process> ID of LiveCode (or a <standalone
-application>). 
+<return|Returns> the <process> ID of LiveCode (or a 
+<standalone application>). 
 
 Introduced: 1.0
 
@@ -34,8 +34,8 @@ On Unix systems, the <processID> uniquely identifies the <process>
 belonging to the running <application>. Other <process|processes> can
 use the <processID> to address LiveCode.
 
-The <processID> function does not <return> a meaningful value on <Mac
-OS> or <Windows|Windows systems>.
+The <processID> function does not <return> a meaningful value on 
+<Mac OS> or <Windows|Windows systems>.
 
 References: kill (command), return (constant), application (glossary),
 Windows (glossary), standalone application (glossary), return (glossary),
