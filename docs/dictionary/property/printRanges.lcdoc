@@ -47,8 +47,8 @@ printing loop.
 >*Note:* LiveCode automatically handles coalescing overlapping ranges,
 > e.g. 1-10,5-25,23 will result in the range being 1-25.
 
-To have an effect, this property must be set before calling <open
-printing>. 
+To have an effect, this property must be set before calling 
+<open printing>. 
 
 References: open printing (command), answer printer (command),
 printPageNumber (property)

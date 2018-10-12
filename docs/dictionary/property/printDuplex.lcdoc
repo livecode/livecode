@@ -37,8 +37,8 @@ effect.
 Attempting to set the <printDuplex> to an invalid value results in a
 script execution error.
 
-To have an effect, this property must be set before calling <open
-printing>. 
+To have an effect, this property must be set before calling 
+<open printing>. 
 
 References: print (command), open printing (command),
 printCollate (property), printerFeatures (property)
