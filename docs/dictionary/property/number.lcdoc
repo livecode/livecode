@@ -65,7 +65,7 @@ References: move (command), length (function), object (glossary),
 property (glossary), substack (glossary), main stack (glossary),
 file (keyword), ninth (keyword), seconds (keyword), card (keyword),
 control (keyword), integer (keyword), home (keyword),
-nameChanged (message), control (object), stack (object), card (object),
+nameChanged (message), stack (object), card (object),
 substacks (property), layer (property)
 
 Tags: ui
