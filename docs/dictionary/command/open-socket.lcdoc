@@ -9,7 +9,7 @@ Syntax: open secure socket [from [<localHostName>][:<localPort>]] [to] <socketID
 Syntax: open secure socket [from [<localHostName>][:<localPort>]] [to] <socketID> [with message <callbackMessage>] [with verification [for host <verificationHostName>]] [using certificate <certificate> and key <key>]
 
 Summary:
-Establishes a <TCP> communications <socket> between your system and
+Establishes either a <TCP> or <UDP> communications <socket> between your system and
 another system.
 
 Associations: ssl & encryption
@@ -101,7 +101,7 @@ data is buffered and is sent to the host as soon as the connection is
 made. 
 
 Use the open datagram socket form if you want to send a connectionless
-UDP datagram instead of opening a socket.
+<UDP> <datagram> instead of opening a socket.
 
 If you specify a callbackMessage, the message is sent to the object
 whose script contains the open socket command, as soon as the connection
@@ -112,7 +112,7 @@ established. (To pause the handler that contains the open socket command
 until the callbackMessage is received, use the wait for messages form of
 the wait command.)
 
-UDP/datagram sockets are not supported by SSL.  When connecting to a
+<UDP>/<datagram> sockets are not supported by SSL.  When connecting to a
 remote peer, the client verifies the servers certificate during the
 handshake process and verifies it against a list of certificates. You
 can specify a list of root CA to verify against using the
@@ -188,8 +188,8 @@ Changes:
 (9.0) Added the ability to specify the local host and port.
 
 References: accept (command), post (command), wait (command),
-TCP (glossary), command (glossary), socket (glossary),
+TCP (glossary), UDP (glossary), command (glossary), socket (glossary),
 Standalone Application Settings (glossary), command (glossary),
 LiveCode custom library (glossary), SSL & Encryption library (library),
-socketTimeout (message), defaultNetworkInterface (property)
+socketTimeout (message), defaultNetworkInterface (property), datagram (glossary)
 
