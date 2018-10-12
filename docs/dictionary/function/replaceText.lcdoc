@@ -25,6 +25,10 @@ Example:
 put replaceText("colour or color","colou?r","culler")
 -- returns "culler or culler"
 
+Example:
+-- escape RegEx metacharacter using backslash
+put replaceText ( "ABC|DEV" , "\|" , CR )
+
 Parameters:
 stringToChange (string): A container reference or literal value.
 
@@ -56,11 +60,12 @@ need to make a case-insensitive comparison, use "(?i)" at the start of
 the <matchExpression> to make the match case-insensitive.)
 
 >*Note:* A number of characters in regular expressions have special
-> meanings and need to be escaped with back slashes For example period
-> (".") matches any character, so in order to replace period characters
-> with a <regular expression> use "\." . For more information on regular
-> expressions see the Perl documentation at 
-> http://perldoc.perl.org/perlre.html .
+> meanings and these need to be 'escaped' using backslashes ("\"). For example
+> period (".") matches any character, so in order to replace period characters
+> using a <regular expression> use "\.", to replace vertical bar characters ("|")
+> use "\|" and so on.
+> For more information on <regular expressions> see the Perl documentation  
+> at http://perldoc.perl.org/perlre.html .
 
 References: replace (command), filter (command), command (glossary),
 regular expression (glossary), property (glossary), string (keyword),
