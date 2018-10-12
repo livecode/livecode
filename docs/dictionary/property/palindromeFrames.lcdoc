@@ -24,8 +24,8 @@ By default, the <palindromeFrames> <property> of newly created
 <image(object)|images> is set to false.
 
 Description:
-Use the <palindromeFrames> <property> to change the way an <animated
-GIF> <image> repeats itself.
+Use the <palindromeFrames> <property> to change the way an 
+<animated GIF> <image> repeats itself.
 
 An animated GIF image can be set to loop over and over, instead of
 playing the animation once and then stopping. If the <palindromeFrames>

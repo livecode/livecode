@@ -39,8 +39,7 @@ handler or message handler. For example, the following handler assigns
 three parameters:
 
     on myHandler thisParam,thatParam,theOtherParam
-    answer thisParam & return & thatParam & return & theOtherParam
-
+        answer thisParam & return & thatParam & return & theOtherParam
     end myHandler
 
 
@@ -55,9 +54,8 @@ You can obtain the fourth parameter for use in the handler with the
 <params> <function> :
 
     on myHandler thisParam,thatParam,theOtherParam
-    put item 4 of the params into yetAnotherParam
-    answer yetAnotherParam
-
+        put item 4 of the params into yetAnotherParam
+        answer yetAnotherParam
     end myHandler
 
 
@@ -69,8 +67,7 @@ parameters are enclosed in parentheses. For example, the following
 function handler has three parameters:
 
     function myFunction thisParam,thatParam,theOtherParam
-    return thisParam & return & thatParam & return & theOtherParam
-
+        return thisParam & return & thatParam & return & theOtherParam
     end myFunction
 
 
@@ -78,7 +75,7 @@ If you call "myFunction" with the following statement:
 
     get myFunction("red","green","blue")
 
-the value returned is "myFunction("red","green","blue")".
+the value returned by the <params> function is "myFunction("red","green","blue")".
 
 LiveCode evaluates the parameters before passing them. So if you call
 myHandler with the following statement: myHandler 1+1,"A","Hello" &&
