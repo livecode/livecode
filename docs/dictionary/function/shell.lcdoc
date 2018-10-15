@@ -40,7 +40,7 @@ was successful but did not return anything, the <shell> <function>
 returns empty. 
 
 The result:
-The shell command's exit code.
+The shell function's exit code. If the exit code is 0 then empty is returned.
 
 Description:
 Use the <shell> <function> to <execute> a <command line>.
