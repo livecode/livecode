@@ -95,4 +95,4 @@ See the separate documentation for:
 - [C++ coding style](docs/development/C++-style.md) and
   [use of C++ language features](docs/development/C++-features.md)
 
-- [LiveCode Builder coding style](docs/guides/LiveCode Builder Style Guide.md)
+- [LiveCode Builder coding style](docs/guides/LiveCode%20Builder%20Style%20Guide.md)
