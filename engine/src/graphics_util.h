@@ -223,6 +223,11 @@ static inline MCPoint MCPointMake(int16_t x, int16_t y)
 	return t_point;
 }
 
+static inline bool MCPointIsEqual(const MCPoint &a, const MCPoint &b)
+{
+	return a.x == b.x && a.y == b.y;
+}
+
 static inline MCPoint MCGPointToMCPoint(const MCGPoint &p_point)
 {
 	return MCPointMake(int16_t(MCClamp(p_point.x, INT16_MIN, INT16_MAX)),
@@ -235,6 +240,11 @@ inline MCGPoint MCPointToMCGPoint(MCPoint p_point, MCGFloat p_adjustment = 0.0f)
 	t_point . x = (MCGFloat) p_point . x + p_adjustment;
 	t_point . y = (MCGFloat) p_point . y + p_adjustment;
 	return t_point;
+}
+
+static inline MCPoint MCPointOffset(const MCPoint &p_point, int16_t p_x, int16_t p_y)
+{
+	return MCPointMake(MCClamp(p_point.x + p_x, INT16_MIN, INT16_MAX), MCClamp(p_point.y + p_y, INT16_MIN, INT16_MAX));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

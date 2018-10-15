@@ -34,6 +34,8 @@
 			'target_name': 'kernel-server',
 			'type': 'static_library',
 			
+			'toolsets': ['host', 'target'],
+
 			'includes':
 			[
 				'kernel-mode-template.gypi',
@@ -47,7 +49,10 @@
 			
 			'dependencies':
 			[
-				'../libexternal/libexternal.gyp:libExternal',
+				'../libfoundation/libfoundation.gyp:libFoundation',
+				'../libgraphics/libgraphics.gyp:libGraphics',
+				'../libscript/libscript.gyp:libScript',
+				'../libscript/libscript.gyp:stdscript',
 				
 				'../prebuilt/libcurl.gyp:libcurl',
 				'../prebuilt/libopenssl.gyp:libopenssl',
@@ -143,6 +148,9 @@
 							[
 								'-ldl',
 								'-lpthread',
+								'-Wl,-Bstatic',
+								'-lstdc++',
+								'-Wl,-Bdynamic',
 							],
 						},
 					],

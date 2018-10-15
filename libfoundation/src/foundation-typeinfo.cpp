@@ -20,6 +20,7 @@
 #include <ffi.h>
 
 #include "foundation-private.h"
+#include "foundation-hash.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -217,7 +218,13 @@ bool MCTypeInfoConforms(MCTypeInfoRef source, MCTypeInfoRef target)
     // have unnamed typeinfos which we need to compare with potentially named
     // handler type typeinfos).
     MCAssert(MCTypeInfoIsNamed(source) || MCTypeInfoIsHandler(source) || MCTypeInfoIsOptional(source));
-    
+	
+	// If the two types are the same, they conform.
+	if (source == target)
+	{
+		return true;
+	}
+	
     // Resolve the source type.
     MCResolvedTypeInfo t_resolved_source;
     if (!MCTypeInfoResolve(source, t_resolved_source))
@@ -257,6 +264,14 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
     // the source type, or one of the source's supertypes.
     if (MCTypeInfoIsForeign(source . type))
     {
+        // If both sides are foreign, do they have a bridge type in common?
+        if (MCTypeInfoIsForeign(target.type))
+        {
+            if (source.type->foreign.descriptor.bridgetype != kMCNullTypeInfo &&
+                source.type->foreign.descriptor.bridgetype == target.type->foreign.descriptor.bridgetype)
+                return true;
+        }
+        
         // Check to see if the target is the source's bridge type.
         if (source . type -> foreign . descriptor . bridgetype != kMCNullTypeInfo &&
             target . named_type == source . type -> foreign . descriptor . bridgetype)
@@ -281,15 +296,9 @@ bool MCResolvedTypeInfoConforms(const MCResolvedTypeInfo& source, const MCResolv
         return false;
     }
     
-    // If the source is of record type, then the target must be the same type or
-    // one of the source's super types.
+    // If the source is of record type, then the target must be the same type.
     if (MCTypeInfoIsRecord(source . type))
     {
-        // Now check to see if the target is one of the source's supertypes.
-        for(MCTypeInfoRef t_supertype = source . type; t_supertype != kMCNullTypeInfo; t_supertype = __MCTypeInfoResolve(t_supertype) -> record . base)
-            if (target . named_type == t_supertype)
-                return true;
-        
         return false;
     }
     
@@ -543,13 +552,6 @@ static ffi_type *__map_primitive_type(MCForeignPrimitiveType p_type)
         case kMCForeignPrimitiveTypeVoid:
             return &ffi_type_void;
         case kMCForeignPrimitiveTypeBool:
-            if (sizeof(bool) == 1)
-                return &ffi_type_uint8;
-            if (sizeof(bool) == 2)
-                return &ffi_type_uint16;
-            if (sizeof(bool) == 4)
-                return &ffi_type_uint32;
-            return &ffi_type_uint64;
         case kMCForeignPrimitiveTypeUInt8:
             return &ffi_type_uint8;
         case kMCForeignPrimitiveTypeSInt8:
@@ -637,6 +639,9 @@ bool MCForeignTypeInfoCreate(const MCForeignTypeDescriptor *p_descriptor, MCType
     self -> foreign . descriptor . hash = p_descriptor -> hash;
     self -> foreign . descriptor . doimport = p_descriptor -> doimport;
     self -> foreign . descriptor . doexport = p_descriptor -> doexport;
+    self -> foreign . descriptor . describe = p_descriptor -> describe;
+    self -> foreign . descriptor . promotedtype = MCValueRetain(p_descriptor->promotedtype);
+    self -> foreign . descriptor . promote = p_descriptor -> promote;
     
     if (!__MCForeignTypeInfoComputeLayoutType(self))
     {
@@ -677,18 +682,10 @@ void *MCForeignTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self)
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
-bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef p_base, MCTypeInfoRef& r_typeinfo)
+bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_field_count, MCTypeInfoRef& r_typeinfo)
 	
 {
 	MCAssert(nil != p_fields || p_field_count == 0);
-
-	MCTypeInfoRef t_resolved_base;
-	t_resolved_base = kMCNullTypeInfo;
-	if (p_base != kMCNullTypeInfo)
-	{
-		t_resolved_base = __MCTypeInfoResolve(p_base);
-		MCAssert(MCTypeInfoIsRecord (t_resolved_base));
-	}
 
 	/* If the p_field_count < 0 then the p_fields are expected to be
 	 * terminated by a custodian with name = nil. */
@@ -716,13 +713,12 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
 		 * in debug builds and will only happen once per type. */
 		for (index_t j = 0; j < i; ++j)
 		{
-			MCAssert(!MCNameIsEqualTo(p_fields[i] . name, p_fields[j] . name));
+			MCAssert(!MCNameIsEqualToCaseless(p_fields[i] . name, p_fields[j] . name));
 		}
         self -> record . fields[i] . name = MCValueRetain(p_fields[i] . name);
         self -> record . fields[i] . type = MCValueRetain(p_fields[i] . type);
     }
     self -> record . field_count = p_field_count;
-    self -> record . base = MCValueRetain(t_resolved_base);
     
     if (MCValueInterAndRelease(self, r_typeinfo))
         return true;
@@ -730,15 +726,6 @@ bool MCRecordTypeInfoCreate(const MCRecordTypeFieldInfo *p_fields, index_t p_fie
     MCValueRelease(self);
     
     return false;
-}
-
-MC_DLLEXPORT_DEF
-MCTypeInfoRef MCRecordTypeInfoGetBaseType(MCTypeInfoRef unresolved_self)
-{
-	MCTypeInfoRef self;
-	self = __MCTypeInfoResolve(unresolved_self);
-	MCAssert(MCTypeInfoIsRecord (self));
-    return self -> record . base;
 }
 
 MC_DLLEXPORT_DEF
@@ -754,15 +741,7 @@ uindex_t MCRecordTypeInfoGetFieldCount(MCTypeInfoRef unresolved_self)
 uindex_t
 __MCRecordTypeInfoGetFieldCount(MCTypeInfoRef self)
 {
-	/* Sum field counts of all base record types */
-	uindex_t t_field_count;
-	t_field_count = 0;
-	while (self != kMCNullTypeInfo) {
-		t_field_count += self -> record . field_count;
-		self = MCRecordTypeInfoGetBaseType (self);
-	}
-    
-    return t_field_count;
+    return self->record.field_count;
 }
 
 MC_DLLEXPORT_DEF
@@ -773,12 +752,8 @@ MCNameRef MCRecordTypeInfoGetFieldName(MCTypeInfoRef unresolved_self, uindex_t p
     
     MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
 
-	MCTypeInfoRef t_base_type;
-	uindex_t t_base_index;
-	__MCRecordTypeInfoGetBaseTypeForField(self, p_index,
-	                                      t_base_type, t_base_index);
-
-	return t_base_type -> record . fields[t_base_index] . name;
+	MCAssert(p_index < self->record.field_count);
+	return self -> record . fields[p_index] . name;
 }
 
 MC_DLLEXPORT_DEF
@@ -789,48 +764,8 @@ MCTypeInfoRef MCRecordTypeInfoGetFieldType(MCTypeInfoRef unresolved_self, uindex
     
     MCAssert((self -> flags & kMCTypeInfoTypeCodeMask) == kMCValueTypeCodeRecord);
 
-	MCTypeInfoRef t_base_type;
-	uindex_t t_base_index;
-	__MCRecordTypeInfoGetBaseTypeForField(self, p_index,
-	                                      t_base_type, t_base_index);
-
-	return t_base_type -> record . fields[t_base_index] . type;
-}
-
-MC_DLLEXPORT_DEF bool
-MCRecordTypeInfoIsDerivedFrom(MCTypeInfoRef self,
-                              MCTypeInfoRef other)
-{
-	MCAssert(MCTypeInfoIsRecord (self));
-	MCAssert(MCTypeInfoIsRecord (other));
-	return MCTypeInfoConforms(self, other);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void
-__MCRecordTypeInfoGetBaseTypeForField (__MCTypeInfo *self,
-                                       uindex_t p_index,
-                                       __MCTypeInfo *& r_base,
-                                       uindex_t & r_base_index)
-{
-	uindex_t t_total_field_count;
-	t_total_field_count = MCRecordTypeInfoGetFieldCount(self);
-	MCAssert(t_total_field_count > p_index);
-
-	/* Search for the base record type where the requested field is
-	 * defined. */
-	uindex_t t_base_field_count;
-	t_base_field_count = t_total_field_count;
-	while (t_base_field_count > p_index)
-	{
-		MCAssert (self != kMCNullTypeInfo);
-		t_base_field_count -= self -> record . field_count;
-		self = MCRecordTypeInfoGetBaseType(self);
-	}
-
-	r_base = self;
-	r_base_index = p_index - t_base_field_count;
+	MCAssert(p_index < self->record.field_count);
+	return self -> record . fields[p_index] . type;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -863,6 +798,20 @@ static bool MCCommonHandlerTypeInfoCreate(bool p_is_foreign, const MCHandlerType
     for (index_t i = 0; i < p_field_count; ++i)
     {
 	    __MCAssertIsTypeInfo(p_fields[i].type);
+        
+        if (p_fields[i].mode == kMCHandlerTypeFieldModeVariadic)
+        {
+            if (i == 0 || p_field_count != i + 1)
+            {
+                MCValueRelease(self);
+                return MCErrorThrowGeneric(MCSTR("Variadic parameter cannot be first, and must be last"));
+            }
+            
+            p_field_count = i;
+            self->flags |= kMCTypeInfoFlagHandlerIsVariadic;
+            break;
+        }
+        
         self -> handler . fields[i] . type = MCValueRetain(p_fields[i] . type);
         self -> handler . fields[i] . mode = p_fields[i] . mode;
     }
@@ -902,6 +851,17 @@ bool MCHandlerTypeInfoIsForeign(MCTypeInfoRef unresolved_self)
     MCAssert(MCTypeInfoIsHandler(self));
 
     return (self -> flags & kMCTypeInfoFlagHandlerIsForeign) != 0;
+}
+
+MC_DLLEXPORT_DEF
+bool MCHandlerTypeInfoIsVariadic(MCTypeInfoRef unresolved_self)
+{
+    MCTypeInfoRef self;
+    self = __MCTypeInfoResolve(unresolved_self);
+
+    MCAssert(MCTypeInfoIsHandler(self));
+
+    return (self -> flags & kMCTypeInfoFlagHandlerIsVariadic) != 0;
 }
 
 MC_DLLEXPORT_DEF
@@ -976,7 +936,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
             return MCErrorThrowUnboundType(t_return_type);
         
         ffi_type *t_ffi_return_type;
-        if (t_return_type != kMCNullTypeInfo)
+        if (t_resolved_return_type.named_type != kMCNullTypeInfo)
         {
             if (MCTypeInfoIsForeign(t_resolved_return_type . type))
                 t_ffi_return_type = (ffi_type *)MCForeignTypeInfoGetLayoutType(t_resolved_return_type . type);
@@ -991,8 +951,9 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
         
         // We need arity + 1 ffi_type slots, as we use the first slot to store
         // the return type (if any).
-        ffi_type **t_ffi_arg_types;
-        if (!MCMemoryNewArray(t_arity + 1, t_ffi_arg_types))
+        MCAutoPointer<ffi_type*[]> t_ffi_arg_types =
+            new (std::nothrow) ffi_type*[t_arity + 1];
+        if (!t_ffi_arg_types)
             return false;
         
         t_ffi_arg_types[0] = t_ffi_return_type;
@@ -1019,7 +980,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
                 t_ffi_arg_types[i + 1] = &ffi_type_pointer;
         }
         
-        self -> handler . layout_args = (void **)t_ffi_arg_types;
+        self -> handler . layout_args = t_ffi_arg_types.Release();
     }
     
     // Now we must create a new layout object.
@@ -1029,7 +990,7 @@ bool MCHandlerTypeInfoGetLayoutType(MCTypeInfoRef unresolved_self, int p_abi, vo
 
 	t_layout -> abi = p_abi;
     
-    if (ffi_prep_cif((ffi_cif *)&t_layout -> cif, (ffi_abi)p_abi, self -> handler . field_count, (ffi_type *)self -> handler . layout_args[0], (ffi_type **)(self -> handler . layout_args + 1)) != FFI_OK)
+    if (ffi_prep_cif((ffi_cif *)&t_layout -> cif, (ffi_abi)p_abi, self -> handler . field_count, self -> handler . layout_args[0], self -> handler . layout_args + 1) != FFI_OK)
     {
         MCMemoryDeallocate(t_layout);
         return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
@@ -1066,8 +1027,6 @@ bool MCErrorTypeInfoCreate(MCNameRef p_domain, MCStringRef p_message, MCTypeInfo
     MCValueRelease(self);
     
     return false;
-    
-    return true;
 }
 
 MC_DLLEXPORT_DEF
@@ -1229,10 +1188,10 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         MCValueRelease(self -> foreign . descriptor . basetype);
         MCValueRelease(self -> foreign . descriptor . bridgetype);
         MCMemoryDeleteArray(self -> foreign . descriptor . layout);
+        MCValueRelease(self->foreign.descriptor.promotedtype);
     }
     else if (t_ext_typecode == kMCValueTypeCodeRecord)
     {
-        MCValueRelease(self -> record . base);
         for(uindex_t i = 0; i < self -> record . field_count; i++)
         {
             MCValueRelease(self -> record . fields[i] . name);
@@ -1248,7 +1207,7 @@ void __MCTypeInfoDestroy(__MCTypeInfo *self)
         }
         MCValueRelease(self -> handler . return_type);
         MCMemoryDeleteArray(self -> handler . fields);
-        MCMemoryDeleteArray(self -> handler . layout_args);
+        delete[] self -> handler . layout_args;
         while(self -> handler . layouts != nil)
         {
             MCHandlerTypeLayout *t_layout;
@@ -1276,7 +1235,7 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     intenum_t t_code;
     t_code = __MCTypeInfoGetExtendedTypeCode(self);
     
-    t_hash = MCHashBytesStream(t_hash, &t_code, sizeof(uint32_t));
+    t_hash = MCHashObjectStream(t_hash, t_code);
     if (t_code == kMCTypeInfoTypeIsAlias)
     {
         // If the alias name is empty, then we treat it as a unique unnamed type.
@@ -1287,19 +1246,20 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
             // Aliases are only equal if both name and type are the same. This is because
             // they are informative (for debugging purposes) rather than having any
             // semantic value.
-            t_hash = MCHashBytesStream(t_hash, &self -> alias . name, sizeof(self -> alias . name));
-            t_hash = MCHashBytesStream(t_hash, &self -> alias . typeinfo, sizeof(self -> alias . typeinfo));
+            t_hash = MCHashObjectStream(t_hash,
+                                        self -> alias . name,
+                                        self -> alias . typeinfo);
         }
     }
     else if (t_code == kMCTypeInfoTypeIsNamed)
     {
         // Named types are only hashed on the name as a named type can only be bound
         // to a single type at any one time (for obvious reasons!).
-        t_hash = MCHashBytesStream(t_hash, &self -> alias . name, sizeof(self -> alias . name));
+        t_hash = MCHashObjectStream(t_hash, self -> alias . name);
     }
     else if (t_code == kMCTypeInfoTypeIsOptional)
     {
-        t_hash = MCHashBytesStream(t_hash, &self -> optional . basetype, sizeof(self -> optional . basetype));
+        t_hash = MCHashObjectStream(t_hash, self -> optional . basetype);
     }
     else if (t_code == kMCTypeInfoTypeIsForeign)
     {
@@ -1308,20 +1268,25 @@ hash_t __MCTypeInfoHash(__MCTypeInfo *self)
     }
     else if (t_code == kMCValueTypeCodeRecord)
     {
-        t_hash = MCHashBytesStream(t_hash, &self -> record . base, sizeof(self -> record . base));
-        t_hash = MCHashBytesStream(t_hash, &self -> record . field_count, sizeof(self -> record . field_count));
-        t_hash = MCHashBytesStream(t_hash, self -> record . fields, sizeof(MCRecordTypeFieldInfo) * self -> record . field_count);
+        t_hash = MCHashObjectStream(t_hash, self -> record . field_count);
+        t_hash = MCHashSpanStream(t_hash,
+                                  MCMakeSpan(self -> record . fields,
+                                             self -> record . field_count));
     }
     else if (t_code == kMCValueTypeCodeHandler)
     {
-        t_hash = MCHashBytesStream(t_hash, &self -> handler . field_count, sizeof(self -> handler . field_count));
-        t_hash = MCHashBytesStream(t_hash, &self -> handler . return_type, sizeof(self -> handler . return_type));
-        t_hash = MCHashBytesStream(t_hash, self -> handler . fields, sizeof(MCRecordTypeFieldInfo) * self -> handler . field_count);
+        t_hash = MCHashObjectStream(t_hash,
+                                    self -> handler . field_count,
+                                    self -> handler . return_type);
+        t_hash = MCHashSpanStream(t_hash,
+                                  MCMakeSpan(self -> handler . fields,
+                                             self -> handler . field_count));
     }
     else if (t_code == kMCValueTypeCodeError)
     {
-        t_hash = MCHashBytesStream(t_hash, &self -> error . domain, sizeof(self -> error . domain));
-        t_hash = MCHashBytesStream(t_hash, &self -> error . message, sizeof(self -> error . message));
+        t_hash = MCHashObjectStream(t_hash,
+                                    self -> error . domain,
+                                    self -> error . message);
     }
     else if (t_code == kMCValueTypeCodeCustom)
     {
@@ -1341,14 +1306,14 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
     t_code = __MCTypeInfoGetExtendedTypeCode(self);
     
     if (t_code == kMCTypeInfoTypeIsAlias)
-        return MCNameIsEqualTo(self -> alias . name, other_self -> alias . name) &&
+        return MCNameIsEqualToCaseless(self -> alias . name, other_self -> alias . name) &&
                 self -> alias . typeinfo == other_self -> alias . typeinfo;
     
     if (t_code == kMCTypeInfoTypeIsNamed)
     {
         if (self -> named . name == kMCEmptyName || other_self -> named . name == kMCEmptyName)
             return false;
-        return MCNameIsEqualTo(self -> named . name, other_self -> named . name);
+        return MCNameIsEqualToCaseless(self -> named . name, other_self -> named . name);
     }
     
     if (t_code == kMCTypeInfoTypeIsOptional)
@@ -1359,16 +1324,7 @@ bool __MCTypeInfoIsEqualTo(__MCTypeInfo *self, __MCTypeInfo *other_self)
     
     if (t_code == kMCValueTypeCodeRecord)
     {
-        if (self -> record . base != other_self -> record . base)
-            return false;
-        
-        if (self -> record . field_count != other_self -> record . field_count)
-            return false;
-        
-        for(uindex_t i = 0; i < self -> record . field_count; i++)
-            if (!MCNameIsEqualTo(self -> record . fields[i] . name, other_self -> record . fields[i] . name) ||
-                self -> record . fields[i] . type != other_self -> record . fields[i] . type)
-                return false;
+		return self == other_self;
     }
     else if (t_code == kMCValueTypeCodeHandler)
     {

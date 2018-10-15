@@ -109,16 +109,6 @@ MCLicenseParameters MClicenseparameters =
 	NULL,
 };
 
-Boolean MCenvironmentactive = False;
-
-MCObjectHandle MCmessageboxredirect = nil;
-
-// IM-2013-04-16: [[ BZ 10836 ]] Provide reference to the last "put" source
-// as a global property, the "revMessageBoxLastObject"
-MCObjectHandle MCmessageboxlastobject = nil;
-MCNameRef MCmessageboxlasthandler = nil;
-uint32_t MCmessageboxlastline = 0;
-
 Boolean MCcrashreportverbose = False;
 MCStringRef MCcrashreportfilename = nil;
 
@@ -156,11 +146,6 @@ MCObjectPropertyTable MCStack::kModePropertyTable =
 MCPropertyInfo MCProperty::kModeProperties[] =
 {    
 	DEFINE_RW_PROPERTY(P_REV_CRASH_REPORT_SETTINGS, Array, Mode, RevCrashReportSettings)
-    DEFINE_RO_PROPERTY(P_REV_MESSAGE_BOX_LAST_OBJECT, String, Mode, RevMessageBoxLastObject)
-    DEFINE_RW_PROPERTY(P_REV_MESSAGE_BOX_REDIRECT, String, Mode, RevMessageBoxRedirect)
-	DEFINE_RO_ARRAY_PROPERTY(P_REV_LICENSE_INFO, Array, Mode, RevLicenseInfoByKey)
-    DEFINE_RO_PROPERTY(P_REV_LICENSE_INFO, String, Mode, RevLicenseInfo)
-    DEFINE_RW_PROPERTY(P_REV_LICENSE_LIMITS, Array, Mode, RevLicenseLimits)
     DEFINE_RO_PROPERTY(P_REV_OBJECT_LISTENERS, LinesOfString, Mode, RevObjectListeners)
     DEFINE_RW_PROPERTY(P_REV_PROPERTY_LISTENER_THROTTLE_TIME, UInt32, Mode, RevPropertyListenerThrottleTime)
 };
@@ -313,13 +298,17 @@ IO_stat MCDispatch::startup(void)
     }
     else
     {
-        MCDataRef t_decompressed;
-        MCDataRef t_compressed;
-        /* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
-        /* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
-        MCValueRelease(t_compressed);
+        MCAutoDataRef t_decompressed;
+        {
+            MCAutoDataRef t_compressed;
+            /* UNCHECKED */ MCDataCreateWithBytes((const char_t*)MCstartupstack,
+                                                  MCstartupstack_length,
+                                                  &t_compressed);
+            /* UNCHECKED */ MCFiltersDecompress(*t_compressed, &t_decompressed);
+        }
         
-        IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(t_decompressed), MCDataGetLength(t_decompressed));
+        IO_handle stream = MCS_fakeopen(MCDataGetBytePtr(*t_decompressed),
+                                        MCDataGetLength(*t_decompressed));
         if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
         {
             if (MCdispatcher -> loadfile(MCstacknames[0], sptr) != IO_NORMAL)
@@ -334,8 +323,8 @@ IO_stat MCDispatch::startup(void)
 
         MCS_close(stream);
 
-        /* FRAGILE */ memset((void *)MCDataGetBytePtr(t_decompressed), 0, MCDataGetLength(t_decompressed));
-        MCValueRelease(t_decompressed);
+        /* FRAGILE */ memset((void *)MCDataGetBytePtr(*t_decompressed), 0,
+                             MCDataGetLength(*t_decompressed));
 
         // Temporary fix to make sure environment stack doesn't get lost behind everything.
     #if defined(_MACOSX)
@@ -436,14 +425,12 @@ void MCStack::mode_load(void)
 	// a custom property 'ideOverride' with value true.
 	if (props != NULL)
 	{
-		MCAutoNameRef t_ide_override_name;
-		/* UNCHECKED */ t_ide_override_name . CreateWithCString("ideOverride");
-
-		MClockmessages++;
+        bool t_old_lock = MClockmessages;
+		MClockmessages = true;
         MCExecValue t_value;
         MCExecContext ctxt(nil, nil, nil);
-        getcustomprop(ctxt, kMCEmptyName, t_ide_override_name, nil, t_value);
-		MClockmessages--;
+        getcustomprop(ctxt, kMCEmptyName, MCNAME("ideOverride"), nil, t_value);
+		MClockmessages = t_old_lock;
 
 		bool t_treat_as_ide;
         MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value, kMCExecValueTypeBool, &t_treat_as_ide);
@@ -599,94 +586,6 @@ bool MCModeShouldCheckCantStandalone(void)
 	return false;
 }
 
-bool MCModeHandleMessageBoxChanged(MCExecContext& ctxt, MCStringRef p_string)
-{
-	// IM-2013-04-16: [[ BZ 10836 ]] update revMessageBoxLastObject
-	// if the source of the change is not within the message box
-	MCObject *t_msg_box = nil;
-	if (MCmessageboxredirect.IsValid())
-		t_msg_box = MCmessageboxredirect;
-	else
-	{
-		if (!MCmbstackptr)
-			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
-		t_msg_box = MCmbstackptr;
-	}
-	
-	MCObject *t_src_object = nil;
-	if (ctxt.GetObject() != nil)
-		t_src_object = ctxt.GetObject();
-	
-	bool t_in_msg_box = false;
-	
-	MCObject *t_obj_ptr = t_src_object;
-	while (t_obj_ptr != nil)
-	{
-		if (t_obj_ptr == t_msg_box)
-		{
-			t_in_msg_box = true;
-			break;
-		}
-		t_obj_ptr = t_obj_ptr->getparent();
-	}
-	
-	if (!t_in_msg_box)
-	{
-		MCmessageboxlastobject = t_src_object->GetHandle();
-		
-		MCNameDelete(MCmessageboxlasthandler);
-		MCmessageboxlasthandler = nil;
-		MCNameClone(ctxt.GetHandler()->getname(), MCmessageboxlasthandler);
-		
-        MCmessageboxlastline = ctxt . GetLine();
-	}
-	
-	if (MCmessageboxredirect.IsValid())
-	{
-		if (MCmessageboxredirect -> gettype() == CT_FIELD)
-		{
-            MCField *t_msg_field = MCmessageboxredirect.GetAs<MCField>();
-			MCStack *t_msg_stack;
-			t_msg_stack = t_msg_field -> getstack();
-
-            t_msg_field -> settext(0, p_string, False);
-			
-            Window_mode newmode = t_msg_stack -> userlevel() == 0 ? WM_MODELESS
-										: (Window_mode)(t_msg_stack -> userlevel() + WM_TOP_LEVEL_LOCKED);
-			
-			// MW-2011-07-05: [[ Bug 9608 ]] The 'ep' that is passed through to us does
-			//   not necessarily have an attached object any more. Given that the 'rel'
-			//   parameter of the open stack call is unused, computing it from that
-			//   context is redundent.
-			if (t_msg_stack -> getmode() != newmode)
-				t_msg_stack -> openrect(t_msg_stack -> getrect(), newmode, NULL, WP_DEFAULT, OP_NONE);
-			else
-				t_msg_stack -> raise();
-		}
-		else
-		{
-			MCAutoNameRef t_msg_changed;
-			/* UNCHECKED */ t_msg_changed . CreateWithCString("msgchanged");
-			
-			bool t_added = false;
-			if (MCnexecutioncontexts < MAX_CONTEXTS && ctxt.GetObject() != nil)
-			{
-				MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
-				t_added = true;
-			}
-			
-			MCmessageboxredirect -> message(t_msg_changed);
-		
-			if (t_added)
-				MCnexecutioncontexts--;
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
 bool MCModeHandleRelaunch(MCStringRef & r_id)
 {
 	r_id = MCSTR("LiveCodeTools");
@@ -707,8 +606,6 @@ MCStatement *MCModeNewCommand(int2 which)
 {
 	switch(which)
 	{
-	case S_INTERNAL:
-		return new MCInternal;
 	case S_REV_RELICENSE:
 		return new MCRevRelicense;
 	default:
@@ -840,13 +737,6 @@ void MCRemotePageSetupDialog(MCDataRef p_config_data, MCDataRef &r_reply_data, u
 {
 }
 
-#ifdef _MACOSX
-uint32_t MCModePopUpMenu(MCMacSysMenuHandle p_menu, int32_t p_x, int32_t p_y, uint32_t p_index, MCStack *p_stack)
-{
-	return 0;
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Implementation of Windows-specific mode hooks for DEVELOPMENT mode.
@@ -870,13 +760,18 @@ LONG WINAPI unhandled_exception_filter(struct _EXCEPTION_POINTERS *p_exception_i
 	if (t_dbg_help_module != NULL)
 		t_write_minidump = (MiniDumpWriteDumpPtr)GetProcAddress(t_dbg_help_module, "MiniDumpWriteDump");
 
-	char *t_path = NULL;
-	if (t_write_minidump != NULL)
-		t_path = MCS_resolvepath(MCStringGetCString(MCcrashreportfilename));
-
-	HANDLE t_file = NULL;
-	if (t_path != NULL)
-		t_file = CreateFileA(t_path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    HANDLE t_file = nullptr;
+    if (t_write_minidump != nullptr)
+    {
+        MCAutoStringRef t_path;
+        MCAutoStringRefAsWString t_path_w32;
+        if (MCS_resolvepath(MCcrashreportfilename, &t_path) &&
+            t_path_w32.Lock(*t_path))
+        {
+            t_file = CreateFileW(*t_path_w32, GENERIC_WRITE, 0, nullptr,
+                                 CREATE_ALWAYS, 0, nullptr);
+        }
+    }
 
 	BOOL t_minidump_written = FALSE;
 	if (t_file != NULL)
@@ -891,9 +786,6 @@ LONG WINAPI unhandled_exception_filter(struct _EXCEPTION_POINTERS *p_exception_i
 	if (t_file != NULL)
 		CloseHandle(t_file);
 
-	if (t_path != NULL)
-		delete t_path;
-	
 	if (t_dbg_help_module != NULL)
 		FreeLibrary(t_dbg_help_module);
 
@@ -925,6 +817,12 @@ void MCModePreMain(void)
 			return;
 		}
 	}
+}
+
+// Pixel scaling can be enabled in Development mode
+bool MCModeCanEnablePixelScaling()
+{
+	return true;
 }
 
 // IM-2014-08-08: [[ Bug 12372 ]] Allow IDE pixel scaling to be enabled / disabled
@@ -1053,333 +951,18 @@ void MCModeSetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef p_settings)
             MCcrashreportfilename = MCValueRetain((MCStringRef)t_filename);
     }
 }
-
-void MCModeSetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef p_settings)
-{
-    if(!MCenvironmentactive)
-        return;
-    
-    bool t_case_sensitive = ctxt . GetCaseSensitive();
-    MCValueRef t_value;
-    MCStringRef t_string;
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("token"), t_value)
-            && ctxt . ConvertToString(t_value, t_string))
-    {
-        MCValueRelease(MClicenseparameters . license_token);
-        MClicenseparameters . license_token = t_string;
-    }
-    
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("name"), t_value)
-            && ctxt . ConvertToString(t_value, t_string))
-    {
-        MCValueRelease(MClicenseparameters . license_name);
-        MClicenseparameters . license_name = t_string;
-    }
-    
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("organization"), t_value)
-            && ctxt . ConvertToString(t_value, t_string))
-    {
-        MCValueRelease( MClicenseparameters . license_organization);
-         MClicenseparameters . license_organization = t_string;
-    }
-    
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("class"), t_value))
-    {
-        MCAutoStringRef t_class;
-        if (!ctxt . ConvertToString(t_value, &t_class) ||
-            !MCStringToLicenseClass(*t_class, MClicenseparameters . license_class))
-        {
-            MClicenseparameters . license_class = kMCLicenseClassNone;
-        }
-    }
-    
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("multiplicity"), t_value))
-    {
-	    MCAutoNumberRef t_number;
-	    if (ctxt.ConvertToNumber(t_value, &t_number))
-	    {
-		    MClicenseparameters . license_multiplicity = MCNumberFetchAsUnsignedInteger(*t_number);
-	    }
-    }
-    
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("scriptlimit"), t_value))
-    {
-	    MCAutoNumberRef t_number;
-	    if (ctxt.ConvertToNumber(t_value, &t_number))
-	    {
-		    integer_t t_limit;
-		    t_limit = MCNumberFetchAsInteger(*t_number);
-		    MClicenseparameters . script_limit = t_limit <= 0 ? 0 : t_limit;
-	    }
-    }
-    
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("dolimit"), t_value))
-    {
-	    MCAutoNumberRef t_number;
-	    if (ctxt.ConvertToNumber(t_value, &t_number))
-	    {
-		    integer_t t_limit;
-		    t_limit = MCNumberFetchAsInteger(*t_number);
-		    MClicenseparameters . do_limit = t_limit <= 0 ? 0 : t_limit;
-	    }
-    }
-    
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("usinglimit"), t_value))
-    {
-	    MCAutoNumberRef t_number;
-	    if (ctxt.ConvertToNumber(t_value, &t_number))
-	    {
-		    integer_t t_limit;
-		    t_limit = MCNumberFetchAsInteger(*t_number);
-		    MClicenseparameters . using_limit = t_limit <= 0 ? 0 : t_limit;
-	    }
-    }
-    
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("insertlimit"), t_value))
-    {
-	    MCAutoNumberRef t_number;
-	    if (ctxt.ConvertToNumber(t_value, &t_number))
-	    {
-		    integer_t t_limit;
-		    t_limit = MCNumberFetchAsInteger(*t_number);
-		    MClicenseparameters . insert_limit = t_limit <= 0 ? 0 : t_limit;
-	    }
-    }
-    
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("deploy"), t_value))
-    {
-        static struct { const char *tag; uint32_t value; } s_deploy_map[] =
-        {
-            { "windows", kMCLicenseDeployToWindows },
-            { "macosx", kMCLicenseDeployToMacOSX },
-            { "linux", kMCLicenseDeployToLinux },
-            { "ios", kMCLicenseDeployToIOS },
-            { "android", kMCLicenseDeployToAndroid },
-            { "winmobile", kMCLicenseDeployToWinMobile },
-            { "meego", kMCLicenseDeployToLinuxMobile },
-            { "server", kMCLicenseDeployToServer },
-            { "ios-embedded", kMCLicenseDeployToIOSEmbedded },
-            { "android-embedded", kMCLicenseDeployToIOSEmbedded },
-            { "html5", kMCLicenseDeployToHTML5 },
-        };
-        
-        MClicenseparameters . deploy_targets = 0;
-        
-        MCAutoStringRef t_params;
-        if (ctxt . ConvertToString(t_value, &t_params))
-        {
-            MCAutoArrayRef t_split_strings;
-            MCValueRef t_fetched_string;
-            if (MCStringSplit(*t_params, MCSTR(","), nil, kMCCompareExact, &t_split_strings))
-            {
-                for(uint32_t i = 0; i < MCArrayGetCount(*t_split_strings); i++)
-                {
-                    // Fetch the string value created with MCStringSplit
-                    MCArrayFetchValueAtIndex(*t_split_strings, i+1, t_fetched_string);
-                    
-                    for(uint32_t j = 0; j < sizeof(s_deploy_map) / sizeof(s_deploy_map[0]); j++)
-                        if (MCStringIsEqualToCString((MCStringRef)t_fetched_string, s_deploy_map[j] . tag, kMCStringOptionCompareCaseless))
-                        {
-                            MClicenseparameters . deploy_targets |= s_deploy_map[j] . value;
-                            break;
-                        }
-                }
-            }
-        }
-    }
-    
-    if (MCArrayFetchValue(p_settings, t_case_sensitive, MCNAME("addons"), t_value) && MCValueIsArray(t_value))
-    {
-        MCValueRelease(MClicenseparameters . addons);
-        MCArrayCopy((MCArrayRef)t_value, MClicenseparameters . addons);
-    }
-}
-
-static MCObject *getobj(MCExecContext& ctxt, MCStringRef p_string)
-{    
-    MCObject *objptr = NULL;
-    MCChunk *tchunk = new MCChunk(False);
-    MCerrorlock++;
-    MCScriptPoint sp(p_string);
-    if (tchunk->parse(sp, False) == PS_NORMAL)
-    {
-        uint4 parid;
-        tchunk->getobj(ctxt, objptr, parid, True);
-    }
-    MCerrorlock--;
-    delete tchunk;
-    return objptr;
-}
-
-void MCModeSetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef p_target)
-{
-    MCObject *t_object;
-    t_object = getobj(ctxt, p_target);
-    
-    if (t_object != NULL)
-        MCmessageboxredirect = t_object -> GetHandle();
-    else
-        MCmessageboxredirect = nil;
-}
             
 void MCModeSetRevPropertyListenerThrottleTime(MCExecContext& ctxt, uinteger_t p_time)
 {
 #ifdef FEATURE_PROPERTY_LISTENER
-    // MM-2012-11-06: [[ Property Listener ]]
-    MCpropertylistenerthrottletime = p_time;
+	// MM-2012-11-06: [[ Property Listener ]]
+	MCpropertylistenerthrottletime = p_time;
 #endif
-}
-
-void MCModeGetRevMessageBoxLastObject(MCExecContext& ctxt, MCStringRef& r_object)
-{
-    if (MCmessageboxlastobject.IsValid())
-    {
-        bool t_success;
-
-        MCAutoStringRef t_obj, t_long_id;
-        MCAutoValueRef t_id_value;
-        t_success = MCStringCreateMutable(0, &t_obj);
-        
-        if (t_success)
-            t_success = MCmessageboxlastobject->names(P_LONG_ID, &t_id_value);
-        if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
-            t_success = MCStringAppendFormat(*t_obj, "%@,%@,%u", *t_long_id, MCNameGetString(MCmessageboxlasthandler), MCmessageboxlastline);
-
-        if (t_success && MCmessageboxlastobject->getparentscript() != nil)
-        {
-            t_success = MCmessageboxlastobject->getparentscript()->GetObject()->names(P_LONG_ID, &t_id_value);
-            if (t_success && ctxt . ConvertToString(*t_id_value, &t_long_id))
-                t_success = MCStringAppendFormat(*t_obj, ",%@", *t_long_id);
-        }
-        if (t_success && MCStringCopy(*t_obj, r_object))
-            return;
-    }
-    else
-    {
-        r_object = MCValueRetain(kMCEmptyString);
-        return;
-    }
-    
-    ctxt . Throw();
-}
-
-void MCModeGetRevMessageBoxRedirect(MCExecContext& ctxt, MCStringRef& r_id)
-{
-    if (MCmessageboxredirect.IsValid())
-    {
-        MCAutoValueRef t_long_id;
-        if (MCmessageboxredirect -> names(P_LONG_ID, &t_long_id) &&
-            ctxt . ConvertToString(*t_long_id, r_id))
-            return;
-    }
-    else
-    {
-        r_id = MCValueRetain(kMCEmptyString);
-        return;
-    }
-    
-    ctxt . Throw();
-}
-
-void MCModeGetRevLicenseLimits(MCExecContext& ctxt, MCArrayRef& r_limits)
-{
-    r_limits = MCValueRetain(kMCEmptyArray);
 }
 
 void MCModeGetRevCrashReportSettings(MCExecContext& ctxt, MCArrayRef& r_settings)
 {
     r_settings = MCValueRetain(kMCEmptyArray);
-}
-
-void MCModeGetRevLicenseInfo(MCExecContext& ctxt, MCStringRef& r_info)
-{
-    static const char *s_deploy_targets[] =
-    {
-        "Windows",
-        "Mac OS X",
-        "Linux",
-        "iOS",
-        "Android",
-        "Windows Mobile",
-        "Linux Mobile",
-        "Server",
-        "iOS Embedded",
-        "Android Embedded",
-        "HTML5",
-    };
-    
-    bool t_success;
-    
-    MCAutoStringRef t_info;
-    t_success = MCStringCreateMutable(0, &t_info);
-    
-    MCStringRef t_license_name;
-    t_license_name = MClicenseparameters . license_name;
-    if (t_license_name == nil)
-        t_license_name = kMCEmptyString;
-
-    MCStringRef t_license_org;
-    t_license_org = MClicenseparameters . license_organization;
-    if (t_license_org == nil)
-        t_license_org = kMCEmptyString;
-
-    
-    MCAutoStringRef t_license_class;
-    if (t_success)
-        t_success = MCStringFromLicenseClass(MClicenseparameters . license_class, false, &t_license_class);
-    
-    if (t_success)
-        t_success = MCStringAppendFormat(*t_info, "%@\n%@\n%@\n%u\n",
-                                         t_license_name, t_license_org,
-                                         *t_license_class,
-                                         MClicenseparameters . license_multiplicity);
-    
-    if (MClicenseparameters . deploy_targets != 0)
-    {
-        bool t_first;
-        t_first = true;
-        for(uint32_t i = 0; t_success && i < sizeof(s_deploy_targets) / sizeof(s_deploy_targets[0]); i++)
-        {
-            if ((MClicenseparameters . deploy_targets & (1 << i)) != 0)
-            {
-                t_success = MCStringAppendFormat(*t_info, t_first ? "%s" : ",%s", s_deploy_targets[i]);
-                t_first = false;
-            }
-        }
-    }
-    
-    // AL-2014-11-04: [[ Bug 13865 ]] Don't add an extra line between deploy targets and addons
-
-    if (t_success && MClicenseparameters . addons != nil)
-    {
-        MCAutoStringRef t_keys;
-        t_success = (MCArrayListKeys(MClicenseparameters . addons, ',', &t_keys) &&
-                    MCStringAppendFormat(*t_info, "\n%@", *t_keys));
-    }
-    
-    if (t_success)
-        if (MCStringAppendFormat(*t_info, "\n%s", MCStringIsEmpty(MClicenseparameters . license_token) ? "Global" : "Local") &&
-                MCStringCopy(*t_info, r_info))
-            return;
-    
-    ctxt . Throw();
-}
-
-// MW-2015-03-09: [[ Bug 14139 ]] Fixed licensing issue with thirdparties
-void MCModeGetRevLicenseInfoByKey(MCExecContext& ctxt, MCNameRef p_key, MCArrayRef& r_info)
-{
-    MCValueRef t_value;
-    if (MClicenseparameters . addons == nil ||
-        !MCArrayFetchValue(MClicenseparameters . addons, ctxt . GetCaseSensitive(), p_key, t_value))
-        {
-            r_info = MCValueRetain(kMCEmptyArray);
-            return;
-        }
-    
-    if (ctxt . ConvertToArray(t_value, r_info))
-        return;
-    
-    ctxt . Throw();
 }
 
 void MCModeGetRevObjectListeners(MCExecContext& ctxt, uindex_t& r_count, MCStringRef*& r_listeners)

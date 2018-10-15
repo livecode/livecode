@@ -21,9 +21,9 @@ Example:
 if the environment is among the lines of userEnv then lock error dialogs
 
 Description:
-Use the <lock error dialogs> <command> to <handle> <execution
-error|execution errors> in a custom handler, rather than allowing
-LiveCode to display the standard error window.
+Use the <lock error dialogs> <command> to <handle> 
+<execution error|execution errors> in a custom handler, rather than 
+allowing LiveCode to display the standard error window.
 
 The <lock error dialogs> <command> sets the <lockErrorDialogs>
 <property> to true.

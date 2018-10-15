@@ -75,6 +75,12 @@ public:
     
     bool OnClick(bool& r_bubble);
     
+    bool HandlesTouchEvents(void);
+    bool OnTouchStart(bool& r_bubble);
+    bool OnTouchMove(bool& r_bubble);
+    bool OnTouchFinish(bool& r_bubble);
+    bool OnTouchCancel(bool& r_bubble);
+    
     bool OnGeometryChanged(void);
     bool OnLayerChanged();
     bool OnParentPropertyChanged(void);
@@ -89,6 +95,7 @@ public:
     void ScheduleTimerIn(double timeout);
     void CancelTimer(void);
     void RedrawRect(MCGRectangle *area);
+    void TriggerAll();
     
     bool CopyChildren(MCProperListRef& r_children);
     void PlaceWidget(MCWidgetRef child, MCWidgetRef relative_to, bool put_below);
@@ -184,7 +191,7 @@ public:
     virtual bool CopyFont(MCFontRef& r_font);
     
 private:
-    MCWidget *m_host;
+    MCWidgetHandle m_host;
 };
 
 class MCWidgetChild: public MCWidgetBase
@@ -213,6 +220,9 @@ private:
 MCWidgetBase *MCWidgetAsBase(MCWidgetRef widget);
 MCWidgetRoot *MCWidgetAsRoot(MCWidgetRef widget);
 MCWidgetChild *MCWidgetAsChild(MCWidgetRef widget);
+
+void *MCWidgetEnter(MCScriptInstanceRef instance, void *host_ptr);
+void MCWidgetLeave(MCScriptInstanceRef instance, void *host_ptr, void *cookie);
 
 ////////////////////////////////////////////////////////////////////////////////
 

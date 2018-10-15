@@ -32,8 +32,8 @@ any more <loop|loops> are skipped. The <handler> <resume|resumes>
 
 Usually, <exit repeat> is used within an <if> <control structure>, so
 that the <loop> stops if a condition is true and continues if the
-condition is false. This example reads a file in chunks and stops the
-<loop> when it encounters the end of file or if the file is empty:
+condition is false. This example reads a file in chunks and stops 
+the <loop> when it encounters the end of file or if the file is empty:
 
     constant kChunk = 1024
     open file tFile for binary read
@@ -44,10 +44,11 @@ condition is false. This example reads a file in chunks and stops the
             ProcessFileChunk it
         end if
         if tResult is not empty then
-             exit repeat
+            exit repeat
         end if
     end repeat
     close file tFile
+
 
 References: exit (control structure), next repeat (control structure),
 repeat (control structure), if (control structure), handler (glossary),

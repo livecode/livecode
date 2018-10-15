@@ -386,6 +386,9 @@ struct load_command {
 // MM-2014-09-30: [[ iOS 8 Support ]] Used by iOS 8 simulator builds.
 #define LC_MAIN (0x28|LC_REQ_DYLD) /* replacement for LC_UNIXTHREAD */
 
+// PM-2018-10-02: [[ iOS 12 Support ]] Used by iOS device builds when min_version=12
+#define LC_BUILD_VERSION 0x32 /* build for platform min OS version */
+
 /*
  * A variable length string in a load command is represented by an lc_str
  * union.  The strings are stored just after the load command structure and
@@ -1047,6 +1050,7 @@ static void swap_load_command(bool p_to_network, uint32_t p_type, load_command* 
 
         case LC_VERSION_MIN_MACOSX:
         case LC_VERSION_MIN_IPHONEOS:
+        case LC_BUILD_VERSION:
             swap_version_min_command(p_to_network, *(version_min_command *)x);
             break;
 		
@@ -1408,6 +1412,7 @@ template<typename T> bool MCDeployToMacOSXMainBody(const MCDeployParameters& p_p
                 case LC_ENCRYPTION_INFO_64:
                 case LC_SOURCE_VERSION:
                 case LC_MAIN:
+                case LC_BUILD_VERSION:
                     break;
                     
                 // We rewrite the contents of these commands as appropriate to
@@ -1612,7 +1617,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
     return t_success;
 }
 
-#if 0
+#if LEGACY_EMBEDDED_DEPLOY
 static bool MCDeployToMacOSXEmbedded(const MCDeployParameters& p_params, bool p_big_endian, MCDeployFileRef p_engine, uint32_t p_engine_offset, uint32_t p_engine_size, uint32_t& x_offset, MCDeployFileRef p_output)
 {
 	bool t_success;
@@ -1872,7 +1877,7 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
 		t_output_offset = 0;
 		if (!p_embedded)
             t_success = MCDeployToMacOSXMain(p_params, false, p_engine, 0, 0, t_output_offset, p_output, p_validate_header_callback);
-#if 0
+#if LEGACY_EMBEDDED_DEPLOY
 		else
 			t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
 #endif
@@ -1933,7 +1938,7 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
                     // Write out this arch's portion.
                     if (!p_embedded)
                         t_success = MCDeployToMacOSXMain(p_params, false, p_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, p_output, p_validate_header_callback);
-    #if 0
+    #if LEGACY_EMBEDDED_DEPLOY
                     else
                         t_success = MCDeployToMacOSXEmbedded(p_params, false, p_engine, 0, 0, t_output_offset, p_output);
     #endif
@@ -2413,7 +2418,9 @@ static bool diet_strip_symbols(MCDeployDietContext& context, bool p_big_endian, 
 	t_symtab_command = nil;
 	t_dysymtab_command = nil;
 	if (t_success)
+    {
 		for(uint32_t i = 0; i < t_header . ncmds; i++)
+        {
 			if (t_commands[i] -> cmd == LC_SEGMENT)
 			{
 				segment_command *t_command;
@@ -2425,6 +2432,8 @@ static bool diet_strip_symbols(MCDeployDietContext& context, bool p_big_endian, 
 				t_symtab_command = (symtab_command *)t_commands[i];
 			else if (t_commands[i] -> cmd == LC_DYSYMTAB)
 				t_dysymtab_command = (dysymtab_command *)t_commands[i];
+        }
+    }
 
 	// The 'linkedit' segment contains all the data used by the symtab
 	// and dysymtab commands. We need to rebuild this segment in the following

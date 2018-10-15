@@ -52,6 +52,7 @@ void MCFontRelease(MCFontRef font);
 MCNameRef MCFontGetName(MCFontRef font);
 MCFontStyle MCFontGetStyle(MCFontRef font);
 int32_t MCFontGetSize(MCFontRef font);
+void *MCFontGetHandle(MCFontRef font);
 
 bool MCFontHasPrinterMetrics(MCFontRef font);
 

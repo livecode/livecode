@@ -34,31 +34,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "param.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-MC_EXEC_DEFINE_EXEC_METHOD(Debugging, Breakpoint, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Debugging, DebugDo, 3)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceAbort, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceAbort, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceDelay, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceDelay, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceReturn, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceReturn, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceStack, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceStack, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, TraceUntil, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, TraceUntil, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, MessageMessages, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, MessageMessages, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, Breakpoints, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, Breakpoints, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, DebugContext, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, DebugContext, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, ExecutionContexts, 1)
-MC_EXEC_DEFINE_GET_METHOD(Debugging, WatchedVariables, 1)
-MC_EXEC_DEFINE_SET_METHOD(Debugging, WatchedVariables, 1)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Engine, Assert, 3)
+#include "chunk.h"
+#include "scriptpt.h"
+#include "osspec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -455,4 +433,12 @@ void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, b
 	t_object.setvalueref_argument(*t_long_id);
 	
 	ctxt . GetObject() -> message(MCM_assert_error, &t_handler);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDebuggingExecPutIntoMessage(MCExecContext& ctxt, MCStringRef p_value, int p_where)
+{
+	if (!MCS_put(ctxt, p_where == PT_INTO ? kMCSPutIntoMessage : (p_where == PT_BEFORE ? kMCSPutBeforeMessage : kMCSPutAfterMessage), p_value))
+		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }

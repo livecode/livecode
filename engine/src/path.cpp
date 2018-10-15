@@ -618,17 +618,17 @@ void MCPath::get_lengths(uint4 &r_commands, uint4 &r_points)
 
 MCPath *MCPath::copy_scaled(int4 p_scale)
 {
-	MCPath *t_path = new MCPath;
+	MCPath *t_path = new (nothrow) MCPath;
 	t_path->f_references = 0;
 
 	uint4 t_numpoints, t_numcommands;
 
 	get_lengths(t_numpoints, t_numcommands);
 
-	t_path->f_commands = new uint1[t_numcommands];
+	t_path->f_commands = new (nothrow) uint1[t_numcommands];
 	memcpy(t_path->f_commands, f_commands, sizeof(uint1) * t_numcommands);
 
-	t_path->f_data = new int4[t_numpoints * 2];
+	t_path->f_data = new (nothrow) int4[t_numpoints * 2];
 	for (uint4 i = 0; i < t_numpoints * 2; i++)
 		t_path->f_data[i] = f_data[i] * p_scale;
 

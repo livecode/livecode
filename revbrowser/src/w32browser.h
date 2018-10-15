@@ -342,7 +342,7 @@ public:
 	HRESULT STDMETHODCALLTYPE OnDocWindowActivate(VARIANT_BOOL fActivate) {return S_OK;}
 	HRESULT STDMETHODCALLTYPE OnFrameWindowActivate(VARIANT_BOOL fActivate) {return S_OK;}
 	HRESULT STDMETHODCALLTYPE ResizeBorder(long left, long top, long right, long bottom, IUnknown __RPC_FAR *pUIWindow, VARIANT_BOOL fFrameWindow) {return S_OK;}
-	HRESULT STDMETHODCALLTYPE TranslateAccelerator(DWORD hWnd, DWORD nMessage, DWORD wParam, DWORD lParam, BSTR bstrGuidCmdGroup, DWORD nCmdID, HRESULT __RPC_FAR *dwRetVal)
+	HRESULT STDMETHODCALLTYPE TranslateAccelerator(DWORD_PTR hWnd, DWORD nMessage, DWORD_PTR wParam, DWORD_PTR lParam, BSTR bstrGuidCmdGroup, DWORD nCmdID, HRESULT __RPC_FAR *dwRetVal)
 	{return S_OK;}
 	HRESULT STDMETHODCALLTYPE GetOptionKeyPath(BSTR __RPC_FAR *pbstrKey, DWORD dw) {return S_OK;}
 	HRESULT STDMETHODCALLTYPE GetDropTarget(IUnknown __RPC_FAR *pDropTarget, IUnknown __RPC_FAR *__RPC_FAR *ppDropTarget) {return S_OK;}

@@ -210,7 +210,7 @@ static char *concatenate(char *p_first, bool p_free_first, char *p_last, bool p_
 bool message_send_with_data(message_t *p_message, unsigned int *r_reply)
 {
 	COPYDATASTRUCT t_data;
-	DWORD t_result;
+	DWORD_PTR t_result;
 
 	t_data . dwData = CWM_RELAUNCH;
 	t_data . cbData = p_message -> data_length;

@@ -2,6 +2,7 @@
 	'variables':
 	{
 		'c++_std': '<!(echo ${CXX_STD:-c++11})',
+		'android_lib_path%': '<!(echo ${ANDROID_LIB_PATH:+-L${ANDROID_LIB_PATH}})',
 	},
 
 	'cflags':
@@ -30,6 +31,18 @@
 	
 	'target_conditions':
 	[
+		[
+			'_type == "loadable_module"',
+			{
+				'ldflags':
+				[
+					'<(android_lib_path)',
+					'-lstdc++',
+					'-landroid',
+				],
+
+			},
+		],
 		[
 			'silence_warnings == 0',
 			{

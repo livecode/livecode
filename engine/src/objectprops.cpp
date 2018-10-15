@@ -266,65 +266,6 @@ MCObjectPropertyTable MCObject::kPropertyTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static const char *ink_names[] =
-{
-	"clear",
-	"srcAnd",
-	"srcAndReverse",
-	"srcCopy",
-	"notSrcAnd",
-	"noop",
-	"srcXor",
-	"srcOr",
-	"notSrcAndReverse",
-	"notSrcXor",
-	"reverse",
-	"srcOrReverse",
-	"notSrcCopy",
-	"notSrcOr",
-	"notSrcOrReverse",
-	"set",
-	"srcBic",
-	"notSrcBic",
-
-	"blend",
-	"addpin",
-	"addOver",
-	"subPin",
-	"transparent",
-	"addMax",
-	"subOver",
-	"adMin",
-	
-	"blendClear",
-	"blendSrc",
-	"blendDst",
-	"blendSrcOver",
-	"blendDstOver",
-	"blendSrcIn",
-	"blendDstIn",
-	"blendSrcOut",
-	"blendDstOut",
-	"blendSrcAtop",
-	"blendDstAtop",
-	"blendXor",
-	"blendPlus",
-	"blendMultiply",
-	"blendScreen",
-
-	"blendOverlay",
-	"blendDarken",
-	"blendLighten",
-	"blendDodge",
-	"blendBurn",
-	"blendHardLight",
-	"blendSoftLight",
-	"blendDifference",
-	"blendExclusion"
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 Exec_stat MCObject::sendgetprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRef p_prop_name, MCValueRef& r_value)
 {
 	// If the set name is nil, then we send a 'getProp <propname>' otherwise we

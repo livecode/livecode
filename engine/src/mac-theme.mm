@@ -129,10 +129,6 @@ static NSFont* font_for_control(MCPlatformControlType p_type, MCPlatformControlS
             return s_system_font;
         }
     }
-    
-    if (r_name)
-        *r_name = nil;
-    return nil;
 }
 
 

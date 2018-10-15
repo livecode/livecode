@@ -14,15 +14,15 @@ Platforms: desktop, server
 
 Description:
 In HyperCard, the <longWindowTitles> <property> determines whether a
-<stack window|stack window's> <title bar> shows the <absolute file
-path|full path> to a <stack>, or only the <stack|stack's> name. In
-LiveCode, the <stack|stack's> <label> <property> is shown as the window
-title; if the <label> is empty, the short version of the <stack|stack's>
-<name> <property> is shown.
+<stack window|stack window's> <title bar> shows the 
+<absolute file path|full path> to a <stack>, or only the <stack|stack's>
+name. In LiveCode, the <stack|stack's> <label> <property> is shown as the 
+window title; if the <label> is empty, the short version of the 
+<stack|stack's> <name> <property> is shown.
 
 A handler can set the <longWindowTitles> without causing a <error|script
 error>, but the actual window title is not changed. The <default> value
-is false<a/>.
+is false.
 
 References: property (glossary), LiveCode (glossary), error (glossary),
 stack window (glossary), absolute file path (glossary),

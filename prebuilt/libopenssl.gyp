@@ -10,6 +10,8 @@
 			'target_name': 'libopenssl_headers',
 			'type': 'none',
 
+			'toolsets': ['host', 'target'],
+
 			'dependencies':
 			[
 				'fetch.gyp:fetch',
@@ -17,9 +19,26 @@
 
 			'direct_dependent_settings':
 			{
-				'include_dirs':
+				'target_conditions':
 				[
-					'include',
+					[
+						'toolset_os == "win"',
+						{
+							'include_dirs':
+							[
+								'unpacked/openssl/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+							],
+						},
+					],
+					[
+						'toolset_os != "win"',
+						{
+							'include_dirs':
+							[
+								'include',
+							],
+						},
+					],
 				],
 			},
 		},
@@ -27,6 +46,8 @@
 			'target_name': 'libopenssl',
 			'type': 'none',
 
+			'toolsets': ['host', 'target'],
+
 			'dependencies':
 			[
 				'fetch.gyp:fetch',
@@ -34,18 +55,35 @@
 
 			'direct_dependent_settings':
 			{
-				'include_dirs':
+				'target_conditions':
 				[
-					'include',
+					[
+						'toolset_os == "win"',
+						{
+							'include_dirs':
+							[
+								'unpacked/openssl/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+							],
+						},
+					],
+					[
+						'toolset_os != "win"',
+						{
+							'include_dirs':
+							[
+								'include',
+							],
+						},
+					],
 				],
 			},
 
 			'link_settings':
 			{
-				'conditions':
+				'target_conditions':
 				[
 					[
-						'OS == "mac"',
+						'toolset_os == "mac"',
 						{
 							'libraries':
 							[
@@ -55,7 +93,7 @@
 						},
 					],
 					[
-						'OS == "ios"',
+						'toolset_os == "ios"',
 						{
 							'libraries':
 							[
@@ -65,12 +103,12 @@
 						},
 					],
 					[
-						'OS == "linux"',
+						'toolset_os == "linux"',
 						{
 							# Gyp doesn't seem to handle non-absolute paths here properly...
 							'library_dirs':
 							[
-								'lib/linux/<(target_arch)',
+								'lib/linux/>(toolset_arch)',
 							],
 							
 							'libraries':
@@ -83,28 +121,37 @@
 						},
 					],
 					[
-						'OS == "android"',
+						'toolset_os == "android"',
 						{
-							'library_dirs':
+							# Gyp doesn't seem to handle non-absolute paths here properly...
+							'conditions':
 							[
-								'lib/android/<(target_arch)',
-							],
+								[
+									'OS == "android"',
+									{
+										'library_dirs':
+										[
+											'lib/android/<(target_arch)/<(android_subplatform)',
+										],
 							
-							'libraries':
-							[
-								'-Wl,-whole-archive',
-								'-lcustomcrypto',
-								'-lcustomssl',
-								'-Wl,-no-whole-archive',
+										'libraries':
+										[
+											'-Wl,-whole-archive',
+											'-lcustomcrypto',
+											'-lcustomssl',
+											'-Wl,-no-whole-archive',
+										],
+									},
+								],
 							],
 						},
 					],
 					[
-						'OS == "win"',
+						'toolset_os == "win"',
 						{
 							'library_dirs':
 							[
-								'lib/win32/<(target_arch)',
+								'unpacked/openssl/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
 							],
 							
 							'libraries':

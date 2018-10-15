@@ -51,7 +51,7 @@ struct MCCursor
 static MCCursorRef create_cursor(Pixmap_ids p_id, GdkCursor *p_cursor)
 {
 	MCCursorRef t_cursor;
-	t_cursor = new MCCursor;
+	t_cursor = new (nothrow) MCCursor;
 	t_cursor -> id = p_id;
 	t_cursor -> handle = p_cursor;
 	return t_cursor;

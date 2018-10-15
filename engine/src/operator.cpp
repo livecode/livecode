@@ -35,61 +35,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "exec.h"
 
-#include "syntax.h"
-
-///////////////////////////////////////////////////////////////////////////////
-
-void MCBinaryOperator::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	left -> compile(ctxt);
-	if (right != nil)
-		right -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstant(ctxt, kMCEmptyString);
-	
-	MCSyntaxFactoryEvalMethod(ctxt, getmethodinfo());
-	
-	MCSyntaxFactoryEndExpression(ctxt);
-
-}
-
-void MCUnaryOperator::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	right -> compile(ctxt);
-	
-	MCSyntaxFactoryEvalMethod(ctxt, getmethodinfo());
-	
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-void MCMultiBinaryOperator::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	if (left != nil)
-		left -> compile(ctxt);
-	else if (canbeunary())
-		MCSyntaxFactoryEvalConstantUInt(ctxt, 0);
-	else
-		MCAssert(false);
-		
-	right -> compile(ctxt);
-	
-	MCExecMethodInfo **t_methods;
-	uindex_t t_method_count;
-	
-	getmethodinfo(t_methods, t_method_count);
-	
-	for(uindex_t i = 0; i < t_method_count; i++)
-		MCSyntaxFactoryEvalMethod(ctxt, t_methods[i]);
-	
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Logical operators
@@ -199,19 +144,6 @@ void MCConcat::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         MCExecValueTraits<MCStringRef>::set(r_value, MCValueRetain(*t_result));
 }
 
-void MCConcat::compile(MCSyntaxFactoryRef ctxt)
-{
-    MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-    
-    left -> compile(ctxt);
-    
-    right -> compile(ctxt);
-    
-    MCSyntaxFactoryEvalMethod(ctxt, kMCStringsEvalConcatenateMethodInfo);
-    
-    MCSyntaxFactoryEndExpression(ctxt);
-}
-
 Parse_stat MCBeginsEndsWith::parse(MCScriptPoint& sp, Boolean the)
 {
     initpoint(sp);
@@ -307,22 +239,6 @@ void MCMinus::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     MCExecTypeRelease(t_right);
 }
 
-void MCMinus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const
-{
-    static MCExecMethodInfo *s_methods[] = { kMCMathEvalSubtractMethodInfo, kMCMathEvalSubtractNumberFromArrayMethodInfo, kMCMathEvalSubtractArrayFromArrayMethodInfo };
-    r_methods = s_methods;
-    r_count = 3;
-}
-
-
-// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-///////////////////////////////////////////////////////////////////////////////
-//
-//  Comparison operators
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Miscellaneous operators
@@ -332,20 +248,11 @@ void MCGrouping::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
     if (right != NULL)
     {
-        MCValueRef t_value;
         if (!ctxt . EvaluateExpression(right, EE_GROUPING_BADRIGHT, r_value))
             return;
     }
     else
         ctxt . LegacyThrow(EE_GROUPING_BADRIGHT);
-}
-
-void MCGrouping::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	right -> compile(ctxt);
-	MCSyntaxFactoryEvalResult(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
@@ -486,54 +393,54 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 				{
 					if (sp . skip_token(SP_FACTOR, TT_THE) == PS_NORMAL)
 					{
-						Symbol_type type;
-						const LT *te;
-						if (sp . next(type) == PS_NORMAL)
+						Symbol_type t_type;
+						const LT *t_te;
+						if (sp . next(t_type) == PS_NORMAL)
 						{
-							if ((sp.lookup(SP_FACTOR, te) == PS_NORMAL
-									&& (te->which == P_DRAG_DATA
-                                        || te->which == P_CLIPBOARD_DATA
-                                        || te->which == P_RAW_CLIPBOARD_DATA
-                                        || te->which == P_RAW_DRAGBOARD_DATA
-                                        || te->which == P_FULL_CLIPBOARD_DATA
-                                        || te->which == P_FULL_DRAGBOARD_DATA)))
+							if ((sp.lookup(SP_FACTOR, t_te) == PS_NORMAL
+									&& (Properties(t_te->which) == P_DRAG_DATA
+                                        || Properties(t_te->which) == P_CLIPBOARD_DATA
+                                        || Properties(t_te->which) == P_RAW_CLIPBOARD_DATA
+                                        || Properties(t_te->which) == P_RAW_DRAGBOARD_DATA
+                                        || Properties(t_te->which) == P_FULL_CLIPBOARD_DATA
+                                        || Properties(t_te->which) == P_FULL_DRAGBOARD_DATA)))
 							{
-								if (te -> which == P_CLIPBOARD_DATA)
+								if (Properties(t_te -> which) == P_CLIPBOARD_DATA)
 								{
 									if (form == IT_NOT_AMONG)
 										form = IT_NOT_AMONG_THE_CLIPBOARD_DATA;
 									else
 										form = IT_AMONG_THE_CLIPBOARD_DATA;
 								}
-                                else if (te -> which == P_RAW_CLIPBOARD_DATA)
+                                else if (Properties(t_te -> which) == P_RAW_CLIPBOARD_DATA)
                                 {
                                     if (form == IT_NOT_AMONG)
                                         form = IT_NOT_AMONG_THE_RAW_CLIPBOARD_DATA;
                                     else
                                         form = IT_AMONG_THE_RAW_CLIPBOARD_DATA;
                                 }
-                                else if (te -> which == P_RAW_DRAGBOARD_DATA)
+                                else if (Properties(t_te -> which) == P_RAW_DRAGBOARD_DATA)
                                 {
                                    if (form == IT_NOT_AMONG)
                                        form = IT_NOT_AMONG_THE_RAW_DRAGBOARD_DATA;
                                     else
                                         form = IT_AMONG_THE_RAW_DRAGBOARD_DATA;
                                 }
-                                else if (te -> which == P_FULL_CLIPBOARD_DATA)
+                                else if (Properties(t_te -> which) == P_FULL_CLIPBOARD_DATA)
                                 {
                                     if (form == IT_NOT_AMONG)
                                         form = IT_NOT_AMONG_THE_FULL_CLIPBOARD_DATA;
                                     else
                                         form = IT_AMONG_THE_FULL_CLIPBOARD_DATA;
                                 }
-                                else if (te -> which == P_FULL_DRAGBOARD_DATA)
+                                else if (Properties(t_te -> which) == P_FULL_DRAGBOARD_DATA)
                                 {
                                     if (form == IT_NOT_AMONG)
                                         form = IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA;
                                     else
                                         form = IT_AMONG_THE_FULL_DRAGBOARD_DATA;
                                 }
-								else /* if (te -> which == P_DRAG_DATA) */
+								else /* if (Properties(te -> which) == P_DRAG_DATA) */
 								{
 									if (form == IT_NOT_AMONG)
 										form = IT_NOT_AMONG_THE_DRAG_DATA;
@@ -577,283 +484,9 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-#if 0
-Exec_stat MCIs::eval(MCExecPoint &ep)
-{
-	MCExecContext ctxt(ep);
-	bool t_result;
-
-	// Implementation of 'is a <type>'
-	if (valid != IV_UNDEFINED)
-	{
-		MCAutoValueRef t_value;
-
-		if (right->eval(ep) != ES_NORMAL)
-		{
-			MCeerror->add(EE_IS_BADLEFT, line, pos);
-			return ES_ERROR;
-		}
-		/* UNCHECKED */ ep.copyasvalueref(&t_value);
-
-		switch (valid)
-		{
-		case IV_ARRAY:
-			if (form == IT_NORMAL)
-				MCArraysEvalIsAnArray(ctxt, *t_value, t_result);
-			else
-				MCArraysEvalIsNotAnArray(ctxt, *t_value, t_result);
-			break;
-		case IV_COLOR:
-			if (form == IT_NORMAL)
-				MCGraphicsEvalIsAColor(ctxt, *t_value, t_result);
-			else
-				MCGraphicsEvalIsNotAColor(ctxt, *t_value, t_result);
-			break;
-		case IV_DATE:
-			if (form == IT_NORMAL)
-				MCDateTimeEvalIsADate(ctxt, *t_value, t_result);
-			else
-				MCDateTimeEvalIsNotADate(ctxt, *t_value, t_result);
-			break;
-		case IV_INTEGER:
-			if (form == IT_NORMAL)
-				MCMathEvalIsAnInteger(ctxt, *t_value, t_result);
-			else
-				MCMathEvalIsNotAnInteger(ctxt, *t_value, t_result);
-			break;
-		case IV_NUMBER:
-			if (form == IT_NORMAL)
-				MCMathEvalIsANumber(ctxt, *t_value, t_result);
-			else
-				MCMathEvalIsNotANumber(ctxt, *t_value, t_result);
-			break;
-		case IV_LOGICAL:
-			if (form == IT_NORMAL)
-				MCLogicEvalIsABoolean(ctxt, *t_value, t_result);
-			else
-				MCLogicEvalIsNotABoolean(ctxt, *t_value, t_result);
-			break;
-		case IV_POINT:
-			if (form == IT_NORMAL)
-				MCGraphicsEvalIsAPoint(ctxt, *t_value, t_result);
-			else
-				MCGraphicsEvalIsNotAPoint(ctxt, *t_value, t_result);
-			break;
-		case IV_RECT:
-			if (form == IT_NORMAL)
-				MCGraphicsEvalIsARectangle(ctxt, *t_value, t_result);
-			else
-				MCGraphicsEvalIsNotARectangle(ctxt, *t_value, t_result);
-			break;
-        // MERG-2013-06-24: [[ IsAnAsciiString ]] Implementation for ascii string
-        //   check.
-        case IV_ASCII:
-            if (form == IT_NORMAL)
-                MCStringsEvalIsAscii(ctxt, *t_value, t_result);
-            else
-                MCStringsEvalIsNotAscii(ctxt, *t_value, t_result);
-            break;
-        }
-
-		if (!ctxt . HasError())
-		{
-			ep . setboolean(t_result);
-			return ES_NORMAL;
-		}
-
-		return ctxt . Catch(line, pos);
-	}
-
-	// Implementation of 'is'
-	if (form == IT_NORMAL || form == IT_NOT)
-	{
-		MCAutoValueRef t_left, t_right;
-		if (!eval_comparison_factors(ep, left, right, &t_left, &t_right))
-			return ES_ERROR;
-
-		if (form == IT_NORMAL)
-			MCLogicEvalIsEqualTo(ctxt, *t_left, *t_right, t_result);
-		else
-			MCLogicEvalIsNotEqualTo(ctxt, *t_left, *t_right, t_result);
-	}
-
-
-	// The rest
-	switch (form)
-	{
-	case IT_AMONG:
-	case IT_NOT_AMONG:
-		if (delimiter == CT_KEY)
-		{
-			MCAutoArrayRef t_array;
-			MCNewAutoNameRef t_name;
-
-			if (left->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_IS_BADLEFT, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasnameref(&t_name);
-
-			if (right->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_IS_BADRIGHT, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasarrayref(&t_array);
-
-			if (form == IT_AMONG)
-				MCArraysEvalIsAmongTheKeysOf(ctxt, *t_name, *t_array, t_result);
-			else
-				MCArraysEvalIsNotAmongTheKeysOf(ctxt, *t_name, *t_array, t_result);
-		}
-		else
-		{
-			MCAutoStringRef t_left, t_right;
-
-			if (left->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_IS_BADLEFT, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasstringref(&t_left);
-
-			if (right->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_IS_BADRIGHT, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasstringref(&t_right);
-
-			switch (delimiter)
-			{
-			case CT_TOKEN:
-				if (form == IT_AMONG)
-					MCStringsEvalIsAmongTheTokensOf(ctxt, *t_left, *t_right, t_result);
-				else
-					MCStringsEvalIsNotAmongTheTokensOf(ctxt, *t_left, *t_right, t_result);
-				break;
-			case CT_WORD:
-				if (form == IT_AMONG)
-					MCStringsEvalIsAmongTheWordsOf(ctxt, *t_left, *t_right, t_result);
-				else
-					MCStringsEvalIsNotAmongTheWordsOf(ctxt, *t_left, *t_right, t_result);
-				break;
-			case CT_LINE:
-				if (form == IT_AMONG)
-					MCStringsEvalIsAmongTheLinesOf(ctxt, *t_left, *t_right, t_result);
-				else
-					MCStringsEvalIsNotAmongTheLinesOf(ctxt, *t_left, *t_right, t_result);
-				break;
-			case CT_ITEM:
-				if (form == IT_AMONG)
-					MCStringsEvalIsAmongTheItemsOf(ctxt, *t_left, *t_right, t_result);
-				else
-					MCStringsEvalIsNotAmongTheItemsOf(ctxt, *t_left, *t_right, t_result);
-				break;
-			}
-		}
-		break;
-	case IT_AMONG_THE_CLIPBOARD_DATA:
-	case IT_NOT_AMONG_THE_CLIPBOARD_DATA:
-	case IT_AMONG_THE_DRAG_DATA:
-	case IT_NOT_AMONG_THE_DRAG_DATA:
-		{
-			MCNewAutoNameRef t_right;
-
-			// If 'is among the clipboardData' then left is NULL
-			if (right->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_IS_BADLEFT, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasnameref(&t_right);
-
-			if (form == IT_AMONG_THE_CLIPBOARD_DATA)
-				MCPasteboardEvalIsAmongTheKeysOfTheClipboardData(ctxt, *t_right, t_result);
-			else if (form == IT_NOT_AMONG_THE_CLIPBOARD_DATA)
-				MCPasteboardEvalIsNotAmongTheKeysOfTheClipboardData(ctxt, *t_right, t_result);
-			else if (form == IT_AMONG_THE_DRAG_DATA)
-				MCPasteboardEvalIsAmongTheKeysOfTheDragData(ctxt, *t_right, t_result);
-			else if (form == IT_NOT_AMONG_THE_DRAG_DATA)
-				MCPasteboardEvalIsNotAmongTheKeysOfTheDragData(ctxt, *t_right, t_result);
-		}
-		break;
-	case IT_IN:
-	case IT_NOT_IN:
-		{
-			MCAutoStringRef t_left, t_right;
-
-			if (left->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_IS_BADLEFT, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasstringref(&t_left);
-
-			if (right->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_IS_BADRIGHT, line, pos);
-				return ES_ERROR;
-			}
-			/* UNCHECKED */ ep . copyasstringref(&t_right);
-
-			if (form == IT_IN)
-				MCStringsEvalContains(ctxt, *t_right, *t_left, t_result);
-			else
-				MCStringsEvalDoesNotContain(ctxt, *t_right, *t_left,t_result);
-		}
-		break;
-	case IT_WITHIN:
-	case IT_NOT_WITHIN:
-		{
-			MCPoint t_point;
-			if (left->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_IS_BADLEFT, line, pos);
-				return ES_ERROR;
-			}
-			if (!ep . copyaslegacypoint(t_point))
-			{
-				MCeerror -> add(EE_IS_WITHINNAP, line, pos, ep . getsvalue());
-				return ES_ERROR;
-			}
-
-			MCRectangle t_rectangle;
-			if (right->eval(ep) != ES_NORMAL)
-			{
-				MCeerror->add(EE_IS_BADRIGHT, line, pos);
-				return ES_ERROR;
-			}
-			if (!ep . copyaslegacyrectangle(t_rectangle))
-			{
-				MCeerror -> add(EE_IS_WITHINNAR, line, pos, ep . getsvalue());
-				return ES_ERROR;
-			}
-
-			if (form == IT_WITHIN)
-				MCGraphicsEvalIsWithin(ctxt, t_point, t_rectangle, t_result);
-			else
-				MCGraphicsEvalIsNotWithin(ctxt, t_point, t_rectangle, t_result);
-		}
-		break;
-	default:
-		break;
-	}
-
-	if (!ctxt . HasError())
-	{
-		ep . setboolean(t_result);
-		return ES_NORMAL;
-	}
-
-	return ctxt . Catch(line, pos);
-}
-#else
-
 void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-    bool t_result;
+    bool t_result = false;
     
     // Implementation of 'is [ not ] strictly'
     if (form == IT_STRICTLY || form == IT_NOT_STRICTLY)
@@ -863,7 +496,6 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         if (!ctxt . EvalExprAsValueRef(right, EE_IS_BADLEFT, &t_value))
             return;
         
-        bool t_result;
         switch(valid)
         {
             case IV_UNDEFINED:
@@ -908,7 +540,9 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                 else
                     MCEngineEvalIsNotStrictlyAnArray(ctxt, *t_value, t_result);
                 break;
-        }
+			default:
+				MCUnreachable();
+		}
         
         if (!ctxt . HasError())
             MCExecValueTraits<bool>::set(r_value, t_result);
@@ -1208,124 +842,6 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
         MCExecValueTraits<bool>::set(r_value, t_result);
 }
 
-#endif
-
-void MCIs::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	if (valid != IV_UNDEFINED)
-	{
-		MCExecMethodInfo *t_method;
-		switch (valid)
-		{
-			case IV_ARRAY:
-				t_method = form == IT_NORMAL ? kMCArraysEvalIsAnArrayMethodInfo : kMCArraysEvalIsNotAnArrayMethodInfo;
-				break;
-			case IV_COLOR:
-				t_method = form == IT_NORMAL ? kMCGraphicsEvalIsAColorMethodInfo : kMCGraphicsEvalIsNotAColorMethodInfo;
-				break;
-			case IV_DATE:
-				t_method = form == IT_NORMAL ? kMCDateTimeEvalIsADateMethodInfo : kMCDateTimeEvalIsNotADateMethodInfo;
-				break;
-			case IV_INTEGER:
-				t_method = form == IT_NORMAL ? kMCMathEvalIsAnIntegerMethodInfo : kMCMathEvalIsNotAnIntegerMethodInfo;
-				break;
-			case IV_NUMBER:
-				t_method = form == IT_NORMAL ? kMCMathEvalIsANumberMethodInfo : kMCMathEvalIsANumberMethodInfo;
-				break;
-			case IV_LOGICAL:
-				t_method = form == IT_NORMAL ? kMCLogicEvalIsABooleanMethodInfo : kMCLogicEvalIsNotABooleanMethodInfo;
-				break;
-			case IV_POINT:
-				t_method = form == IT_NORMAL ? kMCGraphicsEvalIsAPointMethodInfo : kMCGraphicsEvalIsNotAPointMethodInfo;
-				break;
-			case IV_RECT:
-				t_method = form == IT_NORMAL ? kMCGraphicsEvalIsARectangleMethodInfo : kMCGraphicsEvalIsNotARectangleMethodInfo;
-				break;
-            default:
-                MCUnreachableReturn();
-		}
-		
-		right -> compile(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, t_method);
-	}
-	else
-	{
-		MCExecMethodInfo *t_method;
-		bool t_is_unary;
-		t_is_unary = false;
-		switch (form)
-		{
-			case IT_NORMAL:
-				t_method = kMCLogicEvalIsEqualToMethodInfo;
-				break;
-			case IT_NOT:
-				t_method = kMCLogicEvalIsNotEqualToMethodInfo;
-				break;
-			case IT_AMONG:
-			case IT_NOT_AMONG:
-				switch(delimiter)
-				{
-					case CT_KEY:
-						t_method = form == IT_AMONG ? kMCArraysEvalIsAmongTheKeysOfMethodInfo : kMCArraysEvalIsNotAmongTheKeysOfMethodInfo;
-						break;
-					case CT_TOKEN:
-						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheTokensOfMethodInfo : kMCStringsEvalIsNotAmongTheTokensOfMethodInfo;
-						break;
-					case CT_WORD:
-						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheWordsOfMethodInfo : kMCStringsEvalIsNotAmongTheWordsOfMethodInfo;
-						break;
-					case CT_LINE:
-						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheLinesOfMethodInfo : kMCStringsEvalIsNotAmongTheLinesOfMethodInfo;
-						break;
-					case CT_ITEM:
-						t_method = form == IT_AMONG ? kMCStringsEvalIsAmongTheItemsOfMethodInfo : kMCStringsEvalIsNotAmongTheItemsOfMethodInfo;
-						break;
-                    default:
-                        MCUnreachableReturn();
-				}
-				break;
-			case IT_IN:
-				t_method = kMCStringsEvalContainsMethodInfo;
-				break;
-			case IT_NOT_IN:
-				t_method = kMCStringsEvalDoesNotContainMethodInfo;
-				break;
-			case IT_WITHIN:
-				t_method = kMCGraphicsEvalIsWithinMethodInfo;
-				break;
-			case IT_NOT_WITHIN:
-				t_method = kMCGraphicsEvalIsNotWithinMethodInfo;
-				break;
-			case IT_AMONG_THE_CLIPBOARD_DATA:
-				t_method = kMCPasteboardEvalIsAmongTheKeysOfTheClipboardDataMethodInfo;
-				t_is_unary = true;
-				break;
-			case IT_NOT_AMONG_THE_CLIPBOARD_DATA:
-				t_method = kMCPasteboardEvalIsNotAmongTheKeysOfTheClipboardDataMethodInfo;
-				t_is_unary = true;
-				break;
-			case IT_AMONG_THE_DRAG_DATA:
-				t_method = kMCPasteboardEvalIsAmongTheKeysOfTheDragDataMethodInfo;
-				t_is_unary = true;
-				break;
-			case IT_NOT_AMONG_THE_DRAG_DATA:
-				t_method = kMCPasteboardEvalIsNotAmongTheKeysOfTheDragDataMethodInfo;
-				t_is_unary = true;
-				break;
-            default:
-                MCUnreachableReturn();
-		}				
-		if (!t_is_unary)
-			left -> compile(ctxt);
-		right -> compile(ctxt);
-		MCSyntaxFactoryEvalMethod(ctxt, t_method);
-	}
-	
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
 MCThere::~MCThere()
 {
 	delete object;
@@ -1353,13 +869,13 @@ Parse_stat MCThere::parse(MCScriptPoint &sp, Boolean the)
 	if (sp.lookup(SP_THERE, te) != PS_NORMAL)
 	{
 		sp.backup();
-		object = new MCChunk(False);
+		object = new (nothrow) MCChunk(False);
 		if (object->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_THERE_NOOBJECT, sp);
 			return PS_ERROR;
 		}
-		right = new MCExpression(); // satisfy check in scriptpt.parse
+		right = new (nothrow) MCExpression(); // satisfy check in scriptpt.parse
 	}
 	else
 	{
@@ -1419,35 +935,4 @@ void MCThere::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 
     if (!ctxt.HasError())
         MCExecValueTraits<bool>::set(r_value, t_result);
-}
-
-void MCThere::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	
-	MCExecMethodInfo *t_method;
-	if (object == nil)
-	{
-		switch(mode)
-		{
-			case TM_PROCESS:
-				t_method = form == IT_NORMAL ? kMCFilesEvalThereIsAProcessMethodInfo : kMCFilesEvalThereIsNotAProcessMethodInfo;
-				break;
-			case TM_FILE:
-				t_method = form == IT_NORMAL ? kMCFilesEvalThereIsAFileMethodInfo : kMCFilesEvalThereIsNotAFileMethodInfo;
-				break;
-			case TM_DIRECTORY:
-				t_method = form == IT_NORMAL ? kMCFilesEvalThereIsAFolderMethodInfo : kMCFilesEvalThereIsNotAFolderMethodInfo;
-				break;
-            default:
-                MCUnreachableReturn();
-		}
-	}
-	else
-		t_method = form == IT_NORMAL ? kMCInterfaceEvalThereIsAnObjectMethodInfo : kMCInterfaceEvalThereIsNotAnObjectMethodInfo;
-	
-	right -> compile(ctxt);
-	MCSyntaxFactoryEvalMethod(ctxt, t_method);
-		
-	MCSyntaxFactoryEndExpression(ctxt);
 }

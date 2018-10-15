@@ -23,9 +23,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "literal.h"
 #include "scriptpt.h"
 
-
-#include "syntax.h"
-
 Parse_stat MCLiteral::parse(MCScriptPoint &sp, Boolean the)
 {
 	initpoint(sp);
@@ -37,13 +34,3 @@ void MCLiteral::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 	r_value . type = kMCExecValueTypeValueRef;
 	r_value . valueref_value = MCValueRetain(value);
 }
-
-void MCLiteral::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
-	MCSyntaxFactoryEvalConstant(ctxt, value);
-	MCSyntaxFactoryEvalResult(ctxt);
-	MCSyntaxFactoryEndExpression(ctxt);
-}
-
-

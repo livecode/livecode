@@ -303,7 +303,7 @@ MCPrinterResult MCMacOSXPrinter::DoBeginPrint(MCStringRef p_document_name, MCPri
 	GetProperties(true);
 
 	MCMacOSXPrinterDevice *t_device;
-	t_device = new MCMacOSXPrinterDevice;
+	t_device = new (nothrow) MCMacOSXPrinterDevice;
 
 	MCPrinterResult t_result;
 	t_result = t_device -> Start(m_session, m_settings, m_page_format, GetJobColor());
@@ -357,7 +357,6 @@ bool MCMacOSXPrinter::Reset(MCStringRef p_name, PMPrintSettings p_settings, PMPa
 	t_printer = NULL;
 	if (t_success)
 	{
-		OSErr t_err;
 		for(CFIndex i = 0; i < CFArrayGetCount(t_printers); ++i)
 		{
 			PMPrinter t_printer_to_test;
@@ -653,7 +652,6 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 		else if (t_type == kPMDestinationFile && (t_output_format == NULL || CFStringCompare(t_output_format, kPMDocumentFormatPDF, 0) == 0))
 		{
 			PDEBUG(stderr, "SetProperties: Output location is file\n");
-			CFStringRef t_output_format;
 			t_output_type = PRINTER_OUTPUT_FILE;
             // SN-2014-12-22: [[ Bug 14278 ]] Get a UTF-8-encoded filename
 			t_output_location = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_output_location_url, kCFURLPOSIXPathStyle), true, true);
@@ -710,7 +708,9 @@ void MCMacOSXPrinter::SetDerivedProperties(void)
 {
 	PMRect t_pm_page_rect, t_pm_paper_rect;
 	PDEBUG(stderr, "SetProperties: PMGetAdjustedPaperRect\n");
-	if (PMGetAdjustedPaperRect(m_page_format, &t_pm_paper_rect) == noErr && PMGetAdjustedPageRect(m_page_format, &t_pm_page_rect) == noErr)
+	if (m_page_format != nullptr &&
+        PMGetAdjustedPaperRect(m_page_format, &t_pm_paper_rect) == noErr &&
+        PMGetAdjustedPageRect(m_page_format, &t_pm_page_rect) == noErr)
 	{
 		int4 t_left;
 		t_left = (int4)floor(t_pm_page_rect . left - t_pm_paper_rect . left);
@@ -735,7 +735,8 @@ void MCMacOSXPrinter::SetDerivedProperties(void)
 	
 	PDEBUG(stderr, "SetProperties: PMPrinterGetDescriptionURL\n");
     CFURLRef t_ppd_url = NULL;
-	if (PMPrinterCopyDescriptionURL(m_printer, kPMPPDDescriptionType, &t_ppd_url) == noErr)
+	if (m_printer != nullptr &&
+        PMPrinterCopyDescriptionURL(m_printer, kPMPPDDescriptionType, &t_ppd_url) == noErr)
 	{
 		char *t_ppd_file;
 		t_ppd_file = osx_cfstring_to_cstring(CFURLCopyFileSystemPath(t_ppd_url, kCFURLPOSIXPathStyle), true);
@@ -889,7 +890,12 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 			CFRelease(t_output_file);
 			t_output_type = kPMDestinationFile;
 		}
-		break;
+			break;
+		case PRINTER_OUTPUT_WORKFLOW:
+		case PRINTER_OUTPUT_SYSTEM:
+			MCUnreachable();
+			break;
+				
 		}
 
 		t_err = PMSessionSetDestination(m_session, m_settings, t_output_type, kPMDocumentFormatPDF, t_output_url);
@@ -1516,7 +1522,7 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 		
 		if (p_mark -> stroke -> dash . length > 1)
 		{
-			CGFloat *t_lengths = new CGFloat[p_mark -> stroke -> dash . length];
+			CGFloat *t_lengths = new (nothrow) CGFloat[p_mark -> stroke -> dash . length];
 			for(uint4 i = 0; i < p_mark -> stroke -> dash . length; i++)
 				t_lengths[i] = p_mark -> stroke -> dash . data[i];
 			CGContextSetLineDash(m_context, p_mark -> stroke -> dash . offset, t_lengths, p_mark -> stroke -> dash . length);
@@ -1879,6 +1885,9 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				executegroup(p_mark);
 		}
 		break;
+			
+		default:
+			break;
 	}
 	
 	CGContextRestoreGState(m_context);
@@ -2085,7 +2094,7 @@ MCPrinterResult MCMacOSXPrinterDevice::Begin(const MCPrinterRectangle& p_src_rec
 	t_page_height = ceil(t_paper_rect . bottom - t_paper_rect . top);
 	
 	MCQuartzMetaContext *t_context;
-	t_context = new MCQuartzMetaContext(t_src_rect_hull, t_page_width, t_page_height);
+	t_context = new (nothrow) MCQuartzMetaContext(t_src_rect_hull, t_page_width, t_page_height);
 	r_context = t_context;
 
 	m_src_rect = p_src_rect;
@@ -2401,7 +2410,7 @@ bool MCListSystemPrinters(MCStringRef &r_names)
     for(CFIndex i = 0; i < CFArrayGetCount(t_printers) && t_success; ++i)
 	{
         MCAutoStringRef t_name;
-        t_success = MCStringCreateWithCFString(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), &t_name)
+        t_success = MCStringCreateWithCFStringRef(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), &t_name)
                         && MCListAppend(*t_names, *t_name);
 	}
 

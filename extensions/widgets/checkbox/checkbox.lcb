@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 
 -- declaring the extension as a widget, followed by the identifier
-widget com.livecode.widget.checkBox
+widget com.livecode.widget.checkbox
 --
 
 -- dependancy declarations

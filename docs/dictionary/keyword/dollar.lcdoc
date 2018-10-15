@@ -5,9 +5,9 @@ Type: keyword
 Syntax: $
 
 Summary:
-The character <$> (dollar sign) is used to indicate an <environment
-variable> on <Unix|Unix systems> and a command-line parameter on <Unix>
-or <Windows|Windows systems>.
+The character <$> (dollar sign) is used to indicate an 
+<environment variable> on <Unix|Unix systems> and a command-line
+parameter on <Unix> or <Windows|Windows systems>.
 
 Introduced: 1.0
 
@@ -19,7 +19,7 @@ Example:
 put $LOGNAME into field "Login Name"
 
 Example:
-if $0 is not myAppName then answer "Problem initializing!"
+if $0 is not "myAppName" then answer "Problem initializing!"
 
 Description:
 Use the <$> <keyword> to interact with the system environment and to
@@ -28,8 +28,9 @@ started up from the command line.
 
 The <$> character marks two kinds of special <variable|variables>:
 <command line|command-line> <argument|arguments> (on <OS X>, <Unix>, and
-<Windows|Windows systems>) and <environment variable|environment
-variables> (on <OS X> and <Unix|Unix systems>).
+<Windows|Windows systems>) and 
+<environment variable|environment variables> (on <OS X> and 
+<Unix|Unix systems>).
 
 If you start up the application from the command line (on OS X, Unix or
 Windows systems), the command name is stored in the global variable $0

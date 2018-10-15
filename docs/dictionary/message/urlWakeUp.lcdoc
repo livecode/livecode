@@ -2,7 +2,7 @@ Name: urlWakeUp
 
 Type: message
 
-Syntax: urlWakeUp <wakeUpURL>
+Syntax: urlWakeUp <pWakeUpUrl>
 
 Summary:
 Sent to an application when a custom URL is selected.
@@ -19,7 +19,7 @@ on urlWakeUp pURL
 end urlWakeUp
 
 Parameters:
-wakeUpURL (string):
+pWakeUpUrl (string):
 The custom url that was used to launch the application
 
 Description:

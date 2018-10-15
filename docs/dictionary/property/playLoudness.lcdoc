@@ -38,7 +38,8 @@ on the left side of the <player|player's> controller bar, which is
 visible if the <player|player's> <showController> property is true.
 
 References: play (command), beep (command), recordLoudness (function),
-player (object), showController (property)
+player (object), showController (property),
+leftBalance (property), rightBalance (property), audioPan (property)
 
 Tags: multimedia
 

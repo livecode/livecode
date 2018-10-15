@@ -149,9 +149,9 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 	while (tptr != NULL)
 	{
         // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
-        MCContainer *t_container;
-        if (tptr -> evalcontainer(ctxt, t_container))
-            tptr -> set_argument_container(t_container);
+        MCAutoPointer<MCContainer> t_container = new (nothrow) MCContainer;
+        if (tptr -> evalcontainer(ctxt, **t_container))
+            tptr -> set_argument_container(t_container.Release());
         else
         {
             tptr -> clear_argument();
@@ -741,8 +741,11 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                 
                 if (tspr == NULL && state != TS_FINALLY)
                 {
-                    if (state == TS_CATCH)
-                        MCeerror->clear();
+                    // Everything has executed normally but there may have been an
+                    // error added on another event. The trylock needs refactoring to
+                    // ensure a trylock on one event can't cause issues in another
+                    // event.
+                    MCeerror->clear();
                     
                     tspr = finallystatements;
                     state = TS_FINALLY;
@@ -778,7 +781,7 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                             {
                                 MCAutoStringRef t_error;
                                 MCeerror -> copyasstringref(&t_error);
-                                errorvar->evalvar(ctxt)->setvalueref(*t_error);
+                                errorvar->set(ctxt, *t_error);
                             }
                             
                             // MW-2007-09-04: At this point we need to clear the execution error
@@ -808,13 +811,16 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
             case ES_PASS:
                 if (state == TS_CATCH)
                 {
+                    MCAutoValueRef t_value;
                     MCAutoStringRef t_string;
-                    if (ctxt . ConvertToString(errorvar->evalvar(ctxt)->getvalueref(), &t_string))
+                    if ((errorvar->eval(ctxt, &t_value), !ctxt.HasError()) &&
+                        ctxt . ConvertToString(*t_value, &t_string))
                     {
                         MCeerror->copystringref(*t_string, False);
-                        MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
-                        stat = ES_ERROR;
                     }
+                    
+                    MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
+                    stat = ES_ERROR;
                 }
             default:
                 if (state == TS_FINALLY)

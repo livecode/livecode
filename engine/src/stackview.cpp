@@ -323,8 +323,8 @@ void MCStack::view_on_rect_changed(void)
 	// IM-2013-10-03: [[ FullscreenMode ]] if the view rect has changed, update the tilecache geometry
 	view_updatetilecacheviewport();
 	
-	if (view_getfullscreen())
-		view_dirty_all();
+	if (view_getfullscreen() || view_platform_dirtyviewonresize())
+		dirtyall();
 }
 
 void MCStack::view_setrect(const MCRectangle &p_rect)
@@ -426,11 +426,21 @@ void MCStack::view_calculate_viewports(const MCRectangle &p_stack_rect, MCRectan
 	// IM-2014-01-16: [[ StackScale ]] append scale transform to fullscreenmode transform
 	r_transform = MCGAffineTransformConcat(view_get_stack_transform(t_mode, MCGRectangleGetIntegerBounds(t_scaled_rect), t_view_rect), t_transform);
 }
+
+#if defined(_MOBILE)
+#include "mblsyntax.h"
+#endif
 	
 void MCStack::view_update_transform(bool p_ensure_onscreen)
 {
 	MCRectangle t_view_rect;
 	MCGAffineTransform t_transform;
+    
+#if defined(_MOBILE)
+    MCOrientation t_orientation;
+    MCSystemGetOrientation(t_orientation);
+    MCOrientationGetRectForOrientation(t_orientation ,m_view_requested_stack_rect);
+#endif
 	
 	// IM-2014-01-16: [[ StackScale ]] Use utility method to calculate new values
 	view_calculate_viewports(m_view_requested_stack_rect, m_view_adjusted_stack_rect, t_view_rect, t_transform);
@@ -451,7 +461,7 @@ void MCStack::view_update_transform(bool p_ensure_onscreen)
 		m_view_transform = t_transform;
 		m_view_stack_visible_rect = t_stack_visible_rect;
 		
-		view_dirty_all();
+		dirtyall();
 		if (t_transform_changed)
 			this->OnViewTransformChanged();
 	}
@@ -555,7 +565,10 @@ MCRectangle MCStack::view_getstackvisiblerect(void)
 
 void MCStack::view_render(MCGContextRef p_target, MCRectangle p_rect)
 {
-	// redraw borders if visible
+    if (getextendedstate(ECS_DONTDRAW))
+        return;
+    
+    // redraw borders if visible
 
 	// scale & position stack redraw rect
 	// update stack region
@@ -649,7 +662,7 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 		
 		// MW-2012-03-15: [[ Bug ]] Make sure we dirty the stack to ensure all the
 		//   layer mode attrs are rest.
-		view_dirty_all();
+		dirtyall();
 		
 		return;
 	}
@@ -701,7 +714,7 @@ void MCStack::view_setacceleratedrendering(bool p_value)
 	view_updatetilecacheviewport();
 	MCTileCacheSetCompositor(m_view_tilecache, t_compositor_type);
 	
-	view_dirty_all();
+	dirtyall();
 #endif /* !_SERVER */
 }
 
@@ -734,7 +747,7 @@ void MCStack::view_setcompositortype(MCTileCacheCompositorType p_type)
 		MCTileCacheSetCompositor(m_view_tilecache, p_type);
 	}
 	
-	view_dirty_all();
+	dirtyall();
 }
 
 //////////
@@ -752,7 +765,7 @@ void MCStack::view_setcompositorcachelimit(uint32_t p_limit)
 	if (m_view_tilecache != nil)
 	{
 		MCTileCacheSetCacheLimit(m_view_tilecache, p_limit);
-		view_dirty_all();
+		dirtyall();
 	}
 }
 
@@ -776,7 +789,7 @@ void MCStack::view_setcompositortilesize(uint32_t p_size)
 	if (m_view_tilecache != nil)
 	{
 		MCTileCacheSetTileSize(m_view_tilecache, p_size);
-		view_dirty_all();
+		dirtyall();
 	}
 }
 
@@ -951,12 +964,9 @@ void MCStack::view_reset_updates()
 // IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
 void MCStack::view_dirty_rect(const MCRectangle &p_rect)
 {
-	MCRectangle t_view_rect;
-	t_view_rect = MCRectangleMake(0, 0, m_view_rect.width, m_view_rect.height);
-	
-	MCRectangle t_dirty_rect;
-	t_dirty_rect = MCU_intersect_rect(p_rect, t_view_rect);
-	
+    MCRectangle t_visible_rect = MCRectangleGetTransformedBounds(view_getstackvisiblerect(), view_getviewtransform());
+    MCRectangle t_dirty_rect = MCU_intersect_rect(p_rect, t_visible_rect);
+
 	if (t_dirty_rect.width == 0 || t_dirty_rect.height == 0)
 		return;
 	
@@ -970,14 +980,6 @@ void MCStack::view_dirty_rect(const MCRectangle &p_rect)
 	m_view_need_redraw = true;
 
 	MCRedrawScheduleUpdateForStack(this);
-}
-
-// IM-2013-10-14: [[ FullscreenMode ]] Move update region tracking into view abstraction
-void MCStack::view_dirty_all(void)
-{
-	view_dirty_rect(MCRectangleMake(0, 0, m_view_rect.width, m_view_rect.height));
-	
-	dirtyall();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -998,7 +1000,7 @@ MCRectangle MCStack::view_setgeom(const MCRectangle &p_rect)
 		return p_rect;
 	}
 	
-	view_dirty_all();
+	dirtyall();
 	return view_platform_setgeom(p_rect);
 }
 

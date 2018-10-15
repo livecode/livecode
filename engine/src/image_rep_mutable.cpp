@@ -414,8 +414,9 @@ void MCMutableImageRep::startdraw()
 		MCactiveimage->endsel();
 
 	state |= CS_EDITED;
+	
 	MCundos->freestate();
-	Ustruct *us = new Ustruct;
+	Ustruct *us = new (nothrow) Ustruct;
 	us->type = UT_PAINT;
 	Lock();
 	MCundos->savestate(m_owner, us);
@@ -423,6 +424,7 @@ void MCMutableImageRep::startdraw()
 	MCImageFreeBitmap(m_undo_image);
 	m_undo_image = nil;
 	/* UNCHECKED */ MCImageCopyBitmap(m_bitmap, m_undo_image);
+
 	switch (t_tool)
 	{
 	case T_BRUSH:
@@ -445,7 +447,7 @@ void MCMutableImageRep::startdraw()
 	case T_CURVE:
 		if (points != NULL)
 			delete points;
-		points = new MCPoint[MCscreen->getmaxpoints()];
+		points = new (nothrow) MCPoint[MCscreen->getmaxpoints()];
 		npoints = MCscreen->getmaxpoints();
 		points[0].x = mx;
 		points[0].y = my;
@@ -1117,7 +1119,7 @@ void MCMutableImageRep::bucket_fill(MCImageBitmap *p_src, uint4 scolor, MCGRaste
 	if (!gotpoint)
 		return;
 
-	MCstacktype *pstack = new MCstacktype[PSTACKSIZE];
+	MCstacktype *pstack = new (nothrow) MCstacktype[PSTACKSIZE];
 	uint2 pstackptr = 0;
 	uint2 pstacktop = 1;
 	bool collision;
@@ -1672,7 +1674,7 @@ void MCMutableImageRep::selimage()
 	MCeditingimage = m_owner;
 	state |= CS_EDITED;
 	MCundos->freestate();
-	Ustruct *us = new Ustruct;
+	Ustruct *us = new (nothrow) Ustruct;
 	us->type = UT_PAINT;
 
     Lock();
@@ -1838,7 +1840,7 @@ void MCMutableImageRep::rotatesel(int2 angle)
 	if (clearundo)
 	{
 		MCundos->freestate();
-		Ustruct *us = new Ustruct;
+		Ustruct *us = new (nothrow) Ustruct;
 		us->type = UT_PAINT;
         Lock();
 		MCundos->savestate(m_owner, us);

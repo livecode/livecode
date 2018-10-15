@@ -137,7 +137,7 @@ void MCPlatformCreateCustomCursor(MCImageBitmap *p_image, MCPoint p_hotspot, MCP
 	t_cursor -> is_standard = false;
 	
 	CGImageRef t_cg_image;
-	/* UNCHECKED */ MCImageBitmapToCGImage(p_image, false, false, t_cg_image);
+	/* UNCHECKED */ MCImageBitmapToCGImage(p_image, true, false, t_cg_image);
 	
 	// Convert the CGImage into an NSIMage
 	NSImage *t_cursor_image;

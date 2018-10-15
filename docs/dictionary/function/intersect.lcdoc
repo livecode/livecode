@@ -37,13 +37,13 @@ theshold options
 -   "alpha value": An integer between 0 and 255 which specifies a
     threshold that the alpha value of each pixel must be greater than or
     equal to in order to be counted during calculation of the intersect.
--   ""bounds"": (Equivalent to using an alpha value of 0) Specifies that
+-   "bounds": (Equivalent to using an alpha value of 0) Specifies that
     the intersect is calculated using the rect of the two objects.
--   ""pixels"": (Equivalent to using an alpha value of 1) Specifies that
+-   "pixels": (Equivalent to using an alpha value of 1) Specifies that
     the intersect is calculated using pixels of the objects that have
     are not completely transparent, ignoring completely transparent
     areas. 
--   ""opaque pixels"": (Equivalent to using an alpha value of 255)
+-   "opaque pixels": (Equivalent to using an alpha value of 255)
     Specifies that the intersect is calculated using only pixels that
     are completely opaque.
 
@@ -67,10 +67,10 @@ a <stack> or <card(keyword)> and the other is a <control(keyword)>, the
 <intersect> <function> does not <return(constant)> a reliable result.
 
 References: return (constant), function (control structure),
-within (function), stacks (function), relative coordinates (glossary),
-return (glossary), stack window (glossary), object (glossary),
-card (keyword), control (keyword), card (object), stack (object),
-control (object), layer (property)
+within (function), stacks (function), control (glossary), 
+relative coordinates (glossary), return (glossary), 
+stack window (glossary), object (glossary), card (keyword), 
+control (keyword), card (object), stack (object), layer (property)
 
 Tags: ui
 

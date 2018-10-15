@@ -181,23 +181,6 @@ bool create_temporary_mono_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP&
 bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits)
 {
 	HBITMAP t_bitmap;
-#if 0
-	char t_info_data[sizeof(BITMAPINFOHEADER) + 3 * sizeof(RGBQUAD)];
-	BITMAPINFO *t_info = (BITMAPINFO *)t_info_data;
-//	HBITMAP t_bitmap;
-	memset(t_info, 0, sizeof(BITMAPINFOHEADER));
-	t_info -> bmiHeader . biSize = sizeof(BITMAPINFOHEADER);
-	t_info -> bmiHeader . biCompression = BI_BITFIELDS;
-	*(DWORD *)&t_info -> bmiColors[0] = 0x00FF0000;
-	*(DWORD *)&t_info -> bmiColors[1] = 0x0000FF00;
-	*(DWORD *)&t_info -> bmiColors[2] = 0x000000FF;
-	t_info -> bmiHeader . biWidth = p_width;
-	t_info -> bmiHeader . biHeight = -(int4)p_height;
-	t_info -> bmiHeader . biPlanes = 1;
-	t_info -> bmiHeader . biBitCount = 32;
-	t_info -> bmiHeader . biSizeImage = 0; //p_height * ((p_width + 31) & ~31) / 8;
-	t_bitmap = CreateDIBSection(p_dc, t_info, DIB_RGB_COLORS, (void **)&r_bits, NULL, 0);
-#else
 	BITMAPV4HEADER t_bitmap_info;
 	memset(&t_bitmap_info, 0, sizeof(BITMAPV4HEADER));
 	t_bitmap_info . bV4Size = sizeof(BITMAPV4HEADER);
@@ -213,7 +196,6 @@ bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bi
 	t_bitmap_info . bV4GreenMask = 0xFF << 8;
 	t_bitmap_info . bV4BlueMask = 0xFF;
 	t_bitmap = CreateDIBSection(p_dc, (const BITMAPINFO *)&t_bitmap_info, DIB_RGB_COLORS, (void **)&r_bits, NULL, 0);
-#endif
 	if (t_bitmap == NULL)
 		return false;
 

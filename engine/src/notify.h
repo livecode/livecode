@@ -34,4 +34,7 @@ bool MCNotifyDispatch(bool safe);
 // MW-2013-06-14: [[ DesktopPingWait ]] Wake up any currently running 'wait'.
 void MCNotifyPing(bool p_high_priority);
 
+// Returns true if there is a pending notification
+bool MCNotifyPending(void);
+
 #endif

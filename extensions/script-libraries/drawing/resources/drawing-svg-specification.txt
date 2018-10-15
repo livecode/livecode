@@ -1,0 +1,384 @@
+element
+	property fill <paint>|inherit default black inheritable
+	property fill-rule nonzero|evenodd|inherit default nonzero inheritable
+	property fill-opacity <opacity>|inherit default 1 inheritable
+	property stroke <paint>|inherit default none inheritable
+	property stroke-width <length>|inherit default 1 inheritable
+	property stroke-linecap butt|round|square|inherit default butt inheritable
+	property stroke-linejoin miter|round|bevel|inherit default miter inheritable
+	property stroke-miterlimit <miterlimit>|inherit default 4 inheritable
+	property stroke-dasharray <dasharray>|inherit default none inheritable
+	property stroke-dashoffset <length>|inherit default 0 inheritable
+	property stroke-opacity <opacity>|inherit default 1 inheritable
+	property solid-color <color>|inherit default black
+	property solid-opacity <opacity>|inherit default 1
+	property stop-color <color>|inherit default black
+	property stop-opacity <opacity>|inherit default 1
+
+element svg
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute version 1.0|1.1|1.2 nullable 
+	attribute baseProfile none|full|basic|tiny default none
+	attribute x <coordinate> default 0
+	attribute y <coordinate> default 0
+	attribute width <size> default 100%
+	attribute height <size> default 100%
+	attribute viewBox <normalized-rectangle>|none default none
+	attribute preserveAspectRatio <preserve-aspect-ratio> default "xMidYMid meet"
+
+element defs
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+
+element use
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> default ""
+	attribute x <coordinate> default 0
+	attribute y <coordinate> default 0
+	attribute href <reference> nullable
+	attribute xlink:href <reference> nullable
+
+element g
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> default ""
+
+element rect
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> default ""
+	attribute x <coordinate> default 0
+	attribute y <coordinate> default 0
+	attribute width <nonnegative-length> default 0
+	attribute height <nonnegative-length> default 0
+	attribute rx <nonnegative-length> nullable
+	attribute ry <nonnegative-length> nullable
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element circle
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> default ""
+	attribute cx <coordinate> default 0
+	attribute cy <coordinate> default 0
+	attribute r <nonnegative-length> default 0
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element ellipse
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> default ""
+	attribute cx <coordinate> default 0
+	attribute cy <coordinate> default 0
+	attribute rx <nonnegative-length> default 0
+	attribute ry <nonnegative-length> default 0
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element line
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> default ""
+	attribute x1 <coordinate> default 0
+	attribute y1 <coordinate> default 0
+	attribute x2 <coordinate> default 0
+	attribute y2 <coordinate> default 0
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element polyline
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> default ""
+	attribute points <points> default ""
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element polygon
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> default ""
+	attribute points <points> default ""
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element path
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute transform <transform> default ""
+	attribute d <path> default ""
+	attribute pathLength <nonnegative-length> nullable
+	apply fill
+	apply fill-rule
+	apply fill-opacity
+	apply stroke
+	apply stroke-width
+	apply stroke-linecap
+	apply stroke-linejoin
+	apply stroke-miterlimit
+	apply stroke-dasharray
+	apply stroke-dashoffset
+	apply stroke-opacity
+
+element solidColor
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	apply solid-opacity
+	apply solid-color
+
+element linearGradient
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute x1 <percent-coordinate> nullable
+	attribute y1 <percent-coordinate> nullable
+	attribute x2 <percent-coordinate> nullable
+	attribute y2 <percent-coordinate> nullable
+	attribute gradientTransform <transform> nullable
+	attribute gradientUnits userSpaceOnUse|objectBoundingBox nullable
+	attribute spreadMethod pad|reflect|repeat nullable
+	attribute href <reference> nullable
+	attribute xlink:href <reference> nullable
+
+element radialGradient
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute cx <percent-coordinate> nullable
+	attribute cy <percent-coordinate> nullable
+	attribute r <percent-length> nullable
+	attribute fx <percent-coordinate> nullable
+	attribute fy <percent-coordinate> nullable
+	attribute fr <percent-length> nullable
+	attribute gradientTransform <transform> nullable
+	attribute gradientUnits userSpaceOnUse|objectBoundingBox nullable
+	attribute spreadMethod pad|reflect|repeat nullable
+	attribute href <reference> nullable
+	attribute xlink:href <reference> nullable
+
+element stop
+	attribute id <identifier> nullable
+	attribute xml:id <identifier> nullable
+	attribute style <text> nullable
+	attribute offset <opacity> nullable
+	apply stop-color
+	apply stop-opacity
+
+color aliceblue 240 248 255
+color antiquewhite 250 235 215
+color aqua 0 255 255
+color aquamarine 127 255 212
+color azure 240 255 255
+color beige 245 245 220
+color bisque 255 228 196
+color black 0 0 0
+color blanchedalmond 255 235 205
+color blue 0 0 255
+color blueviolet 138 43 226
+color brown 165 42 42
+color burlywood 222 184 135
+color cadetblue 95 158 160
+color chartreuse 127 255 0
+color chocolate 210 105 30
+color coral 255 127 80
+color cornflowerblue 100 149 237
+color cornsilk 255 248 220
+color crimson 220 20 60
+color cyan 0 255 255
+color darkblue 0 0 139
+color darkcyan 0 139 139
+color darkgoldenrod 184 134 11
+color darkgray 169 169 169
+color darkgreen 0 100 0
+color darkgrey 169 169 169
+color darkkhaki 189 183 107
+color darkmagenta 139 0 139
+color darkolivegreen 85 107 47
+color darkorange 255 140 0
+color darkorchid 153 50 204
+color darkred 139 0 0
+color darksalmon 233 150 122
+color darkseagreen 143 188 143
+color darkslateblue 72 61 139
+color darkslategray 47 79 79
+color darkslategrey 47 79 79
+color darkturquoise 0 206 209
+color darkviolet 148 0 211
+color deeppink 255 20 147
+color deepskyblue 0 191 255
+color dimgray 105 105 105
+color dimgrey 105 105 105
+color dodgerblue 30 144 255
+color firebrick 178 34 34
+color floralwhite 255 250 240
+color forestgreen 34 139 34
+color fuchsia 255 0 255
+color gainsboro 220 220 220
+color ghostwhite 248 248 255
+color gold 255 215 0
+color goldenrod 218 165 32
+color gray 128 128 128
+color grey 128 128 128
+color green 0 128 0
+color greenyellow 173 255 47
+color honeydew 240 255 240
+color hotpink 255 105 180
+color indianred 205 92 92
+color indigo 75 0 130
+color ivory 255 255 240
+color khaki 240 230 140
+color lavender 230 230 250
+color lavenderblush 255 240 245
+color lawngreen 124 252 0
+color lemonchiffon 255 250 205
+color lightblue 173 216 230
+color lightcoral 240 128 128
+color lightcyan 224 255 255
+color lightgoldenrodyellow 250 250 210
+color lightgray 211 211 211
+color lightgreen 144 238 144
+color lightgrey 211 211 211
+color lightpink 255 182 193
+color lightsalmon 255 160 122
+color lightseagreen 32 178 170
+color lightskyblue 135 206 250
+color lightslategray 119 136 153
+color lightslategrey 119 136 153
+color lightsteelblue 176 196 222
+color lightyellow 255 255 224
+color lime 0 255 0
+color limegreen 50 205 50
+color linen 250 240 230
+color magenta 255 0 255
+color maroon 128 0 0
+color mediumaquamarine 102 205 170
+color mediumblue 0 0 205
+color mediumorchid 186 85 211
+color mediumpurple 147 112 219
+color mediumseagreen 60 179 113
+color mediumslateblue 123 104 238
+color mediumspringgreen 0 250 154
+color mediumturquoise 72 209 204
+color mediumvioletred 199 21 133
+color midnightblue 25 25 112
+color mintcream 245 255 250
+color mistyrose 255 228 225
+color moccasin 255 228 181
+color navajowhite 255 222 173
+color navy 0 0 128
+color oldlace 253 245 230
+color olive 128 128 0
+color olivedrab 107 142 35
+color orange 255 165 0
+color orangered 255 69 0
+color orchid 218 112 214
+color palegoldenrod 238 232 170
+color palegreen 152 251 152
+color paleturquoise 175 238 238
+color palevioletred 219 112 147
+color papayawhip 255 239 213
+color peachpuff 255 218 185
+color peru 205 133 63
+color pink 255 192 203
+color plum 221 160 221
+color powderblue 176 224 230
+color purple 128 0 128
+color red 255 0 0
+color rosybrown 188 143 143
+color royalblue 65 105 225
+color saddlebrown 139 69 19
+color salmon 250 128 114
+color sandybrown 244 164 96
+color seagreen 46 139 87
+color seashell 255 245 238
+color sienna 160 82 45
+color silver 192 192 192
+color skyblue 135 206 235
+color slateblue 106 90 205
+color slategray 112 128 144
+color slategrey 112 128 144
+color snow 255 250 250
+color springgreen 0 255 127
+color steelblue 70 130 180
+color tan 210 180 140
+color teal 0 128 128
+color thistle 216 191 216
+color tomato 255 99 71
+color turquoise 64 224 208
+color violet 238 130 238
+color wheat 245 222 179
+color white 255 255 255
+color whitesmoke 245 245 245
+color yellow 255 255 0
+color yellowgreen 154 205 50
+

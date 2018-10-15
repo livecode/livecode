@@ -183,6 +183,10 @@ Bool DBConnection_SQLITE::sqlExecute(char *query, DBString *args, int numargs, u
 		}
 
 		int rv = basicExec(newquery, &affectedrows);
+        
+        if (numargs > 0)
+            free(newquery);
+
 		if(rv != SQLITE_OK)
 		{
 			// MW-2008-07-29: [[ Bug 6639 ]] Executing a query doesn't return meaningful error messages.
@@ -245,7 +249,7 @@ DBCursor *DBConnection_SQLITE::sqlQuery(char *query, DBString *args, int numargs
 	}
 
 	try {
-		ret = new DBCursor_SQLITE(mDB, m_enable_binary);
+		ret = new (nothrow) DBCursor_SQLITE(mDB, m_enable_binary);
 		Dataset *ds = ret->getDataset();
 
 		ds->query(newquery);
@@ -267,7 +271,7 @@ DBCursor *DBConnection_SQLITE::sqlQuery(char *query, DBString *args, int numargs
 	}
 
 	if (numargs)
-		delete newquery;
+		free(newquery);
 
 	return ret;
 }

@@ -320,14 +320,6 @@ static MCPlatformMenuRef s_menubar = nil;
 // The delegate for the app menu.
 static com_runrev_livecode_MCAppMenuDelegate *s_app_menu_delegate = nil;
 
-// The services menu that gets populated by Cocoa.
-static NSMenu *s_services_menu = nil;
-
-// The depth of 'keyEquivalent' calls we are in. If non-zero it means the item
-// selection has occured as a result of a key-press and so must be dispatched as
-// such.
-static uint32_t s_key_equivalent_depth = 0;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCShadowedItemTags
@@ -432,7 +424,7 @@ enum MCShadowedItemTags
 
 - (void)menuItemSelected: (id)sender
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     NSMenuItem *t_item;
@@ -566,7 +558,7 @@ enum MCShadowedItemTags
 //  so we quit!
 - (void)quitApplicationSelected: (id)sender
 {
-    if ([NSApp pseudoModalFor] != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     // IM-2015-11-13: [[ Bug 16288 ]] Send shutdown request rather than terminating immediately
@@ -921,10 +913,10 @@ void MCPlatformGetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 	switch(p_property)
 	{
 		case kMCPlatformMenuItemPropertyTitle:
-			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_item title], *(MCStringRef*)r_value);
+			/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[t_item title], *(MCStringRef*)r_value);
 			break;
 		case kMCPlatformMenuItemPropertyTag:
-			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[t_item representedObject], *(MCStringRef*)r_value);
+			/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[t_item representedObject], *(MCStringRef*)r_value);
 			break;
         case kMCPlatformMenuItemPropertySubmenu:
         {
@@ -1097,6 +1089,9 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 			}
 		}
 		break;
+			
+		case kMCPlatformMenuItemPropertyUnknown:
+			MCUnreachable();
 	}
 }
 

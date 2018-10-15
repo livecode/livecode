@@ -911,7 +911,7 @@ bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initia
 		t_success = MCSystemPickN(t_option_list_array, p_use_checkmark, false, false, false, t_initial_index_array, t_return_index, p_button_rect);
 	
 	MCAutoStringRef t_result;
-	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_return_index, &t_result);
+	/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_return_index, &t_result);
 	if (t_success)
 		MCresult -> setvalueref (*t_result);
 	r_chosen_index = atoi ([t_return_index cStringUsingEncoding:NSMacOSRomanStringEncoding]);
@@ -975,7 +975,7 @@ bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, ui
         [t_temp_picker_array retain];
         for (int j = 0; j < p_pick_lists[i] . option_count; j++)
         {
-            t_options = [NSString stringWithMCStringRef: p_pick_lists[i] . options[j]];
+            t_options = MCStringConvertToAutoreleasedNSString(p_pick_lists[i] . options[j]);
             t_temp_picker_array = [t_temp_picker_array arrayByAddingObject: t_options];
         }
         t_option_list_array = [t_option_list_array arrayByAddingObject: t_temp_picker_array];

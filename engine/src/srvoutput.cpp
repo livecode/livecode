@@ -304,7 +304,7 @@ static void MCServerOutputUnicodeChars(const unichar_t *p_chars, uint32_t p_char
 	while(t_index < p_char_count)
 	{
 		if (p_chars[t_index] == 10 ||
-			p_chars[t_index] < 128 && (t_index == p_char_count - 1 || p_chars[t_index + 1] < 128))
+			(p_chars[t_index] < 128 && (t_index == p_char_count - 1 || p_chars[t_index + 1] < 128)))
 		{
 			if (p_chars[t_index] != 10)
 				t_output[t_output_count++] = (char)p_chars[t_index];
@@ -358,7 +358,7 @@ static void MCServerOutputUnicodeMarkup(const unichar_t *p_chars, uint32_t p_cha
 	{
 		if (p_chars[t_index] == 10 ||
 			(p_is_content && (p_chars[t_index] == '&' || p_chars[t_index] == '<' || p_chars[t_index] == '>' || p_chars[t_index] == '"')) ||
-			p_chars[t_index] < 128 && (t_index == p_char_count - 1 || p_chars[t_index + 1] < 128))
+			(p_chars[t_index] < 128 && (t_index == p_char_count - 1 || p_chars[t_index + 1] < 128)))
 		{
 			MCServerOutputMarkupChar((char)p_chars[t_index], p_is_content, t_output, t_output_count);
 			t_index += 1;

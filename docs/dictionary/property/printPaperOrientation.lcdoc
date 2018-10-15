@@ -21,8 +21,8 @@ Example:
 set the printPaperOrientation to "portrait"
 
 Value (enum):
-The <printPaperOrientation> is one of the following values.The default
-value is determined by the default settings of the current printer
+The <printPaperOrientation> is one of the following values. The default
+value is determined by the default settings of the current printer.
 
 -   portrait: rotated 0 degrees.
 -   landscape: rotated 90 degrees clockwise.
@@ -37,8 +37,8 @@ desired orientation on the page.
 Attempting to set the <printPaperOrientation> to an invalid value will
 result in a script execution error.
 
-To have an effect, this property must be set before calling <open
-printing>. 
+To have an effect, this property must be set before calling 
+<open printing>. 
 
 >*Cross-platform note:*  The reverse options are not supported on
 > Windows. When used Windows will revert these options to their

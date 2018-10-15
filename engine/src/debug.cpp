@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "mode.h"
 #include "exec.h"
+#include "system.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -66,8 +67,6 @@ MCExecContext *MCexecutioncontexts[MAX_CONTEXTS];
 uint2 MCnexecutioncontexts = 0;
 uint2 MCdebugcontext = MAXUINT2;
 Boolean MCmessagemessages = False;
-
-static int2 depth;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -131,42 +130,66 @@ void MCB_setvalue(MCExecContext &ctxt, MCExecValue p_value, MCNameRef name)
 
 void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 {
-	if (MCnoui)
-	{
-		MCAutoStringRefAsCString t_output;
-		/* UNCHECKED */ t_output . Lock(p_string);
-		MCS_write(*t_output, sizeof(char), strlen(*t_output), IO_stdout);
-		uint4 length = MCStringGetLength(p_string);
-		if (length && MCStringGetCharAtIndex(p_string, length - 1) != '\n')
-			MCS_write("\n", sizeof(char), 1, IO_stdout);
-		return;
-	}
-	
-	if (!MCModeHandleMessageBoxChanged(ctxt, p_string))
-	{
-		// MW-2004-11-17: Now use global 'MCmbstackptr' instead
-		if (!MCmbstackptr)
-			MCmbstackptr = MCdispatcher->findstackname(MCN_messagename);
-			
-		if (MCmbstackptr)
-		{
-			Window_mode newmode = MCmbstackptr->userlevel() == 0 ? WM_MODELESS
-														: (Window_mode)(MCmbstackptr->userlevel() + WM_TOP_LEVEL_LOCKED);
-			
-			// MW-2011-07-05: [[ Bug 9608 ]] The 'ep' that is passed through to us does
-			//   not necessarily have an attached object any more. Given that the 'rel'
-			//   parameter of the open stack call is unused, computing it from that
-			//   context is redundent.
-			if (MCmbstackptr->getmode() != newmode)
-				MCmbstackptr->openrect(MCmbstackptr -> getrect(), newmode, NULL, WP_DEFAULT,OP_NONE);
-			else
-				MCmbstackptr->raise();
-			MCCard *cptr = MCmbstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
-			MCField *fptr = (MCField *)cptr->getchild(CT_FIRST, kMCEmptyString, CT_FIELD, CT_CARD);
-			if (fptr != NULL)
-				fptr->settext(0, p_string, False);
-		}
-	}
+    Exec_stat t_stat = ES_NOT_HANDLED;
+    
+    MCObject *t_target = nil;
+    if (ctxt.GetObject() != nil)
+        t_target = ctxt.GetObject();
+    else if (MCdefaultstackptr . IsValid())
+        t_target = MCdefaultstackptr;
+    
+    if (t_target != nil)
+    {
+		Boolean oldlock = MClockmessages;
+		MClockmessages = False;
+
+        MCAutoStringRef t_handler;
+        t_handler = MCNameGetString(ctxt.GetHandler()->getname());
+        MCParameter *t_handler_parameter = new (nothrow) MCParameter;
+        t_handler_parameter -> setvalueref_argument(*t_handler);
+        
+        MCAutoNumberRef t_line;
+        MCParameter *t_line_parameter;
+        if (MCNumberCreateWithUnsignedInteger(ctxt.GetLine(), &t_line))
+        {
+            t_line_parameter = new (nothrow) MCParameter;
+            t_line_parameter -> setvalueref_argument(*t_line);
+            t_handler_parameter -> setnext(t_line_parameter);
+        }
+        
+        bool t_added = false;
+        if (MCnexecutioncontexts < MAX_CONTEXTS && ctxt.GetObject() != nil)
+        {
+            MCexecutioncontexts[MCnexecutioncontexts++] = &ctxt;
+            t_added = true;
+        }
+        
+        t_stat = t_target -> message(MCM_msgchanged, t_handler_parameter, True, True, False);
+        
+        if (t_added)
+            MCnexecutioncontexts--;
+
+		MClockmessages = oldlock;
+    }
+    
+    if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+    {
+        if (MCnoui)
+        {
+            MCAutoStringRefAsCString t_output;
+            /* UNCHECKED */ t_output . Lock(p_string);
+            MCS_write(*t_output, sizeof(char), strlen(*t_output), IO_stdout);
+            uint4 length = MCStringGetLength(p_string);
+            if (length && MCStringGetCharAtIndex(p_string, length - 1) != '\n')
+                MCS_write("\n", sizeof(char), 1, IO_stdout);
+            return;
+        }
+        else
+        {
+            MCsystem -> Debug(p_string);
+        }
+    }
+    
 }
 
 void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
@@ -185,6 +208,8 @@ void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCdebugresult"), MCresult);
 	MCtracereturn = False;
 	MCtraceabort = False;
+    
+    MCExecResultMode t_oldresultmode = MCresultmode;
 
 	Boolean oldcheck;
 	oldcheck = MCcheckstack;
@@ -198,9 +223,8 @@ void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 	if (ctxt.GetObject() -> message(mess, p, True, False, True) == ES_NORMAL)
 	{
 		MCcheckstack = oldcheck;
-		//  if (depth++ > 1)
-		//   fprintf(stderr, "Debug depth %d\n", depth);
-		 while (!MCtracereturn)
+		
+        while (!MCtracereturn)
 		{
 			MCU_resetprops(True);
 			MCscreen->wait(REFRESH_INTERVAL, True, True);
@@ -208,6 +232,7 @@ void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 		
         if (!MCtracedobject)
 			MCtracedobject = ctxt.GetObject();
+        
 		if (MCtraceabort)
 		{
 			MCtraceabort = False;
@@ -223,6 +248,8 @@ void MCB_message(MCExecContext &ctxt, MCNameRef mess, MCParameter *p)
 	 MCresult = oldresult;
 	 MCU_restoreprops(sp);
 	 MCexitall = exitall;
+     MCresultmode = t_oldresultmode;
+
 }
 
 void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos, uint2 id, MCStringRef p_info)

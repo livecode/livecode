@@ -52,8 +52,8 @@ three-digit code, followed by any other relevant information.
 
 Description:
 Use the <libURLftpCommand> <function> to communicate with an <FTP>
-<server> and perform tasks that are not implemented in the <Internet
-library>. 
+<server> and perform tasks that are not implemented in the 
+<Internet library>. 
 
 The ability to send any FTP command to an FTP server is a powerful
 function that can enable you to provide full support for all FTP

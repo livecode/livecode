@@ -404,7 +404,7 @@ static const char *url_execute_ftp_delete(void *p_state, CURL *p_curl)
 		t_file = strrchr(t_url, '/') + 1;
 
 		char *t_cmd_string;
-		t_cmd_string = new char[strlen(t_file) + 5 + 1];
+		t_cmd_string = new (nothrow) char[strlen(t_file) + 5 + 1];
 		if (t_cmd_string != NULL)
 		{
 			sprintf(t_cmd_string, "%s %s", (t_is_folder ? "RMD" : "DELE"), t_file); 

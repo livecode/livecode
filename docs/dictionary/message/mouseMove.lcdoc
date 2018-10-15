@@ -44,10 +44,10 @@ The <parameter|parameters> sent with the <mouseMove> <message> describe
 the <mouse pointer|mouse pointer's> current location.
 
 If the mouse button is down, the <mouseMove> <message> continues to be
-sent to the <object(glossary)> that was clicked, even if the <mouse
-pointer> moves outside that <object(glossary)>. However, if the <mouse
-button> was down at the time the <pointer> entered the <control>, no
-<mouseMove> <message|messages> are sent until the <mouse button> is
+sent to the <object(glossary)> that was clicked, even if the 
+<mouse pointer> moves outside that <object(glossary)>. However, if the 
+<mouse button> was down at the time the <pointer> entered the <control>, 
+no <mouseMove> <message|messages> are sent until the <mouse button> is
 released while the <pointer> is still in the <control>.
 
 References: grab (command), mouseCharChunk (function), object (glossary),

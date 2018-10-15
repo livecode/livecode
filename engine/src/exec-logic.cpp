@@ -28,20 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, IsEqualTo, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, IsNotEqualTo, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, IsGreaterThan, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, IsGreaterThanOrEqualTo, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, IsLessThan, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, IsLessThanOrEqualTo, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, And, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, Or, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, Not, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, IsABoolean, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Logic, IsNotABoolean, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static bool MCLogicIsEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef p_right, bool& r_result)
 {    
 	// If the two value ptrs are the same, we are done.

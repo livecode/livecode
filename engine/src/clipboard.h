@@ -20,6 +20,7 @@
 
 
 #include "foundation.h"
+#include "foundation-auto.h"
 #include "mixin-refcounted.h"
 #include "raw-clipboard.h"
 
@@ -192,7 +193,7 @@ private:
     mutable uindex_t m_lock_count;
     
     // Private data (if any) added to this clipboard
-    MCDataRef m_private_data;
+    MCAutoDataRef m_private_data;
     
     // Set whenever a modification is made to the clipboard. No updates are
     // pushed if no modifications have been made.
@@ -202,7 +203,6 @@ private:
     // Constructor and destructor
     friend class MCMixinRefcounted<MCClipboard>;
     MCClipboard(MCRawClipboard* t_underlying_clipboard);
-    ~MCClipboard();
     
     
     // Returns the first item on the clipboard, creating a new one if required

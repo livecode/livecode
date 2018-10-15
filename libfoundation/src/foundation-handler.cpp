@@ -33,7 +33,10 @@ bool MCHandlerCreate(MCTypeInfoRef p_typeinfo, const MCHandlerCallbacks *p_callb
     // start of this is a field 'context' in the struct so we must adjust for its
     // length.
     __MCHandler *self;
-    if (!__MCValueCreate(kMCValueTypeCodeHandler, (sizeof(__MCHandler) - sizeof(self -> context)) + p_callbacks -> size, (__MCValue*&)self))
+    if (!__MCValueCreateExtended(kMCValueTypeCodeHandler,
+         /* prevent overflow */  MCMin(p_callbacks -> size - sizeof(self->context),
+                                       p_callbacks -> size),
+                                 self))
         return false;
     
     MCMemoryCopy(MCHandlerGetContext(self), p_context, p_callbacks -> size);
@@ -53,6 +56,49 @@ bool MCHandlerInvoke(MCHandlerRef self, MCValueRef *p_arguments, uindex_t p_argu
 	__MCAssertIsHandler(self);
 	MCAssert(p_arguments != nil || p_argument_count == 0);
     return self -> callbacks -> invoke(MCHandlerGetContext(self), p_arguments, p_argument_count, r_value);
+}
+
+#if (defined(TARGET_SUBPLATFORM_IPHONE) || defined(TARGET_SUBPLATFORM_ANDROID)) && !defined(CROSS_COMPILE_HOST)
+struct MCHandlerInvokeTrampolineContext
+{
+    MCHandlerRef self;
+    MCValueRef *p_arguments;
+    uindex_t p_argument_count;
+    MCValueRef& r_value;
+    bool return_value;
+};
+
+static void MCHandlerInvokeTrampoline(void *p_context)
+{
+    auto ctxt = static_cast<MCHandlerInvokeTrampolineContext *>(p_context);
+    ctxt->return_value = MCHandlerInvoke(ctxt->self, ctxt->p_arguments, ctxt->p_argument_count, ctxt->r_value);
+}
+#endif
+
+MC_DLLEXPORT_DEF
+bool MCHandlerExternalInvoke(MCHandlerRef self, MCValueRef *p_arguments, uindex_t p_argument_count, MCValueRef& r_value)
+{
+#if defined(TARGET_SUBPLATFORM_ANDROID) && !defined(CROSS_COMPILE_HOST)
+    extern bool MCAndroidIsOnEngineThread(void);
+    if (!MCAndroidIsOnEngineThread())
+    {
+        typedef void (*co_yield_callback_t)(void *);
+        extern void co_yield_to_android_and_call(co_yield_callback_t callback, void *context);
+        MCHandlerInvokeTrampolineContext t_context = {self, p_arguments, p_argument_count, r_value, true};
+        co_yield_to_android_and_call(MCHandlerInvokeTrampoline, &t_context);
+        return t_context.return_value;
+    }
+#elif defined(TARGET_SUBPLATFORM_IPHONE) && !defined(CROSS_COMPILE_HOST)
+    extern bool MCIPhoneIsOnMainFiber(void);
+    if (!MCIPhoneIsOnMainFiber())
+    {
+        extern void MCIPhoneRunOnMainFiber(void (*)(void *), void *);
+        MCHandlerInvokeTrampolineContext t_context = {self, p_arguments, p_argument_count, r_value, true};
+        MCIPhoneRunOnMainFiber(MCHandlerInvokeTrampoline, &t_context);
+        return t_context.return_value;
+    }
+#endif
+    return MCHandlerInvoke(self, p_arguments, p_argument_count, r_value);
 }
 
 MC_DLLEXPORT_DEF
@@ -80,8 +126,40 @@ MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef self, MCProperListRef& x_ar
     return nil;
     
 error_exit:
-    MCValueRelease(x_arguments);
-    x_arguments = nil;
+    r_value = nil;
+    
+    MCErrorRef t_error;
+    if (!MCErrorCatch(t_error))
+        return nil;
+    
+    return t_error;
+}
+
+MC_DLLEXPORT_DEF
+MCErrorRef MCHandlerTryToExternalInvokeWithList(MCHandlerRef self, MCProperListRef& x_arguments, MCValueRef& r_value)
+{
+    __MCAssertIsHandler(self);
+    __MCAssertIsProperList(x_arguments);
+    MCAutoValueRefArray t_args;
+    MCAutoProperListRef t_out_args;
+    
+    if (!t_args . New(MCProperListGetLength(x_arguments)))
+        goto error_exit;
+    
+    for(uindex_t i = 0; i < MCProperListGetLength(x_arguments); i++)
+        t_args[i] = MCValueRetain(MCProperListFetchElementAtIndex(x_arguments, i));
+    
+    if (!MCHandlerExternalInvoke(self, t_args . Ptr(), t_args . Size(), r_value))
+        goto error_exit;
+    
+    if (!t_args . TakeAsProperList(Out(t_out_args)))
+        goto error_exit;
+    
+    MCValueAssign(x_arguments, t_out_args . Take());
+    
+    return nil;
+    
+error_exit:
     r_value = nil;
     
     MCErrorRef t_error;
@@ -178,7 +256,7 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
             {
                 if (t_descriptor -> bridgetype != kMCNullTypeInfo)
                 {
-                    if (!t_descriptor -> doimport(args[t_arg_index], false, t_value_args[t_arg_index]))
+                    if (!t_descriptor -> doimport(t_descriptor, args[t_arg_index], false, t_value_args[t_arg_index]))
                         goto cleanup;
                 }
                 else
@@ -206,7 +284,7 @@ static void __exec_closure(ffi_cif *cif, void *ret, void **args, void *user_data
         {
             const MCForeignTypeDescriptor *t_descriptor;
             t_descriptor = MCForeignTypeInfoGetDescriptor(t_resolved_return_type . type);
-            if (!t_descriptor -> doexport(t_value_result, false, ret))
+            if (!t_descriptor -> doexport(t_descriptor, t_value_result, false, ret))
                 goto cleanup;
         }
         else

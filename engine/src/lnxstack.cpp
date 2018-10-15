@@ -162,9 +162,18 @@ void MCStack::setmodalhints()
 {
 	if (mode == WM_MODAL || mode == WM_SHEET)
 	{
+		Window t_window = nullptr;
 		if (mode == WM_SHEET)
-            gdk_window_set_transient_for(window, (mode == WM_SHEET) ? getparentwindow() : NULL);
-        gdk_window_set_modal_hint(window, TRUE);
+		{
+			t_window = getparentwindow();
+		}
+		
+		if (nullptr == t_window && MCtopstackptr.IsValid()) 
+		{
+			t_window = MCtopstackptr->getwindow();
+		}
+		gdk_window_set_transient_for(window, t_window);
+		gdk_window_set_modal_hint(window, TRUE);
 	}
 }
 
@@ -267,7 +276,7 @@ void MCStack::sethints()
     
     gdk_window_set_type_hint(window, t_type_hint);
     
-    if ((mode >= WM_PULLDOWN && mode <= WM_LICENSE) || getextendedstate(ECS_FULLSCREEN))
+    if ((mode >= WM_PULLDOWN && mode <= WM_LICENSE))
     {
         gdk_window_set_override_redirect(window, TRUE);
     }
@@ -439,6 +448,8 @@ void MCStack::sethints()
 	{
 		gdk_window_set_keep_above(window, TRUE);
 	}
+	
+	MCstacks->restack(this);
 }
 
 void MCStack::destroywindowshape()
@@ -461,6 +472,11 @@ void MCStack::destroywindowshape()
 
 	delete m_window_shape;
 	m_window_shape = nil;
+}
+
+bool MCStack::view_platform_dirtyviewonresize() const
+{
+	return false;
 }
 
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support

@@ -400,27 +400,45 @@ component Documentation
 
 component Extensions
 	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.mac.button
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.mac.textfield
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.android.button
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.android.field
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.ios.button
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.native.emscripten.button
+	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.browser
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.clock
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.colorSwatch
+		rfolder macosx:packaged_extensions/com.livecode.widget.colorswatch
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.gradientRampEditor
+		rfolder macosx:packaged_extensions/com.livecode.widget.gradientrampeditor
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.lineGraph
+		rfolder macosx:packaged_extensions/com.livecode.widget.linegraph
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.headerBar
+		rfolder macosx:packaged_extensions/com.livecode.widget.headerbar
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.iconPicker
+		rfolder macosx:packaged_extensions/com.livecode.widget.iconpicker
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.library.iconSVG
+		rfolder macosx:packaged_extensions/com.livecode.library.androidbgaudio
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.androidaudiorecorder
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.androidutils
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.iconsvg
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.json
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.navbar
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.paletteActions
+		rfolder macosx:packaged_extensions/com.livecode.widget.paletteactions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.segmented
 	into [[ToolsFolder]]/Extensions place
@@ -430,30 +448,60 @@ component Extensions
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.switchbutton
 	into [[ToolsFolder]]/Extensions place
-		rfolder macosx:packaged_extensions/com.livecode.widget.treeView
+		rfolder macosx:packaged_extensions/com.livecode.library.toast		
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.widget.treeview
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.widgetutils
 	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.widget.tile
 	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.scriptitems
+
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.diff
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.drawing
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.dropbox
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.extension-utils		
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.getopt
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.httpd
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.messageauthentication
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.mime
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.oauth2
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.qr
+	into [[ToolsFolder]]/Extensions place
 		rfolder macosx:packaged_extensions/com.livecode.library.objectrepository
+
+	include TimeZone
 
 component Toolchain.MacOSX
 	into [[ToolsFolder]]/Toolchain place
 		executable macosx:lc-compile as lc-compile
 		executable macosx:lc-run as lc-run
+		executable macosx:lc-compile-ffi-java as lc-compile-ffi-java
 		rfolder macosx:modules
 
 component Toolchain.Windows
 	into [[ToolsFolder]]/Toolchain place
 		executable windows:lc-compile.exe as lc-compile.exe
 		executable windows:lc-run.exe as lc-run.exe
+		executable windows:lc-compile-ffi-java.exe as lc-compile-ffi-java.exe
 		rfolder windows:modules
 
 component Toolchain.Linux
 	into [[ToolsFolder]]/Toolchain place
 		executable linux-[[TargetArchitecture]]:lc-compile as lc-compile
 		executable linux-[[TargetArchitecture]]:lc-run as lc-run
+		executable linux-[[TargetArchitecture]]:lc-compile-ffi-java as lc-compile-ffi-java
 		rfolder linux-[[TargetArchitecture]]:modules
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -560,6 +608,7 @@ component Runtime.Android
 		file android:Manifest.xml
 		file android:livecode_inputcontrol.xml
 		file android:notify_icon.png
+		file android:nfc_tech_filter.xml
 		executable android:Standalone[[BaseEditionTagUpper]] as Standalone
 		executable android:RevZip
 		executable android:RevXml
@@ -571,45 +620,15 @@ component Runtime.Android
 //////////
 
 component Runtime.iOS
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-6_1" place
-		executable ios:iphonesimulator6.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
-		executable ios:iphonesimulator6.1/revsecurity.ios-extension as RevSecurity
-		executable ios:iphonesimulator6.1/revpdfprinter.ios-extension as RevPdfPrinter
-		executable ios:iphonesimulator6.1/revzip.ios-extension as RevZip
-		executable ios:iphonesimulator6.1/revxml.ios-extension as RevXml
-		executable ios:iphonesimulator6.1/revdb.ios-extension as RevDb
-		executable ios:iphonesimulator6.1/dbsqlite.ios-extension as DbSqlite
-		executable ios:iphonesimulator6.1/dbmysql.ios-extension as DbMysql
-		file ios:iphonesimulator6.1/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator6.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator6.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator6.1/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator6.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator6.1/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-7_1" place
-		executable ios:iphonesimulator7.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator6.1/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
-		executable ios:iphonesimulator7.1/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator6.1/revsecurity.dylib
-		executable ios:iphonesimulator7.1/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator6.1/revpdfprinter.dylib
-		executable ios:iphonesimulator7.1/revzip.ios-extension as RevZip base ios:iphonesimulator6.1/revzip.dylib
-		executable ios:iphonesimulator7.1/revxml.ios-extension as RevXml base ios:iphonesimulator6.1/revxml.dylib
-		executable ios:iphonesimulator7.1/revdb.ios-extension as RevDb base ios:iphonesimulator6.1/revdb.dylib
-		executable ios:iphonesimulator7.1/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator6.1/dbsqlite.dylib
-		executable ios:iphonesimulator7.1/dbmysql.ios-extension as DbMysql base ios:iphonesimulator6.1/dbmysql.dylib
-		file ios:iphonesimulator7.1/mobile-template.plist as "Settings.plist"
-		file ios:iphonesimulator7.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
-		file ios:iphonesimulator7.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator7.1/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator7.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
-		file ios:iphonesimulator7.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-8_2" place
-		executable ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator6.1/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
-		executable ios:iphonesimulator8.2/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator6.1/revsecurity.dylib
-		executable ios:iphonesimulator8.2/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator6.1/revpdfprinter.dylib
-		executable ios:iphonesimulator8.2/revzip.ios-extension as RevZip base ios:iphonesimulator6.1/revzip.dylib
-		executable ios:iphonesimulator8.2/revxml.ios-extension as RevXml base ios:iphonesimulator6.1/revxml.dylib
-		executable ios:iphonesimulator8.2/revdb.ios-extension as RevDb base ios:iphonesimulator6.1/revdb.dylib
-		executable ios:iphonesimulator8.2/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator6.1/dbsqlite.dylib
-		executable ios:iphonesimulator8.2/dbmysql.ios-extension as DbMysql base ios:iphonesimulator6.1/dbmysql.dylib
+		executable ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
+		executable ios:iphonesimulator8.2/revsecurity.ios-extension as RevSecurity
+		executable ios:iphonesimulator8.2/revpdfprinter.ios-extension as RevPdfPrinter
+		executable ios:iphonesimulator8.2/revzip.ios-extension as RevZip
+		executable ios:iphonesimulator8.2/revxml.ios-extension as RevXml
+		executable ios:iphonesimulator8.2/revdb.ios-extension as RevDb
+		executable ios:iphonesimulator8.2/dbsqlite.ios-extension as DbSqlite
+		executable ios:iphonesimulator8.2/dbmysql.ios-extension as DbMysql
 		file ios:iphonesimulator8.2/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator8.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator8.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
@@ -665,6 +684,22 @@ component Runtime.iOS
 		file ios:iphonesimulator11.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator11.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator11.2/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-12_0" place
+		executable ios:iphonesimulator12.0/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
+		executable ios:iphonesimulator12.0/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
+		executable ios:iphonesimulator12.0/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
+		executable ios:iphonesimulator12.0/revzip.ios-extension as RevZip base ios:iphonesimulator8.2/revzip.dylib
+		executable ios:iphonesimulator12.0/revxml.ios-extension as RevXml base ios:iphonesimulator8.2/revxml.dylib
+		executable ios:iphonesimulator12.0/revdb.ios-extension as RevDb base ios:iphonesimulator8.2/revdb.dylib
+		executable ios:iphonesimulator12.0/dbsqlite.ios-extension as DbSqlite base ios:iphonesimulator8.2/dbsqlite.dylib
+		executable ios:iphonesimulator12.0/dbmysql.ios-extension as DbMysql base ios:iphonesimulator8.2/dbmysql.dylib
+		file ios:iphonesimulator12.0/mobile-template.plist as "Settings.plist"
+		file ios:iphonesimulator12.0/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphonesimulator12.0/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphonesimulator12.0/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphonesimulator12.0/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphonesimulator12.0/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphonesimulator12.0/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-9_2" place
 		executable ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
 		executable ios:iphoneos9.2/revsecurity.ios-extension as RevSecurity
@@ -725,6 +760,26 @@ component Runtime.iOS
 		file ios:iphoneos11.2/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos11.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos11.2/fontmap as "fontmap"
+	into "[[ToolsFolder]]/Runtime/iOS/Device-12_0" place
+		executable ios:iphoneos12.0/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
+		executable ios:iphoneos12.0/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
+		executable ios:iphoneos12.0/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.ios-extension
+		executable ios:iphoneos12.0/revzip.ios-extension as RevZip base ios:iphoneos9.2/revzip.ios-extension
+		executable ios:iphoneos12.0/revxml.ios-extension as RevXml base ios:iphoneos9.2/revxml.ios-extension
+		executable ios:iphoneos12.0/revdb.ios-extension as RevDb base ios:iphoneos9.2/revdb.ios-extension
+		executable ios:iphoneos12.0/dbsqlite.ios-extension as DbSqlite base ios:iphoneos9.2/dbsqlite.ios-extension
+		executable ios:iphoneos12.0/dbmysql.ios-extension as DbMysql base ios:iphoneos9.2/dbmysql.ios-extension
+		file ios:iphoneos12.0/mobile-device-template.plist as "Settings.plist"
+		file ios:iphoneos12.0/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
+		file ios:iphoneos12.0/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
+		file ios:iphoneos12.0/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
+		file ios:iphoneos12.0/template-entitlements.xcent as "Entitlements.xcent"
+		file ios:iphoneos12.0/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
+		file ios:iphoneos12.0/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
+		file ios:iphoneos12.0/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
+		file ios:iphoneos12.0/mobile-disable-ats-template.plist as "DisableATS.plist"
+		file ios:iphoneos12.0/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
+		file ios:iphoneos12.0/fontmap as "fontmap"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -745,12 +800,10 @@ component Externals.Windows
 		executable windows:revxml.dll
 		executable windows:revbrowser.dll
 		executable windows:revzip.dll
-		executable windows:revfont.dll
 	declare external "Speech" using revspeech.dll
 	declare external "XML" using revxml.dll
 	declare external "Browser" using revbrowser.dll
 	declare external "Revolution Zip" using revzip.dll
-	declare external "Font Support" using revfont.dll
 
 //////////
 
@@ -760,33 +813,28 @@ component Externals.MacOSX
 		executable macosx:revxml.bundle
 		executable macosx:revbrowser.bundle
 		executable macosx:revzip.bundle
-		executable macosx:revfont.bundle
 	declare external "Speech" using revspeech.bundle
 	declare external "XML" using revxml.bundle
 	declare external "Browser" using revbrowser.bundle
 	declare external "Revolution Zip" using revzip.bundle
-	declare external "Font Support" using revfont.bundle
 
 //////////
 
 component Externals.CEF.Linux
 	into [[TargetFolder]]/Externals/CEF place
-		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
-		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
-		executable linux-[[TargetArchitecture]]:CEF/libcef.so
-		rfolder linux-[[TargetArchitecture]]:CEF/locales
-		file linux-[[TargetArchitecture]]:CEF/cef.pak
-		file linux-[[TargetArchitecture]]:CEF/cef_100_percent.pak
-		file linux-[[TargetArchitecture]]:CEF/cef_200_percent.pak
-		file linux-[[TargetArchitecture]]:CEF/cef_extensions.pak
-		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
-		file linux-[[TargetArchitecture]]:CEF/natives_blob.bin
-		file linux-[[TargetArchitecture]]:CEF/snapshot_blob.bin
+		executable linux-[[TargetArchitecture]]:Externals/CEF/libcef.so
+		rfolder linux-[[TargetArchitecture]]:Externals/CEF/locales
+		file linux-[[TargetArchitecture]]:Externals/CEF/cef.pak
+		file linux-[[TargetArchitecture]]:Externals/CEF/cef_100_percent.pak
+		file linux-[[TargetArchitecture]]:Externals/CEF/cef_200_percent.pak
+		file linux-[[TargetArchitecture]]:Externals/CEF/cef_extensions.pak
+
 	// Horrible workaround for a libCEF bug
 	into [[TargetFolder]] place
-		file linux-[[TargetArchitecture]]:CEF/icudtl.dat
-		file linux-[[TargetArchitecture]]:CEF/natives_blob.bin
-		file linux-[[TargetArchitecture]]:CEF/snapshot_blob.bin
+		file linux-[[TargetArchitecture]]:icudtl.dat
+		file linux-[[TargetArchitecture]]:natives_blob.bin
+		file linux-[[TargetArchitecture]]:snapshot_blob.bin
+		file linux-[[TargetArchitecture]]:v8_context_snapshot.bin
 		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
 		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
 
@@ -794,19 +842,24 @@ component Externals.CEF.Windows
 	into [[TargetFolder]]/Externals/CEF place
 		executable windows:libbrowser-cefprocess.exe
 		executable windows:revbrowser-cefprocess.exe
-		executable windows:CEF/libcef.dll
-		executable windows:CEF/d3dcompiler_43.dll
-		executable windows:CEF/d3dcompiler_47.dll
-		executable windows:CEF/libEGL.dll
-		executable windows:CEF/libGLESv2.dll
-		rfolder windows:CEF/locales
-		file windows:CEF/cef.pak
-		file windows:CEF/cef_100_percent.pak
-		file windows:CEF/cef_200_percent.pak
-		file windows:CEF/cef_extensions.pak
-		file windows:CEF/icudtl.dat
-		file windows:CEF/natives_blob.bin
-		file windows:CEF/snapshot_blob.bin
+		executable windows:Externals/CEF/libcef.dll
+		executable windows:Externals/CEF/d3dcompiler_43.dll
+		executable windows:Externals/CEF/d3dcompiler_47.dll
+		executable windows:Externals/CEF/libEGL.dll
+		executable windows:Externals/CEF/libGLESv2.dll
+		executable windows:Externals/CEF/chrome_elf.dll
+		rfolder windows:Externals/CEF/locales
+		file windows:Externals/CEF/cef.pak
+		file windows:Externals/CEF/cef_100_percent.pak
+		file windows:Externals/CEF/cef_200_percent.pak
+		file windows:Externals/CEF/cef_extensions.pak
+		file windows:Externals/CEF/icudtl.dat
+		file windows:Externals/CEF/natives_blob.bin
+		file windows:Externals/CEF/snapshot_blob.bin
+		file windows:Externals/CEF/v8_context_snapshot.bin
+	into [[TargetFolder]]/Externals/CEF/swiftshader place
+		executable windows:Externals/CEF/swiftshader/libEGL.dll
+		executable windows:Externals/CEF/swiftshader/libGLESv2.dll
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -865,13 +918,41 @@ component Toolset
 	into [[ToolsFolder]]/Toolset/libraries place
 		stack ide-support:revdeploylibraryandroid.livecodescript
 		stack ide-support:revdeploylibraryios.livecodescript
+		stack ide-support:revdeploylibraryemscripten.livecodescript
 		stack ide-support:revliburl.livecodescript
 		stack ide-support:revsaveasandroidstandalone.livecodescript
 		stack ide-support:revsaveasemscriptenstandalone.livecodescript
 		stack ide-support:revsaveasiosstandalone.livecodescript
 		stack ide-support:revsaveasstandalone.livecodescript
 		stack ide-support:revsblibrary.livecodescript
+		stack ide-support:revhtml5urllibrary.livecodescript
 		file ide-support:revdocsparser.livecodescript
 		file ide-support:revliburl.livecodescript
 
 ////////////////////////////////////////////////////////////////////////////////
+
+component TimeZone
+	into [[ToolsFolder]]/Extensions place
+		rfolder macosx:packaged_extensions/com.livecode.library.timezone
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder android:packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphonesimulator8.2/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphonesimulator9.2/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphonesimulator10.2/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphonesimulator11.2/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphoneos9.2/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphoneos10.2/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphoneos11.2/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder windows:packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder linux-x86_64:packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder linux-x86:packaged_extensions/com.livecode.library.timezone/code

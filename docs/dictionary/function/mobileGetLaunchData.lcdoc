@@ -23,31 +23,24 @@ constant kActionView = "android.intent.action.VIEW"
 put mobileGetLaunchData() into tLaunchData
 
 if tLaunchData is an array and tLaunchData["action"] is kActionView then
-
    -- view content specified in tLaunchData["data"]
-
 else
-
    -- launched as main application
-
 end if
 
 Returns:
-Use the <mobileGetLaunchData> function to get the application launch
-parameters. The returned array will contain the information that is set
-by the launching application.
+Returns an array containing information set by the launcher of the
+application. 
 
 Description:
->Returns an array containing information set by the launcher of the
-> application. 
-
-The <mobileGetLaunchData> function returns the information that was set
+Use the <mobileGetLaunchData> function to get the application launch
+parameters. The returned array will contain the information that is set
 by the launching application. This can be used to perform specific
 actions supported by an application on the provided data.
 
-    >*Note:*  On Android, custom Intent filters can be specified in the
-    > manifest to allow an application to perform actions for other
-    > applications 
+>*Note:*  On Android, custom Intent filters can be specified in the
+> manifest to allow an application to perform actions for other
+> applications 
 
 When the application is launched to handle one of these actions, its
 launch Intent can be queried to determine what action was requested, and

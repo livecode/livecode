@@ -414,7 +414,7 @@ MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserListCreate(MCBrowserListRef &r_browser, uint32_t p_size)
 {
 	MCBrowserList *t_browser;
-	t_browser = new MCBrowserList();
+	t_browser = new (nothrow) MCBrowserList();
 	if (t_browser == nil)
 		return false;
 	
@@ -878,7 +878,7 @@ MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserDictionaryCreate(MCBrowserDictionaryRef &r_dict, uint32_t p_size)
 {
 	MCBrowserDictionary *t_dict;
-	t_dict = new MCBrowserDictionary();
+	t_dict = new (nothrow) MCBrowserDictionary();
 	if (t_dict == nil)
 		return false;
 	

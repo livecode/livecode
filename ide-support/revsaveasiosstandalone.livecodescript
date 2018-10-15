@@ -93,21 +93,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    put true into tConfirm
    if pSettings["inclusions"] is "search" then 
       put false into tConfirm
-      -- search for inclusions when building for simulator
-      if pTarget contains "simulator" then
-         revSBSearchForInclusions pStack, pSettings
-      end if
+      revSBSearchForInclusions pStack, pSettings
    end if
-   
-   -- Make sure all dependencies are included
-   revSBUpdateForDependencies pSettings
-   
-   -- Manually remove built-in implementations from detected script library inclusions
-   revSBRemoveInclusions pStack, "ios", tConfirm, pSettings
-   
-   -- Make sure old-style keys are retained, and updated with new information
-   -- from inclusions pane of standalone settings GUI
-   revSBConvertSettingsForPlatform pSettings, "ios"
    
    -- Get the development root for device builds
    -- MM-2012-09-18: Rejiged the SDKs we use.  Things are now split up into sim, armv7, armv7, 
@@ -138,6 +125,26 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          throw revIDEDeployIOSGetInvalidityMessage(tIosXcodePairs)
       end if
       put tSDKInfo into tSDKs["arm"]
+      
+      -- Compute the list of archs in the fat binary
+      local tRawArchs
+      put shell("otool -fv" && quote & mapFilePath(tSDKs["arm"]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
+      if tRawArchs is empty then
+         put shell("otool -hv" && quote & mapFilePath(tSDKs["arm"]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
+      end if
+      
+      local tArchs
+      -- SN-2015-03-30: [[ Bug 14794 ]] If the user specifies a 32-bit only build,
+      --  then we do not do the 64-bit build.
+      if tRawArchs contains "ARM64" and not pSettings["ios,32-bit only"] then
+         put "arm64 " after tArchs
+      end if
+      if tRawArchs contains "V7" and pSettings["ios,minimum version"] < 11.0 then
+         put "armv7 " after tArchs
+      end if
+      
+      -- Make sure all dependencies are included
+      revSBUpdateForDependencies "ios", replaceText(tArchs, space, comma), "iphoneos" & item 1 of tIosXcodePair, pSettings
    else
       
       -- MM-2012-09-18: We now only support the 4.3 simulators or later.
@@ -147,12 +154,27 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       local tSuffix
       // SN-2015-05-08: We only want the simulator version, not the whole string 'Simulator X.Y'
       put last word of pTarget into tSuffix
+      
+      -- Make sure all dependencies are included
+      revSBUpdateForDependencies "ios", "x86_64", "iphonesimulator" & tSuffix, pSettings
+      
       replace "." with "_" in tSuffix
       put tSuffix into tSDKS["sim"]["suffix"]
       put revMobileRuntimeFolder(pTarget, tSDKs["sim"]["suffix"]) into tSDKs["sim"]["runtime path"]
       
    end if
    
+   revSBEnsurePerExtensionSettings "ios", pSettings
+   if the result is not empty then
+      return the result
+   end if
+   
+   -- Manually remove built-in implementations from detected script library inclusions
+   revSBRemoveInclusions pStack, "ios", tConfirm, pSettings
+   
+   -- Make sure old-style keys are retained, and updated with new information
+   -- from inclusions pane of standalone settings GUI
+   revSBConvertSettingsForPlatform pSettings, "ios"
    
    -- Compute the base folder
    local tBaseFolder
@@ -161,9 +183,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    set the itemDelimiter to comma
    
    -- Fetch the various options we need to initially build the app-bundle
-   local tName, tFiles, tExternals, tDrivers
+   local tName, tExternals, tDrivers
    put pSettings["name"] into tName
-   put pSettings["files"] into tFiles
    
    if pSettings["ios,display name"] is empty then
       put tName into pSettings["ios,display name"]
@@ -256,7 +277,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    end if
    
    local tPlist, tCustomEntitlements
-   revCopyMobileFiles tFiles, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist, tCustomEntitlements
+   revSBUpdateSettingsForExtensions "ios", pSettings
+   revCopyMobileFiles pSettings, tBaseFolder, pAppBundle, pTarget, tSDKs, tRedirects, tCopiedExternals, tCopiedFonts, tPlist, tCustomEntitlements
    revCopyMobileStackFiles tStackFiles, tBaseFolder, pAppBundle
    
    -- Copy in the appropriate externals and drivers
@@ -280,6 +302,53 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          throw "unable to copy provisioning profile"
       end if
    end if
+   
+   repeat for each line tLib in pSettings["extension_code_resources"]
+      local tSourceFile, tSourcePath, tSourceName
+      set the itemdelimiter to slash
+      put item -1 of tLib into tSourceFile
+      put item 1 to -2 of tLib into tSourcePath
+      set the itemDelimiter to "."
+      put item 1 to -2 of tSourceFile into tSourceName
+      
+      if pTarget is "Device" then
+         put "extension-code-resource" into tCopiedExternals[tSourceName]["type"]
+         put tLib into tCopiedExternals[tSourceName]["arm"]
+         put tSourceFile into tCopiedExternals[tSourceName]["location"]
+      else
+         --!TODO Add support for static libraries and frameworks by linking the engine for a simulator build
+         if there is a file tLib then
+            revSBCopyFileToFile tLib, pAppBundle & slash & tSourceFile, "revStandaloneProgressCallback", the long id of me
+         else
+            -- framework
+            revSBCopyFolderToDestination tLib, pAppBundle, "revStandaloneProgressCallback", the long id of me
+         end if
+         put "extension-code-resource" into tCopiedExternals[tSourceName]["type"]
+         put tLib into tCopiedExternals[tSourceName]["sim"]
+         put tSourceFile into tCopiedExternals[tSourceName]["location"]
+      end if
+   end repeat
+   
+   -- Externals to reference
+   -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
+   --
+   local tDeployExternals, tLibraryMappings
+   repeat for each key tExternalName in tCopiedExternals
+      local tExternalRec
+      put tCopiedExternals[tExternalName] into tExternalRec
+      if tExternalRec["type"] is among the words of "external external-tmp" then
+         put tExternalName & return after tDeployExternals
+      end if
+      if not (tExternalRec["location"] ends with ".a" or \
+            (tExternalRec["location"] ends with ".lcext" \
+            and pTarget is "Device")) then
+         put tExternalName & ":" & "./" & tExternalRec["location"] & return after tLibraryMappings
+      end if
+   end repeat
+   delete the last char of tDeployExternals
+   put tDeployExternals into pSettings["externals"]
+   delete the last char of tLibraryMappings
+   put tLibraryMappings into pSettings["ios,library"]
    
    local tDeploy
    -- Update the deploy params with script library and extension inclusions
@@ -308,29 +377,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          if tSDKs[tInstSet]["tools path"] is not empty then
             put tSDKs[tInstSet]["tools path"] & ":" before $PATH
          end if
-         
-         -- Loop through the copied files list, extracting anything that needs to be
-         -- linked with the engine
-         local tLinkExts, tLinkDeps
-         put empty into tLinkExts
-         put empty into tLinkDeps
-         
-         -- Extract the dependency info from the extension
-         -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
-         --
-         repeat for each line tLinkExt in keys of tCopiedExternals
-            put tCopiedExternals[tLinkExt][tInstSet] into tLinkExts[tLinkExt] 
-            _internal extract "__MISC" "__deps" from tLinkExts[tLinkExt]
-            repeat for each line tLine in it
-               put true into tLinkDeps[tLine]
-            end repeat 
-         end repeat
-         
-         -- Fetch the deps for the standalone itself
-         _internal extract "__MISC" "__deps" from mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone")
-         repeat for each line tLine in it
-            put true into tLinkDeps[tLine]
-         end repeat
          
          -- Compute the SDK path
          local tSdkPath
@@ -371,12 +417,82 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
          -- Add reference to the partially linked standalone engine
          put quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote & space after tLinkCommand
          
-         -- Add references to each partially linked extension file, also make sure we force the
-         -- presence of the ___libinfoptr_* symbol for each one - this stops dead-stripping
-         -- from occuring.
-         repeat for each key tLinkExt in tLinkExts
-            put quote & tLinkExts[tLinkExt] & quote & return after tLinkCommand
-            put "-u" && "___libinfoptr_" & tLinkExt & return after tLinkCommand
+         -- Loop through the copied files list, extracting anything that needs to be
+         -- linked with the engine
+         local tLinkExts, tLinkDeps
+         put empty into tLinkExts
+         put empty into tLinkDeps
+         
+         -- Extract the dependency info from the extension
+         -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
+         --
+         set the itemDelimiter to "."
+         repeat for each line tLinkExt in keys of tCopiedExternals
+            switch the last item of tCopiedExternals[tLinkExt][tInstSet]
+               case "txt"
+                  -- deps file
+                  get url ("file:" & tCopiedExternals[tLinkExt][tInstSet])
+                  repeat for each line tLine in it
+                     put true into tLinkDeps[tLine]
+                  end repeat 
+                  break
+               case "a"
+                  put quote & tCopiedExternals[tLinkExt][tInstSet] & quote & return after tLinkCommand
+                  put "-force_load" && quote & tCopiedExternals[tLinkExt][tInstSet] & quote & return after tLinkCommand
+                  break
+               case "bundle"
+               case "framework"
+                  -- check if the library is static or dynamic
+                  local tFileName
+                  set the itemDelimiter to slash
+                  put the last item of tCopiedExternals[tLinkExt][tInstSet] into tFileName
+                  set the itemDelimiter to "."
+                  delete the last item of tFileName
+                  get shell("file" && quote & tCopiedExternals[tLinkExt][tInstSet] & "/" & tFileName & quote)
+                  if it contains "ar archive" then
+                     -- static frameworks are just a package for a static library
+                     put quote & tCopiedExternals[tLinkExt][tInstSet] & "/" & tFileName & quote & return after tLinkCommand
+                     put "-force_load" && quote & tCopiedExternals[tLinkExt][tInstSet] & "/" & tFileName & quote & return after tLinkCommand
+                  else
+                     -- dynamic framework iOS 8+
+                     revSBCopyFolderToDestination tCopiedExternals[tLinkExt][tInstSet], pAppBundle, "revStandaloneProgressCallback", the long id of me
+                     if tCopiedExternals[tLinkExt][tInstSet] ends with ".framework" then
+                        -- remove simulator slices
+                        -- if we are copying a bundle these can only be used for resources
+                        local tCopiedFrameworkBinary
+                        put quote & pAppBundle & "/" & tFileName & ".framework/" & tFileName  & quote into tCopiedFrameworkBinary
+                        repeat for each word tArch in "i386 x86_64"
+                           get shell("lipo -remove" && quote & tArch & quote && "-output" && tCopiedFrameworkBinary && tCopiedFrameworkBinary)
+                        end repeat
+                     end if
+                  end if
+                  break
+               case "embeddedframework"
+                  -- .embeddedframework is a hack that some SDKs use for single drag and drop of
+                  -- multiple resource bundles and frameworks
+                  throw "The contents of the embeddedframework folder should be added to the module code resource folder not the embeddedframework folder itself:" & return & tCopiedExternals[tLinkExt][tInstSet]
+                  break
+               case "lcext"
+               default
+                  put tCopiedExternals[tLinkExt][tInstSet] into tLinkExts[tLinkExt] 
+                  _internal extract "__MISC" "__deps" from tLinkExts[tLinkExt]
+                  repeat for each line tLine in it
+                     put true into tLinkDeps[tLine]
+                  end repeat 
+                  
+                  -- Add references to each partially linked extension file, also make sure we force the
+                  -- presence of the ___libinfoptr_* symbol for each one - this stops dead-stripping
+                  -- from occuring.
+                  put quote & tLinkExts[tLinkExt] & quote & return after tLinkCommand
+                  put "-u" && "___libinfoptr_" & tLinkExt & return after tLinkCommand
+                  break
+            end switch
+         end repeat
+         
+         -- Fetch the deps for the standalone itself
+         _internal extract "__MISC" "__deps" from mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone")
+         repeat for each line tLine in it
+            put true into tLinkDeps[tLine]
          end repeat
          
          -- Add references to each dependency
@@ -389,24 +505,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
                put "-weak_framework" && word 2 of tLinkDep & return after tLinkCommand
             end if
          end repeat
-         
-         -- Compute the list of archs in the fat binary
-         local tRawArchs
-         put shell("otool -fv" && quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
-         if tRawArchs is empty then
-            put shell("otool -hv" && quote & mapFilePath(tSDKs[tInstSet]["runtime path"] & slash & "Standalone") & quote) into tRawArchs
-         end if
-         
-         local tArchs
-         -- SN-2015-03-30: [[ Bug 14794 ]] If the user specifies a 32-bit only build,
-         --  then we do not do the 64-bit build.
-         if tRawArchs contains "ARM64" and not pSettings["ios,32-bit only"] then
-            put "arm64 " after tArchs
-         end if
-         if tRawArchs contains "V7" and pSettings["ios,minimum version"] < 11.0 then
-            put "armv7 " after tArchs
-         end if
-         
          
          -- SN-2015-02-19: [[ Bug 14625 ]] Build each binary separately according
          -- to their architecture.
@@ -469,16 +567,6 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    
    -- Stackfile to use
    put the effective filename of stack pStack into tDeploy["stackfile"]
-   
-   -- Externals to reference
-   -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
-   --
-   repeat for each element tExternal in tCopiedExternals
-      if tExternal["type"] is among the words of "external external-tmp" then
-         put tExternal["location"] & return after tDeploy["externals"]
-      end if
-   end repeat
-   delete the last char of tDeploy["externals"]
    
    -- Put the redirects if any
    -- MM-2014-10-06: [[ Bug 13583 ]] Due to issues with the redirects, we use symlinks with the iOS 8 sim.
@@ -546,6 +634,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    put tStandardFontmapRoot & slash & "fontmap" into tFontMapFiles
    local tUserFontMappings
    put pSettings["ios,fontmappings"] into tUserFontMappings
+   set the itemdelimiter to comma
    if tUserFontMappings is not empty then
       // Make sure to use the right absolute filepath
       if not (tUserFontMappings begins with slash) then
@@ -605,7 +694,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
       get shell("dsymutil" && quote & tDeploy["output"] & quote)
       if it is not empty then
-         throw "extracting debug symbols failed with" && it
+         revStandaloneProgress "Extracting debug symbols failed"
       end if
       
       // Reinstate env var MallocNanoZone if it was set.
@@ -712,7 +801,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       --try
       -- Perform the codesigning of the main bundle
       local tResult
-      put shell("/usr/bin/codesign --verbose -f -s" && quote & tCertificate & quote && \
+      __CodesignFrameworks pAppBundle, tCertificate, tEntitlementsFile
+      put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & tCertificate & quote && \
             "--entitlements" && quote & tEntitlementsFile & quote && \
             quote & pAppBundle & quote) into tResult
       -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
@@ -727,6 +817,23 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
    end if
 end revSaveAsMobileStandaloneMain
+
+private command __CodesignFrameworks pPath, pCertificate, pEntitlements
+   local tFrameworks
+   put folders(pPath) into tFrameworks
+   filter tFrameworks with "*.framework"
+   repeat for each line tFramework in tFrameworks
+      __CodesignFrameworks pPath & "/" & tFramework & "/Frameworks", pCertificate, pEntitlements
+      
+      local tResult
+      put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & pCertificate & quote && \
+            "--entitlements" && quote & pEntitlements & quote && \
+            quote & pPath & "/" & tFramework & quote) into tResult
+      if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
+         throw "codesigning failed with" && tResult
+      end if
+   end repeat
+end __CodesignFrameworks
 
 command revSaveAsMobileDeployer pDeployAppBundle, pAppBundle, pAppName, pAppId, pAppExecutables
    create folder pDeployAppBundle
@@ -1022,7 +1129,7 @@ end addToManifest
 --   foobar/baz -> <base>/foobar/baz
 --   C:/foobar/baz -> <base>/baz
 --
-private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts, @rPlist, @rCustomEntitlements
+private command revCopyMobileFiles pSettings, pBaseFolder, pAppBundle, pAppTarget, pSDKs, @rRedirects, @rExternals, @rFonts, @rPlist, @rCustomEntitlements
    revStandaloneProgress "Copying files..."
    
    -- Only use redirects in simulator 4.x
@@ -1030,6 +1137,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    -- sure that we don't try and use redirects for device builds.
    -- MM-2012-09-18: Since we now no longer support sims before 4.3, we always use redirects for sim builds.
    --
+   
    local tUseRedirects
    if pAppTarget is not "Device" then
       put true into tUseRedirects
@@ -1039,7 +1147,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
    put empty into rRedirects
    
    local tFileData
-   revSBResolveCopyFilesList pBaseFolder, "ios", pFiles, tFileData
+   revSBResolveCopyFilesList pBaseFolder, "ios", pSettings, tFileData
    
    -- Compute a list of the files we need to copy. This is in the form
    --   <target> [tab] <source>
@@ -1082,7 +1190,7 @@ private command revCopyMobileFiles pFiles, pBaseFolder, pAppBundle, pAppTarget, 
       end if
       
       -- If the file is a font, then just copy and record as such
-      if tSource ends with ".ttf" or tSource ends with ".ttc" then
+      if revSBFileIsFontFile(tSource) then
          revSBCopyFileToFile tSource, tTarget, "revStandaloneProgressCallback", the long id of me
          put "font", tTarget & return after rFonts
          next repeat
@@ -1303,32 +1411,70 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    ----------
    
-   local tExeName, tBundleId, tBundleVersion,tMinimumOSByArch
+   local tExeName, tBundleId, tBundleVersion,tBundleBuild,tMinimumOSByArch
    put pSettings["name"] into tExeName
    put pSettings["ios,bundle id"] into tBundleId
    put pSettings["ios,bundle version"] into tBundleVersion
+   put pSettings["ios,bundle build"] into tBundleBuild
    
    -- MW-2011-03-15: Make sure the bundle version is defaulted to 1.0.0 if empty
    if tBundleVersion is empty then
       put "1.0.0" into tBundleVersion
    end if
    
+   if tBundleBuild is empty then
+      put "1" into tBundleBuild
+   end if
    ----------
    
-   local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tExitsOnSuspend
+   local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tEnableBackgroundExecution
    local tDisableATS
-   local tFileSharing, tPrerenderedIcon, tBackGroundAudio
+   local tFileSharing, tPrerenderedIcon
    put pSettings["ios,display name"] into tDisplayName
    put pSettings["ios,minimum version"] into tMinimumOS
    put pSettings["ios,device family"] into tDeviceFamily
    put pSettings["ios,device capabilities"] into tRequiredCapabilities
    put pSettings["ios,persistent wifi"] into tPersistentWifi
    -- MW-2011-03-10: Force this to true for now, until we can fix the engine
-   --put pSettings["ios,exits on suspend"] into tExitsOnSuspend
+   put pSettings["ios,enable background execution"] into tEnableBackgroundExecution
    
-   put  pSettings["ios,background audio"] into tBackgroundAudio
+   -- AB-2017-05-31: Add more background modes
+   local tBackgroundModes
+   
+    if tEnableBackgroundExecution is empty then
+      put "false" into tEnableBackgroundExecution
+   end if
+   
+   if tEnableBackgroundExecution then
+      put pSettings["ios,background audio"] into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
+      put pSettings["ios,background location update"] into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
+      put pSettings["ios,background voip"] into tBackgroundModes["${BACKGROUND_VOIP}"]
+      put pSettings["ios,background newsstand downloads"] into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
+      put pSettings["ios,external acc comn"] into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
+      put pSettings["ios,use bt le"] into tBackgroundModes["${USE_BT_LE}"]
+      put pSettings["ios,acts as bt le"] into tBackgroundModes["${ACTS_AS_BT_LE}"]
+      put pSettings["ios,background fetch"] into tBackgroundModes["${BACKGROUND_FETCH}"]
+      put pSettings["ios,remote notifications"] into tBackgroundModes["${REMOTE_NOTIFICATIONS}"] 
+   else
+      put false into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
+      put false into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
+      put false into tBackgroundModes["${BACKGROUND_VOIP}"]
+      put false into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
+      put false into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
+      put false into tBackgroundModes["${USE_BT_LE}"]
+      put false into tBackgroundModes["${ACTS_AS_BT_LE}"]
+      put false into tBackgroundModes["${BACKGROUND_FETCH}"]
+      put false into tBackgroundModes["${REMOTE_NOTIFICATIONS}"] 
+   end if
    put pSettings["ios,file sharing"] into tFileSharing
    put pSettings["ios,prerendered icon"] into tPrerenderedIcon 
+   
+   local tURLWhitelist
+   put pSettings["ios,urlwhitelist"] into tURLWhitelist
+   
+   if tURLWhitelist is empty then
+      put "" into tURLWhitelist
+   end if
    
    if tDisplayName is empty then
       put tExeName into tDisplayName
@@ -1350,11 +1496,11 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    
    -- tExitsOnSuspend defaulted to true. We want this to be false to allow background audio
-   if tBackgroundAudio is true then 
-      put "false" into tExitsOnSuspend
-   else -- false or empty
-      put "true" into tExitsOnSuspend
-   end if
+   repeat for each key tKey in tBackgroundModes
+      if tBackgroundModes[tKey] is empty then
+         put false into tBackgroundModes[tKey]
+      end if
+   end repeat   
    
    // SN-2015-02-11: [[ Bug 16299 ]] Add ${DISABLE_ATS} in the Plist template
    if pSettings["ios,disable ATS"] then
@@ -1438,6 +1584,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${EXECUTABLE_NAME}" with textEncode(tExeName, "utf-8") in pPlist
    replace "${BUNDLE_IDENTIFIER}" with textEncode(tBundleId, "utf-8") in pPlist
    replace "${BUNDLE_VERSION}" with tBundleVersion in pPlist
+   replace "${BUNDLE_BUILD}" with tBundleBuild in pPlist
    replace "${BUNDLE_DISPLAY_NAME_SUPPORT}" with "<string>" & \ 	
          textEncode(tDisplayName, "utf-8") & "</string>" in pPlist
    		
@@ -1451,24 +1598,24 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       local tDtPlatformBuild, tDtPlatformVersion, tDtSdkBuild, tDtSdkName, tDtXcode, tDtXcodeBuild
       
       -- Note: The values returned by the shell commands contain a trailing LF, so we have to remove it
-      get shell("xcodebuild -version -sdk iphoneos ProductBuildVersion")
+      get shell("xcodebuild -version -sdk iphoneos ProductBuildVersion 2> /dev/null")
       -- Those 2 values are the same, e.g. "15C107"
       put it into tDtPlatformBuild
       delete last char of tDtPlatformBuild
       put it into tDtSdkBuild 
       delete last char of tDtSdkBuild
       
-      get shell("xcodebuild -version -sdk iphoneos PlatformVersion") -- e.g. "11.2"
+      get shell("xcodebuild -version -sdk iphoneos PlatformVersion 2> /dev/null") -- e.g. "11.2"
       put it into tDtPlatformVersion
       delete last char of tDtPlatformVersion
       
       put "iphoneos" & tDtPlatformVersion into tDtSdkName
       
-      get shell("xcodebuild -version | awk '/Xcode/ {print $NF}' ") -- e.g. "9.2"
+      get shell("xcodebuild -version 2> /dev/null| awk '/Xcode/ {print $NF}' ") -- e.g. "9.2"
       put it into tDtXcode
       put convertXcodeVersion(tDtXcode) into tDtXcode 
       
-      get shell("xcodebuild -version | awk 'END {print $NF}' ") -- e.g. "9C40b"
+      get shell("xcodebuild -version 2> /dev/null| awk 'END {print $NF}' ") -- e.g. "9C40b"
       put it into tDtXcodeBuild
       delete last char of tDtXcodeBuild
       
@@ -1510,7 +1657,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${DEVICE_CAPABILITY}" with it in pPlist
    
    replace "${PERSISTENT_WIFI}" with "<" & tPersistentWifi & "/>" in pPlist
-   replace "${APPLICATION_EXITS_ON_SUSPEND}" with "<" & tExitsOnSuspend & "/>" in pPlist
+   replace "${APPLICATION_EXITS_ON_SUSPEND}" with "<" & not tEnableBackgroundExecution & "/>" in pPlist
    replace "${FILE_SHARING}" with "<" & tFileSharing & "/>" in pPlist
    replace "${PRE_RENDERED_ICON}" with "<" & tPrerenderedIcon & "/>" in pPlist
    
@@ -1560,9 +1707,11 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    if 2 is among the items of tDeviceFamily then      
       if tIPadOrientations contains "Portrait" then
          put "Default-Portrait|Default-Portrait|{768, 1024}|Portrait" & return after tSplashScreens
+         put "Default-iPadProPortrait|Default-iPadProPortrait|{1024, 1366}|Portrait" & return after tSplashScreens
       end if
       if tIPadOrientations contains "Landscape" then
          put "Default-Landscape|Default-Landscape|{768, 1024}|Landscape" & return after tSplashScreens
+         put "Default-iPadProLandscape|Default-iPadProLandscape|{1024, 1366}|Landscape" & return after tSplashScreens
       end if
    end if
    
@@ -1645,13 +1794,37 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    replace "${LOCATION_AUTH_TYPE}" with it in pPlist
    
+   -- AB : helper stmts to generate the actual strings that we are going to insert 
+   -- the background modes into the plist file
+   
+   local tBackgroundValues
+   put "<string>audio</string>" into tBackgroundValues["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
+   put "<string>location</string>" into tBackgroundValues["${BACKGROUND_LOCATION_UPDATE}"]
+   put "<string>voip</string>" into tBackgroundValues["${BACKGROUND_VOIP}"]
+   put "<string>newsstand-content</string>" into tBackgroundValues["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
+   put "<string>external-accessory</string>" into tBackgroundValues["${EXTERNAL_ACC_COMM}"]
+   put "<string>bluetooth-central</string>" into tBackgroundValues["${USE_BT_LE}"]
+   put "<string>bluetooth-peripheral</string>" into tBackgroundValues["${ACTS_AS_BT_LE}"]
+   put "<string>fetch</string>" into tBackgroundValues["${BACKGROUND_FETCH}"]
+   put "<string>remote-notification</string>" into tBackgroundValues["${REMOTE_NOTIFICATIONS}"]
+   
    -- PM-2015-10-08:  [[ Bug 16154 ]] Allow audio playing when the app is on background
-   if tBackgroundAudio is true then
-      get "<string>audio</string>"
-   else -- false or empty
-      get empty
-   end if
-   replace "${PLAY_AUDIO_WHEN_IN_BACKGROUND}" with it in pPlist
+   -- AB-2017-05-31: Add BackgroundModes to Plist
+   repeat for each key tKey in tBackgroundModes
+      if tBackgroundModes[tKey] is true then
+         replace tKey with tBackgroundValues[tKey] in pPlist
+      else
+         replace tKey with empty in pPlist
+      end if
+   end repeat
+   
+   -- AB-2017-05-31: Add App URL Query Whitelist
+   local tWhitelistStrings
+   repeat for each item tItem in tURLWhitelist 
+      put "<string>" & tItem & "</string>" & return after tWhitelistStrings
+   end repeat
+   replace "${APP_URL_WHITELIST}" with tWhitelistStrings in pPlist
+   
    
    ----------   
    
@@ -1785,7 +1958,12 @@ function mapFilePath pPath
    else
       put "/Release" after tBuild
    end if
-   put the editionType into tSuffix
+   
+   if the editionType is "community" then
+      put "community" into tSuffix
+   else
+      put "commercial" into tSuffix
+   end if
    
    local tPath
    switch the last item of pPath

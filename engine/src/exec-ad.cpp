@@ -36,17 +36,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Ad, Register, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Ad, Create, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Ad, Delete, 1)
-MC_EXEC_DEFINE_SET_METHOD(Ad, VisibleOfAd, 2)
-MC_EXEC_DEFINE_GET_METHOD(Ad, VisibleOfAd, 2)
-MC_EXEC_DEFINE_SET_METHOD(Ad, TopLeftOfAd, 3)
-MC_EXEC_DEFINE_GET_METHOD(Ad, TopLeftOfAd, 3)
-MC_EXEC_DEFINE_GET_METHOD(Ad, Ads, 1)
-
-//////////
-
 static void MCAdTopLeftParse(MCExecContext& ctxt, MCStringRef p_input, MCAdTopLeft& r_output)
 {
     MCAutoStringRefAsUTF8String t_input_utf8;
@@ -122,12 +111,10 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
         if (t_success)
         {
             t_timeout = 0;
-            MCNewAutoNameRef t_key;
-            MCNameCreateWithCString("refresh", &t_key);
             
             MCValueRef t_value;
             
-            if (p_metadata != nil && MCArrayFetchValue(p_metadata, false, *t_key, t_value))
+            if (p_metadata != nil && MCArrayFetchValue(p_metadata, false, MCNAME("refresh"), t_value))
                 t_timeout = MCNumberFetchAsUnsignedInteger((MCNumberRef)t_value);
             if (t_type == kMCAdTypeFullscreen)
                 t_timeout = 0;
@@ -263,19 +250,16 @@ void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible)
 
 void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads)
 {
-    bool t_success;
-    t_success = false;
-    
     MCAutoListRef t_ads;
-	/* UNCHECKED */ MCListCreateMutable('\n', &t_ads);
+    bool t_success = MCListCreateMutable('\n', &t_ads);
+	
 	for(MCAd *t_ad = MCAdGetStaticAdsPtr(); t_ad != nil && t_success; t_ad = t_ad->GetNext())
     {
 		t_success = MCListAppend(*t_ads, t_ad->GetName());
     }
     
-    if (t_success)
-    {
-        /* UNCHECKED */ MCListCopyAsString(*t_ads, r_ads);
+    if (t_success && MCListCopyAsString(*t_ads, r_ads))
+	{
         return;
     }
 

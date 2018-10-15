@@ -84,6 +84,12 @@ bool MCWidgetOnClick(MCWidgetRef widget, bool& r_bubble);
 
 bool MCWidgetOnMouseScroll(MCWidgetRef widget, real32_t delta_x, real32_t delta_y, bool& r_bubble);
 
+bool MCWidgetHandlesTouchEvents(MCWidgetRef p_widget);
+bool MCWidgetOnTouchStart(MCWidgetRef p_widget, bool& r_bubble);
+bool MCWidgetOnTouchMove(MCWidgetRef p_widget, bool& r_bubble);
+bool MCWidgetOnTouchFinish(MCWidgetRef p_widget, bool& r_bubble);
+bool MCWidgetOnTouchCancel(MCWidgetRef p_widget, bool& r_bubble);
+
 bool MCWidgetOnGeometryChanged(MCWidgetRef widget);
 bool MCWidgetOnLayerChanged(MCWidgetRef widget);
 bool MCWidgetOnParentPropertyChanged(MCWidgetRef widget);
@@ -98,6 +104,7 @@ bool MCWidgetPost(MCWidgetRef widget, MCNameRef event, MCProperListRef args);
 void MCWidgetRedrawAll(MCWidgetRef widget);
 void MCWidgetScheduleTimerIn(MCWidgetRef widget, double timeout);
 void MCWidgetCancelTimer(MCWidgetRef widget);
+void MCWidgetTriggerAll(MCWidgetRef widget);
 
 void MCWidgetCopyChildren(MCWidgetRef widget, MCProperListRef& r_children);
 void MCWidgetPlaceWidget(MCWidgetRef widget, MCWidgetRef child, MCWidgetRef relative_to, bool put_below);
@@ -191,6 +198,7 @@ public:
 	virtual void OnOpen();
 	virtual void OnClose();
 	
+    virtual void SetName(MCExecContext& ctxt, MCStringRef p_name);
     virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag);
     
     void GetKind(MCExecContext& ctxt, MCNameRef& r_kind);

@@ -655,6 +655,91 @@ Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 	return ES_ERROR;
 }
 
+Exec_stat MCHandleSetFullScreenRectForOrientations(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_orientations;
+    
+    bool t_success = p_parameters != nil;
+    
+    if (t_success)
+    {
+        MCAutoValueRef t_value;
+        if (p_parameters -> eval_argument(ctxt, &t_value))
+        {
+            ctxt . ConvertToString(*t_value, &t_orientations);
+        }
+        t_success = t_orientations.IsSet();
+        p_parameters = p_parameters -> getnext();
+    }
+    
+    MCRectangle *t_rect_ptr = nullptr;
+    MCRectangle t_rect;
+    
+    if (t_success && p_parameters != nil)
+    {
+        MCAutoValueRef t_value;
+        if (p_parameters -> eval_argument(ctxt, &t_value))
+        {
+            bool t_have_rect = false;
+            ctxt.TryToConvertToLegacyRectangle(*t_value, t_have_rect, t_rect);
+            if (t_have_rect)
+            {
+                t_rect_ptr = &t_rect;
+            }
+        }
+    }
+    
+    MCAutoArrayRef t_orientations_array;
+    if (t_success)
+    {
+        t_success = MCStringSplit(*t_orientations, MCSTR(","), nil, kMCCompareExact, &t_orientations_array);
+    }
+    
+    uint32_t t_orientations_count;
+    if (t_success)
+    {
+        t_orientations_count = MCArrayGetCount(*t_orientations_array);
+    }
+    
+    intset_t t_orientations_set = 0;
+    if (t_success)
+    {
+        for(uint32_t i = 0; i < t_orientations_count; i++)
+        {
+            // Note: 't_orientations_array' is an array of strings
+            MCValueRef t_orien_value = nil;
+            if (MCArrayFetchValueAtIndex(*t_orientations_array, i + 1, t_orien_value))
+            {
+                MCStringRef t_orientation = (MCStringRef)(t_orien_value);
+                if (MCStringIsEqualToCString(t_orientation, "portrait", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_PORTRAIT;
+                else if (MCStringIsEqualToCString(t_orientation, "portrait upside down", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_PORTRAIT_UPSIDE_DOWN;
+                else if (MCStringIsEqualToCString(t_orientation, "landscape right", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_LANDSCAPE_RIGHT;
+                else if (MCStringIsEqualToCString(t_orientation, "landscape left", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_LANDSCAPE_LEFT;
+                else if (MCStringIsEqualToCString(t_orientation, "face up", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_FACE_UP;
+                else if (MCStringIsEqualToCString(t_orientation, "face down", kMCCompareCaseless))
+                    t_orientations_set |= ORIENTATION_FACE_DOWN;
+            }
+        }
+    }
+    
+    if (t_success)
+    {
+        MCOrientationSetRectForOrientations(ctxt, t_orientations_set, t_rect_ptr);
+    }
+    
+    if (t_success && !ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
 Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters)
 {
 	MCExecContext ctxt(nil, nil, nil);
@@ -3292,6 +3377,99 @@ Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
+/////////////////// Android 6.0 runtime permissions /////////////////////////
+Exec_stat MCHandleRequestPermission(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_permission;
+    bool t_success, t_granted;
+    
+    t_success = MCParseParameters(p_parameters, "x", &(&t_permission));
+    
+    bool t_permission_exists;
+    MCMiscExecPermissionExists(ctxt, *t_permission, t_permission_exists);
+    
+    if (!t_permission_exists)
+    {
+        ctxt.LegacyThrow(EE_BAD_PERMISSION_NAME);
+        t_success = false;
+    }
+    
+    if (t_success)
+        MCMiscExecRequestPermission(ctxt, *t_permission, t_granted);
+    
+    Exec_stat t_stat;
+    if (!ctxt . HasError())
+        t_stat = ES_NORMAL;
+    else
+        t_stat = ES_ERROR;
+    
+    ctxt.SetTheResultToEmpty();
+    return t_stat;
+}
+
+Exec_stat MCHandlePermissionExists(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_permission;
+    bool t_success, t_exists;
+    
+    t_success = MCParseParameters(p_parameters, "x", &(&t_permission));
+    
+    if (t_success)
+        MCMiscExecPermissionExists(ctxt, *t_permission, t_exists);
+    
+    if (!ctxt . HasError())
+    {
+        if (t_exists)
+            ctxt.SetTheResultToValue(kMCTrueString);
+        else
+            ctxt.SetTheResultToValue(kMCFalseString);
+        
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleHasPermission(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_permission;
+    bool t_success, t_permission_granted;
+    
+    t_success = MCParseParameters(p_parameters, "x", &(&t_permission));
+    
+    bool t_permission_exists;
+    MCMiscExecPermissionExists(ctxt, *t_permission, t_permission_exists);
+    
+    if (!t_permission_exists)
+    {
+        ctxt.LegacyThrow(EE_BAD_PERMISSION_NAME);
+        t_success = false;
+    }
+    
+    if (t_success)
+        MCMiscExecHasPermission(ctxt, *t_permission, t_permission_granted);
+    
+    if (!ctxt . HasError())
+    {
+        if (t_permission_granted)
+            ctxt.SetTheResultToValue(kMCTrueString);
+        else
+            ctxt.SetTheResultToValue(kMCFalseString);
+        
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 
 static MCMediaType MCMediaTypeFromString(MCStringRef p_string)
@@ -3915,6 +4093,11 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 		p_parameters -> eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_source);
 	}
+    
+    if (!t_source.IsSet())
+    {
+        return ES_ERROR;
+    }
 	
 	MCPhotoSourceType t_photo_source;
 	bool t_is_take;
@@ -4215,6 +4398,58 @@ Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_paramete
         return ES_ERROR;
 }
 
+Exec_stat MCHandleIsNFCAvailable(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	ctxt.SetTheResultToEmpty();
+	
+	MCNFCGetIsNFCAvailable(ctxt);
+	
+	if (!ctxt.HasError())
+		return ES_NORMAL;
+	
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleIsNFCEnabled(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	ctxt.SetTheResultToEmpty();
+	
+	MCNFCGetIsNFCEnabled(ctxt);
+	
+	if (!ctxt.HasError())
+		return ES_NORMAL;
+	
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleEnableNFCDispatch(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	ctxt.SetTheResultToEmpty();
+	
+	MCNFCExecEnableNFCDispatch(ctxt);
+	
+	if (!ctxt.HasError())
+		return ES_NORMAL;
+	
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleDisableNFCDispatch(void *context, MCParameter *p_parameters)
+{
+	MCExecContext ctxt(nil, nil, nil);
+	ctxt.SetTheResultToEmpty();
+	
+	MCNFCExecDisableNFCDispatch(ctxt);
+	
+	if (!ctxt.HasError())
+		return ES_NORMAL;
+	
+	return ES_ERROR;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -4231,7 +4466,7 @@ struct MCPlatformMessageSpec
 	void *context;
 };
 
-static MCPlatformMessageSpec s_platform_messages[] =
+static const MCPlatformMessageSpec s_platform_messages[] =
 {
     // MM-2012-02-22: Added support for ad management
     {false, "mobileAdRegister", MCHandleAdRegister, nil},
@@ -4350,7 +4585,8 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobileOrientation", MCHandleOrientation, nil},
 	{false, "mobileAllowedOrientations", MCHandleAllowedOrientations, nil},
 	{false, "mobileSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
-	{false, "mobileLockOrientation", MCHandleLockOrientation, nil},
+    {false, "mobileSetFullScreenRectForOrientations", MCHandleSetFullScreenRectForOrientations, nil},
+    {false, "mobileLockOrientation", MCHandleLockOrientation, nil},
 	{false, "mobileUnlockOrientation", MCHandleUnlockOrientation, nil},
 	{false, "mobileOrientationLocked", MCHandleOrientationLocked, nil},
     
@@ -4386,6 +4622,9 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileLocationAuthorizationStatus", MCHandleLocationAuthorizationStatus, nil},
     
 	{false, "mobileBuildInfo", MCHandleBuildInfo, nil},
+    {false, "androidRequestPermission", MCHandleRequestPermission, nil},
+    {false, "androidPermissionExists", MCHandlePermissionExists, nil},
+    {false, "androidHasPermission", MCHandleHasPermission, nil},
 	
 	{false, "mobileCanMakePurchase", MCHandleCanMakePurchase, nil},
 	{false, "mobileEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
@@ -4538,6 +4777,11 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "iphoneDisableRemoteControl", MCHandleDisableRemoteControl, nil},
     {false, "iphoneRemoteControlEnabled", MCHandleRemoteControlEnabled, nil},
     {false, "iphoneSetRemoteControlDisplay", MCHandleSetRemoteControlDisplay, nil},
+	
+	{false, "mobileIsNFCAvailable", MCHandleIsNFCAvailable, nil},
+	{false, "mobileIsNFCEnabled", MCHandleIsNFCEnabled, nil},
+	{false, "mobileEnableNFCDispatch", MCHandleEnableNFCDispatch, nil},
+	{false, "mobileDisableNFCDispatch", MCHandleDisableNFCDispatch, nil},
     
 	{nil, nil, nil}    
 };
@@ -4548,7 +4792,7 @@ bool MCIsPlatformMessage(MCNameRef handler_name)
     
     for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
     {
-		if (MCNameIsEqualToCString(handler_name, s_platform_messages[i].message, kMCCompareCaseless))
+		if (MCStringIsEqualToCString(MCNameGetString(handler_name), s_platform_messages[i].message, kMCCompareCaseless))
 			found = true;
     }
     
@@ -4605,7 +4849,7 @@ bool MCDoHandlePlatformMessage(bool p_waitable, MCPlatformMessageHandler p_handl
 bool MCHandlePlatformMessage(MCNameRef p_message, MCParameter *p_parameters, Exec_stat& r_result)
 {
 	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
-		if (MCNameIsEqualToCString(p_message, s_platform_messages[i] . message, kMCCompareCaseless))
+		if (MCStringIsEqualToCString(MCNameGetString(p_message), s_platform_messages[i] . message, kMCCompareCaseless))
 		{
             return MCDoHandlePlatformMessage(s_platform_messages[i] . waitable, s_platform_messages[i] . handler, s_platform_messages[i] . context, p_parameters, r_result);
 		}

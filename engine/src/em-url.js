@@ -51,7 +51,7 @@ mergeInto(LibraryManager.library, {
 			              'number', // int32_t p_total_length
 			              'number', // MCSystemUrlCallback p_callback
 			              'number'], // void *p_context
-			             [loadedLength, callbackPtr, contextPtr]);
+			             [loadedLength, totalLength, callbackPtr, contextPtr]);
 		},
 
 		_postStatusFinished: function(data, callbackPtr, contextPtr) {
@@ -201,7 +201,7 @@ mergeInto(LibraryManager.library, {
 			}
 
 			// Timeout
-			xhr.timeout = timeout;
+			xhr.timeout = timeout * 1000;
 
 			// We want an array buffer response (no string decoding
 			// etc.)

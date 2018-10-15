@@ -800,7 +800,7 @@ static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, MCStringRef p_ic
 	t_entries = NULL;
 	if (t_success)
 	{
-		t_entries = new ICONDIRENTRY[t_dir . idCount];
+		t_entries = new (nothrow) ICONDIRENTRY[t_dir . idCount];
 		if (t_entries == NULL)
 			t_success = MCDeployThrow(kMCDeployErrorNoMemory);
 	}
@@ -844,7 +844,7 @@ static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, MCStringRef p_ic
 	t_grpicon_data = NULL;
 	if (t_success)
 	{
-		t_grpicon_data = new uint8_t[sizeof_GRPICONDIR + sizeof_GRPICONDIRENTRY * t_dir . idCount];
+		t_grpicon_data = new (nothrow) uint8_t[sizeof_GRPICONDIR + sizeof_GRPICONDIRENTRY * t_dir . idCount];
 		if (t_grpicon_data == NULL)
 			t_success = MCDeployThrow(kMCDeployErrorNoMemory);
 	}
@@ -890,7 +890,7 @@ static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, MCStringRef p_ic
 		{
 			// First allocate memory and load the image data
 			uint8_t *t_image;
-			t_image = new uint8_t[t_entries[i] . dwBytesInRes];
+			t_image = new (nothrow) uint8_t[t_entries[i] . dwBytesInRes];
 			if (t_image != NULL)
 				t_success = MCDeployFileReadAt(t_icon, t_image, t_entries[i] . dwBytesInRes, t_entries[i] . dwImageOffset);
 
@@ -936,7 +936,7 @@ static bool MCWindowsVersionInfoAdd(MCWindowsVersionInfo *p_parent, const char *
 	t_child = NULL;
 	if (t_success)
 	{
-		t_child = new MCWindowsVersionInfo;
+		t_child = new (nothrow) MCWindowsVersionInfo;
 		if (t_child == NULL)
 			t_success = MCDeployThrow(kMCDeployErrorNoMemory);
 	}
@@ -1116,9 +1116,13 @@ static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRe
             !t_bytes . Push('\0'))
             return false;
 	}
-	
+
+    MCAutoStringRefAsCString t_key_str;
+    if (!t_key_str.Lock(MCNameGetString(p_key)))
+        return false;
+
     MCWindowsVersionInfo *t_string;
-    return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCNameGetCString(p_key), true, t_bytes . Ptr(), t_bytes . Size(), t_string);
+    return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, *t_key_str, true, t_bytes . Ptr(), t_bytes . Size(), t_string);
 }
 
 static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)
@@ -1292,7 +1296,7 @@ static bool MCWindowsReadResourceEntryName(MCDeployFileRef p_file, uint32_t p_st
 	swap_uint16(t_length);
 	r_entry . name_length = t_length;
 
-	r_entry . name = new uint16_t[r_entry . name_length];
+	r_entry . name = new (nothrow) uint16_t[r_entry . name_length];
 	if (r_entry . name == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
@@ -1333,7 +1337,7 @@ static bool MCWindowsReadResourceDir(MCDeployFileRef p_file, uint32_t p_address,
 	// Make sure we have enough room in the table.
 	r_resources . is_table = true;
 	r_resources . table . entry_count = t_dir . NumberOfIdEntries + t_dir . NumberOfNamedEntries;
-	r_resources . table . entries = new MCWindowsResources[r_resources . table . entry_count];
+	r_resources . table . entries = new (nothrow) MCWindowsResources[r_resources . table . entry_count];
 	if (r_resources . table . entries == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
@@ -1617,7 +1621,7 @@ static bool MCDeployToWindowsReadHeaders(MCDeployFileRef p_file, IMAGE_DOS_HEADE
 	if (!MCDeployFileSeekSet(p_file, r_dos_header . e_lfanew + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader) + r_nt_header . FileHeader . SizeOfOptionalHeader))
 		return MCDeployThrow(kMCDeployErrorWindowsBadSectionHeaderOffset);
 
-	r_section_headers = new IMAGE_SECTION_HEADER[r_nt_header . FileHeader . NumberOfSections];
+	r_section_headers = new (nothrow) IMAGE_SECTION_HEADER[r_nt_header . FileHeader . NumberOfSections];
 	if (r_section_headers == NULL)
 		return MCDeployThrow(kMCDeployErrorNoMemory);
 
@@ -1677,34 +1681,69 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
     
 	IMAGE_SECTION_HEADER *t_payload_section, *t_project_section, *t_resource_section;
     t_payload_section = t_project_section = t_resource_section = nil;
+    
+    
 	uint32_t t_section_count;
-	if (t_success)
+    
+    uint32_t t_output_offset = 0;
+    uint32_t t_base_address = 0;
+    
+    bool t_swap_payload = false;
+    if (t_success)
 	{
 		t_section_count = t_nt_header . FileHeader . NumberOfSections;
-		if (!MCStringIsEmpty(p_params . payload))
-			t_payload_section = &t_section_headers[t_section_count - 3];
-		else
-			t_payload_section = nil;
         
-        if (!t_icons_only)
-            t_project_section = &t_section_headers[t_section_count - 2];
-        
-		t_resource_section = &t_section_headers[t_section_count - 1];
-	}
-
+        IMAGE_SECTION_HEADER *t_temp_section;
+        for (uint32_t t_index = 0; t_index < t_section_count; t_index++)
+        {
+            t_temp_section = &t_section_headers[t_index];
+            
+            if (memcmp(t_temp_section -> Name, ".payload", 8) == 0)
+            {
+                t_payload_section = t_temp_section;
+                if (t_output_offset == 0)
+                {
+                    t_output_offset = t_temp_section -> PointerToRawData;
+                    t_base_address = t_temp_section -> VirtualAddress;
+                }
+                else
+                {
+                    // payload is should be third last
+                    t_swap_payload = true;
+                }
+            }
+            else if (memcmp(t_temp_section -> Name, ".project", 8) == 0)
+            {
+                t_project_section = t_temp_section;
+                if (t_output_offset == 0)
+                {
+                    t_output_offset = t_temp_section -> PointerToRawData;
+                    t_base_address = t_temp_section -> VirtualAddress;
+                }
+            }
+            else if (memcmp(t_temp_section -> Name, ".rsrc", 5) == 0)
+            {
+                t_resource_section = t_temp_section;
+                if (t_output_offset == 0)
+                {
+                    t_output_offset = t_temp_section -> PointerToRawData;
+                    t_base_address = t_temp_section -> VirtualAddress;
+                }
+            }
+        }
+    }
+    
 	// Next we check that there are at least two sections, and they are the
 	// right ones.
-	if (t_success &&
-		(MCStringIsEmpty(p_params . payload) && t_section_count < 2 ||
-			!MCStringIsEmpty(p_params . payload) && t_section_count < 3))
+	if (t_success && t_section_count < 2)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsMissingSections);
-	if (t_success && memcmp(t_resource_section -> Name, ".rsrc", 6) != 0)
+	if (t_success && t_resource_section == nil)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsNoResourceSection);
-	if (t_success && !t_icons_only && memcmp(t_project_section -> Name, ".project", 8) != 0)
+	if (t_success && !t_icons_only && t_project_section == nil)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsNoProjectSection);
-	if (t_success && t_payload_section != nil && memcmp(t_payload_section -> Name, ".payload", 8) != 0)
+	if (t_success && !MCStringIsEmpty(p_params . payload) && t_payload_section == nil)
 		t_success = MCDeployThrow(kMCDeployErrorWindowsNoPayloadSection);
-
+    
 	// Read in the resources
 	MCWindowsResources t_resources;
 	MCWindowsResourcesInitialize(t_resources);
@@ -1751,35 +1790,49 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 
 	// Write out everything up to the beginning of the payload (if present) else
 	// the project section.
-	uint32_t t_output_offset;
-	t_output_offset = 0;
 	if (t_success)
 	{
-		if (t_icons_only)
-            t_output_offset = t_resource_section -> PointerToRawData;
-        else if (t_payload_section == nil)
-			t_output_offset = t_project_section -> PointerToRawData;
-		else
-			t_output_offset = t_payload_section -> PointerToRawData;
-
 		t_success = MCDeployFileCopy(t_output, 0, t_engine, 0, t_output_offset);
 	}
-
-	// Write out the payload capsule struct (if needed)
-	uint32_t t_payload_size;
-	t_payload_size = 0;
-	if (t_success && t_payload_section != nil)
+    
+    uint32_t t_base_offset = t_output_offset;
+    
+    // Write out the payload capsule struct (if needed)
+	uint32_t t_payload_size = 0;
+    if (t_success && t_payload_section != nil)
 	{
-		t_success = MCDeployWritePayload(p_params, false, t_output, t_output_offset, t_payload_size);
-		if (t_success)
-			t_output_offset += (t_payload_size + 4095) & ~4095;
-	}
+        if (!MCStringIsEmpty(p_params . payload))
+        {
+            t_success = MCDeployWritePayload(p_params, false, t_output, t_output_offset, t_payload_size);
+            if (t_success)
+                t_output_offset += (t_payload_size + 4095) & ~4095;
+        }
+        else
+        {
+            t_success = MCDeployFileCopy(t_output, t_output_offset, t_engine, t_payload_section -> PointerToRawData, t_payload_section -> SizeOfRawData);
+            if (t_success)
+            {
+                t_payload_size = t_payload_section -> SizeOfRawData;
+                t_output_offset += (t_payload_section -> SizeOfRawData + 4095) & ~4095;
+            }
+        }
+    }
 
 	// Write out the project capsule struct
 	uint32_t t_project_size;
 	t_project_size = 0;
-	if (t_success && !t_icons_only)
-		t_success = MCDeployWriteProject(p_params, false, t_output, t_output_offset, t_project_size);
+	if (t_success && t_project_section != nil)
+    {
+        if (!t_icons_only)
+        {
+            t_success = MCDeployWriteProject(p_params, false, t_output, t_output_offset, t_project_size);
+        }
+        else
+        {
+            t_project_size = t_project_section -> SizeOfRawData;
+            t_success = MCDeployFileCopy(t_output, t_output_offset, t_engine, t_project_section -> PointerToRawData, t_project_size);
+        }
+    }
 
 	// Next use the project size to compute the updated header values we need.
 	uint32_t t_optional_header_size, t_optional_header_offset, t_section_headers_offset;
@@ -1809,11 +1862,13 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 		{
 			t_payload_section -> SizeOfRawData = t_payload_section_size;
 			t_payload_section -> Misc . VirtualSize = t_payload_section_size;
+            t_payload_section -> PointerToRawData = t_base_offset;
+            t_payload_section -> VirtualAddress = t_base_address;
 
 			t_project_section -> VirtualAddress = t_payload_section -> VirtualAddress + t_payload_section_size;
 			t_project_section -> PointerToRawData = t_payload_section -> PointerToRawData + t_payload_section_size;
 		}
-
+        
 		// Resize and shift up the project section (if present)
         if (t_project_section != nil)
         {
@@ -1832,11 +1887,18 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 
 		t_resource_section_offset = t_resource_section -> PointerToRawData;
 		t_resource_section_address = t_resource_section -> VirtualAddress;
+        
+        if (t_swap_payload)
+        {
+            IMAGE_SECTION_HEADER t_swap_header = *t_payload_section;
+            t_section_headers[t_section_count - 2] = *t_project_section;
+            t_section_headers[t_section_count - 3] = t_swap_header;
+        }
 
 		// Update the resource data directory entry and the size of image/initialized data
 		t_nt_header . OptionalHeader . SizeOfImage = t_resource_section_address + t_resource_section_size;
-
-		t_nt_header . OptionalHeader . SizeOfInitializedData = 0;
+        
+        t_nt_header . OptionalHeader . SizeOfInitializedData = 0;
 		for(uint32_t i = 0; i < t_section_count; i++)
 			if (t_section_headers[i] . Characteristics & IMAGE_SCN_CNT_INITIALIZED_DATA)
 				t_nt_header . OptionalHeader . SizeOfInitializedData += MCU_max((unsigned)t_section_headers[i] . SizeOfRawData, (unsigned)(t_section_headers[i] . Misc . VirtualSize + 4095) & ~4095);

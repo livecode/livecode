@@ -60,7 +60,6 @@ public:
 
 	/* ---------- Engine process information */
 	virtual uint32_t GetProcessId(void);
-	virtual bool GetExecutablePath(MCStringRef & r_path);
 
 	/* ---------- Scheduling */
 	virtual void Alarm(real64_t p_when);
@@ -132,12 +131,6 @@ public:
 	                                  void *p_output,
 	                                  uint32_t & p_output_length,
 	                                  uint32_t & r_used);
-
-	/* ---------- Loadable modules */
-	virtual MCSysModuleHandle LoadModule(MCStringRef p_path);
-	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module,
-	                                              MCStringRef p_symbol);
-	virtual void UnloadModule(MCSysModuleHandle p_module);
 
 	/* ---------- Subprocesses */
 	virtual bool Shell(MCStringRef p_filename,

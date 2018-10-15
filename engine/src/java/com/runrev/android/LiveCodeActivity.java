@@ -23,6 +23,7 @@ import android.content.*;
 import android.content.res.*;
 import android.widget.*;
 import android.util.*;
+import android.content.pm.PackageManager;
 
 // This is the main activity exported by the application. This is
 // split into two parts, a customizable sub-class that gets dynamically
@@ -40,6 +41,11 @@ public class LiveCodeActivity extends Activity
 	public LiveCodeActivity()
 	{
 	}
+
+    public Class getServiceClass()
+    {
+        return LiveCodeService.class;
+    }
 
 	//////////
 
@@ -193,4 +199,13 @@ public class LiveCodeActivity extends Activity
 	{
 		s_main_view.onActivityResult(requestCode, resultCode, data);
 	}
+    
+    // Callback sent when the app requests permissions on runtime (Android API 23+)
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        s_main_view.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
 }

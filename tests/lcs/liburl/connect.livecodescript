@@ -1,20 +1,19 @@
 ﻿script "TestLibUrlCONNECT"
 
 on TestSetup
-   -- Only run these tests on desktop platforms
-   if the platform is not among the items of "MacOS,Windows,Linux" then
-      return "SKIP Tests are not runnable on" && the platform
-   end if
-
+   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIf "stack", "StandaloneTestRunnerMainstack"
+   TestSkipIf "environment", "server"
+         
    local tLibURl
    put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
-   send "revLoadLibrary" to stack tLibUrl
+   send "extensionInitialize" to stack tLibUrl
 end TestSetup
 
 
 on TestCONNECTHeader
    constant kTestHost = "google.com"
-   set the httpproxy to "http://127.0.0.1:99999"
+   set the httpproxy to "http://127.0.0.1:65535"
    
    put url ("https://" & kTestHost) into tValue
    

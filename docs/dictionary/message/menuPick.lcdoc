@@ -2,7 +2,7 @@ Name: menuPick
 
 Type: message
 
-Syntax: menuPick <pChosenItem>, [<pPreviousTab>]
+Syntax: menuPick <pChosenItem> [, <pPreviousTab>]
 
 Summary:
 Sent to a <button(object)> when a <menu item> is chosen from the <menu>
@@ -25,6 +25,8 @@ end menuPick
 Parameters:
 pChosenItem:
 The label of the menu item the user chose.
+If the menu item chosen is part of a submenu, the menu item label is 
+followed by a vertical bar (|) and the submenu's label.
 
 pPreviousTab:
 The text of the menu item that was selected before the user chose a new
@@ -95,8 +97,8 @@ References: pulldown (command), property (glossary),
 tabbed button (glossary), menu item (glossary), handler (glossary),
 message (glossary), menu (glossary), button menu (glossary),
 parameter (glossary), character (keyword), menu (keyword),
-button (keyword), button (object), menuName (property),
-menuHistory (property)
+button (keyword), button (object), label (property), 
+ menuName (property), menuHistory (property)
 
 Tags: menus
 

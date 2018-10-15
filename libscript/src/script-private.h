@@ -26,9 +26,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern MCTypeInfoRef kMCScriptOutParameterNotDefinedErrorTypeInfo;
-extern MCTypeInfoRef kMCScriptInParameterNotDefinedErrorTypeInfo;
-extern MCTypeInfoRef kMCScriptVariableUsedBeforeDefinedErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptVariableUsedBeforeAssignedErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidReturnValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidVariableValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidArgumentValueErrorTypeInfo;
@@ -39,10 +37,16 @@ extern MCTypeInfoRef kMCScriptForeignHandlerBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptMultiInvokeBindingErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNoMatchingHandlerErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo;
+extern MCTypeInfoRef kMCScriptPropertyUsedBeforeAssignedErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptInvalidPropertyValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptNotAHandlerValueErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptPropertyNotFoundErrorTypeInfo;
 extern MCTypeInfoRef kMCScriptHandlerNotFoundErrorTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCSLibraryRef MCScriptGetLibrary(void);
+bool MCScriptLoadLibrary(MCScriptModuleRef module, MCStringRef name, MCSLibraryRef& r_path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -65,6 +69,16 @@ struct MCScriptObject
 
 bool MCScriptCreateObject(MCScriptObjectKind kind, size_t size, MCScriptObject*& r_object);
 void MCScriptDestroyObject(MCScriptObject *object);
+
+template <typename ScriptObjectType>
+bool MCScriptCreateObject(MCScriptObjectKind kind, ScriptObjectType*& r_object)
+{
+    MCScriptObject* t_new = nullptr;
+    if (!MCScriptCreateObject(kind, sizeof(ScriptObjectType), t_new))
+        return false;
+    r_object = reinterpret_cast<ScriptObjectType*>(t_new);
+    return true;
+}
 
 MCScriptObject *MCScriptRetainObject(MCScriptObject *object);
 void MCScriptReleaseObject(MCScriptObject *object);
@@ -156,6 +170,26 @@ struct MCScriptHandlerTypeParameter
 {
     MCScriptHandlerTypeParameterMode mode;
     uindex_t type;
+
+	/* Translate the mode of this parameter from a
+	 * MCScriptHandlerTypeParameterMode to an
+	 * MCHandlerTypeFieldMode. */
+	inline MCHandlerTypeFieldMode GetFieldMode() const
+	{
+		switch (mode)
+		{
+		case kMCScriptHandlerTypeParameterModeIn:
+			return kMCHandlerTypeFieldModeIn;
+		case kMCScriptHandlerTypeParameterModeOut:
+			return kMCHandlerTypeFieldModeOut;
+		case kMCScriptHandlerTypeParameterModeInOut:
+			return kMCHandlerTypeFieldModeInOut;
+		case kMCScriptHandlerTypeParameterModeVariadic:
+			return kMCHandlerTypeFieldModeVariadic;
+		default:
+			MCUnreachableReturn(kMCHandlerTypeFieldModeIn);
+		}
+	}
 };
 
 struct MCScriptHandlerType: public MCScriptType
@@ -177,7 +211,6 @@ struct MCScriptRecordTypeField
 
 struct MCScriptRecordType: public MCScriptType
 {
-    uindex_t base_type;
     MCScriptRecordTypeField *fields;
     uindex_t field_count;
 };
@@ -293,14 +326,96 @@ struct MCScriptSyntaxDefinition: public MCScriptDefinition
     uindex_t method_count;
 };
 
+enum MCJavaCallType {
+    MCJavaCallTypeInstance,
+    MCJavaCallTypeStatic,
+    MCJavaCallTypeNonVirtual,
+    MCJavaCallTypeConstructor,
+    MCJavaCallTypeInterfaceProxy,
+    MCJavaCallTypeGetter,
+    MCJavaCallTypeSetter,
+    MCJavaCallTypeStaticGetter,
+    MCJavaCallTypeStaticSetter,
+    
+    /* This value is used to indicate that the call type was not known - it is
+     * only used internally in libscript. */
+    MCJavaCallTypeUnknown = -1,
+};
+
+/* MCScriptForeignHandlerLanguage describes the type of foreign handler which
+ * has been bound - based on language. */
+enum MCScriptForeignHandlerLanguage
+{
+    /* The handler has not yet been bound, or failed to bind */
+    kMCScriptForeignHandlerLanguageUnknown,
+    
+    /* The handler should be called using libffi */
+    kMCScriptForeignHandlerLanguageC,
+    
+    /* The handler has a lc-compile generated shim, so can be called directly */
+    kMCScriptForeignHandlerLanguageBuiltinC,
+    
+    /* The handler should be called using objc_msgSend */
+    kMCScriptForeignHandlerLanguageObjC,
+    
+    /* The handler should be called using the JNI */
+    kMCScriptForeignHandlerLanguageJava,
+};
+
+/* MCScriptThreadAffinity describes which thread a foreign handler should be
+ * executed on. This applies to Android and iOS, where a handler can either be
+ * run on the default (engine) thread, or the UI (main) thread. */
+enum MCScriptThreadAffinity
+{
+    kMCScriptThreadAffinityDefault,
+    kMCScriptThreadAffinityUI,
+};
+
+/* MCScriptForeignHandlerObjcCallType describes how to call the objective-c
+ * method. */
+enum MCScriptForeignHandlerObjcCallType
+{
+    /* Call the method using method_invoke on the instance (on the default
+     * thread) */
+    kMCScriptForeignHandlerObjcCallTypeInstanceMethod,
+    
+    /* Call the method using method_invoke on the class instance (on the default
+     * thread) */
+    kMCScriptForeignHandlerObjcCallTypeClassMethod,
+};
+
 struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
 {
     MCStringRef binding;
     
     // Bound function information - not pickled.
-    void *function;
-    void *function_argtypes;
-    void *function_cif;
+    MCScriptForeignHandlerLanguage language : 8;
+    MCScriptThreadAffinity thread_affinity : 8;
+    union
+    {
+        struct
+        {
+            void *function;
+            void *function_cif;
+        } c;
+        struct
+        {
+            void *function;
+        } builtin_c;
+        struct
+        {
+            MCScriptForeignHandlerObjcCallType call_type : 8;
+            void *objc_class;
+            void *objc_selector;
+            void *function_cif;
+        } objc;
+        struct
+        {
+            MCNameRef class_name;
+            void *method_id;
+            int call_type : 8;
+        } java;
+    };
 };
 
 struct MCScriptPropertyDefinition: public MCScriptDefinition
@@ -378,7 +493,9 @@ struct MCScriptModule: public MCScriptObject
     bool is_usable : 1;
     // During the check for usability, this var is true - not pickled
     bool is_in_usable_check : 1;
-    
+    // The module is licensed for use - not pickled
+    bool licensed : 1;
+
     // (computed) The number of slots needed by an instance - not pickled
     uindex_t slot_count;
     
@@ -388,6 +505,13 @@ struct MCScriptModule: public MCScriptObject
     // This is the module-chain link. We keep a linked list of all modules in memory
     // with unique names -- not pickled.
     MCScriptModule *next_module;
+    
+    // These are the native code initializer/finalizer (if any) -- not pickled
+    bool (*initializer)(void);
+    void (*finalizer)(void);
+    
+    // This is the ordinal mapping array (if any) -- not pickled
+    void **builtins;
 };
 
 bool MCScriptWriteRawModule(MCStreamRef stream, MCScriptModule *module);
@@ -396,15 +520,27 @@ void MCScriptReleaseRawModule(MCScriptModule *module);
 
 void MCScriptDestroyModule(MCScriptModuleRef module);
 
+bool MCScriptLookupConstantDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptConstantDefinition*& r_definition);
 bool MCScriptLookupPropertyDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptPropertyDefinition*& r_definition);
 bool MCScriptLookupEventDefinitionInModule(MCScriptModuleRef module, MCNameRef property, MCScriptEventDefinition*& r_definition);
 bool MCScriptLookupHandlerDefinitionInModule(MCScriptModuleRef module, MCNameRef handler, MCScriptHandlerDefinition*& r_definition);
 bool MCScriptLookupDefinitionInModule(MCScriptModuleRef self, MCNameRef p_name, MCScriptDefinition*& r_definition);
 
 MCNameRef MCScriptGetNameOfDefinitionInModule(MCScriptModuleRef module, MCScriptDefinition *definition);
-MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
-MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScriptDefinition *definition, uindex_t index);
-MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, uindex_t index);
+MCNameRef MCScriptGetNameOfLocalVariableInModule(MCScriptModuleRef module, MCScriptHandlerDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfGlobalVariableInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
+MCNameRef MCScriptGetNameOfParameterInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
+
+MCTypeInfoRef MCScriptGetTypeOfLocalVariableInModule(MCScriptModuleRef module, MCScriptHandlerDefinition *definition, uindex_t index);
+MCTypeInfoRef MCScriptGetTypeOfGlobalVariableInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
+MCTypeInfoRef MCScriptGetTypeOfParameterInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
+MCTypeInfoRef MCScriptGetTypeOfReturnValueInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition);
+
+MCNameRef MCScriptGetNameOfPropertyTypeInModule(MCScriptModuleRef module, MCScriptPropertyDefinition *definition);
+MCNameRef MCScriptGetNameOfLocalVariableTypeInModule(MCScriptModuleRef module, MCScriptHandlerDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfReturnValueTypeInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition);
+MCNameRef MCScriptGetNameOfParameterTypeInModule(MCScriptModuleRef module, MCScriptCommonHandlerDefinition *definition, uindex_t index);
+MCNameRef MCScriptGetNameOfGlobalVariableTypeInModule(MCScriptModuleRef module, MCScriptVariableDefinition *definition);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -426,23 +562,142 @@ struct MCScriptInstance: public MCScriptObject
     // MCHandlerRef. The MCHandlerRefs are freed when the instance is freed.
     MCScriptHandlerValue *handlers;
     uindex_t handler_count;
+    
+    // The private host ptr, ignored by libscript but can be used by the host.
+    void *host_ptr;
 };
 
-void MCScriptDestroyInstance(MCScriptInstanceRef instance);
+MCScriptModuleRef MCScriptSetCurrentModule(MCScriptModuleRef module);
 
-bool MCScriptCallHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScriptHandlerDefinition *handler, MCValueRef *arguments, uindex_t argument_count, MCValueRef& r_result);
+void
+MCScriptDestroyInstance(MCScriptInstanceRef instance);
 
-// Evaluate the value of the given handler definition. This will create an
-// appropriate MCHandlerRef which can then be called. The instance retains the
-// handler ref and releases when the instance goes away. This implicitly means
-// that any C function ptrs generated from MCHandlerRefs have lifetime equivalent
-// to that of the instance.
-//
-// If the definition is a foreign function and it cannot be bound, then nil is
-// returned for the handler (i.e. it is not an error).
-//
-// The function returns false if there is a memory error.
-bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCScriptCommonHandlerDefinition *definition, MCHandlerRef& r_handler);
+bool
+MCScriptCallHandlerInInstanceInternal(MCScriptInstanceRef instance,
+									  MCScriptHandlerDefinition *handler,
+									  MCValueRef *arguments,
+									  uindex_t argument_count,
+									  MCValueRef& r_result);
+
+bool
+MCScriptEvaluateHandlerInInstanceInternal(MCScriptInstanceRef instance,
+										  MCScriptCommonHandlerDefinition *handler,
+										  MCHandlerRef& r_handler);
+
+bool
+MCScriptTryToBindForeignHandlerInInstanceInternal(MCScriptInstanceRef instance,
+												  MCScriptForeignHandlerDefinition *handler,
+												  bool& r_bound);
+
+bool
+MCScriptBindForeignHandlerInInstanceInternal(MCScriptInstanceRef instance,
+											 MCScriptForeignHandlerDefinition *handler);
+
+bool
+MCScriptHandlerIsInternal(MCHandlerRef handler);
+
+void
+MCScriptInternalHandlerQuery(MCHandlerRef handler,
+							 MCScriptInstanceRef& r_instance,
+							 MCScriptCommonHandlerDefinition*& r_definition);
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool
+MCScriptThrowPropertyNotFoundError(MCScriptInstanceRef instance,
+								   MCNameRef property);
+bool
+MCScriptThrowHandlerNotFoundError(MCScriptInstanceRef instance,
+								  MCNameRef handler);
+bool
+MCScriptThrowPropertyUsedBeforeAssignedError(MCScriptInstanceRef instance,
+											 MCScriptPropertyDefinition *property_def);
+bool
+MCScriptThrowInvalidValueForPropertyError(MCScriptInstanceRef instance,
+										  MCScriptPropertyDefinition *property_def,
+                                          MCTypeInfoRef property_type,
+										  MCValueRef provided_value);
+
+bool
+MCScriptThrowWrongNumberOfArgumentsError(MCScriptInstanceRef instance,
+										 MCScriptCommonHandlerDefinition *handler_def,
+										 uindex_t provided_argument_count);
+
+bool
+MCScriptThrowInvalidValueForArgumentError(MCScriptInstanceRef instance,
+										  MCScriptCommonHandlerDefinition *handler_def,
+										  uindex_t argument_index,
+										  MCValueRef provided_value);
+
+bool
+MCScriptThrowInvalidValueForReturnValueError(MCScriptInstanceRef instance,
+											 MCScriptCommonHandlerDefinition *handler_def,
+											 MCValueRef provided_value);
+
+bool
+MCScriptThrowNotAHandlerValueError(MCValueRef actual_value);
+
+bool
+MCScriptThrowNotAStringValueError(MCValueRef actual_value);
+
+bool
+MCScriptThrowNotABooleanOrBoolValueError(MCValueRef actual_value);
+
+bool
+MCScriptThrowGlobalVariableUsedBeforeAssignedError(MCScriptInstanceRef instance,
+												   MCScriptVariableDefinition *variable_def);
+
+bool
+MCScriptThrowInvalidValueForGlobalVariableError(MCScriptInstanceRef instance,
+												MCScriptVariableDefinition *variable_def,
+												MCValueRef provided_value);
+
+bool
+MCScriptThrowLocalVariableUsedBeforeAssignedError(MCScriptInstanceRef instance,
+												  MCScriptHandlerDefinition *handler,
+												  uindex_t index);
+
+bool
+MCScriptThrowInvalidValueForLocalVariableError(MCScriptInstanceRef instance,
+											   MCScriptHandlerDefinition *handler,
+											   uindex_t index,
+											   MCValueRef provided_value);
+
+bool
+MCScriptThrowUnableToResolveMultiInvokeError(MCScriptInstanceRef instance,
+											 MCScriptDefinitionGroupDefinition *group,
+											 MCProperListRef argument_values);
+
+bool
+MCScriptThrowUnableToResolveForeignHandlerError(MCScriptInstanceRef instance,
+												MCScriptForeignHandlerDefinition *handler);
+
+bool
+MCScriptThrowUnknownForeignLanguageError(void);
+
+bool
+MCScriptThrowUnknownForeignCallingConventionError(void);
+
+bool
+MCScriptThrowMissingFunctionInForeignBindingError(void);
+
+bool
+MCScriptThrowUnableToLoadForiegnLibraryError(void);
+
+bool
+MCScriptThrowForeignExceptionError(MCStringRef p_reason);
+
+bool
+MCScriptThrowObjCBindingNotSupported(void);
+
+bool
+MCScriptThrowJavaBindingNotSupported(void);
+
+bool
+MCScriptThrowUnknownThreadAffinityError(void);
+
+bool
+MCScriptCreateErrorExpectedError(MCErrorRef& r_error);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -471,13 +726,26 @@ bool MCScriptEvaluateHandlerOfInstanceInternal(MCScriptInstanceRef instance, MCS
 // present then the instruction requires 15 + extension byte arguments up to a
 // maximum of 256.
 
+enum
+{
+    kMCScriptBytecodeOpCodeMask = 0x0f,
+    kMCScriptBytecodeOpCodeShift = 0,
+    kMCScriptBytecodeOpCodeMax = kMCScriptBytecodeOpCodeMask >> kMCScriptBytecodeOpCodeShift,
+    
+    kMCScriptBytecodeOpArityMask = 0xf0,
+    kMCScriptBytecodeOpArityShift = 4,
+    kMCScriptBytecodeOpArityMax = kMCScriptBytecodeOpArityMask >> kMCScriptBytecodeOpArityShift,
+};
+
 enum MCScriptBytecodeOp
 {
+	kMCScriptBytecodeOp__First,
+	
 	// Unconditional jump:
 	//  X: jump <Y-X>
 	// Location is encoded as relative position to jump instruction.
     //
-	kMCScriptBytecodeOpJump,
+	kMCScriptBytecodeOpJump = kMCScriptBytecodeOp__First,
 	
 	// Conditional jumps:
 	//  X: jump* <register>, <Y - X>
@@ -578,9 +846,100 @@ enum MCScriptBytecodeOp
     // Initializes the given slots to default values, if the type of the slot
     // has a default, otherwise makes the slot unassigned.
     kMCScriptBytecodeOpReset,
+	
+	kMCScriptBytecodeOp__Last = kMCScriptBytecodeOpReset
 };
 
-bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCScriptBytecodeOp& r_op, uindex_t& r_arity, uindex_t *r_arguments);
+inline void
+MCScriptBytecodeDecodeOp(const byte_t*& x_bytecode_ptr,
+						 MCScriptBytecodeOp& r_op,
+						 uindex_t& r_arity)
+{
+	byte_t t_op_byte;
+	t_op_byte = *x_bytecode_ptr++;
+	
+	// The lower nibble is the bytecode operation.
+	MCScriptBytecodeOp t_op;
+	t_op = (MCScriptBytecodeOp)((t_op_byte & kMCScriptBytecodeOpCodeMask) >> kMCScriptBytecodeOpCodeShift);
+	
+	// The upper nibble is the arity.
+	uindex_t t_arity;
+	t_arity = (t_op_byte & kMCScriptBytecodeOpArityMask) >> kMCScriptBytecodeOpArityShift;
+	
+	// If the arity is 15, then overflow to a subsequent byte.
+	if (t_arity == kMCScriptBytecodeOpArityMax)
+		t_arity += *x_bytecode_ptr++;
+	
+	r_op = t_op;
+	r_arity = t_arity;
+}
+
+// TODO: Make this better for negative numbers.
+inline uindex_t
+MCScriptBytecodeDecodeArgument(const byte_t*& x_bytecode_ptr)
+{
+	uindex_t t_value;
+	t_value = 0;
+	int t_shift;
+	t_shift = 0;
+	for(;;)
+	{
+		byte_t t_next;
+		t_next = *x_bytecode_ptr++;
+		t_value |= (t_next & 0x7f) << t_shift;
+		if ((t_next & 0x80) == 0)
+			break;
+		t_shift += 7;
+	}
+	return t_value;
+}
+
+inline bool
+MCScriptBytecodeIterate(const byte_t*& x_bytecode,
+						const byte_t *p_bytecode_limit,
+						MCScriptBytecodeOp& r_op,
+						uindex_t& r_arity,
+						uindex_t *r_arguments)
+{
+	MCScriptBytecodeDecodeOp(x_bytecode, r_op, r_arity);
+	if (x_bytecode > p_bytecode_limit)
+		return false;
+	
+	for(uindex_t i = 0; i < r_arity; i++)
+	{
+		r_arguments[i] = MCScriptBytecodeDecodeArgument(x_bytecode);
+		if (x_bytecode > p_bytecode_limit)
+			return false;
+	}
+	
+	return true;
+}
+
+inline void
+MCScriptBytecodeDecode(const byte_t*& x_bytecode_ptr,
+					   MCScriptBytecodeOp& r_operation,
+					   uindex_t* r_arguments,
+					   uindex_t& r_argument_count)
+{
+	MCScriptBytecodeDecodeOp(x_bytecode_ptr,
+							 r_operation,
+							 r_argument_count);
+	for(uindex_t i = 0; i < r_argument_count; i++)
+	{
+		r_arguments[i] = MCScriptBytecodeDecodeArgument(x_bytecode_ptr);
+	}
+}
+
+inline index_t
+MCScriptBytecodeDecodeSignedArgument(uindex_t p_original_value)
+{
+	index_t t_value;
+	if ((p_original_value & 1) == 0)
+		t_value = (signed)(p_original_value >> 1);
+	else
+		t_value = -(signed)(p_original_value >> 1);
+	return t_value;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -603,7 +962,8 @@ bool MCScriptBytecodeIterate(byte_t*& x_bytecode, byte_t *p_bytecode_limit, MCSc
 
 #define kMCScriptModuleVersion_8_0_0_DP_1 0
 #define kMCScriptModuleVersion_8_1_0_DP_2 1
-#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_8_1_0_DP_2
+#define kMCScriptModuleVersion_9_0_0_DP_4 2
+#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_9_0_0_DP_4
 
 ////////////////////////////////////////////////////////////////////////////////
 

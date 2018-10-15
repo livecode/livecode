@@ -50,6 +50,7 @@
 			'src/tilecachegl.cpp',
 			'src/tilecachesw.cpp',
 			'src/mcsemaphore.h',
+			'src/mctristate.h',
 			
 			# Group "Core - Language"
 			'src/ans.h',
@@ -77,7 +78,6 @@
 			'src/scriptpt.h',
 			'src/statemnt.h',
 			'src/variable.h',
-			'src/variable_impl.h',
 			'src/visual.h',
 			'src/answer.cpp',
 			'src/ask.cpp',
@@ -103,6 +103,7 @@
 			'src/keywords.cpp',
 			'src/literal.cpp',
 			'src/keywords.cpp',
+			'src/mcmessagedigest.cpp',
 			'src/newobj.cpp',
 			'src/operator.cpp',
 			'src/param.cpp',
@@ -126,6 +127,7 @@
 			'src/flst.h',
 			'src/globals.h',
 			'src/license.h',
+            'src/license.cpp',
 			'src/mcerror.h',
 			'src/mcio.h',
 			'src/mcssl.h',
@@ -167,6 +169,13 @@
 			'src/regex.cpp',
 			'src/securemode.cpp',
 			'src/sha1.cpp',			
+			'src/shacommon.h',
+			'src/sha256.h',
+			'src/sha256.cpp',
+			'src/sha512.h',
+			'src/sha512.cpp',
+			'src/sha3.h',
+			'src/sha3.cpp',
 			'src/socket.h',			
 			'src/text.cpp',
 			'src/uidc.cpp',
@@ -261,6 +270,7 @@
 			'src/image_rep_resampled.cpp',
 			'src/imagebitmap.cpp',
 			'src/imageloader.cpp',
+            'src/internal.cpp',
 			'src/ipng.cpp',
 			'src/iquantization.cpp',
 			'src/iquantize_new.cpp',
@@ -362,6 +372,7 @@
 			'src/exec-multimedia.cpp',
 			'src/exec-nativecontrol.cpp',
 			'src/exec-network.cpp',
+			'src/exec-nfc.cpp',
 			'src/exec-notification.cpp',
 			'src/exec-orientation.cpp',
 			'src/exec-pasteboard.cpp',
@@ -433,11 +444,13 @@
 			'src/mblandroidinput.cpp',
 			'src/mblandroidio.cpp',
 			'src/mblandroidjava.cpp',
+			'src/mblandroidlcb.cpp',
 			'src/mblandroidmail.cpp',
 			'src/mblandroidmediapick.cpp',
 			'src/mblandroidmisc.cpp',
 			'src/mblandroidmm.cpp',
 			'src/mblandroidnetwork.cpp',
+			'src/mblandroidnfc.cpp',
 			'src/mblandroidnotification.cpp',
 			'src/mblandroidorientation.cpp',
 			'src/mblandroidplayer.cpp',
@@ -480,6 +493,7 @@
 			'src/mbliphonemail.mm',
 			'src/mbliphonemediapick.mm',
 			'src/mbliphonemisc.mm',
+			'src/mbliphonenfc.mm',
 			'src/mbliphonenotification.mm',
 			'src/mbliphoneorientation.mm',
 			'src/mbliphonepick.mm',
@@ -546,6 +560,10 @@
 			#'src/text-segment.cpp',
 			#'src/text-simplebreakingengine.cpp',
 			
+			# Group "Emscripten"
+			'src/jsobject.h',
+			'src/jsobject.cpp',
+			
 			# Group "Desktop"
 			'src/quicktime.cpp',
 			'src/quicktime.stubs',
@@ -570,10 +588,6 @@
 			'src/mblandroid-theme.cpp',
 			'src/mbliphone-theme.mm',
 			'src/windows-theme.cpp',
-				
-			# Group "Syntax"
-			'src/syntax.h',
-			'src/syntax.cpp',
 			
 			# Other files
 			'src/socket_resolve.cpp',
@@ -662,7 +676,6 @@
 			'src/lnxdclnx.cpp',
 			'src/lnxdcs.cpp',
 			'src/lnxdnd.cpp',
-			'src/lnxflstold.cpp',
 			'src/lnxgtktheme.cpp',
 			'src/lnxgtkthemedrawing.cpp',
 			'src/lnximage.cpp',
@@ -748,10 +761,12 @@
 			# Group "Desktop - Emscripten"
 			'src/em-async.h',
 			'src/em-async.js',
-			'src/em-dc-mainloop.h',
+			'src/em-clipboard.h',
+			'src/em-clipboard.cpp',
 			'src/em-dc-mainloop.cpp',
 			'src/em-dc.h',
 			'src/em-dc.cpp',
+			'src/em-dc.js',
 			'src/em-dialog.js',
 			'src/em-event.h',
 			'src/em-event.cpp',
@@ -760,9 +775,17 @@
 			'src/em-filehandle.cpp',
 			'src/em-fontlist.h',
 			'src/em-fontlist.cpp',
+			'src/em-javascript.h',
+			'src/em-javascript.cpp',
+			'src/em-liburl.h',
+			'src/em-liburl.cpp',
+			'src/em-liburl.js',
 			'src/em-main.cpp',
+			'src/em-native-layer.h',
+			'src/em-native-layer.cpp',
 			'src/em-osspec-misc.cpp',
 			'src/em-osspec-network.cpp',
+			'src/em-preamble-overlay.js',
 			'src/em-preamble.js',
 			'src/em-resolution.cpp',
 			'src/em-stack.cpp',
@@ -771,8 +794,10 @@
 			'src/em-standalone.js',
 			'src/em-surface.h',
 			'src/em-surface.cpp',
+			'src/em-surface.js',
 			'src/em-system.h',
 			'src/em-system.cpp',
+			'src/em-system.js',
 			'src/em-theme.cpp',
 			'src/em-url.cpp',
 			'src/em-url.js',
@@ -817,7 +842,6 @@
 			'src/deploy_windows.cpp',
 			'src/deploysecurity.cpp',
 			'src/ide.cpp',
-			'src/internal.cpp',
 			'src/internal_development.cpp',
 			'src/mode_development.cpp',
 		],
@@ -833,7 +857,6 @@
 		'engine_installer_mode_source_files':
 		[
 			'src/bsdiff_apply.cpp',
-			'src/internal.cpp',
 			'src/mode_installer.cpp',
 			'src/mode_installer_lnx.cpp',
 			'src/mode_installer_osx.mm',
@@ -877,7 +900,7 @@
 		[
 			'src/java/com/runrev/android/AccelerationChangeListener.java',
 			'src/java/com/runrev/android/Alert.java',
-			'src/java/com/runrev/android/AttachmentProvider.java',
+			'src/java/com/runrev/android/AppProvider.java',
 			'src/java/com/runrev/android/BitmapView.java',
 			'src/java/com/runrev/android/BusyIndicator.java',
 			'src/java/com/runrev/android/CalendarEvents.java',
@@ -888,8 +911,12 @@
 			'src/java/com/runrev/android/Engine.java',
 			'src/java/com/runrev/android/EngineApi.java',
 			'src/java/com/runrev/android/EngineReceiver.java',
+			'src/java/com/runrev/android/FileProvider.java',
+			'src/java/com/runrev/android/LCBInvocationHandler.java',
 			'src/java/com/runrev/android/LiveCodeActivity.java',
+			'src/java/com/runrev/android/LiveCodeService.java',
 			'src/java/com/runrev/android/NetworkModule.java',
+			'src/java/com/runrev/android/NFCModule.java',
 			'src/java/com/runrev/android/NotificationModule.java',
 			'src/java/com/runrev/android/OpenGLView.java',
 			'src/java/com/runrev/android/PushReceiver.java',
@@ -966,6 +993,7 @@
 			'src/module-resources.cpp',
 			
 			'src/module-browser.cpp',
+			'src/module-emscripten.cpp',
 		],
 		
 		# Engine LCB files containing syntax
@@ -975,11 +1003,19 @@
 			'src/engine.lcb',
 			'src/widget.lcb',
 		],
+        
+        # Engine LCB files containing syntax which don't require compiling into
+        # the engine.
+        'engine_syntax_only_lcb_files':
+        [
+            'src/license.lcb',
+        ],
 		
 		# Other engine LCB files
 		'engine_other_lcb_files':
 		[
 			'src/browser.lcb',
+			'src/emscripten.lcb',
 		],
 
 		# Engine cpptest source files
@@ -988,6 +1024,7 @@
 			'test/test_lextable.cpp',
 			'test/test_new.cpp',
 			'test/test_rgb.cpp',
+            'test/test_path.cpp',
 		],
 	},
 	
@@ -1027,7 +1064,6 @@
 					'sources!':
 					[
 						'src/dskmac.cpp',
-						'src/srvmac.cpp',
 						'src/native-layer-mac.mm',
 					],
 				},

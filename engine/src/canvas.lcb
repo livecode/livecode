@@ -2079,6 +2079,7 @@ public foreign handler MCCanvasImageMakeWithPath(in pPath as String, out rImage 
 public foreign handler MCCanvasImageMakeWithResourceFile(in pResourcePath as String, out rImage as Image) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithData(in pData as Data, out rImage as Image) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixels(in pWidth as LCInt, in pHeight as LCInt, in pPixels as Data, out rImage as Image) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasImageMakeWithPixelsInFormat(in pWidth as LCInt, in pHeight as LCInt, in pPixels as Data, in pFormat as LCInt, out rImage as Image) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageMakeWithPixelsWithSizeAsList(in pSize as List, in pPixels as Data, out rImage as Image) returns nothing binds to "<builtin>"
 
 //////////
@@ -2284,10 +2285,10 @@ end syntax
 // TODO - add resize operation? "resize <image> to <width>,<height>"
 // TODO - implement image operations
 
-public foreign handler MCCanvasImageTransform(inout xImage as Image, in pTransform as Transform) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasImageScale(inout xImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasImageRotate(inout xImage as Image, in pRotation as CanvasFloat) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rectangle) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageTransform(inout xImage as Image, in pTransform as Transform) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageScale(inout xImage as Image, in pScaleX as CanvasFloat, in pScaleY as CanvasFloat) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageRotate(inout xImage as Image, in pRotation as CanvasFloat) returns nothing binds to "<builtin>"
+// public foreign handler MCCanvasImageCrop(inout xImage as Image, in pRight as Rectangle) returns nothing binds to "<builtin>"
 
 //syntax TransformImage is statement
 //	"transform" <mImage: Expression> "by" <mTransform: Expression>
@@ -3314,7 +3315,34 @@ Summary:	The blend mode of an effect.
 
 mEffect:		An expression which evaluates to an effect.
 
-Description:	The blend mode of <mEffect> as a string. Can be any one of the standard canvas blend modes.
+Description:	The blend mode of <mEffect> as a string. Can be any one of:
+- clear
+- copy
+- source over
+- source in
+- source out
+- destination over
+- destination in
+- destination out
+- destination atop
+- xor
+- plus darker
+- plus lighter
+- multiply
+- screen
+- overlay
+- darken
+- lighten
+- color dodge
+- color burn
+- soft light
+- hard light
+- difference
+- exclusion
+- hue
+- saturation
+- color
+- luminosity
 
 Example:
 	// Create an effect with blend mode "source over"
@@ -4018,7 +4046,34 @@ Summary:	The current blend mode of a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
 
-Description:	The blend mode used for drawing operations on <mCanvas> as a string.
+Description:	The blend mode used for drawing operations on <mCanvas> as a string. Can be any one of:
+- clear
+- copy
+- source over
+- source in
+- source out
+- destination over
+- destination in
+- destination out
+- destination atop
+- xor
+- plus darker
+- plus lighter
+- multiply
+- screen
+- overlay
+- darken
+- lighten
+- color edge
+- color burn
+- soft light
+- hard light
+- difference
+- exclusion
+- hue
+- saturation
+- color
+- luminosity
 
 Example:
 	// Use color dodge mode to draw on canvas
@@ -4865,7 +4920,7 @@ end syntax
 ////////////////////////////////////////////////////////////////////////////////
 
 public foreign handler MCCanvasThisCanvas(out rCanvas as Canvas) returns nothing binds to "<builtin>"
-public foreign handler MCCanvasPretendToAssignThisCanvas(in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasPretendToAssignToThisCanvas(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasNewCanvasWithSize(in pSize as List, out rCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetPixelDataOfCanvas(in pCanvas as Canvas, out rData as Data) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasGetPixelHeightOfCanvas(in pCanvas as Canvas, out rHeight as LCUInt) returns nothing binds to "<builtin>"
@@ -4889,7 +4944,7 @@ syntax ThisCanvas is expression
     "this" "canvas"
 begin
     MCCanvasThisCanvas(output)
-    MCCanvasPretendToAssignThisCanvas(input)
+    MCCanvasPretendToAssignToThisCanvas(input)
 end syntax
 
 //////////

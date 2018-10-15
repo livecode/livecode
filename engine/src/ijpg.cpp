@@ -188,7 +188,7 @@ static bool read_exif_orientation(j_decompress_ptr cinfo, uint32_t *r_orientatio
 	jpeg_saved_marker_ptr t_marker;
 	t_marker = nil;
 	for(t_marker = cinfo -> marker_list; t_marker != nil; t_marker = t_marker -> next)
-		if ((t_marker->marker == (JPEG_APP0 + 1)))
+		if (t_marker->marker == (JPEG_APP0 + 1))
 			break;
 	
 	if (t_marker == nil)
@@ -236,7 +236,7 @@ static bool read_exif_orientation(j_decompress_ptr cinfo, uint32_t *r_orientatio
 	
 	for(uindex_t i = 0; i < t_count; i++)
 	{
-		uint16_t t_tag, t_format;
+		uint16_t t_format;
 		uint32_t t_components;
 		memcpy(&t_tag, t_ifd_ptr + 0, 2);
 		memcpy(&t_format, t_ifd_ptr + 2, 2);
@@ -836,7 +836,7 @@ bool MCJPEGImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForJPEGStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCJPEGImageLoader *t_loader;
-	t_loader = new MCJPEGImageLoader(p_stream);
+	t_loader = new (nothrow) MCJPEGImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;

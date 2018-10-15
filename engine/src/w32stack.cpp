@@ -308,15 +308,14 @@ void MCStack::setopacity(uint1 p_level)
 			Bool t_is_xp_menu;
 			t_is_xp_menu = (mode == WM_PULLDOWN || mode == WM_POPUP || mode == WM_CASCADE) && (MCcurtheme && MCcurtheme->getthemeid() == LF_NATIVEWIN);
 
-			if (!t_is_xp_menu && mode < WM_PULLDOWN)
-				window -> handle . window = (MCSysWindowHandle)CreateWindowExW(t_ex_style, MC_WIN_CLASS_NAME_W, WideCString(getname_cstring()), t_style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, t_rect . left, t_rect . top, t_rect . right - t_rect . left, t_rect . bottom - t_rect . top, NULL, NULL, MChInst, NULL);
-			else
-				window -> handle . window = (MCSysWindowHandle)CreateWindowExA(t_ex_style, t_is_xp_menu ? MC_MENU_WIN_CLASS_NAME : mode >= WM_PULLDOWN ? MC_POPUP_WIN_CLASS_NAME : MC_WIN_CLASS_NAME, getname_cstring(), t_style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, t_rect . left, t_rect . top, t_rect . right - t_rect . left, t_rect . bottom - t_rect . top, NULL, NULL, MChInst, NULL);
+            MCAutoStringRefAsWString t_window_name;
+            /* UNCHECKED */ t_window_name.Lock(MCNameGetString(getname()));
+            window -> handle . window = (MCSysWindowHandle)CreateWindowExW(t_ex_style, MC_WIN_CLASS_NAME_W, *t_window_name, t_style | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, t_rect . left, t_rect . top, t_rect . right - t_rect . left, t_rect . bottom - t_rect . top, NULL, NULL, MChInst, NULL);
 			
 			// MW-2010-10-22: [[ Bug 8151 ]] Make sure we update the title string.
 			MCscreen -> setname(window, titlestring);
 
-			SetWindowLongA((HWND)window->handle.window, GWL_USERDATA, mode);
+			SetWindowLongPtrA((HWND)window->handle.window, GWLP_USERDATA, mode);
 			
 			if (flags & F_DECORATIONS && !(decorations & WD_SHAPE) && !(decorations & WD_CLOSE))
 				EnableMenuItem(GetSystemMenu((HWND)window->handle.window, False), SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
@@ -413,7 +412,7 @@ void MCStack::realize()
 		LONG height = wrect.bottom - wrect.top;
 		if (flags & F_WM_PLACE && !(state & CS_BEEN_MOVED))
 			x = CW_USEDEFAULT;
-		window = new _Drawable;
+		window = new (nothrow) _Drawable;
 		window->type = DC_WINDOW;
 		window->handle.window = 0; // protect against creation callbacks
 
@@ -429,16 +428,12 @@ void MCStack::realize()
 
 		HWND t_parenthwnd = NULL;
 
-		// MW-2007-07-06: [[ Bug 3226 ]] If the platform is NT always create a Unicode window
-		if ((MCruntimebehaviour & RTB_NO_UNICODE_WINDOWS) == 0 && !isxpmenu && mode < WM_PULLDOWN)
-			window -> handle . window = (MCSysWindowHandle)CreateWindowExW(exstyle, MC_WIN_CLASS_NAME_W, WideCString(getname_cstring()),wstyle | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, x, y, width, height,
-		                 t_parenthwnd, NULL, MChInst, NULL);
-		else
-			window->handle.window = (MCSysWindowHandle)CreateWindowExA(exstyle, isxpmenu? MC_MENU_WIN_CLASS_NAME: mode >= WM_PULLDOWN ? MC_POPUP_WIN_CLASS_NAME
-		                 : MC_WIN_CLASS_NAME, getname_cstring(), wstyle | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, x, y, width, height,
-		                 t_parenthwnd, NULL, MChInst, NULL);
+        MCAutoStringRefAsWString t_window_name;
+        /* UNCHECKED */ t_window_name.Lock(MCNameGetString(getname()));
+        window -> handle . window = (MCSysWindowHandle)CreateWindowExW(exstyle, MC_WIN_CLASS_NAME_W, *t_window_name, wstyle | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, x, y, width, height,
+                                                                       t_parenthwnd, NULL, MChInst, NULL);
 
-		SetWindowLongA((HWND)window->handle.window, GWL_USERDATA, mode);
+		SetWindowLongPtrA((HWND)window->handle.window, GWLP_USERDATA, mode);
 		
 		if (flags & F_DECORATIONS && !(decorations & WD_SHAPE) && !(decorations & WD_CLOSE))
 			EnableMenuItem(GetSystemMenu((HWND)window->handle.window, False), SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
@@ -477,6 +472,11 @@ void MCStack::sethints()
 	if (sptr != NULL && sptr != this && sptr->getw() != DNULL
 	        && GetWindowLongA((HWND)window->handle.window, 0) == 0)
 		SetWindowLongA((HWND)window->handle.window, 0, (LONG)sptr->getw()->handle.window);
+}
+
+bool MCStack::view_platform_dirtyviewonresize() const
+{
+	return false;
 }
 
 MCRectangle MCStack::view_platform_getwindowrect() const
@@ -629,7 +629,7 @@ void MCStack::start_externals()
 
 	if (!MCnoui && window != DNULL)
 	{
-		droptarget = new CDropTarget;
+		droptarget = new (nothrow) CDropTarget;
 		droptarget->setstack(this);
 		CoLockObjectExternal(droptarget, TRUE, TRUE);
 		RegisterDragDrop((HWND)window->handle.window, droptarget);

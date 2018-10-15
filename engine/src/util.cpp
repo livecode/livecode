@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <mach-o/dyld.h>
 #endif
 
+#include <algorithm>
+
 // MDW-2014-07-06: [[ oval_points ]]
 #define QA_NPOINTS 90
 
@@ -108,7 +110,7 @@ void MCU_init()
     }
     else
     {
-        MCLog("Warning: Failed to seed random number generator", NULL);
+        MCLog("Warning: Failed to seed random number generator");
         MCrandomseed = (int4)(intptr_t)&MCdispatcher + MCS_getpid() + (int4)time(NULL);
     }
     MCU_srand();
@@ -425,7 +427,7 @@ char *MCU_strtok(char *s, const char *delim)
 	return True == t_converted;
 }
 
-int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
+int4 MCU_strtol(const char *&sptr, uint4 &l, int1 p_delim, Boolean &done,
                 Boolean reals, Boolean octals)
 {
 	done = False;
@@ -445,19 +447,20 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 	uint4 startlength = l;
 	uint2 base = 10;
 	if (l && *sptr == '0')
+    {
 		if (l > 2 && MCS_tolower(*(sptr + 1)) == 'x')
 		{
 			base = 16;
 			sptr += 2;
 			l -= 2;
 		}
-		else
-			if (octals)
-			{
-				base = 8;
-				sptr++;
-				l--;
-			}
+		else if (octals)
+        {
+            base = 8;
+            sptr++;
+            l--;
+        }
+    }
 	while (l)
 	{
 		if (isdigit((uint1)*sptr))
@@ -472,7 +475,7 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 			if (isspace((uint1)*sptr))
 			{
 				MCU_skip_spaces(sptr, l);
-				if (l && *sptr == c)
+				if (l && *sptr == p_delim)
 				{
 					sptr++;
 					l--;
@@ -480,7 +483,7 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 				break;
 			}
 			else
-				if (l && c && *sptr == c)
+				if (l && p_delim && *sptr == p_delim)
 				{
 					sptr++;
 					l--;
@@ -515,7 +518,7 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 								while (l && *sptr == '0');
 							if (l == 0)
 								break;
-							if (*sptr == c || isspace((uint1)*sptr))
+							if (*sptr == p_delim || isspace((uint1)*sptr))
 							{
 								sptr++;
 								l--;
@@ -526,11 +529,11 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 					}
 					else
 					{
-						char c = MCS_tolower(*sptr);
-						if (base == 16 && c >= 'a' && c <= 'f')
+						char t_char = MCS_tolower(*sptr);
+						if (base == 16 && t_char >= 'a' && t_char <= 'f')
 						{
 							value *= base;
-							value += c - 'a' + 10;
+							value += t_char - 'a' + 10;
 						}
 						else
 							return 0;
@@ -616,7 +619,7 @@ uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
 	if (d == NULL || s <  R8L)
 	{
 		delete d;
-		d = new char[R8L];
+		d = new (nothrow) char[R8L];
 		s = R8L;
 	}
 	if (n < 0.0 && n >= -MC_EPSILON)
@@ -671,7 +674,7 @@ Boolean MCU_stor8(const MCString &s, real8 &d, Boolean convertoctals)
 	// bugs in MSL means we need to check these things
 	// MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
 	//   of these tests.
-	if (l == 0 || (l > 1 && ((MCS_tolower((uint1)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint1)sptr[2]))
+	if (l == 0 || (l > 1 && (((MCS_tolower((uint1)sptr[1]) == 'x' && (l == 2 || !isxdigit((uint1)sptr[2])))
 	        || (sptr[1] == '+' || sptr[1] == '-')))))
 		return False;
 	char buff[R8L];
@@ -706,7 +709,7 @@ real8 MCU_strtor8(const char *&r_str, uint4 &r_len, int1 p_delim, Boolean &r_don
 	// bugs in MSL means we need to check these things
 	// MW-2006-04-21: [[ Purify ]] This was incorrect - we need to ensure l > 1 before running most
 	//   of these tests.
-	if (r_len == 0 || (r_len > 1 && ((MCS_tolower((uint1)r_str[1]) == 'x' && (r_len == 2 || !isxdigit((uint1)r_str[2]))
+	if (r_len == 0 || (r_len > 1 && (((MCS_tolower((uint1)r_str[1]) == 'x' && (r_len == 2 || !isxdigit((uint1)r_str[2])))
 	        || (r_str[1] == '+' || r_str[1] == '-')))))
 	{
 		r_done = False;
@@ -893,10 +896,11 @@ Boolean MCU_stoui4(const MCString &s, uint4 &d)
 
 bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2)
 {
-    char *t_string;
-    /* UNCHECKED */ MCStringConvertToCString(p_string, t_string);
-    const char *sptr = t_string;
-	uint4 l = MCStringGetLength(p_string);
+    MCAutoStringRefAsCString t_string;
+    if (!t_string.Lock(p_string))
+        return false;
+    const char *sptr = *t_string;
+    uint4 l = t_string.Size();
 	Boolean done;
 	r_d1 = MCU_strtol(sptr, l, ',', done, True, False);
 	if (!done || l == 0)
@@ -1095,7 +1099,7 @@ void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 #if !defined(_DEBUG_MEMORY)
 void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize)
 {
-	char *ndata = new char[nsize * csize];
+	char *ndata = new (nothrow) char[nsize * csize];
 	if (data != NULL)
 	{
 		if (nsize > osize)
@@ -1128,7 +1132,7 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 
 // This *must* be updated if any chunk terms are added between CT_STACK
 // and CT_LAST_CONTROL in the Chunk_term enum
-static const char **nametable[] =
+static const char * const * const nametable[] =
 {
 	&MCstackstring,			/* CT_STACK */
 	&MCnullstring,			/* CT_TOOLTIP */
@@ -1157,7 +1161,7 @@ bool MCU_matchname(MCNameRef test, Chunk_term type, MCNameRef name)
 	if (name == nil || MCNameIsEmpty(name) || MCNameIsEmpty(test))
 		return false;
     
-	if (MCNameIsEqualTo(name, test, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(name, test))
 		return true;
 
 	MCAssert(type - CT_STACK < (sizeof(nametable) / sizeof(nametable[0])));
@@ -1194,7 +1198,7 @@ bool MCU_roundrect(MCPoint *&r_points, uindex_t &r_point_count,
                    const MCRectangle &rect, uint2 radius, uint2 startAngle, uint2 arcAngle, uint2 flags)
 {
 	uint2 i, j, k, count;
-	uint2 x, y;
+	uint2 t_x, t_y;
 	bool ignore = false;
 
 	MCAutoArray<MCPoint> t_points;
@@ -1244,8 +1248,8 @@ bool MCU_roundrect(MCPoint *&r_points, uindex_t &r_point_count,
 		{
 			if (flags & F_OPAQUE)
 			{
-				x = origin_horiz;
-				y = origin_vert;
+				t_x = origin_horiz;
+				t_y = origin_vert;
 			}
 			else
 			{
@@ -1254,31 +1258,31 @@ bool MCU_roundrect(MCPoint *&r_points, uindex_t &r_point_count,
 		}
 		else if (count < 90) // quadrant 1
 		{
-			x = tr . x + tr . width - rr_width + (qa_points[j] . x * rr_width / MAXINT2);
-			y = tr . y                         + (qa_points[j] . y * rr_height / MAXINT2);
+			t_x = tr . x + tr . width - rr_width + (qa_points[j] . x * rr_width / MAXINT2);
+			t_y = tr . y                         + (qa_points[j] . y * rr_height / MAXINT2);
 		}
 		else if (count < 180) // quadrant 2
 		{
-			x = origin_horiz - (qa_points[k] . x * rr_width / MAXINT2);
-			y = tr . y       + (qa_points[k] . y * rr_height / MAXINT2);
+			t_x = origin_horiz - (qa_points[k] . x * rr_width / MAXINT2);
+			t_y = tr . y       + (qa_points[k] . y * rr_height / MAXINT2);
 		}
 		else if (count < 270) // quadrant 3
 		{
-			x = origin_horiz         - (qa_points[j] . x * rr_width / MAXINT2);
-			y = tr . y + tr . height - (qa_points[j] . y * rr_height / MAXINT2);
+			t_x = origin_horiz         - (qa_points[j] . x * rr_width / MAXINT2);
+			t_y = tr . y + tr . height - (qa_points[j] . y * rr_height / MAXINT2);
 		}
 		else // quadrant 4
 		{
-			x = tr . x + tr . width - rr_width + (qa_points[k] . x * rr_width / MAXINT2);
-			y = tr . y + tr . height           - (qa_points[k] . y * rr_height / MAXINT2);
+			t_x = tr . x + tr . width - rr_width + (qa_points[k] . x * rr_width / MAXINT2);
+			t_y = tr . y + tr . height           - (qa_points[k] . y * rr_height / MAXINT2);
 		}
 
 		if (ignore == false)
 		{
-			if (i == 0 || x != t_points[i-1] . x || y != t_points[i-1] . y)
+			if (i == 0 || t_x != t_points[i-1] . x || t_y != t_points[i-1] . y)
 			{
-				t_points[i] . x = x;
-				t_points[i] . y = y;
+				t_points[i] . x = t_x;
+				t_points[i] . y = t_y;
 				i++;
 			}
 		}
@@ -1370,26 +1374,26 @@ Boolean MCU_parsepoint(MCPoint &point, MCStringRef data)
 	return True;
 }
 
-void MCU_set_rect(MCRectangle &rect, int2 x, int2 y, uint2 w, uint2 h)
+void MCU_set_rect(MCRectangle &rect, int2 p_x, int2 p_y, uint2 p_w, uint2 p_h)
 {
-	rect.x = x;
-	rect.y = y;
-	rect.width = w;
-	rect.height = h;
+	rect.x = p_x;
+	rect.y = p_y;
+	rect.width = p_w;
+	rect.height = p_h;
 }
 
-void MCU_set_rect(MCRectangle32 &rect, int32_t x, int32_t y, int32_t w, int32_t h)
+void MCU_set_rect(MCRectangle32 &rect, int32_t p_x, int32_t p_y, int32_t p_w, int32_t p_h)
 {
-	rect.x = x;
-	rect.y = y;
-	rect.width = w;
-	rect.height = h;
+	rect.x = p_x;
+	rect.y = p_y;
+	rect.width = p_w;
+	rect.height = p_h;
 }
 
-Boolean MCU_point_in_rect(const MCRectangle &srect, int2 x, int2 y)
+Boolean MCU_point_in_rect(const MCRectangle &srect, int2 p_x, int2 p_y)
 {
-	if (x >= srect.x && x < srect.x + srect.width
-	        && y >= srect.y && y < srect.y + srect.height)
+	if (p_x >= srect.x && p_x < srect.x + srect.width
+	        && p_y >= srect.y && p_y < srect.y + srect.height)
 		return True;
 	return False;
 }
@@ -1433,76 +1437,76 @@ bool MCU_line_intersect_rect(const MCRectangle& srect, const MCRectangle& line)
 }
 
 
-static inline double distance_to_point(int4 x, int4 y, int4 px, int4 py)
+static inline double distance_to_point(int4 p_x, int4 p_y, int4 p_px, int4 p_py)
 {
 	double dx, dy;
 
-	dx = px - x;
-	dy = py - y;
+	dx = p_px - p_x;
+	dy = p_py - p_y;
 
 	return dx * dx + dy * dy;
 }
 
-double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y)
+double MCU_squared_distance_from_line(int4 p_sx, int4 p_sy, int4 p_ex, int4 p_ey, int4 p_x, int4 p_y)
 {
 	double dx, dy;
 	double d;
 
-	dx = ex - sx;
-	dy = ey - sy;
+	dx = p_ex - p_sx;
+	dy = p_ey - p_sy;
 
 	if (dx == 0 && dy == 0)
-		d = distance_to_point(x, y, sx, sy);
+		d = distance_to_point(p_x, p_y, p_sx, p_sy);
 	else
 	{
 		double pdx, pdy;
 		double u;
 
-		pdx = x - sx;
-		pdy = y - sy;
+		pdx = p_x - p_sx;
+		pdy = p_y - p_sy;
 
 		u = (pdx * dx + pdy * dy) / (dx * dx + dy * dy);
 
 		if (u <= 0)
-			d = distance_to_point(x, y, sx, sy);
+			d = distance_to_point(p_x, p_y, p_sx, p_sy);
 		else if (u >= 1)
-			d = distance_to_point(x, y, ex, ey);
+			d = distance_to_point(p_x, p_y, p_ex, p_ey);
 		else
-			d = distance_to_point((int4)(sx + u * dx), (int4)(sy + u * dy), x, y);
+			d = distance_to_point((int4)(p_sx + u * dx), (int4)(p_sy + u * dy), p_x, p_y);
 	}
 
 	return d;
 }
 
 
-Boolean MCU_point_on_line(MCPoint *points, uint2 npoints,
-                          int2 x, int2 y, uint2 linesize)
+Boolean MCU_point_on_line(MCPoint *p_points, uint2 p_npoints,
+                          int2 p_x, int2 p_y, uint2 p_linesize)
 {
 	// OK-2008-12-04: [[Bug 7292]] - Old code replaced with stuff copied from pathprocess.cpp
 	uint2 i;
-	for (i = 0 ; i < npoints -  1 ; i++)
+	for (i = 0 ; i < p_npoints -  1 ; i++)
 	{
 		// SMR 1913 expand radius for hit testing lines
-		linesize >>= 1;
-		linesize *= linesize;
+		p_linesize >>= 1;
+		p_linesize *= p_linesize;
 
 		double t_distance;
-		t_distance = MCU_squared_distance_from_line(points[i]. x, points[i] . y, points[i + 1] . x, points[i + 1] . y, x, y);
-		if (t_distance < linesize + (4 * 4))
+		t_distance = MCU_squared_distance_from_line(p_points[i]. x, p_points[i] . y, p_points[i + 1] . x, p_points[i + 1] . y, p_x, p_y);
+		if (t_distance < p_linesize + (4 * 4))
 			return True;
 	}
 	return False;
 }
 
-Boolean MCU_point_in_polygon(MCPoint *points, uint2 npoints, int2 x, int2 y)
+Boolean MCU_point_in_polygon(MCPoint *p_points, uint2 p_npoints, int2 p_x, int2 p_y)
 {
 	// SMR 1958 don't do check if no points
-	if (npoints <= 1)
+	if (p_npoints <= 1)
 		return False;
-	MCU_offset_points(points, npoints, -x, -y);
+	MCU_offset_points(p_points, p_npoints, -p_x, -p_y);
 
-	MCPoint *endLp = &points[npoints];
-	MCPoint *lp = points;
+	MCPoint *endLp = &p_points[p_npoints];
+	MCPoint *lp = p_points;
 
 	uint2 ncross = 0;
 	int2 sign = lp->y < 0 ? -1 : 1;
@@ -1530,7 +1534,7 @@ Boolean MCU_point_in_polygon(MCPoint *points, uint2 npoints, int2 x, int2 y)
 				ncross++;
 		}
 	}
-	MCU_offset_points(points, npoints, x, y);
+	MCU_offset_points(p_points, p_npoints, p_x, p_y);
 	if (ncross & 1)
 		return True;
 	return False;
@@ -1586,51 +1590,55 @@ MCRectangle MCU_center_rect(const MCRectangle &one, const MCRectangle &two)
 	return drect;
 }
 
-MCRectangle MCU_bound_rect(const MCRectangle &srect,
-                           int2 x, int2 y, uint2 width, uint2 height)
+MCRectangle MCU_bound_rect(const MCRectangle &p_srect,
+                           int2 p_x, int2 p_y, uint2 p_width, uint2 p_height)
 {
-	MCRectangle drect = srect;
-	if (drect.x + drect.width > x + width)
-		drect.x = x + width - drect.width;
-	if (drect.x < x)
-		drect.x = x;
-	if (drect.y + drect.height > y + height)
-		drect.y = y + height - drect.height;
-	if (drect.y < y)
-		drect.y = y;
+	MCRectangle drect = p_srect;
+	if (drect.x + drect.width > p_x + p_width)
+		drect.x = p_x + p_width - drect.width;
+	if (drect.x < p_x)
+		drect.x = p_x;
+	if (drect.y + drect.height > p_y + p_height)
+		drect.y = p_y + p_height - drect.height;
+	if (drect.y < p_y)
+		drect.y = p_y;
 	return drect;
 }
 
-MCRectangle MCU_clip_rect(const MCRectangle &srect,
-                          int2 x, int2 y, uint2 width, uint2 height)
+MCRectangle MCU_clip_rect(const MCRectangle &p_srect,
+                          int2 p_x, int2 p_y, uint2 p_width, uint2 p_height)
 {
-	MCRectangle drect = srect;
-	if (srect.x < x)
+	MCRectangle drect = p_srect;
+	if (p_srect.x < p_x)
 	{
-		drect.x = x;
-		if (x - srect.x > srect.width)
+		drect.x = p_x;
+		if (p_x - p_srect.x > p_srect.width)
 			drect.width = 0;
 		else
-			drect.width -= x - srect.x;
+			drect.width -= p_x - p_srect.x;
 	}
-	if (srect.x + srect.width > x + width)
-		if (srect.x > x + width)
+	if (p_srect.x + p_srect.width > p_x + p_width)
+	{
+		if (p_srect.x > p_x + p_width)
 			drect.width = 0;
 		else
-			drect.width = x + width - drect.x;
-	if (srect.y < y)
-	{
-		drect.y = y;
-		if (y - srect.y > srect.height)
-			drect.height = 0;
-		else
-			drect.height -= y - srect.y;
+			drect.width = p_x + p_width - drect.x;
 	}
-	if (srect.y + srect.height > y + height)
-		if (srect.y > y + height)
+	if (p_srect.y < p_y)
+	{
+		drect.y = p_y;
+		if (p_y - p_srect.y > p_srect.height)
 			drect.height = 0;
 		else
-			drect.height = y + height - drect.y;
+			drect.height -= p_y - p_srect.y;
+	}
+	if (p_srect.y + p_srect.height > p_y + p_height)
+	{
+		if (p_srect.y > p_y + p_height)
+			drect.height = 0;
+		else
+			drect.height = p_y + p_height - drect.y;
+	}
 	return drect;
 }
 
@@ -1720,6 +1728,7 @@ MCRectangle MCU_subtract_rect(const MCRectangle &one, const MCRectangle &two)
 			drect.height -= one.y + one.height - two.y;
 	else
 		if (one.y == two.y && one.height == two.height)
+        {
 			if (one.x > two.x)
 			{
 				uint2 overlap = two.x + two.width - one.x;
@@ -1728,6 +1737,7 @@ MCRectangle MCU_subtract_rect(const MCRectangle &one, const MCRectangle &two)
 			}
 			else
 				drect.width -= one.x + one.width - two.x;
+        }
 	return drect;
 }
 
@@ -1982,7 +1992,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 
 	unichar_t *t_dst;
 	uindex_t t_length;
-    t_dst = new unichar_t[t_length + 1];
+    t_dst = new (nothrow) unichar_t[t_length + 1];
 	t_length = MCStringGetChars(p_path, MCRangeMake(0, t_length), t_dst);
 
 	for (uindex_t i = 0; i < t_length; i++)
@@ -2045,7 +2055,7 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
     uindex_t t_length;
     t_length = MCStringGetLength(in);
     
-    t_unicode_str = new unichar_t[t_length + 1];
+    t_unicode_str = new (nothrow) unichar_t[t_length + 1];
     t_length = MCStringGetChars(in, MCRangeMake(0, t_length), t_unicode_str);
     t_unicode_str[t_length] = 0;
 
@@ -2234,38 +2244,37 @@ void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
 //   could be a url. It checks for strings of the form:
 //     <letter> (<letter> | <digit> | '+' | '.' | '-')+ ':' <char>+
 // MW-2013-07-01: [[ Bug 10975 ]] Update to a MCU_* utility function.
-bool MCU_couldbeurl(const MCString& p_potential_url)
+bool MCU_couldbeurl(MCStringRef p_potential_url)
 {
-	uint4 t_length;
-	const char *t_url;
-	t_length = p_potential_url . getlength();
-	t_url = p_potential_url . getstring();
-	
+    MCAutoStringRefAsCString t_potential_url;
+    if (!t_potential_url.Lock(p_potential_url))
+        return false;
+    const auto&& t_url = t_potential_url.Span();
+
 	// If the first char isn't a letter, then we are done.
-	if (t_length == 0 || !isalpha(t_url[0]))
+	if (t_url.empty() || !isalpha(t_url[0]))
 		return false;
-	
-	uint4 t_colon_index;
-	for(t_colon_index = 0; t_colon_index < t_length; t_colon_index++)
-	{
-		char t_char;
-		t_char = t_url[t_colon_index];
-		
-		// If we find the ':' we are done (end of scheme).
-		if (t_url[t_colon_index] == ':')
-			break;
-		
-		// If the character isn't something allowed in a scheme name, we are done.
-		if (!isalpha(t_char) && !isdigit(t_char) && t_char != '+' && t_char != '.' && t_char != '-')
-			return false;
-	}
-	
-	// If the scheme name < 2 chars, or there is nothing after it, we are done.
-	if (t_colon_index < 2 || t_colon_index + 1 == t_length)
-		return false;
-	
-	// If we get here then we could well have a url.
-	return true;
+
+    auto t_is_scheme_char = [](const char p_char) {
+        return (isalpha(p_char) || isdigit(p_char) ||
+                p_char == '+' || p_char == '.' || p_char == '-');
+    };
+    auto t_colon =
+        std::find_if_not(t_url.begin(), t_url.end(), t_is_scheme_char);
+
+    /* If no scheme name or non-scheme characters were found, this
+     * could still be a URL. */
+    if (t_colon == t_url.end())
+        return true;
+    /* If there was a non-scheme character, this can't be a URL */
+    if (*t_colon != ':')
+        return false;
+    /* If the scheme name is < 2 characters, or there is nothing after
+       the scheme, this can't be a URL. */
+    if (t_url.end() - t_colon <= 1 || t_colon - t_url.begin() <= 1)
+        return false;
+
+    return true;
 }
 
 void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
@@ -2274,20 +2283,20 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_url, MCValueRef &r_output)
 	MCAutoStringRef t_filename;
 	if (MCStringGetLength(p_url) > 5 && MCStringBeginsWithCString(p_url, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url)-5), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(5, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadtextfile(*t_filename, (MCStringRef&)r_output);
 	}
 	else if (MCStringGetLength(p_url) > 8 && MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadbinaryfile(*t_filename, (MCDataRef&)r_output);
 	}
 	else if (MCStringGetLength(p_url) > 8 && MCStringBeginsWithCString(p_url, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url)-8), &t_filename);
+		MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_filename);
 		MCS_loadresfile(*t_filename, (MCStringRef&)r_output);
 	}
-	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
+	else if (MCU_couldbeurl(p_url))
 	{
 		// Send a "getURL" message
 		Boolean oldlock = MClockmessages;
@@ -2335,14 +2344,14 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	{
 		MCAutoStringRef t_path, t_data;
 		/* UNCHECKED */ ctxt . ConvertToString(p_data, &t_data);
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(5, MCStringGetLength(p_url) - 5), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(5, MCStringGetLength(p_url)), &t_path);
 		MCS_savetextfile(*t_path, *t_data);
 	}
 	else if (MCStringBeginsWithCString(p_url, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
 		MCAutoStringRef t_path;
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_path);
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_savebinaryfile(*t_path, *t_data);
 	}
@@ -2350,11 +2359,11 @@ void MCU_puturl(MCExecContext &ctxt, MCStringRef p_url, MCValueRef p_data)
 	{
 		MCAutoStringRef t_path;
 		MCAutoDataRef t_data;
-		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMake(8, MCStringGetLength(p_url) - 8), &t_path);
+		/* UNCHECKED */ MCStringCopySubstring(p_url, MCRangeMakeMinMax(8, MCStringGetLength(p_url)), &t_path);
 		/* UNCHECKED */ ctxt.ConvertToData(p_data, &t_data);
 		MCS_saveresfile(*t_path, *t_data);
 	}
-	else if (MCU_couldbeurl(MCStringGetOldString(p_url)))
+	else if (MCU_couldbeurl(p_url))
 	{
 		MCAutoDataRef t_data;
 
@@ -2440,7 +2449,7 @@ MCNameRef MCU_charsettolanguage(uint1 charset)
 uint1 MCU_languagetocharset(MCNameRef p_language)
 {
 	for (uinteger_t i = 0; i < ELEMENTS(langtocharsets); i++)
-		if (MCNameIsEqualTo(p_language, *langtocharsets[i].langname))
+		if (MCNameIsEqualToCaseless(p_language, *langtocharsets[i].langname))
 			return langtocharsets[i].charset;
 
 	return 0;
@@ -2732,7 +2741,7 @@ void MCDictionary::Set(uint4 p_id, MCString p_value)
 	t_node = Find(p_id);
 	if (t_node == NULL)
 	{
-		t_node = new Node;
+		t_node = new (nothrow) Node;
 		t_node -> next = m_nodes;
 		t_node -> key = p_id;
 		m_nodes = t_node;
@@ -2763,7 +2772,7 @@ void MCDictionary::Pickle(void*& r_buffer, uint4& r_length)
 		t_size += ((t_node -> length + 3) & ~3) + 8;
 
 	char *t_buffer;
-	t_buffer = new char[t_size];
+	t_buffer = new (nothrow) char[t_size];
 	
 	char *t_buffer_ptr;
 	t_buffer_ptr = t_buffer;
@@ -2872,129 +2881,505 @@ uint32_t MCDictionary::Checksum(const void *p_data, uint32_t p_length)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// SN-2015-04-07: [[ Bug 15164 ]] MCU_loadmodule is now a wrapper of MCU_loadmodule_stringref
-//  to keep consistent its use from the externals.
-void* MCU_loadmodule(const char* p_module)
+static bool
+MCU_path_is_absolute(MCStringRef p_path)
 {
-    MCAutoStringRef t_module;
-    if (!MCStringCreateWithCString(p_module, &t_module))
-        return NULL;
-
-    return MCU_loadmodule_stringref(*t_module);
+#ifdef __WINDOWS__
+    if ((MCStringGetLength(p_path) > 1 && MCStringGetCharAtIndex(p_path, 1) == ':') ||
+        (MCStringGetLength(p_path) > 2 && MCStringGetCharAtIndex(p_path, 0) == '/' && MCStringGetCharAtIndex(p_path, 1) == '/'))
+    {
+        return true;
+    }
+#endif
+    
+    return MCStringGetCharAtIndex(p_path,
+                                  0) == '/';
 }
 
-// AL-2015-02-06: [[ SB Inclusions ]] Add utility functions for module loading where
-//  p_module can be a universal module name, where a mapping from module names to
-// relative paths has been provided.
-// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
-//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
-void* MCU_loadmodule_stringref(MCStringRef p_module)
+static bool
+MCU_path_has_extension(MCStringRef p_path)
 {
-    MCSysModuleHandle t_handle;
-    t_handle = nil;
-#if defined(_MACOSX)
-    MCAutoPointer<char> t_module_cstring;
-    // SN-2015-04-07: [[ Bug 15164 ]] NSAddImage understands UTF-8.
-    if (!MCStringConvertToUTF8String(p_module, &t_module_cstring))
-        return NULL;
-    t_handle = (MCSysModuleHandle)NSAddImage(*t_module_cstring, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
-    if (t_handle != nil)
-        return t_handle;
-    // MM-2014-02-06: [[ LipOpenSSL 1.0.1e ]] On Mac, if module cannot be found then look relative to current executable.
-    uint32_t t_buffer_size;
-    t_buffer_size = 0;
-    _NSGetExecutablePath(NULL, &t_buffer_size);
-    char *t_module_path;
-    t_module_path = (char *) malloc(t_buffer_size + strlen(*t_module_cstring) + 1);
-    if (t_module_path != NULL)
+    uindex_t t_sep;
+    if (!MCStringLastIndexOfChar(p_path,
+                                 '/',
+                                 UINDEX_MAX,
+                                 kMCStringOptionCompareExact,
+                                 t_sep))
     {
-        if (_NSGetExecutablePath(t_module_path, &t_buffer_size) == 0)
+        t_sep = 0;
+    }
+    
+    uindex_t t_ext;
+    return MCStringFirstIndexOfChar(p_path,
+                                    '.',
+                                    t_sep,
+                                    kMCStringOptionCompareExact,
+                                    t_ext);
+}
+
+static void
+MCU_path_compute_split_unix(MCStringRef p_path,
+                            uindex_t p_split_at,
+                            uindex_t& x_dir_end,
+                            uindex_t& x_base_start)
+
+{
+    if (MCStringGetLength(p_path) > 0 &&
+        MCStringGetCharAtIndex(p_path, 0) == '/')
+    {
+        if (p_split_at == 0)
         {
-            char *t_last_slash;
-            t_last_slash = t_module_path + t_buffer_size;
-            for (uint32_t i = 0; i < t_buffer_size; i++)
-            {
-                if (*t_last_slash == '/')
-                {
-                    *(t_last_slash + 1) = '\0';
-                    break;
-                }
-                t_last_slash--;
-            }
-            strcat(t_module_path, *t_module_cstring);
-            t_handle = (MCSysModuleHandle)NSAddImage(t_module_path, NSADDIMAGE_OPTION_RETURN_ON_ERROR | NSADDIMAGE_OPTION_WITH_SEARCHING);
+            /* Make sure dir is / and base is everything after */
+            x_dir_end = 1;
         }
-        free(t_module_path);
-        // AL-2015-02-17: [[ SB Inclusions ]] Return the handle if found here.
-        if (t_handle != nil)
-            return t_handle;
     }
-#endif
+    else
+    {
+        if (p_split_at == 0)
+        {
+            x_dir_end = 0;
+            x_base_start = 0;
+        }
+    }
 
+    /* Trim any trailing slashes, down to one in the first position */
+    while(x_dir_end > 1 &&
+          MCStringGetCharAtIndex(p_path, x_dir_end - 1) == '/')
+    {
+        x_dir_end -= 1;
+    }
+}
+
+static void
+MCU_path_compute_split_win32(MCStringRef p_path,
+                             uindex_t p_split_at,
+                             uindex_t& x_dir_end,
+                             uindex_t& x_base_start)
+{
+   if (MCStringBeginsWithCString(p_path,
+                                 (const char_t *)"//",
+                                 kMCStringOptionCompareExact))
+    {
+        /* UNC */
+        
+        uindex_t t_end_of_share = 0;
+        uindex_t t_end_of_folder = 0;
+        if (MCStringFirstIndexOfChar(p_path,
+                                     '/',
+                                     2,
+                                     kMCStringOptionCompareExact,
+                                     t_end_of_share))
+        {
+            if (!MCStringFirstIndexOfChar(p_path,
+                                          '/',
+                                          t_end_of_share + 1,
+                                          kMCStringOptionCompareExact,
+                                          t_end_of_folder))
+            {
+                t_end_of_folder = UINDEX_MAX;
+            }
+        }
+        else
+        {
+            t_end_of_folder = UINDEX_MAX;
+        }
+        
+        if (t_end_of_folder >= p_split_at)
+        {
+            x_dir_end = t_end_of_folder;
+            if (t_end_of_folder != UINDEX_MAX)
+            {
+                x_base_start = t_end_of_folder + 1;
+            }
+            else
+            {
+                x_base_start = UINDEX_MAX;
+            }
+        }
+        
+        /* Trim any slashes down to the end of the UNC folder component */
+        while(x_dir_end > t_end_of_folder &&
+              MCStringGetCharAtIndex(p_path, x_dir_end - 1) == '/')
+        {
+            x_dir_end -= 1;
+        }
+    }
+    else if (MCStringGetLength(p_path) > 1 &&
+             MCStringGetCharAtIndex(p_path, 1) == ':')
+    {
+        /* DRIVE */
+    
+        if (MCStringGetLength(p_path) > 2 &&
+            MCStringGetCharAtIndex(p_path, 2) == '/')
+        {
+            /* DRIVE:/ (absolute) */
+        
+            if (p_split_at == 2)
+            {
+                /* Make sure we include the / after the drive in the dir */
+                x_dir_end = p_split_at + 1;
+            }
+        }
+        else
+        {
+            /* DRIVE: (DRIVE relative) */
+        
+            if (p_split_at == 0)
+            {
+                /* Make sure dir is DRIVE: and base is everything after */
+                x_dir_end = 2;
+                x_base_start = 2;
+            }
+        }
+        
+        /* Trim any trailing slashes, down to one in the third position */
+        while(x_dir_end > 3 &&
+              MCStringGetCharAtIndex(p_path, x_dir_end - 1) == '/')
+        {
+            x_dir_end -= 1;
+        }
+    }
+    else
+    {
+        MCU_path_compute_split_unix(p_path,
+                                    p_split_at,
+                                    x_dir_end,
+                                    x_base_start);
+    }
+}
+
+static bool
+MCU_path_split(MCStringRef p_path,
+               MCStringRef* r_dir,
+               MCStringRef* r_base,
+               bool p_win32)
+{
+    uindex_t t_split_at = 0;
+    if (!MCStringLastIndexOfChar(p_path,
+                                 '/',
+                                 UINDEX_MAX,
+                                 kMCStringOptionCompareExact,
+                                 t_split_at))
+    {
+        t_split_at = 0;
+    }
+    
+    uindex_t t_dir_end = t_split_at;
+    uindex_t t_base_start = t_split_at + 1;
+
+    if (p_win32)
+    {
+        MCU_path_compute_split_win32(p_path,
+                                     t_split_at,
+                                     t_dir_end,
+                                     t_base_start);
+    }
+    else
+    {
+        MCU_path_compute_split_unix(p_path,
+                                    t_split_at,
+                                    t_dir_end,
+                                    t_base_start);
+    }
+
+    if (r_dir != nullptr)
+    {
+        if (!MCStringCopySubstring(p_path,
+                                   MCRangeMakeMinMax(0, t_dir_end),
+                                   *r_dir))
+        {
+            return false;
+        }
+    }
+    
+    if (r_base != nullptr)
+    {
+        if (!MCStringCopySubstring(p_path,
+                                   MCRangeMakeMinMax(t_base_start, UINDEX_MAX),
+                                   *r_base))
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool MCU_path_split(MCStringRef p_path,
+                    MCStringRef* r_dir,
+                    MCStringRef* r_base)
+{
+#ifdef __WINDOWS__
+    return MCU_path_split(p_path, r_dir, r_base, true);
+#else
+    return MCU_path_split(p_path, r_dir, r_base, false);
+#endif
+}
+
+bool MCU_path_split_unix(MCStringRef p_path,
+                         MCStringRef* r_dir,
+                         MCStringRef* r_base)
+{
+    return MCU_path_split(p_path, r_dir, r_base, false);
+}
+
+bool MCU_path_split_win32(MCStringRef p_path,
+                          MCStringRef* r_dir,
+                          MCStringRef* r_base)
+{
+    return MCU_path_split(p_path, r_dir, r_base, true);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static bool
+__MCU_library_load_verbatim(MCStringRef p_path,
+                            MCSLibraryRef& r_library)
+{
+    if (!MCSLibraryCreateWithPath(p_path,
+                                  r_library))
+    {
+        MCAutoErrorRef t_error;
+        MCErrorCatch(&t_error);
+        MCLog("MCU_library_load failed for %@", p_path);
+        return false;
+    }
+    
+    return true;
+}
+
+static bool
+__MCU_library_load_adding_extension(MCStringRef p_path,
+                                    const char *p_extension,
+                                    MCSLibraryRef& r_library)
+{
+    MCAutoStringRef t_library_path;
+    if (!MCStringFormat(&t_library_path,
+                        "%@.%s",
+                        p_path,
+                        p_extension))
+    {
+        return false;
+    }
+    return __MCU_library_load_verbatim(*t_library_path,
+                                       r_library);
+}
+
+static bool
+__MCU_library_map_path(MCStringRef p_path,
+                       MCStringRef& r_mapped_library_path)
+{
+    // If the path does not begin with './', then we are done.
+    if (!MCStringBeginsWithCString(p_path,
+                                   reinterpret_cast<const char_t *>("./"),
+                                   kMCStringOptionCompareExact))
+    {
+        r_mapped_library_path = MCValueRetain(p_path);
+        return true;
+    }
+    
+    // Extract the base path (i.e. remove the ./)
+    MCAutoStringRef t_base_path;
+    if (!MCStringCopySubstring(p_path,
+                               MCRangeMake(2, UINDEX_MAX),
+                               &t_base_path))
+    {
+        return false;
+    }
+    
+    // Apply any mappings which are present.
+    MCAutoStringRef t_mapped_path;
+    if (MCdispatcher == nullptr ||
+        !MCdispatcher->fetchlibrarymapping(*t_base_path,
+                                           &t_mapped_path))
+    {
+        // If there is no mapping, restore the original path including ./
+        // if it was there.
+        t_mapped_path = p_path;
+    }
+    
+    // If the mapped path does not begin with './', then we just resolve.
+    MCAutoStringRef t_unresolved_library_path;
+    if (MCStringBeginsWithCString(*t_mapped_path,
+                                  reinterpret_cast<const char_t *>("./"),
+                                  kMCStringOptionCompareExact))
+    {
+        
+        // Concatenate the mapped path onto the app code path
+        if (!MCStringFormat(&t_unresolved_library_path,
+                            "%@/%@",
+                            MCappcodepath,
+                            *t_mapped_path))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        t_unresolved_library_path = *t_mapped_path;
+    }
+    
+    // resolve the oath to ensure that all '.' and '..' type components are
+    // removed. (otherwise things might go awry if we have a //?/ type path on
+    // Windows).
+    if (!MCS_resolvepath(*t_unresolved_library_path,
+                         r_mapped_library_path))
+    {
+        return false;
+    }
+    
+    return true;
+}
+
+MCSLibraryRef MCU_library_load(MCStringRef p_path)
+{
+    // If the path is not absolute, apply the internal mapping to the name.
+    // This uses any mapping section in the standalone capsule, and ensures
+    // that revsecurity and revpdfprinter map correctly.
+    MCAutoStringRef t_library_path;
+    if (!__MCU_library_map_path(p_path,
+                                &t_library_path))
+    {
+        MCAutoErrorRef t_error;
+        MCErrorCatch(&t_error);
+        return nullptr;
+    }
+
+    MCLog("MCU_library_load %@ -> %@",
+        p_path,
+        *t_library_path);
+    
+    // If the path already has an extension, we don't need to add one. Otherwise
+    // we try the various appropriate extensions per-platform.
+    MCSAutoLibraryRef t_library;
+    if (MCU_path_has_extension(*t_library_path))
+    {
+        __MCU_library_load_verbatim(*t_library_path,
+                                    &t_library);
+    }
+    else
+    {
+#if defined(__MAC__) || defined(__IOS__)
+        __MCU_library_load_adding_extension(*t_library_path,
+                                            "framework",
+                                            &t_library);
+        if (!t_library.IsSet())
+            __MCU_library_load_adding_extension(*t_library_path,
+                                                "bundle",
+                                                &t_library);
+        if (!t_library.IsSet())
+            __MCU_library_load_adding_extension(*t_library_path,
+                                                "dylib",
+                                                &t_library);
+#elif defined(__WINDOWS__)
+        __MCU_library_load_adding_extension(*t_library_path,
+                                            "dll",
+                                            &t_library);
+#elif defined(__LINUX__) || defined(__ANDROID__) || defined(__EMSCRIPTEN__)
+        __MCU_library_load_adding_extension(*t_library_path,
+                                            "so",
+                                            &t_library);
+#else
+#       error MCU_library_load not implemented for this platform
+#endif
+    }
+    
+    return t_library.Take();
+}
+
+void MCU_library_unload(MCSLibraryRef p_module)
+{
+    if (p_module != nullptr)
+        MCValueRelease(p_module);
+}
+
+void *MCU_library_lookup(MCSLibraryRef p_module,
+                         MCStringRef p_symbol)
+{
+    return MCSLibraryLookupSymbol(p_module,
+                                  p_symbol);
+}
+
+//////////
+
+void *MCSupportLibraryLoad(const char *p_name_cstr)
+{
+    MCAutoStringRef t_name;
+    if (!MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_name_cstr),
+                                 strlen(p_name_cstr),
+                                 kMCStringEncodingUTF8,
+                                 false,
+                                 &t_name))
+    {
+        return nullptr;
+    }
+
+    MCSAutoLibraryRef t_module;
+    &t_module = MCU_library_load(*t_name);
+    if (!t_module.IsSet())
+    {
+        // try a relative path
+        MCAutoStringRef t_relative_filename;
+        if (MCStringFormat(&t_relative_filename, "./%@", *t_name))
+        {
+            &t_module = MCU_library_load(*t_relative_filename);
+        }
+    }
+    
+    if (!t_module.IsSet())
+    {
+        return nullptr;
+    }
+    
+    return t_module.Take();
+}
+
+void MCSupportLibraryUnload(void *p_handle)
+{
+    MCU_library_unload(static_cast<MCSLibraryRef>(p_handle));
+}
+
+char *MCSupportLibraryCopyNativePath(void *p_handle)
+{
     MCAutoStringRef t_path;
-    
-    if (!MCdispatcher || !MCdispatcher -> fetchlibrarymapping(p_module, &t_path))
+    if (!MCSLibraryCopyPath(static_cast<MCSLibraryRef>(p_handle),
+                            &t_path))
     {
-        if (!MCStringCopy(p_module, &t_path))
-            return nil;
+        return nullptr;
     }
 
-    t_handle = MCS_loadmodule(*t_path);
-    
-    if (t_handle != nil)
-        return t_handle;
-    
-    MCAutoStringRef t_filename;
-    if (MCStringGetCharAtIndex(*t_path ,0) == '/')
+    MCAutoStringRef t_native_path;
+    if (!MCS_pathtonative(*t_path,
+                          &t_native_path))
     {
-        if (!MCStringCopy(*t_path, &t_filename))
-            return nil;
-    }
-    else if (MCcmd)
-    {
-        uindex_t t_last_slash_index;
-        if (!MCStringLastIndexOfChar(MCcmd, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_last_slash_index))
-            t_last_slash_index = MCStringGetLength(MCcmd);
-
-        MCRange t_range;
-        t_range = MCRangeMake(0, t_last_slash_index);
-        if (!MCStringFormat(&t_filename, "%*@/%@", &t_range, MCcmd, *t_path))
-            return nil;
+        return nullptr;
     }
 
-	if (*t_filename != nil)
-    	t_handle = MCS_loadmodule(*t_filename);
-    
-    return t_handle;
+    char *t_path_str;
+    if (!MCStringConvertToUTF8String(*t_native_path,
+                                     t_path_str))
+    {
+        return nullptr;
+    }
+
+    return t_path_str;
 }
 
-// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
-//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
-void MCU_unloadmodule(void *p_module)
+void *MCSupportLibraryLookupSymbol(void *p_handle,
+                                   const char *p_symbol_cstr)
 {
-    // SN-2015-03-04: [[ Broken module unloading ]] NSAddImage, used on Mac in
-    //  MCU_loadmodule, does not need any unloading of the module -
-    //  but the other platforms do.
-#if !defined(_MACOSX)
-    MCS_unloadmodule((MCSysModuleHandle)p_module);
-#endif
-}
-
-// SN-2015-02-23: [[ Broken Win Compilation ]] Use void*, as the function is imported
-//  as extern in revbrowser/src/cefshared.h - where MCSysModuleHandle does not exist
-void *MCU_resolvemodulesymbol(void* p_module, const char *p_symbol)
-{
-#if defined(_MACOSX)
-    NSSymbol t_symbol;
-    t_symbol = NSLookupSymbolInImage((mach_header *)p_module, p_symbol, NSLOOKUPSYMBOLINIMAGE_OPTION_BIND_NOW);
-    if (t_symbol != NULL)
-        return NSAddressOfSymbol(t_symbol);
-#endif
-    MCAutoStringRef t_symbol_str;
-    if (!MCStringCreateWithCString(p_symbol, &t_symbol_str))
-        return nil;
-
-    return MCS_resolvemodulesymbol((MCSysModuleHandle)p_module, *t_symbol_str);
+    MCAutoStringRef t_symbol;
+    if (!MCStringCreateWithBytes(reinterpret_cast<const byte_t *>(p_symbol_cstr),
+                                 strlen(p_symbol_cstr),
+                                 kMCStringEncodingUTF8,
+                                 false,
+                                 &t_symbol))
+    {
+        return nullptr;
+    }
+ 
+    return MCU_library_lookup(static_cast<MCSLibraryRef>(p_handle),
+                              *t_symbol);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3032,51 +3417,9 @@ MCU_is_token(MCStringRef p_string)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef _DEBUG_MEMORY
+// Color conversion utilities
 
-// SN-2015-04-17: [[ Bug 15187 ]] Don't use the nothrow variant on iOS Simulator
-//  as they won't let iOS Simulator 6.3 engine compile.
-#if defined __VISUALC__ || TARGET_IPHONE_SIMULATOR
-void *operator new (size_t size)
+bool MCU_format_color(const MCColor p_color, MCStringRef& r_string)
 {
-    return malloc(size);
+    return MCStringFormat(r_string, "%d,%d,%d", p_color.red >> 8, p_color.green >> 8, p_color.blue >> 8);
 }
-
-void operator delete (void *p)
-{
-    free(p);
-}
-
-void *operator new[] (size_t size)
-{
-    return malloc(size);
-}
-
-void operator delete[] (void *p)
-{
-    free(p);
-}
-#else
-void *operator new (size_t size) throw()
-{
-    return malloc(size);
-}
-
-void operator delete (void *p) throw()
-{
-    free(p);
-}
-
-void *operator new[] (size_t size) throw()
-{
-    return malloc(size);
-}
-
-void operator delete[] (void *p) throw()
-{
-    free(p);
-}
-#endif
-
-#endif
-

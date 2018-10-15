@@ -33,21 +33,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Security, Encrypt, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Security, CipherNames, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Security, RandomBytes, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Security, RsaEncrypt, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Security, RsaDecrypt, 4)
-MC_EXEC_DEFINE_EXEC_METHOD(Security, BlockEncryptWithPassword, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Security, BlockEncryptWithKey, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Security, BlockDecryptWithPassword, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Security, BlockDecryptWithKey, 5)
-MC_EXEC_DEFINE_GET_METHOD(Security, SslCertificates, 1)
-MC_EXEC_DEFINE_SET_METHOD(Security, SslCertificates, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Security, SecureSocket, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCSecurityEvalEncrypt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_dest)
 {
 	if (MCStackSecurityEncryptString(p_source, r_dest))

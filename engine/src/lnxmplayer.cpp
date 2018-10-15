@@ -131,7 +131,7 @@ bool MPlayer::shutdown(void)
 //	IO_handle handle = NULL;
 //	FILE *fptr = fdopen(fd, mode);
 //	if (fptr != NULL)
-//		handle = new IO_header(fptr, NULL, 0, fd, 0);
+//		handle = new (nothrow) IO_header(fptr, NULL, 0, fd, 0);
 //	return handle;
 //}
 

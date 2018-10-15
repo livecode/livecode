@@ -36,9 +36,9 @@ on a <platform> other than the one you're developing on.
 
 The <lookAndFeel> <property> determines the <appearance> and <behavior>
 of <scrollbar|scrollbars>, <object(glossary)> borders,
-<checkbox|checkboxes> and <radio button|radio buttons>, and <button
-menu|button menus>. It also changes the <appearance> of the <active
-(focused) control(glossary)>.
+<checkbox|checkboxes> and <radio button|radio buttons>, and 
+<button menu|button menus>. It also changes the <appearance> of the 
+<active control|active (focused) control>.
 
 However, changing this property does not provide an exact representation
 of the appearance and behavior of the stack on the target platform. For
@@ -75,8 +75,8 @@ property (glossary), checkbox (glossary), behavior (glossary),
 Mac OS (glossary), user interface (glossary), OS X (glossary),
 appearance (glossary), Unix (glossary), radio button (glossary),
 active control (glossary), button menu (glossary), object (glossary),
-word (keyword), default (keyword), system (keyword), scrollbar (object),
-stack (object), control (object), emacsKeyBindings (property),
+control (glossary), word (keyword), default (keyword), system (keyword), 
+scrollbar (object), stack (object), emacsKeyBindings (property),
 activatePalettes (property), hiliteBorder (property)
 
 Tags: ui

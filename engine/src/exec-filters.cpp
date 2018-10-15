@@ -33,23 +33,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, Base64Encode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, Base64Decode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, BinaryEncode, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, BinaryDecode, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, Compress, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, Decompress, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, IsoToMac, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, MacToIso, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, UrlEncode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, UrlDecode, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, UniEncode, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, UniDecode, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, MD5Digest, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Filters, SHA1Digest, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCFiltersIsoToMac(MCDataRef p_source, MCDataRef &r_result)
 {
 	MCAutoByteArray t_buffer;
@@ -90,7 +73,7 @@ bool MCFiltersMacToIso(MCDataRef p_source, MCDataRef &r_result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static const char *url_table[256] =
+static const char * const url_table[256] =
     {
         "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07", "%08", "%09",
         "%0D%0A", "%0B", "%0C", "%0D", "%0E", "%0F", "%10", "%11", "%12",
@@ -335,7 +318,7 @@ static bool MCU_gettemplate(MCStringRef format, uindex_t &x_offset, unichar_t &c
             // No ending curly brace: error
             return false;
         
-        /* UNCHECKED */ MCStringCopySubstring(format, MCRangeMake(x_offset, t_brace_end - x_offset), &t_encoding_string);
+        /* UNCHECKED */ MCStringCopySubstring(format, MCRangeMakeMinMax(x_offset, t_brace_end), &t_encoding_string);
         
         x_offset = t_brace_end + 1;
         
@@ -698,7 +681,6 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
         case 'u':
         case 'U':
             {
-                MCStringRef t_output;
                 
                 if (count == BINARY_ALL)
                     count = length - offset;
@@ -727,7 +709,6 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
                         else
                         {
                             bool t_is_space = true;
-                            uindex_t t_consucutive_fails = 0;
                             
                             // Compare the encoded spaces
                             for (uindex_t i = 0; i < t_space_length && t_is_space; ++i)
@@ -1128,8 +1109,6 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
                     uindex_t t_cu_pos = 0;
                     uindex_t t_char_pos = 0;
                     
-                    byte_t* t_byte_string;
-                    
                     bool t_char_offsets = false;
                     
                     // Loop until we have reached either the output byte-amount specified by the user
@@ -1239,44 +1218,3 @@ void MCFiltersEvalUniEncodeFromNative(MCExecContext& ctxt, MCStringRef p_input, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bool MCFiltersMD5Digest(MCDataRef p_src, MCDataRef& r_digest)
-{
-	md5_state_t state;
-	md5_byte_t digest[16];
-	md5_init(&state);
-	md5_append(&state, MCDataGetBytePtr(p_src), MCDataGetLength(p_src));
-	md5_finish(&state, digest);
-
-	return MCDataCreateWithBytes(digest, 16, r_digest);
-}
-
-bool MCFiltersSHA1Digest(MCDataRef p_src, MCDataRef& r_digest)
-{
-	sha1_state_t state;
-	uint8_t digest[20];
-	sha1_init(&state);
-	sha1_append(&state, MCDataGetBytePtr(p_src), MCDataGetLength(p_src));
-	sha1_finish(&state, digest);
-
-	return MCDataCreateWithBytes(digest, 20, r_digest);
-}
-
-void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest)
-{
-	if (MCFiltersMD5Digest(p_src, r_digest))
-		return;
-
-	ctxt.Throw();
-}
-
-void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest)
-{
-	if (MCFiltersSHA1Digest(p_src, r_digest))
-		return;
-
-	ctxt.Throw();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-

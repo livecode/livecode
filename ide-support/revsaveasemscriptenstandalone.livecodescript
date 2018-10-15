@@ -46,17 +46,28 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
    set the itemDelimiter to comma
    
    -- Other parameters
-   local tName, tFiles, tAuxStackFiles, tExtensions
+   local tName
    put pSettings["name"] into tName
-   put pSettings["files"] into tFiles
-   put pSettings["auxiliary_stackfiles"] into tAuxStackFiles
-   put pSettings["extensions"] into tExtensions
    
-   -- If the datagrid is used, then include the library as an aux stack
-   if "data grid templates" is in the subStacks of stack pStack and there is a stack "revDataGridLibrary" then
-      revSBAddDataGridToAuxiliaryStackFiles tAuxStackFiles
+   revStandaloneResetWarnings
+   
+   -- If we're searching for inclusions, do it here 
+   if pSettings["inclusions"] is "search" then 
+      revSBSearchForInclusions pStack, pSettings
    end if
    
+   -- Make sure all dependencies are included
+   revSBUpdateForDependencies "emscripten",,, pSettings
+   
+   revSBUpdateSettingsForExtensions "emscripten", pSettings
+   
+   local tResolvedFileData
+   revSBResolveCopyFilesList tBaseFolder, "emscripten", pSettings, tResolvedFileData
+   
+   local tDeploy
+   -- Update the deploy params with script library and extension inclusions
+   revSBUpdateDeployParams pStack, "emscripten", pSettings, tDeploy
+
    local tError
    try
       ---------- Check deployment entitlement
@@ -101,41 +112,16 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
       
       -- Define some paths within the zip archive
       local tBootPath, tStandalonePath
-      local tBootStackPath, tAuxStackPath, tStartupStackPath
-      local tExtensionsPath
+      local tDeployedStackPath
       put "boot" into tBootPath
-      put tBootPath & slash & "__startup.livecode" into tStartupStackPath
+      put tBootPath & slash & "__startup.data" into tDeployedStackPath
       put tBootPath & slash & "standalone" into tStandalonePath
-      put tStandalonePath & slash & "__boot.livecode" into tBootStackPath
-      put tBootPath & slash & "auxiliary_stackfiles" into tAuxStackPath
-      put tBootPath & slash & "extensions" into tExtensionsPath
       
-      -- Store the initial stack
-      local tBootHash
-      storeBootStack tBuildZip, tBootStackPath, tBuildFolder, tStackFile, tBootHash
-
-      -- Store auxiliary stacks
-      local tZipAuxPath, tAuxStackFile
-      repeat for each line tAuxStackFile in tAuxStackFiles
-         set the itemdelimiter to slash
-         put item -1 of tAuxStackFile into tZipAuxPath
-         put tAuxStackPath & slash before tZipAuxPath
-         
-         logDebug "aux", "Storing" && tAuxStackFile
-         revZipAddUncompressedItemWithFile tBuildZip, tAuxStackPath, tAuxStackFile
-         if the result is not empty then
-            throw "could not store auxiliary stack in standalone archive"
-         end if
-      end repeat
-      
-      -- Store extensions
-      storeExtensions tBuildZip, tExtensions, tExtensionsPath
-      
-      -- Deploy and store the startup script
-      storeStartupStack tBuildZip, tStartupStackPath, tBuildFolder, tBootHash
+      -- Deploy the standalone application data
+      storeDeployedStack tBuildZip, tDeployedStackPath, tBuildFolder, tStackFile, tDeploy
       
       -- Store extra, copied files
-      storeAssets tBuildZip, tFiles, tStandalonePath, tBaseFolder
+      storeAssets tBuildZip, tResolvedFileData, tStandalonePath, tBaseFolder
       
       -- Close zip file
       revZipCloseArchive tBuildZip
@@ -169,10 +155,10 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
             "revStandaloneProgressCallback", the long id of me
       
    catch tError
-	if tError is empty then
-		put "an unknown error occurred" into tError
-	end if
-
+      if tError is empty then
+         put "an unknown error occurred" into tError
+      end if
+      
       -- Cleanup on failure
       if there is a folder pOutputFolder then
          revDeleteFolder pOutputFolder
@@ -195,163 +181,68 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
 end revSaveAsEmscriptenStandalone
 
 ----------------------------------------------------------------
--- LiveCode Builder extensions
+-- Standalone deployment
 ----------------------------------------------------------------
 
-private command storeExtensions pZip, pExtensions, pExtensionsPath
-   if pExtensions is empty then
-      exit storeExtensions
-   end if
+private command storeDeployedStack pZip, pDeployPath, pBuildFolder, pMainStack, pDeployParams
+   local tTempStackData, tTempStackPath, tStartupScript, tTempDeployPath
    
-   -- Put extensions in the correct order for loading
-   local tExtensions
-   put revIDEExtensionsOrderByDependency(pExtensions) into tExtensions
+   ---------- Generate the startup script
+   logDebug "startup", "Generating startup script"
    
-   -- Store the list of extensions
-   storeExtensionsList pZip, tExtensions, pExtensionsPath
+   put getTemporaryBuildFile(pBuildFolder, ".livecode") into tTempStackPath
+   put getPreparedStackAsData(pMainStack, pBuildFolder) into tTempStackData
+   put tTempStackData into url ("binfile:" & tTempStackPath)
    
-   -- Store each extension's data
-   local tKind
-   repeat for each line tKind in tExtensions
-      storeExtensionByKind pZip, tKind, pExtensionsPath
-   end repeat
-end storeExtensions
-
-private command storeExtensionsList pZip, pExtensions, pExtensionsPath
-   local tData, tZipPath
+   put getStartupScript(pDeployParams["startup_script"]) into tStartupScript
    
-   put textEncode(pExtensions, "UTF-8") into tData
+   put pBuildFolder & slash & "emscriptendeploy.data" into tTempDeployPath
    
-   put pExtensionsPath & slash & "extensions.txt" into tZipPath
+   put tStartupScript into pDeployParams["startup_script"]
+   put tTempStackPath into pDeployParams["stackfile"]
+   put tTempDeployPath into pDeployParams["output"]
+   put empty into pDeployParams["engine"]
+
+   // Externals are not yet supported in emscripten builds
+   put empty into pDeployParams["externals"]
+
+   ---------- Perform standalone deployment
+   logDebug "deploy", "Deploying standalone"
    
-   logDebug "lcb", "Storing" && tZipPath
-   
-   revZipAddUncompressedItemWithData pZip, tZipPath, "tData"
-   
-   if the result is not empty then
-      LogDebug "lcb", the result
-      throw "could not store extension list in standalone archive"
-   end if
-end storeExtensionsList
-
-private command storeExtensionByKind pZip, pKind, pExtensionsPath
-   local tInstallFolder
-   put revIDEExtensionProperty(pKind, "install_path") into tInstallFolder
-   
-   local tFiles
-   put getExtensionFilesByKind(tInstallFolder) into tFiles
-   
-   local tZipPath, tFilePath
-   repeat for each element tFilePath in tFiles
-      put pExtensionsPath & slash & pKind & slash & tFilePath into tZipPath
-      put tInstallFolder & slash before tFilePath
-      
-      logDebug "lcb", "Storing" && tFilePath
-      revZipAddUncompressedItemWithFile pZip, tZipPath, tFilePath
-      if the result is not empty then
-         throw "could not store extension file in standalone archive"
-      end if
-   end repeat
-end storeExtensionByKind
-
--- For community (GPL) standalones, we need to include the extension in
--- "the preferred form for modification".  I.e. with all of its source code
--- and documentation.  Otherwise, just include compiled extension + resources
-private function getExtensionFilesByKind pInstallFolder
-   local tExtensionModule, tFiles, tFileCount, tResourceFiles, tFilePath
-   
-   if not revEnvironmentEditionProperty("open_source_required") then
-      put empty into tFiles
-      put 0 into tFileCount
-      
-      -- All resource files
-      put scanFolder(pInstallFolder & slash & "resources") into tResourceFiles
-      -- Make resource file paths relative to module install directory
-      repeat for each element tFilePath in tResourceFiles
-         add 1 to tFileCount
-         put "resources" & slash & tFilePath into tFiles[tFileCount]
-      end repeat
-      
-      -- Compiled module file
-      add 1 to tFileCount
-      put "module.lcm" into tFiles[tFileCount]
-      
-   else
-      -- Include *every* file in the extension
-      put scanFolder(pInstallFolder) into tFiles
-      
-   end if
-   
-   return tFiles
-end getExtensionFilesByKind
-
-----------------------------------------------------------------
--- Startup stack
-----------------------------------------------------------------
-
-private command storeStartupStack pZip, pStartupPath, pBuildFolder, pBootHash
-   local tTempStack, tTempStackPath, tStartupScript, tDeployInfo
-
-   ---------- Generate the startup stack
-   logDebug "startup", "Generating startup stack"
-
-   put pBuildFolder & slash & "revEmscriptenStandaloneStartup.livecode" into tTempStackPath
-
-   put getStartupScript(pBootHash) into tStartupScript
-
-   create invisible stack "revEmscriptenStandaloneStartup"
-   put it into tTempStack
-   set the script of tTempStack to tStartupScript
-   if the result is not empty then
-      throw "could not generate startup stack:" && the result
-   end if
-
-   save tTempStack as tTempStackPath
-   if the result is not empty then
-      throw "could not save startup stack:" && the result
-   end if
-   close tTempStack
-
-   put tTempStackPath into tDeployInfo["output"]
-   put empty into tDeployInfo["engine"]
-
-   ---------- Perform startup stack deployment
-   logDebug "startup", "Deploying startup stack"
-
-   _internal deploy emscripten tDeployInfo
+   _internal deploy emscripten pDeployParams
    if the result is not empty then
       throw "could not deploy startup stack:" && the result
    end if
-
-   ---------- Store startup stack
-   logDebug "startup", "Storing" && tTempStackPath
-   local tStackData
-
+   
+   ---------- Store deployment data
+   logDebug "deploy", "Storing" && tTempDeployPath
+   local tDeployData
+   
    -- We do this using data so that we can immediately delete the
-   -- temporary stack file.  If used the file, we'd have to keep the
+   -- temporary file.  If used the file, we'd have to keep the
    -- file around until the zip file is finished.
-
-   open file tTempStackPath for binary read
-   read from file tTempStackPath until end
-   put it into tStackData
-   close file tTempStackPath
-
-   revZipAddUncompressedItemWithData pZip, pStartupPath, "tStackData"
+   
+   open file tTempDeployPath for binary read
+   read from file tTempDeployPath until end
+   put it into tDeployData
+   close file tTempDeployPath
+   
+   revZipAddUncompressedItemWithData pZip, pDeployPath, "tDeployData"
    if the result is not empty then
       throw "could not store startup stack in standalone archive:" && the result
    end if
-
+   
    ---------- Cleanup
    delete file tTempStackPath
-
-end storeStartupStack
+   delete file tTempDeployPath
+   
+end storeDeployedStack
 
 -- Create the startup script by processing the startup stack template.
 -- Engine-specific and standalone-specific data is substituted into the
 -- template in order 
-private function getStartupScript pStackHash
+private function getStartupScript pGeneratedStartupScript
    local tTemplateFile, tScript
-   local tStackHashString
    
    -- Load template
    put getStartupTemplateFile() into tTemplateFile
@@ -365,98 +256,53 @@ private function getStartupScript pStackHash
       throw tTemplateFile & ":" && the result
    end if
    close file tTemplateFile
-   
-   -- Trim to the actual script
-   delete line 1 of tScript
-      
-   -- Compute a hex string representation of the boot stack hash
-   put empty into tStackHashString
-   local tByte, tByteString
-   repeat for each byte tByte in pStackHash
-      put baseConvert(byteToNum(tByte), 10, 16) into tByteString
-      switch the number of chars in tByteString
-         case 1
-            put "0" after tStackHashString
-         case 2
-            put tByteString after tStackHashString
-      end switch
-   end repeat
-   
+
    -- Make substitutions in the startup script
    replace "@ENGINE_VERSION@" with the version in tScript
-   replace "@BOOT_HASH@" with tStackHashString in tScript
-   
+   replace "@STARTUP_SCRIPT@" with pGeneratedStartupScript in tScript
    return tScript
 end getStartupScript
-
-----------------------------------------------------------------
--- Boot stack
-----------------------------------------------------------------
-
-private command storeBootStack pZip, pBootStackPath, pBuildFolder, pStackFile, @rStackHash
-   logDebug "boot-stack", "Storing" && pStackFile
-   
-   local tStackData
-   put getPreparedStackAsData(pStackFile, pBuildFolder) into tStackData
-   
-   -- Compute the SHA-1 hash of the first 1 kB of the boot stack
-   -- This is needed when building the startup script
-   put the sha1Digest of (byte 1 to 1024 of tStackData) into rStackHash
-   
-   revZipAddUncompressedItemWithData pZip, pBootStackPath, "tStackData"
-   if the result is not empty then
-      throw "could not store initial stack in standalone archive"
-   end if   
-end storeBootStack
 
 ----------------------------------------------------------------
 -- Extra files from "copy files"
 ----------------------------------------------------------------
 
-private command storeAssets pZip, pFiles, pStandalonePath, pBaseFolder
+private command storeAssets pZip, pFileData, pStandalonePath, pBaseFolder
    -- Get a list of all the files to copy
    local tPath, tFiles, tCount
    
-   put empty into tFiles
-   put 0 into tCount
-   
-   repeat for each line tPath in pFiles
-      getAssetFilesFromPath tPath, pBaseFolder, tFiles, tCount
+   -- Store all the files in the zip archive
+   local tFolderFilesA,tFolderFilesCount
+   put 0 into tFolderFilesCount
+   repeat for each element tFileInfoElement in pFileData
+      if there is a file tFileInfoElement["resolved"] then
+         add 1 to tFolderFilesCount
+         put tFileInfoElement["name"] into tFolderFilesA[tFolderFilesCount]["name"]
+         put tFileInfoElement["name"] into tFolderFilesA[tFolderFilesCount]["dest"]
+         put tFileInfoElement["resolved"] into tFolderFilesA[tFolderFilesCount]["resolved"]
+      else if there is a folder tFileInfoElement["resolved"] then
+         local tFolderFiles
+         put files(tFileInfoElement["resolved"]) into tFolderFiles
+         repeat for each line tLine in tFolderFiles
+            add 1 to tFolderFilesCount
+            put tLine into tFolderFilesA[tFolderFilesCount]["name"]
+            put tFileInfoElement["name"] & slash & tLine into tFolderFilesA[tFolderFilesCount]["dest"]
+            put tFileInfoElement["resolved"] & slash & tLine into tFolderFilesA[tFolderFilesCount]["resolved"]
+         end repeat
+      end if
    end repeat
    
-   -- Store all the files in the zip archive
-   local tCopyInfo, tZipPath
-   
-   repeat for each element tCopyInfo in tFiles
-      logDebug "asset", "Storing" && tCopyInfo["source"]
+   local tZipPath
+   repeat for each element tFileInfo in tFolderFilesA
+      logDebug "asset", "Storing" && tFileInfo["resolved"]
       
-      put pStandalonePath & slash & tCopyInfo["dest"] into tZipPath
-      revZipAddUncompressedItemWithFile pZip, tZipPath, tCopyInfo["source"]
+      put pStandalonePath & slash & tFileInfo["dest"] into tZipPath
+      revZipAddUncompressedItemWithFile pZip, tZipPath, tFileInfo["resolved"]
       if the result is not empty then
          throw "could not store asset file in standalone archive"
       end if
    end repeat
 end storeAssets
-
-private command getAssetFilesFromPath pPath, pBaseFolder, @xFiles, @xCount
-   local tSourcePath, tAssetPath, tFile
-   
-   mapAssetPath pPath, pBaseFolder, tSourcePath, tAssetPath
-   
-   if there is a file tSourcePath then
-      add 1 to xCount
-      put tSourcePath into xFiles[xCount]["source"]
-      put tAssetPath into xFiles[xCount]["dest"]
-   else if there is a folder tSourcePath then
-      repeat for each element tFile in scanFolder(tSourcePath)
-         add 1 to xCount
-         put tSourcePath & slash & tFile into xFiles[xCount]["source"]
-         put tAssetPath & slash & tFile into xFiles[xCount]["dest"]
-      end repeat
-   else
-      throw "could not store asset from '" & pPath & "': not a file or directory"
-   end if
-end getAssetFilesFromPath
 
 ----------------------------------------------------------------
 -- Stack manipulation functions
@@ -520,7 +366,6 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          
       end if
       
-      -- Compute the SHA-1 hash of the first 1 kB of the boot stack
       open file tTempFile for binary read
       if the result is not empty then
          throw tTempFile & ":" && the result
@@ -579,36 +424,6 @@ private function mapResPath pPath
       return getRepoResourceFolder() & slash & pPath
    end if
 end mapResPath
-
--- Map a path pPath for asset inclusion.
---
--- Interprets pPath as a user-provided asset source path, defined
--- relative to pBaseFolder.  Computes the absolute path of the file to
--- read from into rSourcePath, and the relative asset path to store the
--- data in into rDestPath.
---
--- This is designed to be compatible with computeAssetLocation in the
--- revSaveAsAndroidStandalone stack.
---
--- FIXME This may have problems if pPath is a root directory or if
--- pPath is not normalized.
-private command mapAssetPath pPath pBaseFolder @rSourcePath @rDestPath
-   local tIsAbsolute
-   put pPath begins with "/" or char 2 to 3 of pPath is ":/" into tIsAbsolute
-   
-   set the itemDelimiter to slash
-   if the last item of pPath is "*" then
-      delete the last item of pPath
-   end if
-   
-   if tIsAbsolute then
-      put item -1 of pPath into rDestPath
-      put pPath into rSourcePath
-   else
-      put pPath into rDestPath
-      put pBaseFolder & slash & pPath into rSourcePath
-   end if
-end mapAssetPath
 
 -- Scan a directory, returning a number-indexed array of files found.
 -- The returned paths are relative to the specified directory.
@@ -673,6 +488,10 @@ private command scanFolder_recurse @xCount, @xFiles, pRelPath
 
    set the defaultFolder to tSaveFolder
 end scanFolder_recurse
+
+function revGetEmscriptenFiles
+   return getEngineFiles()
+end revGetEmscriptenFiles
 
 -- Return a number-indexed array of engine files that need to be
 -- copied into the standalone output folder.

@@ -1,0 +1,43 @@
+module __VMTEST.foreign_aggregate
+
+use com.livecode.foreign
+
+public foreign type AggregateAll binds to "MCAggregateTypeInfo:abcCdDeEfFgGhHiIjJkKlLmMnNoOpPq"
+constant kAggregateAll is \
+[ true, \
+  0, 0x7f, -0x7f, 0x7fff, -0x7fff, 0x7fffffff, -0x7fffffff, 0x7fffffff, -0x7fffffff, 0x7fffffff, -0x7fffffff, \
+  0x7f, -0x7f, 0x7fff, -0x7fff, 0x7fffffff, -0x7fffffff, 0x7fffffff, -0x7fffffff, \
+  0x7fffffff, -0x7fffffff, 0x7fffffff, -0x7fffffff, \
+  3.125, 3.14159647, \
+  0x7fffffff, -0x7fffffff, \
+  0x7fffffff, -0x7fffffff, \
+  3.14159 ]
+
+public handler TestForeignAggregate_Roundtrip()
+	variable tAggregate as AggregateAll
+	put kAggregateAll into tAggregate
+
+	variable tList as List
+	put tAggregate into tList
+
+	variable i as Integer
+	repeat with i from 1 up to the number of elements in kAggregateAll
+		test "aggregate type code " & char i of "abcCdDeEfFgGhHiIjJkKlLmMnNoOpPq" & " roundtrips" when tList[i] is kAggregateAll[i]
+	end repeat
+end handler
+
+public foreign type AggregateWithPointer binds to "MCAggregateTypeInfo:r"
+constant kAggregateWithNullPointer is [nothing]
+
+public handler TestForeignAggregateNullPointerRoundTrip()
+	variable tAggregate as AggregateWithPointer
+	put kAggregateWithNullPointer into tAggregate
+	
+	variable tList as List
+	put tAggregate into tList
+	
+	test "aggregate containing null pointer roundtrips" when \
+		tList[1] is kAggregateWithNullPointer[1]
+end handler
+
+end module

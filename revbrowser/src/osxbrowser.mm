@@ -120,8 +120,6 @@ static NSRect RectToNSRect(NSWindow *p_window, Rect p_rect)
 {
     NSString * urlKey = [[actionInformation objectForKey:WebActionOriginalURLKey] absoluteString];
 	
-	int i = [[actionInformation objectForKey:@"WebActionNavigationTypeKey"] intValue];
-	
 	if ( [urlKey compare:@"about:blank"] != NSOrderedSame )
 	{
 		bool t_cancel = false;
@@ -178,7 +176,7 @@ static NSRect RectToNSRect(NSWindow *p_window, Rect p_rect)
 	
 	id myDocument = [[NSDocumentController sharedDocumentController] openUntitledDocumentOfType:@"DocumentType" display:YES];
     [[[myDocument webView] mainFrame] loadRequest:request];
-    return [myDocument webView];
+    return (WebView*)[myDocument webView];
 }
 
 - (void)webViewShow:(WebView *)sender
@@ -232,7 +230,7 @@ static NSRect RectToNSRect(NSWindow *p_window, Rect p_rect)
 
 - (void)webView:(WebView *)sender unableToImplementPolicyWithError:(NSError *)error frame:(WebFrame *)frame
 {
-	void *t_foo = NULL;
+    
 }
 
 
@@ -710,7 +708,6 @@ char * TAltBrowser::GetURL()
 void TAltBrowser::GoBack(void)
 {
 	WebView*            nativeView;
-	WebFrame*           mainFrame;
 	
 	nativeView = m_web_browser; // get the Cocoa view
 	
@@ -720,7 +717,6 @@ void TAltBrowser::GoBack(void)
 void TAltBrowser::GoForward(void)
 {
 	WebView*            nativeView;
-	WebFrame*           mainFrame;
 	
 	nativeView = m_web_browser; // get the Cocoa view
 	
@@ -753,7 +749,6 @@ void TAltBrowser::SetScrollbars(bool p_enabled)
 {
 	WebView*            nativeView;
 	WebFrameView *		   theframe;
-	NSScrollView *	   sview;
 	
 	nativeView = m_web_browser;
 	
@@ -847,8 +842,6 @@ char *TAltBrowser::GetSource()
 {
 	WebView*            nativeview;
 	WebDataSource *     datasource;
-	NSString *		   websource;
-	const char * curl=NULL;
 	
 	nativeview = m_web_browser;
 
@@ -1006,10 +999,6 @@ void TAltBrowser::MakeTextSmaller(void)
 void TAltBrowser::Print()
 {
 	WebView*            nativeView;
-	WebView *		   printView;
-	NSView *			  pView;
-	WebFrameView *     pFrame;
-	WebPreferences *   thePrefs;
 	SInt32				 SystemMinorVersion;
 	
 	
@@ -1020,11 +1009,8 @@ void TAltBrowser::Print()
 	[info setVerticalPagination:NSAutoPagination];
 	[info setHorizontallyCentered:NO];
 	[info setVerticallyCentered:NO];
-	[info setOrientation:NSPortraitOrientation];
+	[info setOrientation:NSPaperOrientationPortrait];
 	
-	
-	pView = [[[nativeView mainFrame] frameView] documentView];
-	printDelegate * pd = [[printDelegate alloc] init];
 	
 	NSPrintOperation * op = [NSPrintOperation printOperationWithView:(NSView *)pView printInfo:info];
 	[NSPrintOperation setCurrentOperation:op];

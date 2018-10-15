@@ -35,11 +35,10 @@ The <orientationChanged> message is sent before any automatic interface
 rotation takes place thus changes to the orientation lock state and
 allowed set can be made at this point and still have an effect. If you
 wish to perform an action after the interface has been rotated, then
-either do so on receipt of <resizeStack>, or by using a <send in 0
+either do so on receipt of <resizeStack>, or by using a <send|send in 0
 milliseconds(command)> command.
 
 References: mobileSetAllowedOrientations (command),
 mobileLockOrientation (command), mobileUnlockOrientation (command),
 mobileAllowedOrientations (function), mobileDeviceOrientation (function),
-mobileOrientation (function), resizeStack (message)
-
+mobileOrientation (function), resizeStack (message), mobileSetFullScreenRectForOrientations (command)

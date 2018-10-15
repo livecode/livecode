@@ -128,7 +128,9 @@ bool MCRegexMatcher::match(MCExecContext ctxt, MCNameRef p_key, bool p_match_key
     else
     {
         MCValueRef t_element;
-        MCArrayFetchValue(m_array_source, m_options == kMCStringOptionCompareCaseless, p_key, t_element);
+        if (!MCArrayFetchValue(m_array_source, m_options == kMCStringOptionCompareCaseless, p_key, t_element))
+            return false;
+        
         if (!ctxt . ConvertToString(t_element, t_string))
             return false;
     }
@@ -297,7 +299,8 @@ bool MCWildcardMatcher::match(MCExecContext ctxt, MCNameRef p_key, bool p_match_
     else
     {
         MCValueRef t_element;
-        MCArrayFetchValue(m_array_source, m_options == kMCStringOptionCompareCaseless, p_key, t_element);
+        if (!MCArrayFetchValue(m_array_source, m_options == kMCStringOptionCompareCaseless, p_key, t_element))
+            return false;
         if (!ctxt . ConvertToString(t_element, t_string))
             return false;
     }

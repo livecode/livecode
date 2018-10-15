@@ -6,7 +6,7 @@ Syntax: it
 
 Summary:
 A special <local variable> that is used with commands such as <get>,
-<read from file>, <convert>, ask, and <answer>.
+<read from file>, <convert>, <ask>, and <answer>.
 
 Introduced: 1.0
 
@@ -24,15 +24,16 @@ Description:
 Use the <it> <keyword> to get the result of certain <command|commands>,
 or as a handy temporary storage place.
 
-The <it> <keyword> designates a special <local variable>. <It> can be
+The <it> <keyword> designates a special <local variable>. <it|It> can be
 used like any other <local variable>: you can put a <value> into <it>,
 or put <it> into another <container>.
 
-The commands that use the <it> <variable> are:  <answer>, <answer
-color>, <answer effect>, <answer file>, <answer folder>, <ask>, <ask
-file>, <ask password>, <clone>, <convert>, <copy>, <create>, <get>,
-<paste>, <post>, <read from driver>, <read from file>, <read from
-process>, <read from socket>, <request>, and <request appleEvent>.
+The commands that use the <it> <variable> are:  <answer>, 
+<answer color>, <answer effect>, <answer file>, <answer folder>, <ask>, 
+<ask file>, <ask password>, <clone>, <convert>, <copy>, <create>, <get>,
+<paste>, <post>, <read from driver>, <read from file>, 
+<read from process>, <read from socket>, <request>, and 
+<request appleEvent>.
 
 Unlike other local variables, <it> can change even if you don't
 explicitly change its <value>. Certain <command|commands> use it to

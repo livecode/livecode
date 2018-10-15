@@ -33,7 +33,7 @@ A <newGroup> <message> is sent before the <newBackground> <message>.
 
 References: copy (command), group (command), pass (control structure),
 object (glossary), trap (glossary), message (glossary),
-HyperCard (glossary), templateGroup (glossary), message path (glossary),
+HyperCard (glossary), message path (glossary), templateGroup (keyword),
 openBackground (message), newGroup (message), newCard (message),
 script (property)
 

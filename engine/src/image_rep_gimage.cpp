@@ -204,7 +204,7 @@ void MCGImageImageRep::ReleaseBitmap()
 bool MCImageRepCreateWithGImage(MCGImageRef p_image, MCImageRep *&r_image_rep)
 {
 	MCGImageImageRep *t_rep;
-	t_rep = new MCGImageImageRep(p_image);
+	t_rep = new (nothrow) MCGImageImageRep(p_image);
 	
 	if (t_rep == nil)
 		return false;

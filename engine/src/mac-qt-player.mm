@@ -14,12 +14,14 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <Cocoa/Cocoa.h>
-#include <QTKit/QTKit.h>
-
 #include "globdefs.h"
 #include "imagebitmap.h"
 #include "region.h"
+
+#include <Cocoa/Cocoa.h>
+#if defined(FEATURE_QUICKTIME)
+#   include <QTKit/QTKit.h>
+#endif
 
 #include "platform.h"
 #include "platform-internal.h"
@@ -492,9 +494,9 @@ void MCQTKitPlayer::Load(MCStringRef p_filename, bool p_is_url)
     
     id t_filename_or_url;
     if (!p_is_url)
-        t_filename_or_url = [NSString stringWithMCStringRef: t_filename];
+        t_filename_or_url = MCStringConvertToAutoreleasedNSString(t_filename);
     else
-        t_filename_or_url = [NSURL URLWithString: [NSString stringWithMCStringRef: t_filename]];
+        t_filename_or_url = [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(t_filename)];
     
 	NSDictionary *t_attrs;
     extern NSString **QTMovieFileNameAttribute_ptr;
@@ -771,6 +773,8 @@ void MCQTKitPlayer::SetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
             MCMemoryCopy(m_markers, t_markers -> ptr, m_marker_count * sizeof(MCPlatformPlayerDuration));
         }
             break;
+		default:
+			MCUnreachable();
 	}
     
     m_synchronizing = false;
@@ -906,6 +910,9 @@ void MCQTKitPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformP
 		case kMCPlatformPlayerPropertyScalefactor:
             *(double *)r_value = m_scale;
 			break;
+		
+		default:
+			MCUnreachable();
 	}
 }
 

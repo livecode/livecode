@@ -14,7 +14,7 @@ OS: mac, windows, linux
 Platforms: desktop, server
 
 Example:
--- Use of scriptExecutionErros in a try statement
+-- Use of scriptExecutionErrors in a try statement
 on mouseUp
   local tVar, tErr
   try
@@ -51,7 +51,7 @@ such that the variable tErr would contain something like this:
     573,4,13,in
 
 This would indicate that the error description is found on line 573 of 
-the <scriptExecutionErrors>, and that the error occured on line 4 of 
+the <scriptExecutionErrors>, and that the error occurred on line 4 of 
 the script, on character 13, the token 'in'.
 
 The <scriptExecutionErrors> property is read-only and cannot be set.

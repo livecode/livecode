@@ -23,9 +23,12 @@ answer "The user prefers" && line 1 of tLanguages
 Returns:
 The <mobilePreferredLanguages> function returns a list of language tags
 in order of user preference, highest first, one per line. For example:
+
 EN
+
 FR
-DE.
+
+DE
 
 Description:
 Use <mobilePreferredLanguages> to get a list of preferred user

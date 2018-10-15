@@ -33,9 +33,9 @@ loosely (enum):
 How accurate the readings from sensors should be. The default value is
 false 
 
--   "true": readings are determined without using accurate(but power
+-   "true": readings are determined without using accurate (but power
     consuming) sources such as GPS.
--   "false": readings are determined using accurate(but power consuming)
+-   "false": readings are determined using accurate (but power consuming)
     sources such as GPS.
 
 

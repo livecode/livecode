@@ -136,7 +136,7 @@ static void MCInterfaceFieldRangesParse(MCExecContext& ctxt, MCStringRef p_input
             break;
         
 		if (t_success)
-            t_success = MCStringCopySubstring(p_input, MCRangeMake(t_old_offset, t_new_offset - t_old_offset), &t_uintx2_string);
+            t_success = MCStringCopySubstring(p_input, MCRangeMakeMinMax(t_old_offset, t_new_offset), &t_uintx2_string);
 		
 		if (t_success)
 			t_success = MCU_stoui4x2(*t_uintx2_string, t_range . start, t_range . end);
@@ -172,8 +172,11 @@ static void MCInterfaceFieldRangesFormat(MCExecContext& ctxt, const MCInterfaceF
 	{
         if (t_success && i != 0)
 			t_success = MCStringAppendNativeChar(*t_list, '\n');
-        
-		t_success = MCStringAppendFormat(*t_list, "%d,%d", p_input . ranges[i] . start, p_input . ranges[i] . end);
+		
+		if (t_success)
+			t_success = MCStringAppendFormat(*t_list, "%d,%d",
+			                                 p_input . ranges[i] . start,
+			                                 p_input . ranges[i] . end);
 	}
 	
 	if (t_success)
@@ -200,100 +203,16 @@ static MCExecCustomTypeInfo _kMCInterfaceFieldRangesTypeInfo =
 
 //////////
 
-static MCExecEnumTypeElementInfo _kMCInterfaceLayerModeElementInfo[] =
-{
-	{ "static", kMCLayerModeHintStatic, false },
-	{ "dynamic", kMCLayerModeHintDynamic, false },
-	{ "scrolling", kMCLayerModeHintScrolling, false },
-	{ "container", kMCLayerModeHintContainer, false },
-};
-
-static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
-{
-	"Interface.LayerMode",
-	sizeof(_kMCInterfaceLayerModeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-	_kMCInterfaceLayerModeElementInfo
-};
-
-//////////
-
 static void MCInterfaceFieldTabAlignmentsParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceFieldTabAlignments& r_output)
 {
-    MCAutoArrayRef t_array;
-    /* UNCHECKED */ MCStringSplit(p_input, MCSTR(","), nil, kMCStringOptionCompareExact, &t_array);
-    uindex_t t_count;
-    t_count = MCArrayGetCount(*t_array);
-    
-    MCAutoArray<intenum_t> t_alignments;
-    t_alignments.Extend(t_count);
-    
-    for (uindex_t i = 0; i < t_count; i++)
-    {
-        MCValueRef t_item;
-        /* UNCHECKED */ MCArrayFetchValueAtIndex(*t_array, i + 1, t_item);
-        if (MCStringIsEqualToCString((MCStringRef)t_item, "left", kMCStringOptionCompareCaseless))
-        {
-            t_alignments[i] = kMCParagraphTextAlignLeft;
-        }
-        else if (MCStringIsEqualToCString((MCStringRef)t_item, "right", kMCStringOptionCompareCaseless))
-        {
-            t_alignments[i] = kMCParagraphTextAlignRight;
-        }
-        else if (MCStringIsEqualToCString((MCStringRef)t_item, "center", kMCStringOptionCompareCaseless))
-        {
-            t_alignments[i] = kMCParagraphTextAlignCenter;
-        }
-        else
-        {
-            ctxt . Throw();
-            return;
-        }
-    }
-    
-    t_alignments . Take(r_output . m_alignments, r_output . m_count);
+	if (!MCField::parsetabalignments(p_input, r_output.m_alignments, r_output.m_count))
+		ctxt.Throw();
 }
 
 static void MCInterfaceFieldTabAlignmentsFormat(MCExecContext& ctxt, const MCInterfaceFieldTabAlignments& p_input, MCStringRef& r_output)
 {
-    if (p_input . m_count == 0)
-    {
-        r_output = MCValueRetain(kMCEmptyString);
-        return;
-    }
-    
-    MCAutoListRef t_list;
-    /* UNCHECKED */ MCListCreateMutable(',', &t_list);
-    
-    for (uindex_t i = 0; i < p_input . m_count; i++)
-    {
-        switch (p_input . m_alignments[i])
-        {
-            case kMCParagraphTextAlignLeft:
-                /* UNCHECKED */ MCListAppendCString(*t_list, "left");
-                break;
-                
-            case kMCParagraphTextAlignRight:
-                /* UNCHECKED */ MCListAppendCString(*t_list, "right");
-                break;
-                
-            case kMCParagraphTextAlignCenter:
-                /* UNCHECKED */ MCListAppendCString(*t_list, "center");
-                break;
-                
-            case kMCParagraphTextAlignJustify:
-                /* UNCHECKED */ MCListAppendCString(*t_list, "justify");
-                break;
-                
-            default:
-            {
-                MCAssert(false);
-                ctxt . Throw();
-                return;
-            }
-        }
-    }
-    
-    /* UNCHECKED */ MCListCopyAsString(*t_list, r_output);
+	if (!MCField::formattabalignments(p_input.m_alignments, p_input.m_count, r_output))
+		ctxt.Throw();
 }
 
 static void MCInterfaceFieldTabAlignmentsFree(MCExecContext& ctxt, MCInterfaceFieldTabAlignments& p_input)
@@ -836,8 +755,13 @@ void MCField::GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_te
 void MCField::SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef p_text)
 {
 	MCAutoStringRef t_string;
-	/* UNCHECKED */ MCStringDecode(p_text, kMCStringEncodingUTF16, false, &t_string);
-	SetText(ctxt, part, *t_string);
+	if (MCStringDecode(p_text, kMCStringEncodingUTF16, false, &t_string))
+	{
+		SetText(ctxt, part, *t_string);
+		return;
+	}
+	
+	ctxt . Throw();
 }
 
 void MCField::GetHtmlText(MCExecContext& ctxt, uint32_t part, MCValueRef& r_text)
@@ -1118,7 +1042,7 @@ void MCField::GetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, MCInterface
 void MCField::SetFlaggedRanges(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceFieldRanges& p_ranges)
 {
     // MW-2012-02-08: [[ FlaggedField ]] Special case the 'flaggedRanges' property.
-    int4 t_line_index, t_char_index, si, ei;
+    int4 si, ei;
     si = 0;
     ei = INT32_MAX;
     
@@ -1280,7 +1204,6 @@ void MCField::GetPageRanges(MCExecContext& ctxt, MCInterfaceFieldRanges& r_range
         uint4 tstart = 1;
         uint4 tend = 0;
         MCLine *lastline = NULL;
-        uint2 j = 0;
         while (True)
         {
             MCInterfaceFieldRange t_range;

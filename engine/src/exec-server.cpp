@@ -30,33 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Server, PutHeader, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Server, PutBinaryOutput, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Server, PutContent, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Server, PutMarkup, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Server, PutCookie, 7)
-MC_EXEC_DEFINE_EXEC_METHOD(Server, DeleteSession, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Server, StartSession, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Server, StopSession, 0)
-MC_EXEC_DEFINE_EXEC_METHOD(Server, Include, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Server, Echo, 1)
-MC_EXEC_DEFINE_GET_METHOD(Server, ErrorMode, 1)
-MC_EXEC_DEFINE_SET_METHOD(Server, ErrorMode, 1)
-MC_EXEC_DEFINE_GET_METHOD(Server, OutputLineEnding, 1)
-MC_EXEC_DEFINE_SET_METHOD(Server, OutputLineEnding, 1)
-MC_EXEC_DEFINE_GET_METHOD(Server, OutputTextEncoding, 1)
-MC_EXEC_DEFINE_SET_METHOD(Server, OutputTextEncoding, 1)
-MC_EXEC_DEFINE_GET_METHOD(Server, SessionSavePath, 1)
-MC_EXEC_DEFINE_SET_METHOD(Server, SessionSavePath, 1)
-MC_EXEC_DEFINE_GET_METHOD(Server, SessionLifetime, 1)
-MC_EXEC_DEFINE_SET_METHOD(Server, SessionLifetime, 1)
-MC_EXEC_DEFINE_GET_METHOD(Server, SessionCookieName, 1)
-MC_EXEC_DEFINE_SET_METHOD(Server, SessionCookieName, 1)
-MC_EXEC_DEFINE_GET_METHOD(Server, SessionId, 1)
-MC_EXEC_DEFINE_SET_METHOD(Server, SessionId, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
 static MCExecEnumTypeElementInfo _kMCServerErrorModeTypeElementInfo[] =
 {
 	{ "", kMCSErrorModeNone, true },

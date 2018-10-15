@@ -407,6 +407,22 @@ extern "C" MC_DLLEXPORT_DEF void MCMathEvalRandomReal(double& r_output)
     r_output = MCSRandomReal();
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalSqrtReal(double p_operand, double& r_output)
+{
+    r_output = sqrt(p_operand);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCMathEvalSqrtNumber(MCNumberRef p_operand, MCNumberRef& r_output)
+{
+    double t_operand;
+    t_operand = MCNumberFetchAsReal(p_operand);
+    
+    double t_result;
+    MCMathEvalSqrtReal(t_operand, t_result);
+    
+    MCNumberCreateWithReal(t_result, r_output);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 extern "C" MC_DLLEXPORT_DEF void MCMathEvalConvertToBase10(MCStringRef p_operand, integer_t p_source_base, integer_t& r_output)

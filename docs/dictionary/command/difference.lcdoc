@@ -1,0 +1,67 @@
+Name: difference
+
+Type: command
+
+Syntax: difference <targetArray> with <templateArray> [into <destinationArray>]
+
+Summary:
+Removes <element(glossary)|elements> from an <array> which have a 
+corresponding <element(keyword)> in another <array>, and leaves all
+others alone.
+
+Introduced: 9.0
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Example:
+local tLeft, tRight
+put "green" into tLeft["color"]
+put "left" into tLeft["align"]
+
+put "blue" into tRight["color"]
+put "100" into tRight["width"]
+
+difference tLeft with tRight
+
+# RESULT
+# the keys of tLeft = "align"
+# tRight unchanged
+
+Parameters:
+targetArray (array):
+The value to modify.
+
+
+templateArray (array):
+The array to difference <targetArray> with.
+
+destinationArray (optional array):
+A variable to set as the destination instead of mutating <targetArray>
+
+Description:
+Use the <difference> <command> to filter out <element(glossary)|elements>
+from an <array> according to the contents of another <array>.
+
+Each key of <targetArray> is checked to see whether there is a matching
+<key> in <templateArray>. The <element(glossary)|elements> of
+<targetArray> that match an <element(keyword)> of the <templateArray>
+are removed from <targetArray>.
+
+The content of individual elements of the <templateArray> does not
+affect the final result. Only which <element(glossary)|elements> exist
+in the <templateArray>, not their content, controls which
+<element(glossary)|elements> of <targetArray> are retained and which are
+removed.
+
+If the into clause is used the operation of the commands is the same as
+the non-into form except that <targetArray> does not have to be a
+variable, and the result of the operation is placed into
+<destinationArray> rather than mutating <targetArray>.
+
+References: split (command), union (command), element (glossary),
+array (glossary), command (glossary), key (glossary), element (keyword),
+intersect (command), symmetric difference (command)
+
+Tags: properties

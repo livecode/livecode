@@ -43,11 +43,11 @@ not opaque, regardless of the setting of the <image(object)|image's>
 <opaque> <property>.
 
 >*Tip:*  <graphic(object)|Graphics> whose <ink> <property> is set to
-> <noOp> are transparent, but (unlike <graphic(object)|Graphics> whose
+> `noOp` are transparent, but (unlike <graphic(object)|Graphics> whose
 > <opaque> is set to false) they still intercept mouse clicks within the
 > <graphic(object)|graphic's> outline. To create an invisible hot spot
 > with a non-rectangular shape, use a <curve> or <polygon>
-> <graphic(keyword)> and set its <ink> to <noOp>.
+> <graphic(keyword)> and set its <ink> to `noOp`.
 
 Setting a button's or field's style <property> to "opaque" sets its
 <opaque> to true.
@@ -64,7 +64,7 @@ Setting a button's or field's style <property> to "opaque" sets its
 References: object (glossary), property (glossary), background (glossary),
 appearance (glossary), object (glossary), Mac OS (glossary),
 OS X (glossary), polygon (keyword), opaque (keyword), curve (keyword),
-control (keyword), graphic (keyword), noOp (keyword), image (keyword),
+control (keyword), graphic (keyword), image (keyword),
 button (object), image (object), graphic (object),
 strokeGradient (property), ink (property), showBorder (property),
 properties (property), threeD (property), blendLevel (property),
@@ -72,4 +72,3 @@ backgroundPattern (property), style (property), lookAndFeel (property),
 visible (property), fillRule (property), fillGradient (property)
 
 Tags: ui
-

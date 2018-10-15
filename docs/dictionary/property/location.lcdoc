@@ -39,11 +39,12 @@ Description:
 Use the <location> <property> to move an <object(glossary)> without
 resizing it, or to find out where an <object(glossary)> is.
 
-The <location> of a <stack> is in <absolute (screen)
-coordinates(glossary)>. The first <item> of a <card|card's> <location>
-<property> is equal to the width of stack div 2; the second item is is
-equal to the height of stack div 2. The <location> of a <group> or
-<control> is in <relative (window) coordinates(glossary)>.
+The <location> of a <stack> is in 
+<absolute coordinates|absolute (screen) coordinates>. The first <item> 
+of a  <card|card's> <location> <property> is equal to the width of 
+stack div 2; the second item is equal to the height of stack div 2. The 
+<location> of a <group> or <control> is in <relative coordinates|
+relative (window) coordinates>.
 
 In window coordinates, the point 0,0 is at the top left of the stack
 window. In screen coordinates, the point 0,0 is at the top left of the

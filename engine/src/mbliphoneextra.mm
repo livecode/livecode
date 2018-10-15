@@ -680,7 +680,7 @@ bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages)
 		for (NSString *t_lang in t_preferred_langs)
 		{
             MCAutoStringRef t_language;
-            if (t_success && MCStringCreateWithCFString((CFStringRef)t_lang, &t_language))
+            if (t_success && MCStringCreateWithCFStringRef((CFStringRef)t_lang, &t_language))
                 t_success = MCListAppend(*t_languages, *t_language);
         }
 	}
@@ -696,7 +696,7 @@ bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
 	NSString *t_current_locale_id = nil;
 	t_current_locale_id = [[NSLocale currentLocale] objectForKey: NSLocaleIdentifier];
 
-	/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_current_locale_id, r_current_locale);
+	/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_current_locale_id, r_current_locale);
 
 	return true;
 }
@@ -711,7 +711,7 @@ bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
     NSString *t_identifier;
     t_identifier = objc_msgSend([UIDevice currentDevice], sel_getUid("uniqueIdentifier"));
 	
-    return MCStringCreateWithCFString((CFStringRef)t_identifier, r_identifier);
+    return MCStringCreateWithCFStringRef((CFStringRef)t_identifier, r_identifier);
 }
 
 bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier)
@@ -723,7 +723,7 @@ bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier)
     {
         NSString *t_identifier;
         t_identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-        return MCStringCreateWithCFString((CFStringRef)t_identifier, r_identifier);
+        return MCStringCreateWithCFStringRef((CFStringRef)t_identifier, r_identifier);
     }
 
     r_identifier = MCValueRetain(kMCEmptyString);
@@ -740,7 +740,7 @@ bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier)
 	NSString *t_identifier;
 	t_identifier = [t_plist objectForKey: @"CFBundleIdentifier"];
 	
-	return MCStringCreateWithCFString((CFStringRef)t_identifier, r_identifier);
+	return MCStringCreateWithCFStringRef((CFStringRef)t_identifier, r_identifier);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -983,11 +983,7 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
 		t_info_dict = [[NSMutableDictionary alloc] initWithCapacity: 8];
 		for(uindex_t i = 0; i < sizeof(s_props) / sizeof(s_props[0]); i++)
 		{
-            MCNewAutoNameRef t_key;
-            if (!MCNameCreateWithCString(s_props[i] . key, &t_key))
-                return false;
-            
-			if (!MCArrayFetchValue(p_props, false, *t_key, t_prop_value))
+			if (!MCArrayFetchValue(p_props, false, MCNAME(s_props[i].key), t_prop_value))
 				continue;
             
 			NSObject *t_value;
@@ -1007,7 +1003,8 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
                     MCAutoStringRef t_string;
                     if (!ctxt . ConvertToString(t_prop_value, &t_string))
                         continue;
-					t_value = [[NSString stringWithMCStringRef: *t_string] retain];
+                        
+					t_value = [MCStringConvertToAutoreleasedNSString(*t_string) retain];
                 }
 					break;
 				case kRCDPropTypeImage:
@@ -1021,7 +1018,7 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
                         MCImageDataIsGIF(*t_data) ||
                         MCImageDataIsPNG(*t_data))
                     {
-                        t_image = [[UIImage alloc] initWithData: [NSData dataWithMCDataRef : *t_data]];
+                        t_image = [[UIImage alloc] initWithData: MCDataConvertToAutoreleasedNSData(*t_data)];
                     }
                     else
                     {
@@ -1032,7 +1029,7 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
                         if (MCS_exists(*t_string, true))
                         {
                             /* UNCHECKED */ MCS_resolvepath(*t_string, &t_resolved);
-                            t_image = [[UIImage alloc] initWithContentsOfFile: [NSString stringWithMCStringRef: *t_resolved]];
+                            t_image = [[UIImage alloc] initWithContentsOfFile: MCStringConvertToAutoreleasedNSString(*t_resolved)];
                         }
                     }
                     

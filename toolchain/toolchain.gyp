@@ -13,6 +13,7 @@
 			'dependencies':
 			[
 				'lc-compile/lc-compile.gyp:lc-compile',
+				'lc-compile-ffi-java/lc-compile-ffi-java.gyp:lc-compile-ffi-java',
 			],
 			
 			'conditions':

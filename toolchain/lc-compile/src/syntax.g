@@ -50,7 +50,7 @@
         Id'Name -> Name
         Id'Meaning -> syntax(Info)
         Info'Parent -> ParentId
-        ParentId'Name -> ModuleName
+        GetQualifiedName(ParentId -> ModuleName)
         (|
             where(Class -> phrase)
             BeginPhraseSyntaxRule(ModuleName, Name)
@@ -189,6 +189,7 @@
 'condition' QueryHandlerIdSignature(ID -> SIGNATURE)
 'condition' IsFirstArgumentOfClass(SYNTAXCONSTANTLIST, SYNTAXMARKTYPE)
 'condition' IsLastArgumentOfClass(SYNTAXCONSTANTLIST, SYNTAXMARKTYPE)
+'action' GetQualifiedName(ID -> NAME)
 
 'action' GenerateSyntaxMethodArgumentsForBootstrap(PARAMETERLIST, SYNTAXCONSTANTLIST)
 
@@ -293,13 +294,13 @@
 
     'rule' MapSyntaxPrecedence(property -> 3)
     'rule' MapSyntaxPrecedence(subscriptchunk -> 3)
-
-    'rule' MapSyntaxPrecedence(conversion -> 4)
     'rule' MapSyntaxPrecedence(functionchunk -> 3)
 
-    'rule' MapSyntaxPrecedence(modifier -> 5)
+    'rule' MapSyntaxPrecedence(conversion -> 4)
 
-    'rule' MapSyntaxPrecedence(exponentiation -> 6)
+    'rule' MapSyntaxPrecedence(exponentiation -> 5)
+
+    'rule' MapSyntaxPrecedence(modifier -> 6)
 
     'rule' MapSyntaxPrecedence(multiplication -> 7)
 

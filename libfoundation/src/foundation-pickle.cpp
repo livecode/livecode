@@ -187,7 +187,7 @@ static bool MCPickleReadTypeInfoRefContents(MCStreamRef stream, uint8_t p_kind, 
         bool t_success;
         t_success = true;
         
-        uindex_t t_param_count;
+        uindex_t t_param_count = 0;
         if (t_success)
             t_success = MCPickleReadCompactUInt(stream, t_param_count);
         
@@ -869,10 +869,10 @@ static bool MCPickleWriteField(MCStreamRef stream, MCPickleFieldType p_kind, voi
                 
                 MCPickleRecordInfo *t_record_info;
                 t_record_info = nil;
-                for(int i = 0; t_info -> cases[i] . kind != -1; i++)
-                    if (t_kind == t_info -> cases[i] . kind)
+                for(int t_cases = 0; t_info -> cases[t_cases] . kind != -1; t_cases++)
+                    if (t_kind == t_info -> cases[t_cases] . kind)
                     {
-                        t_record_info = t_info -> cases[i] . record;
+                        t_record_info = t_info -> cases[t_cases] . record;
                         break;
                     }
                 
@@ -972,10 +972,10 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
                         int t_kind;
                         t_kind = *((int *)((uint8_t *)t_variant + t_info -> kind_offset));
 
-                        for(int i = 0; t_info -> cases[i] . kind != -1; i++)
-                            if (t_kind == t_info -> cases[i] . kind)
+                        for(int t_case = 0; t_info -> cases[t_case] . kind != -1; t_case++)
+                            if (t_kind == t_info -> cases[t_case] . kind)
                             {
-                                MCPickleRelease(t_info -> cases[i] . record, t_variant);
+                                MCPickleRelease(t_info -> cases[t_case] . record, t_variant);
                                 break;
                             }
                     }

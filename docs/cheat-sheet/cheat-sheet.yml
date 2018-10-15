@@ -1,0 +1,567 @@
+# This YAML is used to generate cheat sheets for either the LiveCode 
+# language, or for transitioning between an alternative scripting 
+# language and LiveCode.
+# Each element of the content array must have a title element, which is
+# used for the relevant section, and an lc element which contains the
+# relevant LiveCode script. Each element containing both lc and another
+# language (currently either py for Python or js for Javascript) will
+# place the code side by side in the generated cheat sheet PDF, under
+# the heading given in the title.
+# If there is a text element, this text will precede the code for the 
+# section.
+content:
+  - title: "Comments"
+    text: |
+      Comments allow you to add explanations and annotations to your code.
+    lc: |
+      -- these
+      # are
+      // all
+      /* commented
+         out */
+    lcb: |
+      -- these
+      // are
+      /* commented
+         out */         
+    py: |
+      # this is commented out
+    js: |
+      // These
+      /* are
+         commented
+         out */
+  - title: "Literals"
+    text: |
+      A literal is a notation for creating a particular type of value.
+    lcb: |
+      "string literal"
+      ["list", "of", "literals"]
+      {"array": "literal"}
+    py: |
+      "string literal"
+      'string literal'
+      ["list", "of", "literals"]
+      {"dictionary": "literal"}
+    js: |
+      "string literal"
+      'string literal'
+      ["array", "of", "literals"]
+      {"object": "literal"}
+  - title: "Variables"
+    text: |
+      Variables are used to to store information, the stored value can be changed or accessed when you need it.
+    lc: |
+      local tVar
+      put "str" into tVar
+      put 1 into tVar
+
+      put "val" into tVar["key"]
+    lcb: |
+      variable tVar
+      put "str" into tVar
+      put 1 into tVar
+
+      variable tArr as Array 
+      put "val" into tArr["key"] 
+    py: |
+
+      var = "str"
+      var = 1
+
+      var["key"] = "val"
+    js: |
+      var myVar;
+      myVar = "str";
+      myVar = 1;
+
+      var arr = {};
+      arr["key"] = "val";
+  - title: "Constants"
+    text: |
+      Constants store a value that is defined at the point of declaration and never changes.
+    lc: |
+      constant kFoo = 15
+    lcb: |
+      constant kFoo is 15
+    js: |
+      const FOO = 15;
+  - title: "Control Structures"
+    text: |
+      Control structures are used to control what code is executed and how many times.
+    lc: |
+      repeat for each char tChar in tVar
+      end repeat
+
+      repeat 10
+      end repeat
+
+      repeat with x = 1 to 10
+      end repeat
+
+      repeat while x > 1
+           subtract 1 from x
+      end repeat
+
+      if true then ... else ...
+
+      if tVar then
+      else if tOther then
+      else
+      end if
+
+      switch tVar
+           case "a"
+              break
+           default
+              break
+      end switch
+    lcb: |
+      repeat for each char tChar in tVar
+      end repeat
+
+      repeat 10 times
+      end repeat
+
+      repeat with tX from 1 up to 10
+      end repeat
+
+      repeat while tX > 1
+           subtract 1 from tX
+      end repeat
+
+      if tVar then
+      else if tOther then
+      else
+      end if
+    py: |
+      for x in tVar:
+          # do things
+
+      for x in range(10):
+          # do things
+
+      while x > 1:
+          x -= 1
+
+      if tVar:
+      elif tOther:
+      else:
+    js: |
+      for (var i=0; i < text.length; i++) {
+          char = text.charAt(i);
+      }
+
+      for (var i=0; i < 10; i++) {
+      }
+
+      while (x > 1) {
+          x--;
+      }
+
+      if (value) {
+      } else if (other) {
+      } else {
+      }
+
+      switch (value) {
+          case "a":
+              break;
+          default:
+              break;
+      }
+  - title: "Operators"
+    text: |
+      Operators are ways of combining values such as boolean values, numbers or strings, to produce other values.
+    lc: |
+      // Logical
+      true and false is false
+      true or false is true
+      not false is true
+
+      // String
+      "foo" & "bar" is "foobar"
+      "foo" && "bar" is "foo bar"
+      "string" begins with "st"
+      "string" ends with "g"
+
+      // Chunks
+      char 5 of "string" is "n"
+      item 3 of "a,b,c" is "c"
+      word 1 of "hi there" is "hi"
+      line 2 of "a" & return & "b" is "b"
+
+      // Compound chunks
+      char 1 of item 1 of line 1 of "a,b,c" is "a"
+    lcb: |
+      // Logical
+      true and false is false
+      true or false is true
+      not false is true
+
+      // String
+      "foo" & "bar" is "foobar"
+      "foo" && "bar" is "foo bar"
+      "string" begins with "st"
+      "string" ends with "g"
+
+      // Chunks
+      char 5 of "string" is "n"
+
+      split "a,b,c" by "," into tItems
+      tItems[3] is "c"
+
+      split "hi there" by " " into tWords
+      tWords[1] is "hi"
+
+      split "a\nb" by "\n" into tLines
+      tLines[2] is "b"
+
+      split "a,b,c" by "\n" into tLines
+      split tLines by "," into tItems
+      char 1 of tItems[1] is "a"
+    py: |
+      # Logical
+      true and false == false
+      true or false == true
+      !false == true
+
+      # String
+      "foo" + "bar" == "foobar"
+      strs = ['foo','bar']
+      ' '.join(strs) == "foo bar"
+      "string".startswith("st")
+      "string".endswith("g")
+
+      # Chunks
+      "string"[4:5] == "n"
+
+      items = "a,b,c".split(",")
+      items[2] == "c"
+
+      words = "hi there".split(" ")
+      words[0] == "hi"
+
+      lines = "a\nb".split("\n")
+      lines[1] == "b"
+
+      lines = "a,b,c".split("\n")
+      items = lines[1].split(",")
+      items[1][0:1] == "a"
+    js: |
+      // Logical
+      true && false == false
+      true || false == true
+      !false == true
+
+      // String
+      "foo" + "bar" == "foobar"
+      var strs = ['foo','bar'];
+      strs.join(" ") == "foo bar"
+
+      "string".startsWith("st");
+      "string".endsWith("g");
+
+      // Chunks
+      "string".charAt(4) == "n"
+
+      var items = "a,b,c".split(",");
+      items[2] == "c"
+
+      var words = "hi there".split(" ");
+      words[0] == "hi"
+
+      var lines = "a\nb".split("\n");
+      lines[2] == "b"
+
+      var lines = "a,b,c".split("\n")
+      var items = lines[1].split(",")
+      items[1].charAt(0) == "a"
+  - title: "String Processing"
+    text: |
+      These examples show how string values can be manipulated.
+    lc: |
+      // General
+      put "a" before tVar
+      delete char 1 of tVar
+      replace "_" with "-" in tVar
+
+      // Regex
+      matchText("1", "([0-9])", tN) is true
+      tN is 1
+
+      filter lines of tVar with regex pattern tPattern
+    lcb: |
+      // General
+      put "a" before tVar
+      delete char 1 of tVar
+      replace "_" with "-" in tVar
+    py: |
+      # General
+      var = 'a' + var
+      var = var[1:]
+      var.replace("_", "-")
+
+      # Regex
+      found = re.match('([0-9])', '1')
+      num = tMatch.group(1)
+
+      for line in var:
+        if re.match(pattern, line):
+          filtered.push(line)
+      var = '\n'.join(filtered)
+    js: |
+      # General
+      str = 'a' + str;
+      str = str.slice(1);
+      str = str.replace("_", "-")
+
+      # Regex
+      var found = /[0-9]/.exec("1");
+      var num = found[1];
+
+      str.split("\n").filter(function(elem) {
+        return pattern.exec(elem) != NULL;
+      });
+  - title: "Array Processing"
+    text: |
+      These examples show how array values can be manipulated.
+    lc: |
+      // Split / combine
+      put "a,b,c" into tVar
+      split tVar by ","
+      tVar[2] is "b"
+      combine tVar with ","
+      tVar is "a,b,c"
+
+      // Iteration
+      repeat for each key tKey in tArray
+         -- Do something with tArray[tKey]
+      end repeat
+
+      repeat for each element tElement in tArray
+      end repeat
+
+      // Length
+      the number of elements in tArray
+    lcb: |
+      // Split / combine
+      put "a,b,c" into tVar
+      split tVar by ","
+      tVar[2] is "b"
+      combine tVar with ","
+      tVar is "a,b,c"
+
+      // Iteration
+      repeat for each key tKey in tArray
+         -- Do something with tArray[tKey]
+      end repeat
+
+      repeat for each element tElement in tArray
+      end repeat
+
+      // Length
+      the number of elements in tArray
+    py: |
+      # Split / combine
+      var = "a,b,c".split(",")
+      var[1] is "b"
+      ','.join(var)
+      var == "a,b,c"
+
+      # Iteration
+      for key in array:
+        # do something with array[key]
+
+      # Length
+      len(array)
+    js: |
+      # Split / combine
+      var list = "a,b,c".split(",")
+      list[1] is "b"
+      list = list.join(",");
+      list == "a,b,c"
+
+      for (var key in array) {
+        # Do something with array[key];
+      }
+
+      # Length
+      array.length();
+  - title: "Sorting"
+    text: |
+      These examples show how to sort items and lists.
+    lc: |
+      local tList
+      put "5,2,3,1,4" into tList
+      sort items of tList ascending numeric
+         -> tList is "1,2,3,4,5"
+      sort items of tList descending numeric
+         -> tList is "5,4,3,2,1"
+
+      local tData 
+      put "6,1:8,3:2,2" into tData
+      set the lineDelimiter to ":"
+      sort lines of tData ascending numeric by item 2 of each
+         -> tData is "6,1:2,2:8,3"
+    lcb: |
+      variable tList
+      put [5,2,3,1,4] into tList
+      sort tList in ascending numeric order
+         -> tList is [1,2,3,4,5]
+      sort tList in descending numeric order
+         -> tList is [5,4,3,2,1]
+
+      public handler DoSort(in pLeft, in pRight) returns Integer
+          return pLeft[2] - pRight[2]
+      end handler
+
+      variable tData as List
+      put [[6, 1], [8, 3], [2, 2]] into tData
+      sort tData using handler DoSort
+         -> tData is [[6, 1], [2, 2], [8, 3]]
+    py: |
+      list = [5, 2, 3, 1, 4]
+      sorted(list) == [1, 2, 3, 4, 5]
+      sorted(list, reverse=True) == [5, 4, 3, 2, 1]
+
+      data = [(6, 1), (8, 3), (2, 2)]
+      sorted(data, key=itemgetter(2)) == [(6, 1), (2, 2), (8, 3)]
+    js: |
+      var list = [5, 2, 3, 1, 4]
+      list.sort();
+        -> list == [1, 2, 3, 4, 5]
+      list.reverse();
+        -> list == [5, 4, 3, 2, 1]
+
+      var data = [[6, 1], [8, 3], [2, 2]];
+      data.sort(function(a,b) {
+        return a[2] - b[2]
+      });
+        -> data == [[6, 1], [2, 2], [8, 3]]
+  - title: "Files & Processes"
+    text: |
+      These examples show how to read from and write to files and processes.
+    lc: |
+      get url("file:/" & tPath)
+      put "" into url("file:/" & tPath)
+
+      open process tProc
+      read from process tProc for 5
+      close process tProc
+    lcb: |
+      get the contents of file tPath
+      set the contents of file tPath to ""
+    py: |
+      open(tPath).read()
+      open(tPath).write("")
+
+      process = subprocess.Popen([tProc], stdout=subprocess.PIPE)
+      while True:
+        process.wait()
+        data = process.stdout.read(5)
+        if data:
+          break
+  - title: "User Input / Notification"
+    text: |
+      These examples show how to pop up information dialogs, or prompts for user input.
+    lc: |
+      ask "What is your name?"
+      put it into tName
+
+      answer "Something"
+    py: |
+      dlg = wx.TextEntryDialog(None, "What is your name?", defaultValue=default_value)
+      dlg.ShowModal()
+      name = dlg.GetValue()
+      dlg.Destroy()
+
+      dlg = wx.MessageDialog(None, "Something", caption, wx.OK)
+      result = dlg.ShowModal()
+      dlg.Destroy()
+    js: |
+      var name = prompt("What is your name?");
+
+      alert("Something");
+  - title: "Custom Handlers"
+    text: |
+      A custom handler is a function or command that you define yourself.
+    lc: |
+      function foo pParam
+      end foo
+      // get foo(tVar)
+
+      command bar pParam
+      end bar
+      // bar 5
+    lcb: |
+      handler foo(in pParam)
+      end foo
+      // get foo(tVar)
+      // foo 5
+    py: |
+      def foo(param):
+        # return something
+      # foo(var)
+    js: |
+      function foo(param) {
+      }
+      // foo(value)
+  - title: "Event Handlers"
+    text: |
+      An event handler is a hander that is triggered when an event occurs, such as the use of the mouse or keyboard.
+    lc: |
+      // Mouse
+      on mouseUp pButton
+      end mouseUp
+
+      on mouseDown pButton
+      end mouseDown
+
+      on mouseMove
+      end mouseMove
+
+      // Keyboard
+      on keyDown pKey
+      end keyDown
+
+      on keyUp pKey
+      end keyUp
+    lcb: |
+      // Mouse
+      handler OnMouseUp()
+          get the click button
+      end handler
+
+      handler OnMouseDown()
+          get the click button
+      end handler
+
+      handler OnMouseMove()
+      end handler
+
+      // Keyboard
+      handler OnKeyPress(in pText)
+      end handler
+    js: |
+      # Mouse
+      function handleMouseUp {
+      }
+      <button onmouseup="handleMouseUp" />
+
+      function handleMouseDown {
+      }
+      <button onmousedown="handleMouseDown" />
+
+      function handleMouseMove {
+      }
+      <div onmousemove="handleMouseMove" />
+
+      # Keyboard
+      function handleKeyUp {
+      }
+      <input onkeyup="handleKeyUp" />
+
+      function handleKeyDown {
+      }
+      <input onkeydown="handleKeyDown" />

@@ -66,287 +66,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec-interface.h"
 #include "resolution.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-MC_EXEC_DEFINE_GET_METHOD(Interface, DialogData, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DialogData, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LookAndFeel, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LookAndFeel, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenMouseLoc, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ScreenMouseLoc, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Backdrop, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Backdrop, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BufferImages, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BufferImages, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SystemFileSelector, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SystemFileSelector, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SystemColorSelector, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SystemColorSelector, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SystemPrintSelector, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SystemPrintSelector, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PaintCompression, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PaintCompression, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BrushBackColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BrushBackColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PenBackColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PenBackColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BrushColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BrushColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PenColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PenColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BrushPattern, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BrushPattern, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PenPattern, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PenPattern, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Filled, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Filled, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PolySides, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PolySides, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LineSize, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LineSize, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RoundRadius, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RoundRadius, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StartAngle, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StartAngle, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ArcAngle, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ArcAngle, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RoundEnds, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RoundEnds, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Dashes, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Dashes, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RecentCards, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RecentNames, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, EditBackground, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, EditBackground, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockScreen, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockScreen, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, AccentColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, AccentColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, HiliteColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, HiliteColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LinkColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LinkColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LinkHiliteColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LinkHiliteColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LinkVisitedColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LinkVisitedColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, UnderlineLinks, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, UnderlineLinks, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SelectGroupedControls, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SelectGroupedControls, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Icon, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Icon, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, AllowInlineInput, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, AllowInlineInput, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DragDelta, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DragDelta, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StackFileType, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StackFileType, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StackFileVersion, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StackFileVersion, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, IconMenu, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, IconMenu, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StatusIcon, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StatusIcon, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StatusIconToolTip, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StatusIconToolTip, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, StatusIconMenu, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, StatusIconMenu, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ProcessType, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ProcessType, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ShowInvisibles, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ShowInvisibles, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Cursor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Cursor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DefaultCursor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DefaultCursor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DefaultStack, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DefaultStack, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DefaultMenubar, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DefaultMenubar, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DragSpeed, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DragSpeed, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, MoveSpeed, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, MoveSpeed, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockCursor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockCursor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockErrors, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockErrors, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockMenus, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockMenus, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockMessages, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockMessages, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockMoves, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockMoves, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, LockRecent, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, LockRecent, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, IdleRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, IdleRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, IdleTicks, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, IdleTicks, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BlinkRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BlinkRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RepeatRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RepeatRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RepeatDelay, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RepeatDelay, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, TypeRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, TypeRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SyncRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SyncRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, EffectRate, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, EffectRate, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DoubleDelta, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DoubleDelta, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DoubleTime, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DoubleTime, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, TooltipDelay, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, TooltipDelay, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, NavigationArrows, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, NavigationArrows, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ExtendKey, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ExtendKey, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, PointerFocus, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PointerFocus, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, EmacsKeyBindings, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, EmacsKeyBindings, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RaiseMenus, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RaiseMenus, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ActivatePalettes, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ActivatePalettes, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, HidePalettes, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, HidePalettes, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RaisePalettes, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RaisePalettes, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RaiseWindows, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RaiseWindows, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, HideBackdrop, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, HideBackdrop, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, DontUseNavigationServices, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, DontUseNavigationServices, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ProportionalThumbs, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ProportionalThumbs, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SharedMemory, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SharedMemory, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenGamma, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, ScreenGamma, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SelectionMode, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SelectionMode, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SelectionHandleColor, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, SelectionHandleColor, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, WindowBoundingRect, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, WindowBoundingRect, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, JpegQuality, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, JpegQuality, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, RelayerGroupedControls, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, RelayerGroupedControls, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Brush, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Brush, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Eraser, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Eraser, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Spray, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Spray, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Centered, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Centered, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Grid, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Grid, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, GridSize, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, GridSize, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Slices, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Slices, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BeepLoudness, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BeepLoudness, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BeepPitch, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BeepPitch, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BeepDuration, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BeepDuration, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, BeepSound, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, BeepSound, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, Tool, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, Tool, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenRect, 3)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenRects, 3)
-
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, HomeStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, HelpStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SelectedObjectAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, TopStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ClickStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, MouseStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ClickFieldAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SelectedFieldAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SelectedImageAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, FoundFieldAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, MouseControlAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, FocusedObjectAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, BinaryStackAsObject, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, DefaultStackAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, AudioClipOfStackByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, AudioClipOfStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, AudioClipOfStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, VideoClipOfStackByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, VideoClipOfStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, VideoClipOfStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, BackgroundOfStackByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, BackgroundOfStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, BackgroundOfStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfStackByOrdinal, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfStackById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfStackByName, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfStack, 2)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfBackgroundByOrdinal, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfBackgroundById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfBackgroundByName, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardByOrdinal, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardByName, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfCardOrStackById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfGroupByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfGroupById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, GroupOfGroupByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, MenubarAsObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfGroupByOrdinal, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfGroupById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfGroupByName, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardByOrdinal, 5)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardById, 5)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardByName, 5)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardOrStackById, 5)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackByValue, 2)
-
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, HomeStackAsOptionalObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, HelpStackAsOptionalObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, DefaultStackAsOptionalObject, 1)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfOptionalStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfOptionalStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfOptionalStackByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfOptionalStackById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundById, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundByName, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackByOrdinal, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackById, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackByName, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfOptionalStack, 2)
-
-MC_EXEC_DEFINE_EVAL_METHOD(Interface, TextOfContainer, 2)
-
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, Relayer, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, RelayerRelativeToControl, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResolveImageByName, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, ResolveImageById, 2)
-
-MC_EXEC_DEFINE_GET_METHOD(Interface, PixelScale, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, PixelScale, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, SystemPixelScale, 1)
-MC_EXEC_DEFINE_SET_METHOD(Interface, UsePixelScaling, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, UsePixelScaling, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenPixelScale, 1)
-MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenPixelScales, 1)
+#include "scriptpt.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -669,10 +389,10 @@ static MCExecEnumTypeInfo _kMCInterfaceLookAndFeelTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfacePaintCompressionElementInfo[] =
 {
-	{ "png", EX_PNG },
-	{ "jpeg", EX_JPEG },
-	{ "gif", EX_GIF },
-	{ "rle", EX_PBM },
+	{ "png", EX_PNG, false },
+	{ "jpeg", EX_JPEG, false },
+	{ "gif", EX_GIF, false },
+	{ "rle", EX_PBM, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfacePaintCompressionTypeInfo =
@@ -686,8 +406,8 @@ static MCExecEnumTypeInfo _kMCInterfacePaintCompressionTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceProcessTypeElementInfo[] =
 {
-	{ "background", 0 },
-	{ "foreground", 1 },
+	{ "background", 0, false },
+	{ "foreground", 1, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceProcessTypeTypeInfo =
@@ -701,8 +421,8 @@ static MCExecEnumTypeInfo _kMCInterfaceProcessTypeTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCInterfaceSelectionModeElementInfo[] =
 {
-	{ "surround", 0 },
-	{ "intersect", 1 },
+	{ "surround", 0, false },
+	{ "intersect", 1, false },
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceSelectionModeTypeInfo =
@@ -774,7 +494,6 @@ void MCInterfaceGetLookAndFeel(MCExecContext& ctxt, intenum_t& r_value)
 
 void MCInterfaceSetLookAndFeel(MCExecContext& ctxt, intenum_t p_value)
 {
-	MCTheme *newtheme = NULL;
 	MCField *oldactive = MCactivefield;
 	if (oldactive != NULL)
 		oldactive->kunfocus();
@@ -1882,7 +1601,7 @@ void MCInterfaceSetHidePalettes(MCExecContext& ctxt, bool p_value)
 {
 	MChidepalettes = p_value ? True : False;
     // MW-2014-04-23: [[ Bug 12080 ]] Make sure we update the hidesOnSuspend of all palettes.
-#ifdef _MACOSX
+#ifdef _MAC_DESKTOP
     MCstacks->hidepaletteschanged();
 #endif
 }
@@ -2396,36 +2115,26 @@ void MCInterfaceEvalFocusedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
-static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_binary_fail)
+MCStack *MCInterfaceTryToEvalStackFromString(MCStringRef p_data)
 {
-    uint4 offset;
-    MCStack *t_stack;
-    bool t_binary_fail;
+    MCAutoStringRefAsNativeChars t_native_string;
+    const char_t* t_string = nullptr;
+    uindex_t t_length = 0;
+    if (!t_native_string.Lock(p_data, t_string, t_length))
+        return nullptr;
+ 
+    MCStack *t_stack = nullptr;
+    IO_handle stream = MCS_fakeopen(t_string, t_length);
+    /* UNCHECKED */ MCdispatcher->readfile(nullptr, nullptr, stream, t_stack);
+    MCS_close(stream);
     
-    t_stack = nil;
-    t_binary_fail = false;
-    
-    if (MCStringFirstIndexOf(p_data, MCSTR(kMCStackFileMetaCardSignature), 0, kMCCompareExact, offset) && (MCStringGetLength(p_data) > 8 && MCStringBeginsWithCString(p_data, (const char_t *)"REVO", kMCCompareExact)))
-    {
-        char_t* t_string;
-        uindex_t t_length;
-        /* UNCHECKED */ MCStringConvertToNative(p_data, t_string, t_length);
-        IO_handle stream = MCS_fakeopen(t_string, t_length);
-        /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
-        MCS_close(stream);
-        t_binary_fail = t_stack == nil;
-    }
-
-    r_binary_fail = t_binary_fail;
     return t_stack;
 }
                                            
 void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data, MCObjectPtr& r_object)
 {
     MCStack *t_stack;
-    bool t_binary_fail;
-    
-    t_stack = MCInterfaceTryToEvalBinaryStack(p_data, t_binary_fail);
+    t_stack = MCInterfaceTryToEvalStackFromString(p_data);
     
     if (t_stack != nil)
     {
@@ -2478,11 +2187,47 @@ void MCInterfaceEvalStackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, 
     ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
 }
 
+bool MCInterfaceStringCouldBeStack(MCStringRef p_string)
+{
+    // Check if it could be a binary stack
+    uindex_t t_offset;
+    if (MCStringFirstIndexOf(p_string,
+                             MCSTR(kMCStackFileMetaCardSignature), 0,
+                             kMCCompareExact, t_offset) ||
+        (MCStringGetLength(p_string) > 8 &&
+         MCStringBeginsWithCString(p_string, (const char_t *)"REVO",
+                                  kMCCompareExact)))
+        return true;
+
+    //Here we check whether it is very likely that the string is a UTF-8
+    //encoded script-only stack and not a name. Any UTF-8 encoded script-only
+    //stack with BOM will start with 'BOMscript "'. - i.e. have the 3 byte
+    //BOM prefix and then 'script "'.
+    const char_t k_utf8bom[] = { 0xEF, 0xBB, 0xBF, 's', 'c', 'r', 'i', 'p',
+                                 't', ' ', '"', 0x00 };
+    if (MCStringGetLength(p_string) > 12 &&
+        MCStringBeginsWithCString(p_string, k_utf8bom, kMCCompareExact))
+        return true;
+
+    // Check if it could be a script-only stack without BOM
+    MCScriptPoint sp(p_string);
+    // Parse 'script' token.
+    if (sp . skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) != PS_NORMAL)
+        return false;
+    
+    // Parse <string> token.
+    Symbol_type t_type;
+    if (sp . next(t_type) != PS_NORMAL || t_type != ST_LIT)
+        return false;
+            
+    // Parse end of line.
+    Parse_stat t_stat = sp . next(t_type);
+    return (t_stat == PS_EOL || t_stat == PS_EOF);
+}
+
 void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_stack)
 {
-    uint4 offset;
-   
-    if (MCStringFirstIndexOf((MCStringRef)p_value, MCSTR(kMCStackFileMetaCardSignature), 0, kMCCompareExact, offset) && MCStringGetLength((MCStringRef)p_value) > 8 && MCStringBeginsWithCString((MCStringRef)p_value, (const char_t *)"REVO", kMCCompareExact))
+    if (MCInterfaceStringCouldBeStack((MCStringRef)p_value))
     {
         MCInterfaceEvalBinaryStackAsObject(ctxt, (MCStringRef)p_value, r_stack);
         return;
@@ -3262,51 +3007,6 @@ void MCInterfaceEvalStackOfOptionalStackById(MCExecContext& ctxt, MCObjectPtr p_
     r_stack . part_id = p_parent . part_id;
 }
 
-void MCInterfaceEvalOptionalStackOrCardByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
-{
-    ctxt . SetTheResultToEmpty();
-    
-    MCStack *t_stack;
-    bool t_binary_fail;
-    
-    t_stack = MCInterfaceTryToEvalBinaryStack((MCStringRef)p_value, t_binary_fail);
-    
-    if (t_binary_fail)
-    {
-        ctxt . SetTheResultToStaticCString("can't build stack from string");
-        r_object . object = nil;
-        r_object . part_id = 0;
-        return;
-    }
-    
-    if (t_stack == nil)
-    {
-        integer_t t_id;
-        if (MCU_stoi4((MCStringRef)p_value, t_id))
-            t_stack = MCdefaultstackptr -> findstackid(t_id);
-    }
-    
-    if (t_stack == nil)
-        t_stack = MCdefaultstackptr -> findstackname((MCNameRef)p_value);
-    
-    if (t_stack != nil)
-    {
-        r_object . object = t_stack;
-        r_object . part_id = 0;
-        return;
-    }
-    
-    bool t_parse_error;
-    
-    if (!MCEngineEvalValueAsObject(p_value, false, r_object, t_parse_error))
-    {
-        if (t_parse_error)
-            ctxt . SetTheResultToStaticCString("no such card");
-        r_object . object = nil;
-        r_object . part_id = 0;
-    }
-}
-
 void MCInterfaceEvalSubstackOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack)
 {
     MCStack *t_stack;
@@ -3450,13 +3150,16 @@ void MCInterfaceEvalCardOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p
         
         if (p_marked)
             t_stack -> setmark();
-        r_card . object = t_stack -> getchildbyname(p_name);
+        t_card = t_stack -> getchildbyname(p_name);
         t_stack -> clearmark();
         t_stack -> clearbackground();
     }
 
     r_card . object = t_card;
-    r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
+	if (t_card != nil)
+		r_card . part_id = t_card -> getid();
+	else
+		r_card . part_id = p_stack . part_id;
 }
 
 void MCInterfaceMarkObject(MCExecContext& ctxt, MCObjectPtr p_object, Boolean wholechunk, MCMarkedText& r_mark)

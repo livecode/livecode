@@ -167,6 +167,8 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 		t_inherited_paragraph_style . first_indent = indent;
 		t_inherited_paragraph_style . tab_count = ntabs;
 		t_inherited_paragraph_style . tabs = tabs;
+		t_inherited_paragraph_style . tab_alignment_count = nalignments;
+		t_inherited_paragraph_style . tab_alignments = alignments;
 		t_inherited_paragraph_style . border_color = getcoloraspixel(DI_BORDER);
 	}
 
@@ -670,7 +672,7 @@ bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, i
 bool MCField::importparagraph(MCParagraph*& x_paragraphs, const MCFieldParagraphStyle *p_style)
 {
 	MCParagraph *t_new_paragraph;
-	t_new_paragraph = new MCParagraph;
+	t_new_paragraph = new (nothrow) MCParagraph;
     
     // SN-2014-04-25 [[ Bug 12177 ]] Importing HTML was creating parent-less paragraphs,
     // thus sometimes causing crashing when the parent was accessed - mainly when getfontattrs() was needed
@@ -761,7 +763,7 @@ MCParagraph *MCField::texttoparagraphs(MCStringRef p_text)
 {
     // Create a new list of paragraphs
     MCParagraph *t_paragraphs;
-	t_paragraphs = new MCParagraph;
+	t_paragraphs = new (nothrow) MCParagraph;
 	t_paragraphs -> setparent(this);
 	t_paragraphs -> inittext();
 
@@ -828,7 +830,7 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 		t_paragraph -> defrag();
 
 		MCParagraph *t_new_paragraph;
-		t_new_paragraph = new MCParagraph;
+		t_new_paragraph = new (nothrow) MCParagraph;
 		t_new_paragraph -> setparent(t_paragraph -> getparent());
 		t_new_paragraph -> inittext();
 
@@ -926,7 +928,7 @@ bool MCField::converttoparagraphs(void *p_context, const MCTextParagraph *p_para
 		const char *t_font_name;
 		t_font_name = p_block -> font_name == NULL ? "" : p_block -> font_name;
         
-#if defined _MACOSX
+#if defined _MAC_DESKTOP
         
 		// MW-2011-03-13: [[ Bug ]] Try different variants of font searching to ensure we don't
 		//   get strange choices. (e.g. Helvetica -> Helvetica Light Oblique).
@@ -967,7 +969,7 @@ extern bool RTFRead(const char *p_rtf, uint4 p_length, MCTextConvertCallback p_w
 MCParagraph *MCField::rtftoparagraphs(MCStringRef p_data)
 {
 	MCParagraph *t_paragraphs;
-	t_paragraphs = new MCParagraph;
+	t_paragraphs = new (nothrow) MCParagraph;
 	t_paragraphs -> setparent(this);
 	t_paragraphs -> inittext();
 

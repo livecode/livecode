@@ -17,6 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "gtest/gtest.h"
 
 #include "foundation.h"
+#include "foundation-system.h"
 
 //
 // The libfoundation testing environment
@@ -27,9 +28,11 @@ public:
 
 	virtual void SetUp() {
 		ASSERT_TRUE(MCInitialize());
+        ASSERT_TRUE(MCSInitialize());
 	}
 
 	virtual void TearDown() {
+        MCSFinalize();
 		MCFinalize();
 	}
 };

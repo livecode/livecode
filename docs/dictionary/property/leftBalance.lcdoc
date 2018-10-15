@@ -1,0 +1,36 @@
+Name: leftBalance
+
+Type: property
+
+Syntax: set the leftBalance of <player> to <percentage>
+
+Summary:
+Specifies the volume of the left stereo channel output of a player control.
+
+Introduced: 9.0.1
+
+OS: mac
+
+Platforms: desktop
+
+Example:
+set the leftBalance of player "myVideoPlayer" to 100 -- maximum loudness
+
+Value:
+The leftBalance is a number between zero and 100.
+By default, the leftBalance property is 100.
+
+Description:
+Use the leftBalance property to set the volume of audio played through the left speaker.
+
+Setting the leftBalance to zero turns off audio to the left speaker.
+
+>**Important:** This property only has an effect on media files that contain stereo audio tracks.
+> Mono audio tracks cannot currently be balanced.
+
+References: player (object), rightBalance (property), audioPan (property)
+
+Associations: player
+
+Tags: multimedia
+

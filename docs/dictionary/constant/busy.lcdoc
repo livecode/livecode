@@ -24,13 +24,12 @@ operations.
 The <busy> <cursor(property)> is a rotating beach ball. Each time you
 use the statement set the cursor to busy, the beach ball advances in its
 rotation. For example, the following statements cause the
-<cursor(property)> to appear to spin as long as the <repeat> <loop> is
-running: 
+<cursor(property)> to appear to spin as long as the <repeat> <loop>
+is running:
 
     repeat until someCondition is true
-    set the cursor to busy -- spins a bit further
-    doSomething -- insert whatever you want the loop to do here
-
+        set the cursor to busy -- spins a bit further
+        doSomething -- insert whatever you want the loop to do here
     end repeat
 
 

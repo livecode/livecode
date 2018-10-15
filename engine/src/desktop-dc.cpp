@@ -137,7 +137,6 @@ Boolean MCScreenDC::close(Boolean force)
 	MCPlatformReleaseMenu(icon_menu);
 	
 	// COCOA-TODO: Is this still needed?
-	uint2 i;
 	if (ncolors != 0)
 	{
 		int2 i;
@@ -577,7 +576,7 @@ void MCScreenDC::redrawbackdrop(MCPlatformSurfaceRef p_surface, MCGRegionRef p_r
 	if (MCPlatformSurfaceLockGraphics(p_surface, t_bounds, t_context, t_raster))
 	{
 		MCGraphicsContext *t_gfxcontext;
-		/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+		/* UNCHECKED */ t_gfxcontext = new (nothrow) MCGraphicsContext(t_context);
 		t_gfxcontext -> setforeground(backdrop_colour);
 		if (backdrop_pattern != NULL)
 			t_gfxcontext -> setfillstyle(FillTiled, backdrop_pattern, 0, 0);
@@ -670,7 +669,6 @@ void MCScreenDC::beep()
 
 void MCScreenDC::getbeep(uint4 which, int4& r_value)
 {
-	long v;
 	switch (which)
 	{
 		case P_BEEP_LOUDNESS:
@@ -794,7 +792,6 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	real8 exittime = curtime + duration;
 	
 	Boolean abort = False;
-	Boolean reset = False;
 	Boolean done = False;
 	
 	MCwaitdepth++;
@@ -824,7 +821,7 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 		// Handle pending events
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch) ||
-            dispatch && MCEventQueueDispatch())
+            (dispatch && MCEventQueueDispatch()))
 		{
 			if (anyevent)
 				done = True;

@@ -215,7 +215,7 @@ Boolean MCScreenDC::open()
 	// TS : Changed 2008-01-08 as a more relaible way of testing for UTF-8
 	MCutf8 = (strcmp(nl_langinfo(CODESET), "UTF-8") == 0)	;
 	
-	MCimagecache = new MCXImageCache ;
+	MCimagecache = new (nothrow) MCXImageCache ;
 	
     if (MCdisplayname == NULL)
         MCdisplayname = gdk_get_display();
@@ -254,14 +254,26 @@ Boolean MCScreenDC::open()
     GdkScreen *t_screen;
     t_screen = gdk_display_get_default_screen(dpy);
     
-    MCAutoStringRef t_displayname;
-    /* UNCHECKED */ MCStringCreateWithSysString(gdk_display_get_name(dpy), &t_displayname);
-    /* UNCHECKED */ MCNameCreate(*t_displayname, displayname);
+    {
+        MCAutoStringRef t_displayname;
+        MCNewAutoNameRef t_displayname_asname;
+        if (MCStringCreateWithSysString(gdk_display_get_name(dpy),
+                                        &t_displayname) &&
+            MCNameCreate(*t_displayname, &t_displayname_asname))
+        {
+            displayname.Reset(t_displayname_asname.Take());
+        }
+    }
 	{
         MCAutoStringRef t_vendor_string, t_vendor;
-        /* UNCHECKED */ MCStringCreateWithSysString(x11::XServerVendor(XDisplay), &t_vendor);
-        /* UNCHECKED */ MCStringFormat(&t_vendor_string, "%@ %d", *t_vendor, x11::XVendorRelease(XDisplay));
-		MCNameCreate(*t_vendor_string, vendorname);
+        MCNewAutoNameRef t_vendorname;
+        if (MCStringCreateWithSysString(x11::XServerVendor(XDisplay), &t_vendor) &&
+            MCStringFormat(&t_vendor_string, "%@ %d", *t_vendor,
+                           x11::XVendorRelease(XDisplay)) &&
+            MCNameCreate(*t_vendor_string, &t_vendorname))
+        {
+            vendorname.Reset(t_vendorname.Take());
+        }
 	}
 	
 #ifdef SYNCMODE
@@ -581,7 +593,7 @@ Boolean MCScreenDC::close(Boolean force)
 
 MCNameRef MCScreenDC::getdisplayname()
 {
-	return displayname;
+	return *displayname;
 }
 
 
@@ -941,31 +953,6 @@ void MCScreenDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
     // Not needed
 }
 
-#ifdef OLD_GRAPHICS
-MCBitmap *MCScreenDC::regiontomask(MCRegionRef r, int32_t w, int32_t h)
-{
-	Pixmap t_image;
-	t_image = createpixmap(w, h, 1, False);
-
-	XSetForeground(dpy, gc1, 0);
-	XFillRectangle(dpy, t_image, gc1, 0, 0, w, h);
-
-	XSetRegion(dpy, gc1, (Region)r);
-
-	XSetForeground(dpy, gc1, 1);
-	XFillRectangle(dpy, t_image, gc1, 0, 0, w, h);
-
-	XSetClipMask(dpy, gc1, None);
-
-	MCBitmap *t_bitmap;
-	t_bitmap = getimage(t_image, 0, 0, w, h, False);
-
-	freepixmap(t_image);
-
-	return t_bitmap;
-}
-#endif
-
 void MCScreenDC::setfunction(uint4 rop)
 {
 	if (rop < 0x10)
@@ -1030,7 +1017,7 @@ void MCScreenDC::setbeep(uint4 which, int4 beep)
 
 MCNameRef MCScreenDC::getvendorname(void)
 {
-	return vendorname;
+	return *vendorname;
 }
 
 uint2 MCScreenDC::getpad()
@@ -1091,7 +1078,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
         }
         
         // Prepare for drawing the selection rectangle
-        MCRectangle t_rect;
+        MCRectangle t_rect(kMCEmptyRectangle);
         GdkColor t_color;
         t_color.pixel = ~0;
         GdkGC *t_gc = gdk_gc_new(t_root);

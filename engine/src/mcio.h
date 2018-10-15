@@ -120,6 +120,8 @@ extern IO_stat IO_read_string_legacy_full(char *&r_string, uint32_t &r_length, I
 extern IO_stat IO_write_string_legacy_full(const MCString &string, IO_handle stream, uint1 size, bool p_write_null);
 extern IO_stat IO_read_cstring_legacy(char*& r_string, IO_handle stream, uint1 size);
 extern IO_stat IO_write_cstring_legacy(const char* string, IO_handle stream, uint1 size);
+// Read and immediately discard a legacy string
+extern IO_stat IO_discard_cstring_legacy(IO_handle string, uint1 size);
 
 // These methods are used by 5.5 -> 7.0 props which saved their value out in UTF-8.
 extern IO_stat IO_read_stringref_legacy_utf8(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
@@ -141,31 +143,6 @@ extern IO_stat IO_write_stringref_new(MCStringRef name, IO_handle stream, bool s
 // These methods read/write a valueref - they are only supported in 7.0+ formats.
 extern IO_stat IO_read_valueref_new(MCValueRef& r_value, IO_handle stream);
 extern IO_stat IO_write_valueref_new(MCValueRef value, IO_handle stream);
-
-#if 0
-extern IO_stat IO_read_string(char *&r_string, uint32_t &r_length, IO_handle p_stream, uint8_t p_size, bool p_includes_null, bool p_translate);
-extern IO_stat IO_read_string(char *&string, IO_handle stream, uint1 size = 2);
-extern IO_stat IO_read_string(char *&string, uint4 &outlen, IO_handle stream, bool isunicode, uint1 size = 2);
-extern IO_stat IO_read_string_no_translate(char *&string, IO_handle stream, uint1 size = 2);
-extern IO_stat IO_write_string(const MCString &string, IO_handle stream, uint1 size = 2, bool p_write_null = true);
-extern IO_stat IO_write_string(const char *string, IO_handle stream, uint1 size = 2);
-extern IO_stat IO_write_string(const char *string, uint4 outlen, IO_handle stream, Boolean isunicode, uint1 size = 2);
-
-extern IO_stat IO_read_nameref(MCNameRef& r_name, IO_handle stream, uint1 size = 2);
-extern IO_stat IO_write_nameref(MCNameRef name, IO_handle stream, uint1 size = 2);
-
-// MW-2012-05-02: [[ Values ]] New methods for reading/writing value types.
-extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
-extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, uint1 size = 2);
-
-// String IO requesting explicit Unicode or native encoding
-extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size = 2);
-extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, bool as_unicode, uint1 size = 2);
-
-// String IO for UTF-8 formatted strings
-extern IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
-extern IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size = 2);
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

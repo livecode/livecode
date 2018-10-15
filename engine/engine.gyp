@@ -22,115 +22,51 @@
 	'targets':
 	[
 		{
-			'target_name': 'extract_docs',
+			'target_name': 'host-server',
 			'type': 'none',
-			
-			'all_dependent_settings':
-			{
-				'variables':
-				{
-					'dist_aux_files':
-					[
-						# Gyp will only use a recursive xcopy on Windows if the path ends with '/'
-						'<(PRODUCT_DIR)/extracted_docs/',
-					],
-				},
-			},
-			
-			'variables':
-			{
-				'conditions':
+
+			'toolsets': ['host', 'target'],
+
+			'conditions':
+			[
 				[
-					[
-						'host_os == "linux"',
+					'cross_compile != 0',
+					{
+						'dependencies':
+						[
+							'server#host',
+						],
+
+						'direct_dependent_settings':
 						{
-							'engine': '<(PRODUCT_DIR)/server-community',
+							'variables':
+							{
+								'engine': '<(PRODUCT_DIR)/server-community-host>(exe_suffix)'
+							},
 						},
-					],
-					[
-						'host_os == "mac"',
+					},
+					{
+						'dependencies':
+						[
+							'server#target',
+						],
+
+						'direct_dependent_settings':
 						{
-							'engine': '<(PRODUCT_DIR)/server-community',
+							'variables':
+							{
+								'engine': '<(PRODUCT_DIR)/server-community>(exe_suffix)',
+							},
 						},
-					],
-					[
-						'host_os == "win"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community.exe',
-						},
-					],
+					},
 				],
-			},
-			
-			'dependencies':
-			[
-				# Requires a working LiveCode engine
-				'server',
-			],
-			
-			'sources':
-			[
-				
-			],
-			
-			'actions':
-			[
-				{
-					'action_name': 'extract_docs_from_stacks',
-					'message': 'Extracting docs from stacks',
-					
-					'inputs':
-					[
-						'../util/extract-docs.livecodescript',
-						'../ide-support/revdocsparser.livecodescript',
-						'<@(_sources)',
-					],
-					
-					'outputs':
-					[
-						'<(PRODUCT_DIR)/extracted_docs',
-					],
-					
-					'action':
-					[
-						'<(engine)',
-						'../util/extract-docs.livecodescript',
-						'../ide-support/revdocsparser.livecodescript',
-						'<(PRODUCT_DIR)/extracted_docs',
-						'<@(_sources)',
-					],
-				},
 			],
 		},
+
 		
 		{
 			'target_name': 'descriptify_environment_stack',
 			'type': 'none',
-			
-			'variables':
-			{
-				'conditions':
-				[
-					[
-						'host_os == "linux"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community',
-						},
-					],
-					[
-						'host_os == "mac"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community',
-						},
-					],
-					[
-						'host_os == "win"',
-						{
-							'engine': '<(PRODUCT_DIR)/server-community.exe',
-						},
-					],
-				],
-			},
 			
 			'sources':
 			[
@@ -154,7 +90,7 @@
 			'dependencies':
 			[
 				# Requires a working LiveCode engine
-				'server',
+				'host-server',
 			],
 			
 			'actions':
@@ -176,7 +112,7 @@
 					
 					'action':
 					[
-						'<(engine)',
+						'>(engine)',
 						'../util/descriptify_stack.livecodescript',
 						'<(SHARED_INTERMEDIATE_DIR)/src/environment_descriptified.livecode',
 						'<@(_sources)',
@@ -227,17 +163,22 @@
 			'type': 'executable',
 			'product_name': 'server-community',
 			
+			'toolsets': ['host', 'target'],
+
 			'dependencies':
 			[
 				'kernel-server.gyp:kernel-server',
 				
 				'../libfoundation/libfoundation.gyp:libFoundation',
 				'../libgraphics/libgraphics.gyp:libGraphics',
+
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'sources':
 			[
 				'<@(engine_security_source_files)',
+				'>@(builtin_lcb_modules)',
 				'src/main.cpp',
 			],
 
@@ -253,6 +194,16 @@
 					{
 						'type': 'none',
 						'mac_bundle': 0,
+					},
+				],
+			],
+
+			'target_conditions':
+			[
+				[
+					'_toolset == "host"',
+					{
+						'product_name': 'server-community-host',
 					},
 				],
 			],
@@ -277,7 +228,7 @@
 		{
 			'target_name': 'standalone',
 			'product_name': 'standalone-community',
-			
+
 			'includes':
 			[
 				'app-bundle-template.gypi',
@@ -292,10 +243,12 @@
 			[
 				'kernel-standalone.gyp:kernel-standalone',
 				'engine-common.gyp:security-community',
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'sources':
 			[
+				'>@(builtin_lcb_modules)',
 				'src/dummy.cpp',
 				'rsrc/standalone.rc',
 			],
@@ -366,7 +319,7 @@
 					{
 						'ldflags':
 						[
-							'-T', '$(abs_srcdir)/engine/linux.link',
+							'-Wl,-T,$(abs_srcdir)/engine/linux.link',
 						],
 					},
 				],
@@ -378,7 +331,7 @@
 						'product_prefix': '',
 						'product_extension': '',
 						'product_dir': '<(PRODUCT_DIR)',	# Shared libraries are not placed in PRODUCT_DIR by default
-						'type': 'shared_library',
+						'type': 'loadable_module',		# Shared library imples --whole-archive
 						
 						'sources':
 						[
@@ -451,6 +404,25 @@
 									'cp', '<@(_inputs)', '<@(_outputs)',
 								],
 							},
+							{
+								'action_name': 'copy_nfc_tech_filter',
+								'message': 'Copying NFC tech filter file',
+								
+								'inputs':
+								[
+									'rsrc/android-nfc_tech_filter.xml',
+								],
+								
+								'outputs':
+								[
+									'<(PRODUCT_DIR)/nfc_tech_filter.xml',
+								],
+								
+								'action':
+								[
+									'cp', '<@(_inputs)', '<@(_outputs)',
+								],
+							},
 						],
 						
 						'all_dependent_settings':
@@ -462,6 +434,7 @@
 									'<(PRODUCT_DIR)/Manifest.xml',
 									'<(PRODUCT_DIR)/livecode_inputcontrol.xml',
 									'<(PRODUCT_DIR)/notify_icon.png',
+									'<(PRODUCT_DIR)/nfc_tech_filter.xml',
 								],
 							},
 						},
@@ -589,12 +562,14 @@
 			[
 				'kernel-installer.gyp:kernel-installer',
 				'engine-common.gyp:security-community',
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'sources':
 			[
 				'src/dummy.cpp',
 				'rsrc/installer.rc',
+				'>@(builtin_lcb_modules)',
 			],
 
 			'conditions':
@@ -657,36 +632,6 @@
 				},
 			},
 		},
-		
-		{
-			'target_name': 'development-postprocess',
-			'type': 'none',
-
-			'dependencies':
-			[
-				'development',
-				'../thirdparty/libopenssl/libopenssl.gyp:revsecurity',
-			],
-
-			'conditions':
-			[
-				[
-					'OS == "mac"',
-					{
-						'copies':
-						[
-							{
-								'destination': '<(PRODUCT_DIR)/LiveCode-Community.app/Contents/MacOS',
-								'files':
-								[
-									'<(PRODUCT_DIR)/revsecurity.dylib',
-								],
-							},
-						],
-					},
-				],
-			],
-		},
 
 		{
 			'target_name': 'development',
@@ -703,17 +648,20 @@
 			},
 			
 			'dependencies':
-			[
+            [
+                '../thirdparty/libopenssl/libopenssl.gyp:revsecurity_built',
+                '../revpdfprinter/revpdfprinter.gyp:external-revpdfprinter',
 				'kernel-development.gyp:kernel-development',
 				'encode_environment_stack',
 				'engine-common.gyp:security-community',
-				'extract_docs',
+				'lcb-modules.gyp:engine_lcb_modules',
 			],
 			
 			'sources':
 			[
 				'<(SHARED_INTERMEDIATE_DIR)/src/startupstack.cpp',
 				'rsrc/development.rc',
+				'>@(builtin_lcb_modules)',
 			],
 
 			'conditions':
@@ -738,7 +686,19 @@
 						[
 							'rsrc/LiveCode.icns',
 							'rsrc/LiveCodeDoc.icns',
-						],
+                        ],
+                        
+                        'copies':
+                        [
+                            {
+                                'destination': '<(PRODUCT_DIR)/LiveCode-Community.app/Contents/MacOS',
+                                'files':
+                                [
+                                    '<(PRODUCT_DIR)/revsecurity.dylib',
+                                    '<(PRODUCT_DIR)/revpdfprinter.bundle',
+                                ],
+                            },
+                        ],
 					},
 				],
 				[
@@ -873,46 +833,6 @@
 			}
 		],
 		[
-			'OS == "ios"',
-			{
-				'targets':
-				[
-					{
-						'target_name': 'standalone-app-bundle',
-						'product_name': 'Standalone-Community-App',
-			
-						'includes':
-						[
-							'app-bundle-template.gypi',
-						],
-			
-						'variables':
-						{
-							'app_plist': 'rsrc/standalone-mobile-Info.plist',
-						},
-			
-						'dependencies':
-						[
-							'kernel-standalone.gyp:kernel-standalone',
-							'engine-common.gyp:security-community',
-						],
-			
-						'sources':
-						[
-							'src/dummy.cpp',
-							'src/main.cpp',
-						],
-
-						'include_dirs':
-						[
-							'../libfoundation/include',
-						],
-
-					},
-				],
-			},
-		],
-		[
 			'OS == "emscripten"',
 			{
 				'targets':
@@ -982,8 +902,11 @@
 									'src/em-dialog.js',
 									'src/em-event.js',
 									'src/em-surface.js',
+									'src/em-system.js',
 									'src/em-url.js',
 									'src/em-standalone.js',
+									'src/em-liburl.js',
+									'src/em-dc.js',
 								],
 
 								'outputs':
@@ -1013,8 +936,11 @@
 									'src/em-dialog.js',
 									'src/em-event.js',
 									'src/em-surface.js',
+									'src/em-system.js',
 									'src/em-url.js',
 									'src/em-standalone.js',
+									'src/em-liburl.js',
+									'src/em-dc.js',
 								],
 							},
 						],

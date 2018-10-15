@@ -586,12 +586,12 @@ MCExternalError MCExternalVariable::GetBoolean(MCExternalValueOptions p_options,
 	else
 	{
 		MCExternalError t_error;
-		MCAutoStringRef t_value;
-		t_error = GetString(p_options, &t_value);
+		MCAutoStringRef t_string_value;
+		t_error = GetString(p_options, &t_string_value);
 		if (t_error != kMCExternalErrorNone)
 			return t_error;
 		
-		return string_to_boolean(*t_value, p_options, &r_value);
+		return string_to_boolean(*t_string_value, p_options, &r_value);
 	}
 	
 	return kMCExternalErrorNone;
@@ -683,7 +683,6 @@ MCExternalError MCExternalVariable::ConvertToString(MCValueRef p_value, MCExtern
         case kMCValueTypeCodeArray:
             // An array is never a string (from the point of view of the externals API).
             return kMCExternalErrorNotAString;
-            break;
         default:
             assert(false);
     }
@@ -790,9 +789,9 @@ bool MCTemporaryExternalVariable::IsTemporary(void)
 
 //////////
 
-MCReferenceExternalVariable::MCReferenceExternalVariable(MCVariable *p_variable)
+MCReferenceExternalVariable::MCReferenceExternalVariable(MCContainer& p_container)
+    : m_container(p_container)
 {
-	m_variable = p_variable;
 }
 
 MCReferenceExternalVariable::~MCReferenceExternalVariable(void)
@@ -811,12 +810,12 @@ bool MCReferenceExternalVariable::IsTransient(void)
 
 MCValueRef MCReferenceExternalVariable::GetValueRef(void)
 {
-	return m_variable -> getvalueref();
+	return m_container.get_valueref();
 }
 
 void MCReferenceExternalVariable::SetValueRef(MCValueRef p_value)
 {
-	m_variable -> setvalueref(p_value);
+	m_container.set_valueref(p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -837,7 +836,8 @@ bool MCExternalV1::Prepare(void)
 	// Fetch the description callback - this symbol has to exist since a V1
 	// external is only created if it does!
 	MCExternalDescribeProc t_describe;
-	t_describe = (MCExternalDescribeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalDescribe"));
+	t_describe = (MCExternalDescribeProc)MCU_library_lookup(*m_module,
+                                                            MCSTR("MCExternalDescribe"));
 	
 	// Update the current external var.
 	s_current_external = this;
@@ -847,18 +847,19 @@ bool MCExternalV1::Prepare(void)
 	
 	// Unset the current external var.
 	s_current_external = nil;
-	
+    
 	if (m_info == nil)
 		return false;
 
-	return true;
+    return true;
 }
 
 bool MCExternalV1::Initialize(void)
 {
 	// Fetch the initialize entry point.
 	MCExternalInitializeProc t_initialize;
-	t_initialize = (MCExternalInitializeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalInitialize"));
+	t_initialize = (MCExternalInitializeProc)MCU_library_lookup(*m_module,
+                                                                MCSTR("MCExternalInitialize"));
 	if (t_initialize == nil)
 		return true;
 	
@@ -890,7 +891,8 @@ void MCExternalV1::Finalize(void)
 {
 	// Fetch the finalize entry point.
 	MCExternalFinalizeProc t_finalize;
-	t_finalize = (MCExternalFinalizeProc)MCS_resolvemodulesymbol(m_module, MCSTR("MCExternalFinalize"));
+	t_finalize = (MCExternalFinalizeProc)MCU_library_lookup(*m_module,
+                                                            MCSTR("MCExternalFinalize"));
 	if (t_finalize == nil)
 		return;
 	
@@ -961,51 +963,24 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 	t_parameter_vars = NULL;
 	if (t_parameter_count != 0)
 	{
-		t_parameter_vars = new MCExternalVariableRef[t_parameter_count];
+		t_parameter_vars = new (nothrow) MCExternalVariableRef[t_parameter_count];
 		if (t_parameter_vars == nil)
 			return ES_ERROR;
 	}
 	
 	// Now iterate through the parameters, fetching the parameter values as we go.
 	for(uint32_t i = 0; p_parameters != nil && t_stat == ES_NORMAL; i++, p_parameters = p_parameters -> getnext())
-	{
-		MCVariable* t_var;
-		t_var = p_parameters -> eval_argument_var();
-		if (t_var != nil)
-		{
-			// We are a variable parameter so use the value directly (i.e. pass by
-			// reference).
-			
-			// MW-2014-01-22: [[ CompatV1 ]] Create a reference to the MCVariable.
-			t_parameter_vars[i] = new MCReferenceExternalVariable(t_var);
-		}
-		else
-		{
-			// AL-2014-08-28: [[ ArrayElementRefParams ]] Evaluate container if necessary
-			MCAutoValueRef t_value;
-			MCContainer *t_container;
-			t_container = p_parameters -> eval_argument_container();
-			
-			if (t_container != nil)
-			{
-				MCNameRef *t_path;
-				uindex_t t_length;
-				t_container -> getpath(t_path, t_length);
-				
-				MCExecContext ctxt(p_context, nil, nil);
-				
-				if (t_length == 0)
-					t_parameter_vars[i] = new MCReferenceExternalVariable(t_container -> getvar());
-				else
-					t_container -> eval(ctxt, &t_value);
-			}
-			else
-				t_value = p_parameters -> getvalueref_argument();
-			
-			// MW-2014-01-22: [[ CompatV1 ]] Create a temporary value var.
-			if (*t_value != nil)
-				t_parameter_vars[i] = new MCTransientExternalVariable(*t_value);
-		}
+    {
+        MCContainer *t_container
+                = p_parameters -> eval_argument_container();
+        if (t_container != nil)
+        {
+            t_parameter_vars[i] = new (nothrow) MCReferenceExternalVariable(*t_container);
+        }
+        else
+        {
+            t_parameter_vars[i] = new (nothrow) MCTransientExternalVariable(p_parameters->getvalueref_argument());
+        }
 	}
 
 	// We have our list of parameters (hopefully), so now call - passing a temporary
@@ -1018,7 +993,10 @@ Exec_stat MCExternalV1::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		// MW-2014-01-22: [[ CompatV1 ]] Make a reference var to hold it (should it be needed).
 		//   We then store the previous global value of the it extvar, and set this one.
 		//   As external calls are recursive, this should be fine :)
-		MCReferenceExternalVariable t_it(MCECptr -> GetIt() -> evalvar(*MCECptr));
+        MCContainer t_it_container;
+        MCECptr->GetIt()->evalcontainer(*MCECptr, t_it_container);
+		MCReferenceExternalVariable t_it(t_it_container);
+        
 		MCReferenceExternalVariable *t_old_it;
 		t_old_it = s_external_v1_current_it;
 		s_external_v1_current_it = &t_it;
@@ -1239,7 +1217,10 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
         case kMCExternalContextQueryResult:
             // MW-2014-01-22: [[ CompatV1 ]] If the result shim hasn't been made, make it.
             if (s_external_v1_result == nil)
-                s_external_v1_result = new MCReferenceExternalVariable(MCresult);
+            {
+                s_external_v1_result_container = new (nothrow) MCContainer(MCresult);
+                s_external_v1_result = new (nothrow) MCReferenceExternalVariable(*s_external_v1_result_container);
+            }
             *(MCExternalVariableRef *)result = s_external_v1_result;
             break;
         case kMCExternalContextQueryIt:
@@ -1295,7 +1276,6 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, MCEx
             return MCExternalConvertStringToValueType(MCECptr -> GetColumnDelimiter(), p_option, result);
         case kMCExternalContextQueryRowDelimiter:
             return MCExternalConvertStringToValueType(MCECptr -> GetRowDelimiter(), p_option, result);
-			break;
 			
 		case kMCExternalContextQueryHasLicenseCheck:
 			*(bool *)result = true;
@@ -1385,7 +1365,7 @@ static MCExternalError MCExternalVariableCreate(MCExternalVariableRef* r_var)
     if (r_var == NULL)
         return kMCExternalErrorNoVariable;
 
-	*r_var = new MCTemporaryExternalVariable(kMCEmptyString);
+	*r_var = new (nothrow) MCTemporaryExternalVariable(kMCEmptyString);
     // SN-2015-06-02: [[ CID 90609 ]] Check that the pointed value has been allocated
 	if (*r_var == nil)
 		return kMCExternalErrorOutOfMemory;
@@ -1618,8 +1598,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     {
         // For efficiency, we use 'exchange' - this prevents copying a temporary array.
         MCExternalVariableRef t_tmp_array;
-        MCExternalError t_error;
-        
         MCAutoArrayRef t_tmp_array_ref;
         
         t_error = kMCExternalErrorNone;
@@ -1643,7 +1621,6 @@ static MCExternalError MCExternalVariableStore(MCExternalVariableRef var, MCExte
     {
         // For efficiency, we use 'exchange' - this prevents copying a temporary array.
         MCExternalVariableRef t_tmp_array;
-        MCExternalError t_error;
         MCAutoArrayRef t_tmp_array_ref;
         
         t_error = kMCExternalErrorNone;
@@ -1782,7 +1759,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsNSNumber:
     case kMCExternalValueOptionAsCFNumber:
     {
-        CFNumberRef t_number;
         real64_t t_real;
         
         t_error = var -> GetReal(p_options, t_real);
@@ -1838,7 +1814,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsNSArray:
     case kMCExternalValueOptionAsCFArray:
     {
-        MCExternalError t_error;
         CFArrayRef t_value;
         
         t_error = kMCExternalErrorNone;
@@ -1865,7 +1840,6 @@ static MCExternalError MCExternalVariableFetch(MCExternalVariableRef var, MCExte
     case kMCExternalValueOptionAsNSDictionary:
     case kMCExternalValueOptionAsCFDictionary:
     {
-        MCExternalError t_error;
         CFDictionaryRef t_value;
         
         t_error = kMCExternalErrorNone;
@@ -2014,13 +1988,12 @@ static MCExternalError MCExternalVariableAppend(MCExternalVariableRef var, MCExt
             else
                 return var -> AppendInteger(p_options, t_integer);
         }
-        break;
     }
     case kMCExternalValueOptionAsNSString:
     {
         MCAutoStringRef t_string;
         
-        if (!MCStringCreateWithCFString(*(CFStringRef*)p_value, &t_string))
+        if (!MCStringCreateWithCFStringRef(*(CFStringRef*)p_value, &t_string))
             return kMCExternalErrorNotAString;
         
         return var -> AppendString(p_options, *t_string);
@@ -2188,13 +2161,10 @@ static bool MCExternalIsCaseSensitive(MCExternalValueOptions p_options)
     {
         case kMCExternalValueOptionDefaultCaseSensitive:
             return MCECptr -> GetCaseSensitive();
-            break;
         case kMCExternalValueOptionCaseSensitive:
             return true;
-            break;
         case kMCExternalValueOptionNotCaseSensitive:
             return false;
-            break;
         default:
             return false;
     }
@@ -2348,7 +2318,7 @@ static MCExternalError MCExternalObjectResolve(const char *p_long_id, MCExternal
 
 	// Create a new chunk object to parse the reference into
 	MCChunk *t_chunk;
-	t_chunk = new MCChunk(False);
+	t_chunk = new (nothrow) MCChunk(False);
 	if (t_chunk == nil)
 		t_error = kMCExternalErrorOutOfMemory;
 
@@ -2449,7 +2419,7 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
 	for(uint32_t i = 0; i < p_argc; i++)
 	{
 		MCParameter *t_param;
-		t_param = new MCParameter;
+		t_param = new (nothrow) MCParameter;
 		t_param -> setvalueref_argument(p_argv[i] -> GetValueRef());
 
 		if (t_last_param == nil)
@@ -2501,7 +2471,7 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
  			}
 	}
 
-	MCNameDelete(t_message_as_name);
+	MCValueRelease(t_message_as_name);
 
 	while(t_params != nil)
 	{
@@ -2832,9 +2802,9 @@ MCExternalError MCExternalLicenseCheckEdition(unsigned int p_options, unsigned i
         return kMCExternalErrorFailed;
     }
     
-    MCAutoValueRef t_value;
+    MCValueRef t_value;
     if (MClicenseparameters . addons != nil &&
-        MCArrayFetchValue(MClicenseparameters . addons, false, *t_key_as_nameref, &t_value))
+        MCArrayFetchValue(MClicenseparameters . addons, false, *t_key_as_nameref, t_value))
     {
         return kMCExternalErrorNone;
     }
@@ -2866,7 +2836,6 @@ MCExternalError MCExternalLicenseCheckEdition(unsigned int p_options, unsigned i
 			
 		default:
 			MCUnreachableReturn(kMCExternalErrorUnlicensed);
-			break;
 	}
 	
 	if (kMCExternalLicenseTypeNone == p_min_edition ||

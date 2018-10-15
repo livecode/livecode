@@ -126,13 +126,18 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
 		MCField::formattabstops(P_TAB_STOPS, p_style . tabs, p_style . tab_count, &t_string);
         /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("tabStops"), *t_string);
 	}
+	if (p_style . has_tab_alignments || p_effective)
+	{
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCField::formattabalignments(p_style . tab_alignments, p_style . tab_alignment_count, &t_string);
+		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("tabAlign"), *t_string);
+	}
 	if (p_style . has_background_color)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . background_color >> 16) & 0xFF;
-        uint32_t g = (p_style . background_color >> 8) & 0xFF;
-        uint32_t b = (p_style . background_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . background_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("backgroundColor"), *t_string);
 	}
 	if (p_style . has_border_width || p_effective)
@@ -152,10 +157,9 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
 	if (p_style . has_border_color || p_effective)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . border_color >> 16) & 0xFF;
-        uint32_t g = (p_style . border_color >> 8) & 0xFF;
-        uint32_t b = (p_style . border_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . border_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("borderColor"), *t_string);
 	}
 	if (p_style . has_dont_wrap || p_effective)
@@ -168,6 +172,11 @@ static void export_styled_text_paragraph_style(MCArrayRef p_style_array, const M
         /* UNCHECKED */ MCNumberCreateWithInteger(p_style . padding, &t_padding);
         /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("padding"), *t_padding);
     }
+    
+    if (p_style . hidden  || p_effective)
+    {
+        /* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("hidden"), p_style . hidden == True ? kMCTrue : kMCFalse);
+    }
 }
 
 
@@ -177,19 +186,17 @@ static void export_styled_text_character_style(MCArrayRef p_style_array, const M
 	if (p_style . has_text_color || p_effective)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . text_color >> 16) & 0xFF;
-        uint32_t g = (p_style . text_color >> 8) & 0xFF;
-        uint32_t b = (p_style . text_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . text_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("textColor"), *t_string);
 	}
 	if (p_style . has_background_color)
 	{
         MCAutoStringRef t_string;
-        uint32_t r = (p_style . background_color >> 16) & 0xFF;
-        uint32_t g = (p_style . background_color >> 8) & 0xFF;
-        uint32_t b = (p_style . background_color >> 0) & 0xFF;
-        /* UNCHECKED */ MCStringFormat(&t_string, "%u,%u,%u", r & 0xff, g & 0xff, b & 0xff);
+        MCColor t_color;
+        MCColorSetPixel(t_color, p_style . background_color);
+        /* UNCHECKED */ MCU_format_color(t_color, &t_string);
 		/* UNCHECKED */ MCArrayStoreValue(p_style_array, true, MCNAME("backgroundColor"), *t_string);
 	}
 	if (p_style . has_link_text)
@@ -253,13 +260,6 @@ static bool export_styled_text(void *p_context, MCFieldExportEventType p_event_t
             /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("metadata"), p_event_data . paragraph_style . metadata);
 		}
 		
-		// MW-2012-03-05: [[ HiddenText ]] If the paragraph is hidden, mark it as such in the
-		//   array.
-		if (p_event_data . paragraph_style . hidden)
-		{
-            /* UNCHECKED */ MCArrayStoreValue(ctxt . paragraph_array, true, MCNAME("hidden"), kMCTrue);
-		}
-
 		// Now create the 'runs' entry in the paragraph array.
 		/* UNCHECKED */ MCArrayCreateMutable(ctxt . runs_array);
 
@@ -430,7 +430,7 @@ MCParagraph *MCField::styledtexttoparagraphs(MCArrayRef p_array)
 MCParagraph *MCField::parsestyledtextappendparagraph(MCArrayRef p_style, MCStringRef p_metadata, bool p_split, MCParagraph*& x_paragraphs)
 {
 	MCParagraph *t_new_paragraph;
-	t_new_paragraph = new MCParagraph;
+	t_new_paragraph = new (nothrow) MCParagraph;
 	t_new_paragraph -> setparent(this);
 	t_new_paragraph -> inittext();
 	
@@ -617,8 +617,8 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
     if (MCArrayFetchValue(p_block_value, false, MCNAME("style"), t_valueref) && !MCValueIsEmpty(t_valueref))
 	{
 		MCArrayRef t_array;
-		/* UNCHECKED */ ctxt . ConvertToArray(t_valueref, t_array);
-		/* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);	
+		if (ctxt . ConvertToArray(t_valueref, t_array))
+            /* UNCHECKED */ MCArrayCopyAndRelease(t_array, &t_style_entry);
 	}
 	// Get the metadata (if any)
 	MCAutoStringRef t_metadata;
@@ -668,7 +668,7 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 
 		// We now add the range initial...final as a block.
         MCAutoStringRef t_substring;
-        MCStringCopySubstring(*t_temp, MCRangeMake(t_text_initial_start_index, t_text_end_index - t_text_initial_start_index), &t_substring);
+        MCStringCopySubstring(*t_temp, MCRangeMakeMinMax(t_text_initial_start_index, t_text_end_index), &t_substring);
 		parsestyledtextappendblock(t_paragraph, *t_style_entry, *t_substring, *t_metadata);
 
 		// And, if we need a new paragraph, add it.

@@ -35,18 +35,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDate, 5)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickTime, 6)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDateAndTime, 6)
-MC_EXEC_DEFINE_GET_METHOD(Pick, SpecificCameraFeatures, 2)
-MC_EXEC_DEFINE_GET_METHOD(Pick, CameraFeatures, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickMedia, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhoto, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhotoAndResize, 3)
-MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickOptionByIndex, 10)
-
-////////////////////////////////////////////////////////////////////////////////
-
 enum 
 {
     kMCPickDate,
@@ -58,9 +46,9 @@ enum
 
 static MCExecEnumTypeElementInfo _kMCPickButtonTypeElementInfo[] =
 {
-	{ "cancel", kMCPickButtonCancel },
-	{ "done", kMCPickButtonDone },
-	{ "canceldone", kMCPickButtonCancelAndDone },
+	{ "cancel", kMCPickButtonCancel, false },
+	{ "done", kMCPickButtonDone, false },
+	{ "canceldone", kMCPickButtonCancelAndDone, false },
 };
 
 static MCExecEnumTypeInfo _kMCPickButtonTypeTypeInfo =
@@ -147,11 +135,11 @@ static MCExecSetTypeInfo _kMCPickMediaTypesTypeInfo =
 
 static MCExecEnumTypeElementInfo _kMCPickPhotoSourceTypeElementInfo[] =
 {
-	{ "album", kMCCameraSourceTypeFront, false },
-	{ "library", kMCCameraSourceTypeRear, false },
-	{ "camera", kMCCameraSourceTypeUnknown, false },
-	{ "front camera", kMCCameraSourceTypeUnknown, false },
-	{ "rear camera", kMCCameraSourceTypeUnknown, false },
+	{ "album", kMCPhotoSourceTypeAlbum, false },
+	{ "library", kMCPhotoSourceTypeLibrary, false },
+	{ "camera", kMCPhotoSourceTypeCamera, false },
+	{ "front camera", kMCPhotoSourceTypeFrontCamera, false },
+	{ "rear camera", kMCPhotoSourceTypeRearCamera, false },
 };
 
 static MCExecEnumTypeInfo _kMCPickPhotoSourceTypeTypeInfo =
@@ -168,7 +156,7 @@ MCExecEnumTypeInfo *kMCPickCameraSourceTypeTypeInfo = &_kMCPickCameraSourceTypeT
 MCExecSetTypeInfo *kMCPickCameraFeaturesTypeInfo = &_kMCPickCameraFeaturesTypeInfo;
 MCExecSetTypeInfo *kMCPickCamerasFeaturesTypeInfo = &_kMCPickCamerasFeaturesTypeInfo;
 MCExecSetTypeInfo *kMCPickMediaTypesTypeInfo = &_kMCPickMediaTypesTypeInfo;
-MCExecEnumTypeInfo *kMCPickPhotoSourceTypeTypeInfo = &_kMCPickCameraSourceTypeTypeInfo;
+MCExecEnumTypeInfo *kMCPickPhotoSourceTypeTypeInfo = &_kMCPickPhotoSourceTypeTypeInfo;
 
 //////////
 
@@ -326,14 +314,14 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
         
         while (t_success && MCStringFirstIndexOfChar(p_option_lists[i], t_delimiter, t_old_offset, kMCCompareCaseless, t_new_offset))
         {
-            t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMake(t_old_offset, t_new_offset - t_old_offset), t_option);
+            t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMakeMinMax(t_old_offset, t_new_offset), t_option);
             if (t_success)
                 t_options . Push(t_option);
             
             t_old_offset = t_new_offset + 1;
         }
         // Append the remaining part of the options
-        t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMake(t_old_offset, MCStringGetLength(p_option_lists[i]) - t_old_offset), t_option);
+        t_success = MCStringCopySubstring(p_option_lists[i], MCRangeMakeMinMax(t_old_offset, MCStringGetLength(p_option_lists[i])), t_option);
         if (t_success)
             t_options . Push(t_option);
         

@@ -694,6 +694,20 @@ bool MCDataPad(MCDataRef self, byte_t p_byte, uindex_t p_count)
 }
 
 MC_DLLEXPORT_DEF
+bool MCDataReverse(MCDataRef self)
+{
+    MCAssert(MCDataIsMutable(self));
+
+    // Ensure the data ref is not indirect
+    if (__MCDataIsIndirect(self))
+        if (!__MCDataResolveIndirect(self))
+            return false;
+
+    MCInplaceReverse(self->bytes, self->byte_count);
+    return true;
+}
+
+MC_DLLEXPORT_DEF
 compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right)
 {
 	__MCAssertIsData(p_left);
@@ -852,20 +866,6 @@ MCDataLastIndexOf (MCDataRef self,
 	}
 	return false;
 }
-
-#if defined(__MAC__) || defined (__IOS__)
-MC_DLLEXPORT_DEF
-bool MCDataConvertToCFDataRef(MCDataRef p_data, CFDataRef& r_cfdata)
-{
-	__MCAssertIsData(p_data);
-
-    if (__MCDataIsIndirect(p_data))
-        p_data = p_data -> contents;
-    
-    r_cfdata = CFDataCreate(nil, MCDataGetBytePtr(p_data), MCDataGetLength(p_data));
-    return r_cfdata != nil;
-}
-#endif
 
 static void __MCDataClampRange(MCDataRef p_data, MCRange& x_range)
 {

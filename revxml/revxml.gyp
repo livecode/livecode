@@ -100,6 +100,20 @@
 				'INFOPLIST_FILE': 'rsrc/revxml-Info.plist',
 				'EXPORTED_SYMBOLS_FILE': 'revxml.exports',
 			},
+			'conditions':
+			[
+				[
+					'OS == "linux"',
+					{
+						'libraries':
+						[
+							'-Wl,-Bstatic',
+							'-lstdc++',
+							'-Wl,-Bdynamic',
+						],
+					},
+				],
+			],
 			
 			'all_dependent_settings':
 			{

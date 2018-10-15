@@ -1,0 +1,1 @@
+# revDocsFormatLibraryArrayAsJSON omits dictionary data

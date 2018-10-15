@@ -492,7 +492,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doSt
     
     if (MCAndroidControl::FindByView(object, t_control) && MCJavaStringToNative(env, url, t_url))
     {
-        t_event = new MCAndroidBrowserStartFinishEvent((MCAndroidBrowserControl*)t_control, t_url, false);
+        t_event = new (nothrow) MCAndroidBrowserStartFinishEvent((MCAndroidBrowserControl*)t_control, t_url, false);
         MCEventQueuePostCustom(t_event);
     }
     
@@ -508,7 +508,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doFi
     
     if (MCAndroidControl::FindByView(object, t_control) && MCJavaStringToNative(env, url, t_url))
     {
-        t_event = new MCAndroidBrowserStartFinishEvent((MCAndroidBrowserControl*)t_control, t_url, true);
+        t_event = new (nothrow) MCAndroidBrowserStartFinishEvent((MCAndroidBrowserControl*)t_control, t_url, true);
         MCEventQueuePostCustom(t_event);
     }
     
@@ -527,7 +527,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doLo
         MCJavaStringToNative(env, url, t_url) &&
         MCJavaStringToNative(env, error, t_error))
     {
-        t_event = new MCAndroidBrowserLoadFailedEvent((MCAndroidBrowserControl*)t_control, t_url, t_error);
+        t_event = new (nothrow) MCAndroidBrowserLoadFailedEvent((MCAndroidBrowserControl*)t_control, t_url, t_error);
         MCEventQueuePostCustom(t_event);
     }
     
@@ -556,7 +556,7 @@ void MCAndroidBrowserControl::DeleteView(jobject p_view)
 
 bool MCNativeBrowserControlCreate(MCNativeControl *&r_control)
 {
-    r_control = new MCAndroidBrowserControl();
+    r_control = new (nothrow) MCAndroidBrowserControl();
     return true;
 }
 

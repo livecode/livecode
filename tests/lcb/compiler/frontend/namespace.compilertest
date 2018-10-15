@@ -1,0 +1,118 @@
+%% Copyright (C) 2016 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%TEST NamespaceOperatorInDeclarationError
+module compiler_test
+constant Valid is [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ]
+constant Not.Valid %{AFTER_IDENTIFIER} is 0
+end module
+%EXPECT PASS
+%ERROR "Namespace operator invalid in declaration context" AT AFTER_IDENTIFIER
+%ENDTEST
+
+%TEST ExplicitHandlerNamespace
+module compiler_test
+handler DoNothing(in pNum as Number) returns Number
+	return pNum
+end handler
+handler OnTest()
+variable tVar as Number
+put compiler_test.DoNothing(360) into tVar
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST ExplicitTypeNamespace
+module compiler_test
+type TestType is String
+handler OnTest()
+variable tVar as compiler_test.TestType
+put "string" into tVar
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST ShadowedConstant
+module compiler_test
+constant ModuleConstant is 5
+handler Shadow()
+	variable ModuleConstant as String
+	put "a" into ModuleConstant
+	variable tTest as Number
+	put compiler_test.ModuleConstant into tTest
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST ShadowedVariable
+module compiler_test
+variable ModuleVar as Number
+handler Shadow()
+	variable ModuleVar as String
+	put "a" into ModuleVar
+
+	put 5 into compiler_test.ModuleVar
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST NonexistentNamespace
+module compiler_test
+handler DoNothing() returns nothing
+end handler
+handler Qualified()
+	nonexistent_module.DoNothing() %{AFTER_IDENTIFIER}
+end handler
+end module
+%EXPECT PASS
+%ERROR "Identifier 'nonexistent_module.DoNothing' not declared" AT AFTER_IDENTIFIER
+%ENDTEST
+
+%TEST UseUndeclaredIdentifier
+module compiler_test
+handler Foo()
+	variable tFoo as %{BEFORE_TYPE}UndeclaredType
+	%{BEFORE_HANDLER}UndeclaredHandler()
+	put %{BEFORE_VAR}UndeclaredVar into tFoo
+end handler
+end module
+%EXPECT PASS
+%ERROR "Identifier 'UndeclaredType' not declared" AT BEFORE_TYPE
+%ERROR "Identifier 'UndeclaredHandler' not declared" AT BEFORE_HANDLER
+%ERROR "Identifier 'UndeclaredVar' not declared" AT BEFORE_VAR
+%ENDTEST
+
+%TEST WarnOnInvalidNamespaceStartWithDigit
+module %{POS}compiler_test.0foo
+end module
+%EXPECT PASS
+%ERROR "Namespace component '0foo' must not begin with a digit" AT POS
+%ENDTEST
+
+%TEST WarnOnInvalidNamespaceContainsUppercase
+module %{POS}compiler_test.FOO
+end module
+%EXPECT PASS
+%WARNING "Non-lowercase namespace component 'FOO' may cause future syntax error" AT POS
+%ENDTEST

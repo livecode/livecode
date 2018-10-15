@@ -56,6 +56,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "vclip.h"
 #include "redraw.h"
 #include "widget.h"
+#include "graphics_util.h"
 
 #include "globals.h"
 #include "mctheme.h"
@@ -179,7 +180,7 @@ MCCard::MCCard(const MCCard &cref) : MCObject(cref)
 		MCObjptr *tptr = cref.objptrs;
 		do
 		{
-			MCObjptr *newoptr = new MCObjptr;
+			MCObjptr *newoptr = new (nothrow) MCObjptr;
 			newoptr->setparent(this);
 			newoptr->setid(tptr->getid());
 			newoptr->appendto(objptrs);
@@ -665,8 +666,10 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 
 				MCRedrawUnlockScreen();
 
-				// MW-2011-08-19: [[ Layers ]] Ensure the selection rect is updated.
-				layer_selectedrectchanged(oldrect, selrect);
+                /* The set of selected controls has changed so dirty the old
+                 * rect, and the new. */
+				dirtyselection(oldrect);
+                dirtyselection(selrect);
 			}
 			message_with_args(MCM_mouse_move, x, y);
 			return true;
@@ -819,22 +822,22 @@ Boolean MCCard::mdown(uint2 which)
 			case T_HELP:
 				break;
 			case T_BUTTON:
-				cptr = new MCButton(*MCtemplatebutton);
+				cptr = new (nothrow) MCButton(*MCtemplatebutton);
 				break;
 			case T_SCROLLBAR:
-				cptr = new MCScrollbar(*MCtemplatescrollbar);
+				cptr = new (nothrow) MCScrollbar(*MCtemplatescrollbar);
 				break;
 			case T_PLAYER:
-				cptr = new MCPlayer(*MCtemplateplayer);
+				cptr = new (nothrow) MCPlayer(*MCtemplateplayer);
 				break;
 			case T_GRAPHIC:
-				cptr = new MCGraphic(*MCtemplategraphic);
+				cptr = new (nothrow) MCGraphic(*MCtemplategraphic);
 				break;
 			case T_FIELD:
-				cptr = new MCField(*MCtemplatefield);
+				cptr = new (nothrow) MCField(*MCtemplatefield);
 				break;
 			case T_IMAGE:
-				cptr = new MCImage(*MCtemplateimage);
+				cptr = new (nothrow) MCImage(*MCtemplateimage);
 				break;
 			case T_DROPPER:
 				// IM-2013-09-23: [[ FullscreenMode ]] Get mouse loc in view coordinates
@@ -918,8 +921,10 @@ Boolean MCCard::mup(uint2 which, bool p_release)
 				if (state & CS_SIZE)
 				{
 					state &= ~CS_SIZE;
-					// MW-2011-08-18: // MW-2011-08-19: [[ Layers ]] Ensure the selection rect is updated.
-					layer_dirtyrect(selrect);
+                    
+                    /* The selection marquee has finished, so update the selection
+                     * layer. */
+                    dirtyselection(selrect);
 					
 					// MM-2012-11-05: [[ Object selection started/ended message ]]
 					if (m_selecting_objects)
@@ -1048,7 +1053,7 @@ Boolean MCCard::doubleup(uint2 which)
 
 void MCCard::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_idle, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_idle))
 	{
 		if (opened)
 		{
@@ -1406,13 +1411,16 @@ void MCCard::kfocusset(MCControl *target)
 	}
 }
 
-MCCard *MCCard::clone(Boolean attach, Boolean controls)
+MCCard *MCCard::clone(Boolean attach, Boolean controls, MCStack *p_parent)
 {
 	clean();
-	MCCard *newcptr = new MCCard(*this);
-	newcptr->parent = MCdefaultstackptr;
+	MCCard *newcptr = new (nothrow) MCCard(*this);
+    if (p_parent == nullptr)
+    {
+        p_parent = MCdefaultstackptr;
+    }
+	newcptr->parent = p_parent;
 	Boolean diffstack = getstack() != MCdefaultstackptr;
-
 	if (controls)
 	{
 		if (objptrs != NULL)
@@ -1479,7 +1487,7 @@ MCCard *MCCard::clone(Boolean attach, Boolean controls)
 				//   place it on the new card.
 				if (optr->getref()->gettype() == CT_GROUP && static_cast<MCGroup *>(optr -> getref()) -> isbackground())
 				{
-					MCObjptr *newoptr = new MCObjptr;
+					MCObjptr *newoptr = new (nothrow) MCObjptr;
 					newoptr->setparent(newcptr);
 					newoptr->setid(optr->getid());
 					newoptr->appendto(newcptr->objptrs);
@@ -1503,7 +1511,7 @@ void MCCard::clonedata(MCCard *source)
 		MCCdata *cptr = source->savedata;
 		do
 		{
-			MCCdata *dptr = new MCCdata(*cptr);
+			MCCdata *dptr = new (nothrow) MCCdata(*cptr);
 			dptr->appendto(savedata);
 			cptr = cptr->next();
 		}
@@ -1635,7 +1643,7 @@ void MCCard::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 {	
 	// Add the control to the card's objptr list.
 	MCObjptr *t_control_ptr;
-	t_control_ptr = new MCObjptr;
+	t_control_ptr = new (nothrow) MCObjptr;
 	t_control_ptr -> setparent(this);
 	t_control_ptr -> setref(p_control);
 	p_control -> setparent(this);
@@ -1722,60 +1730,84 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 	}
 	else
 	{
-		MCObjptr *newptr = new MCObjptr;
-		newptr->setparent(this);
-		newptr->setref(optr);
-		optr->setparent(this);
-		getstack()->appendcontrol(optr);
-		if (foundobj == NULL)
-			if (newlayer <= 1)
-				newptr->insertto(objptrs);
-			else
-				newptr->appendto(objptrs);
-		else
-		{
-			Boolean g = False;
-			if (!MCrelayergrouped)
-			{
-				while (foundobj->getparent() != this)
+        /* Find place in the object pointer list at which the
+         * relayered object should be placed.  If t_before, the object
+         * should be placed immediately before the iterator. */
+        MCObjptr *t_insert_iter = objptrs;
+        bool t_before = false;
+        if (foundobj == nullptr)
+        {
+            t_before = (newlayer <= 1);
+        }
+        else
+        {
+            /* If there's a target object for relayering, and group
+             * relayering is banned, then we need to find the outer
+             * group of the target object. */
+            bool t_found_in_group = false;
+            while (!MCrelayergrouped &&
+                   foundobj->getparent() != this)
+            {
+                foundobj = MCObjectCast<MCControl>(foundobj->getparent());
+                t_found_in_group = true;
+            }
+
+            do
+            {
+				if (foundobj == t_insert_iter->getref())
 				{
-					foundobj = (MCControl *)foundobj->getparent();
-					g = True;
-				}
-			}
-			tptr = objptrs;
-			do
-			{
-				if (tptr->getref() == foundobj)
-				{
-					if (g)
+					if (t_found_in_group)
 					{
-						uint2 tnum;
-						count(CT_LAYER, CT_UNDEFINED, tptr->next()->getref(), tnum, True);
-						if (tptr->next() == objptrs || newlayer < tnum)
+						uint2 t_minimum_layer = 0;
+						count(CT_LAYER, CT_UNDEFINED, t_insert_iter->next()->getref(),
+							  t_minimum_layer, True);
+						if (t_insert_iter->next() == objptrs ||
+							newlayer < t_minimum_layer)
 						{
-							if (tptr == objptrs)
-								newptr->insertto(objptrs);
-							else
-								tptr->prev()->append(newptr);
-							break;
+							t_before = true;
+							if (t_insert_iter == objptrs)
+								foundobj = nullptr;
 						}
 					}
-					tptr->append(newptr);
 					break;
 				}
-				tptr = tptr->next();
-			}
-			while (tptr != objptrs);
-		}
+				t_insert_iter = t_insert_iter->next();            }
+            while (t_insert_iter != objptrs);
+        }
 
-		layer_added(optr, newptr -> prev() != objptrs -> prev() ? newptr -> prev() : nil, newptr -> next() != objptrs ? newptr -> next() : nil);
+        /* Create and insert an object pointer */
+        MCObjptr *newptr = new (nothrow) MCObjptr();
+        if (newptr == nullptr)
+            return ES_ERROR;
+        newptr->setparent(this);
+        newptr->setref(optr);
+        optr->setparent(this);
+        getstack()->appendcontrol(optr);
+
+        if (foundobj == nullptr)
+        {
+            if (t_before)
+                newptr->insertto(objptrs);
+            else
+                newptr->appendto(objptrs);
+        }
+        else
+        {
+            if (t_before)
+                t_insert_iter->prev()->append(newptr);
+            else
+                t_insert_iter->append(newptr);
+        }
+
+        layer_added(optr,
+                    (newptr->prev() != objptrs->prev()) ? newptr->prev() : nil,
+                    (newptr->next() != objptrs)         ? newptr->next() : nil);
 	}
 
 	if (oldparent == this)
 	{
 		MCObjptr *newoptr = NULL;
-		MCObjptr *tptr = objptrs;
+		tptr = objptrs;
 		do
 		{
 			if (tptr->getref() == optr)
@@ -1834,8 +1866,6 @@ void MCCard::geometrychanged(const MCRectangle &p_rect)
 
 MCCard *MCCard::findname(Chunk_term type, MCNameRef inname)
 {
-   // MCNewAutoNameRef t_name;
-   // /* UNCHECKED */ MCNameCreateWithOldString(inname, &t_name);
 	if (type == CT_CARD && MCU_matchname(inname, CT_CARD, getname()))
 		return this;
 	else
@@ -2445,7 +2475,7 @@ void MCCard::resize(uint2 width, uint2 height)
 MCImage *MCCard::createimage()
 {
 	MCtemplateimage->setrect(rect);
-	MCImage *iptr = new MCImage(*MCtemplateimage);
+	MCImage *iptr = new (nothrow) MCImage(*MCtemplateimage);
 	getstack()->appendcontrol(iptr);
 	mfocused = newcontrol(iptr, False);
 	return iptr;
@@ -2535,7 +2565,7 @@ MCObjptr *MCCard::newcontrol(MCControl *cptr, Boolean needredraw)
 	if (opened)
 		cptr->setparent(this);
 
-	MCObjptr *newptr = new MCObjptr;
+	MCObjptr *newptr = new (nothrow) MCObjptr;
 	newptr->setparent(this);
 	newptr->setref(cptr);
 	newptr->appendto(objptrs);
@@ -2744,7 +2774,7 @@ bool MCCard::selectedbutton(integer_t p_family, bool p_background, MCStringRef& 
 	MCButton *bptr;
 	while (nil != (bptr = (MCButton *)getnumberedchild(i, CT_BUTTON, ptype)))
 	{
-		if (bptr->getfamily() == p_family && bptr->gethilite(obj_id))
+		if (bptr->getfamily() == p_family && !(bptr->gethilite(obj_id).isFalse()))
 		{
 			uint2 bnum = 0;
 			getcard()->count(CT_BUTTON, ptype, bptr, bnum, True);
@@ -2790,7 +2820,7 @@ MCRectangle MCCard::computecrect()
 }
 
 void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
-                             const MCRectangle &selrect, MCRectangle &drect)
+                             const MCRectangle &p_selrect, MCRectangle &drect)
 {
 	// MW-2008-01-30: [[ Bug 5749 ]] Make sure we check to see if the object is
 	//   selectable - this will recurse up the object tree as necessary.
@@ -2802,7 +2832,8 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 	//   select-tool drags
 	if (MCselectgrouped && cptr->gettype() == CT_GROUP)
 	{
-	        MCGroup *gptr = MCObjectCast<MCGroup>(cptr);
+        MCGroup *gptr = MCObjectCast<MCGroup>(cptr);
+
 		if (gptr->getcontrols() != NULL && gptr->getflag(F_VISIBLE) && !gptr->getflag(F_SELECT_GROUP))
 		{
 			cptr = gptr->getcontrols();
@@ -2814,7 +2845,7 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 			t_group_oldrect = MCU_intersect_rect(oldrect, t_group_rect);
 			
 			MCRectangle t_group_selrect;
-			t_group_selrect = MCU_intersect_rect(selrect, t_group_rect);
+			t_group_selrect = MCU_intersect_rect(p_selrect, t_group_rect);
 			
 			do
 			{
@@ -2834,7 +2865,7 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
 		if (MCselectintersect)
 		{
             was = cptr->maskrect(oldrect);
-            is = cptr->maskrect(selrect);
+            is = cptr->maskrect(p_selrect);
 
             // AL-2015-10-07:: [[ External Handles ]] If either dimension is 0,
             //  recheck the selection intersect
@@ -2847,13 +2878,13 @@ void MCCard::updateselection(MCControl *cptr, const MCRectangle &oldrect,
                     was = MCU_line_intersect_rect(oldrect, t_rect);
                 
                 if (!is)
-                    is = MCU_line_intersect_rect(selrect, t_rect);
+                    is = MCU_line_intersect_rect(p_selrect, t_rect);
             }
 		}
 		else
 		{
 			was = MCU_rect_in_rect(cptr->getrect(), oldrect);
-			is = MCU_rect_in_rect(cptr->getrect(), selrect);
+			is = MCU_rect_in_rect(cptr->getrect(), p_selrect);
 		}
 		if (is != was)
 		{
@@ -3002,78 +3033,51 @@ void MCCard::drawbackground(MCContext *p_context, const MCRectangle &p_dirty)
 	p_context->fillrect(p_dirty);
 }
 
-// IM-2013-09-13: [[ RefactorGraphics ]] Factor out card selection rect drawing to separate method
-void MCCard::drawselectionrect(MCContext *p_context)
-{
-    drawmarquee(p_context, selrect);
-}
-
-void MCCard::drawselectedchildren(MCDC *dc)
+/* The card's drawselection method first renders the selections of all children
+ * and then renders the marquee. */
+void MCCard::drawselection(MCContext *p_context, const MCRectangle& p_dirty)
 {
     MCObjptr *tptr = objptrs;
     if (tptr == nil)
         return;
+
     do
     {
         MCControl *t_control = tptr->getref();
-        if (t_control != nullptr)
+        if (t_control != nullptr &&
+            t_control->getopened() != 0 &&
+            (t_control->getflag(F_VISIBLE) || showinvisible()))
         {
-            if (tptr -> getref() -> getstate(CS_SELECTED))
-                tptr->getref()->drawselected(dc);
-        
-            if (tptr -> getrefasgroup() != nil)
-                tptr -> getrefasgroup() -> drawselectedchildren(dc);
+            t_control->drawselection(p_context, p_dirty);
         }
             
         tptr = tptr->next();
     }
     while (tptr != objptrs);
+    
+    if (getstate(CS_SIZE))
+    {
+        drawmarquee(p_context, selrect);
+    }
 }
 
 void MCCard::dirtyselection(const MCRectangle &p_rect)
 {
-	// redraw marquee rect
-	// selrect with 0 width or height will still draw a 1px line, so increase rect size to account for this.
-	layer_dirtyrect(MCU_reduce_rect(p_rect, -1));
-	
-	// redraw selection handles
-	MCRectangle t_handles[8];
-	MCControl::sizerects(p_rect, t_handles);
-
-	for (uint32_t i = 0; i < 8; i++)
-		layer_dirtyrect(t_handles[i]);
-}
-
-bool MCCard::updatechildselectedrect(MCRectangle& x_rect)
-{
-    bool t_updated;
-    t_updated = false;
+    MCRectangle t_rect = MCU_reduce_rect(p_rect, -(1 + MCsizewidth / 2));
     
-    MCObjptr *t_objptr = objptrs;
-    if (t_objptr == nil)
-        return t_updated;
-    do
+    MCTileCacheRef t_tilecache = getstack()->view_gettilecache();
+    if (t_tilecache != nullptr)
     {
-        MCControl *t_control;
-        t_control = t_objptr -> getref();
+        MCGAffineTransform t_transform =
+                getstack()->getdevicetransform();
         
-        if (t_control -> getstate(CS_SELECTED))
-        {
-            x_rect = MCU_union_rect(t_control -> geteffectiverect(), x_rect);
-            t_updated = true;
-        }
+        MCRectangle32 t_device_rect =
+                MCRectangle32GetTransformedBounds(t_rect, t_transform);
         
-        if (t_control -> gettype() == CT_GROUP)
-        {
-            MCGroup *t_group = static_cast<MCGroup *>(t_control);
-            t_updated = t_updated | t_group -> updatechildselectedrect(x_rect);
-        }
-        
-        t_objptr = t_objptr->next();
+        MCTileCacheUpdateScenery(t_tilecache, m_fg_layer_id, t_device_rect);
     }
-    while (t_objptr != objptrs);
     
-    return t_updated;
+    layer_dirtyrect(t_rect);
 }
 
 void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
@@ -3101,18 +3105,14 @@ void MCCard::draw(MCDC *dc, const MCRectangle& dirty, bool p_isolated)
 		}
 		while (tptr != objptrs);
 	}
-    
-    // Draw the selection outline and handles on top of everything
-    drawselectedchildren(dc);
-    
+
 	dc -> setopacity(255);
 	dc -> setfunction(GXcopy);
 
 	if (t_draw_cardborder)
 		drawcardborder(dc, dirty);
 	
-	if (getstate(CS_SIZE))
-		drawselectionrect(dc);
+    drawselection(dc, dirty);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -3157,7 +3157,7 @@ IO_stat MCCard::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (type == OT_PTR)
 		{
-			MCObjptr *newptr = new MCObjptr;
+			MCObjptr *newptr = new (nothrow) MCObjptr;
 			if ((stat = newptr->load(stream)) != IO_NORMAL)
 			{
 				delete newptr;
@@ -3193,37 +3193,37 @@ IO_stat MCCard::loadobjects(IO_handle stream, uint32_t version)
 			switch(t_object_type)
 			{
 			case OT_GROUP:
-				t_control = new MCGroup;
+				t_control = new (nothrow) MCGroup;
 			break;
 			case OT_BUTTON:
-				t_control = new MCButton;
+				t_control = new (nothrow) MCButton;
 			break;
 			case OT_FIELD:
-				t_control = new MCField;
+				t_control = new (nothrow) MCField;
 			break;
 			case OT_IMAGE:
-				t_control = new MCImage;
+				t_control = new (nothrow) MCImage;
 			break;
 			case OT_SCROLLBAR:
-				t_control = new MCScrollbar;
+				t_control = new (nothrow) MCScrollbar;
 			break;
 			case OT_GRAPHIC:
-				t_control = new MCGraphic;
+				t_control = new (nothrow) MCGraphic;
 			break;
 			case OT_PLAYER:
-				t_control = new MCPlayer;
+				t_control = new (nothrow) MCPlayer;
 			break;
 			case OT_MCEPS:
-				t_control = new MCEPS;
+				t_control = new (nothrow) MCEPS;
 			break;
             case OT_WIDGET:
-                t_control = new MCWidget;
+                t_control = new (nothrow) MCWidget;
                 break;
 			case OT_MAGNIFY:
-				t_control = new MCMagnify;
+				t_control = new (nothrow) MCMagnify;
 			break;
 			case OT_COLORS:
-				t_control = new MCColors;
+				t_control = new (nothrow) MCColors;
 			break;
 			default:
 				return checkloadstat(IO_ERROR);

@@ -10,7 +10,7 @@ redirects and GET the page that it is redirected to.
 
 Introduced: 1.1.1
 
-OS: mac, windows, linux
+OS: mac, windows, linux,html5
 
 Platforms: desktop, server
 
@@ -32,6 +32,8 @@ Description:
 (This is different from previous behavior whereby libURL always
 attempted to GET 301 and 302 redirects whatever the original request
 method, but didn't handle other responses.)
+
+> *Cross-platform note:* The HTML5 engine will always follow redirects.
 
 References: libURLDownloadToFile (command),
 libURLLastHTTPHeaders (function)

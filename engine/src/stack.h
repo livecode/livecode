@@ -300,6 +300,9 @@ protected:
     
     // MW-2014-09-30: [[ ScriptOnlyStack ]] If true, the stack is a script-only-stack.
     bool m_is_script_only : 1;
+    
+    // BWM-2017-08-16: [[ Bug 17810 ]] Line endings for imported script-only-stack.
+    MCStringLineEndingStyle m_line_encoding_style : 3;
 	
 	bool m_is_ide_stack : 1;
 	
@@ -414,6 +417,11 @@ public:
 	// IM-2014-01-24: [[ HiDPI ]] The request region is specified in logical coordinates.
 	void view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
 	
+	// Some platforms require the entire window to be redrawn when resized.
+	// This method indicates whether or not to mark the entire view as dirty
+	//   when resized.
+	bool view_platform_dirtyviewonresize() const;
+	
 	//////////
 	
 	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given surface.
@@ -525,8 +533,6 @@ public:
 	void view_reset_updates(void);
 	// IM-2013-10-14: [[ FullscreenMode ]] Mark the given view region as needing redrawn
 	void view_dirty_rect(const MCRectangle &p_rect);
-	// IM-2013-10-14: [[ FullscreenMode ]] Mark the entire view surface as needing redrawn
-	void view_dirty_all(void);
 	// IM-2013-10-14: [[ FullscreenMode ]] Request a redraw of the marked areas
 	void view_updatewindow(void);
 	// IM-2013-10-14: [[ FullscreenMode ]] Ensure the view content is up to date
@@ -717,7 +723,7 @@ public:
 	
 	// MW-2011-09-12: [[ MacScroll ]] The 'next' scroll setting (i.e. what it should be with
 	//   current menubar and such).
-	int32_t getnextscroll(void);
+	int32_t getnextscroll(bool p_ignore_opened);
 	// MW-2011-09-12: [[ MacScroll ]] Return the current scroll setting of the stack.
 	int32_t getscroll(void) const;
 	// MW-2011-09-12: [[ MacScroll ]] Apply any necessary scroll setting, based on current
@@ -839,7 +845,7 @@ public:
 	{
 		if (!MCStringIsEmpty(title))
 			return title;
-		return MCNameGetString(_name);
+		return MCNameGetString(getname());
 	}
 	MCControl *getcontrols()
 	{
@@ -947,6 +953,17 @@ public:
     bool isscriptonly(void) const { return m_is_script_only; }
     void setasscriptonly(MCStringRef p_script);
     
+    // BWM-2017-08-16: [[ Bug 17810 ]] Get/set line endings for imported script-only-stack.
+    MCStringLineEndingStyle getlineencodingstyle(void) const
+    {
+        return m_line_encoding_style;
+    }
+    
+    void setlineencodingstyle(MCStringLineEndingStyle p_line_encoding_style)
+    {
+        m_line_encoding_style = p_line_encoding_style;
+    }
+
 	inline bool getextendedstate(uint4 flag) const
 	{
 		return (f_extended_state & flag) != 0;

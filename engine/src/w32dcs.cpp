@@ -161,7 +161,7 @@ Boolean MCScreenDC::open()
 	f_src_dc = CreateCompatibleDC(NULL);
 	f_dst_dc = CreateCompatibleDC(NULL);
 
-	vis = new MCVisualInfo;
+	vis = new (nothrow) MCVisualInfo;
 
 	ncolors = 0;
 			redbits = greenbits = bluebits = 8;
@@ -312,6 +312,9 @@ Boolean MCScreenDC::close(Boolean force)
 	timeEndPeriod(1);
 	opened = 0;
 
+	DestroyWindow(invisiblehwnd);
+	invisiblehwnd = NULL;
+
 	return True;
 }
 
@@ -411,6 +414,19 @@ void MCScreenDC::openwindow(Window w, Boolean override)
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(w);
 
+    // If there is a mainwindow callback then disable the mainwindow.
+    if (MCmainwindowcallback != NULL && !IsWindowVisible((HWND)w->handle.window))
+    {
+        MCAssert(m_main_window_depth < INT_MAX - 1);
+        m_main_window_depth += 1;
+        if (m_main_window_depth == 1)
+        {
+            m_main_window_current = (HWND)MCmainwindowcallback();
+            EnableWindow(m_main_window_current, False);
+        }
+        SetWindowLongPtr((HWND)w->handle.window, GWLP_HWNDPARENT, (LONG_PTR)m_main_window_current);
+    }
+
 	if (override)
 		ShowWindow((HWND)w->handle.window, SW_SHOWNA);
 	else
@@ -438,6 +454,20 @@ void MCScreenDC::closewindow(Window w)
 
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(w);
+
+    // If there is a mainwindow callback then re-enable the mainwindow if at
+    // depth 1.
+    if (MCmainwindowcallback != nullptr && IsWindowVisible((HWND)w->handle.window))
+    {
+        MCAssert(m_main_window_depth > 0);
+        m_main_window_depth -= 1;
+        if (m_main_window_depth == 0 &&
+            m_main_window_current != nullptr)
+        {
+            EnableWindow(m_main_window_current, True);
+            m_main_window_current = nullptr;
+        }
+    }
 
 	// If we are a sheet or a modal dialog we need to ensure we enable the right windows
 	// and activate the next obvious window.
@@ -723,7 +753,7 @@ uintptr_t MCScreenDC::dtouint(Drawable d)
 
 Boolean MCScreenDC::uinttowindow(uintptr_t id, Window &w)
 {
-	w = new _Drawable;
+	w = new (nothrow) _Drawable;
 	w->type = DC_WINDOW;
 	w->handle.window = (MCSysWindowHandle)id;
 	return True;
@@ -780,7 +810,7 @@ Window MCScreenDC::getroot()
 {
 	static Meta::static_ptr_t<_Drawable> mydrawable;
 	if (mydrawable == DNULL)
-		mydrawable = new _Drawable;
+		mydrawable = new (nothrow) _Drawable;
 	mydrawable->type = DC_WINDOW;
 	mydrawable->handle.window = (MCSysWindowHandle)GetDesktopWindow();
 	return mydrawable;
@@ -850,7 +880,14 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 	MCRectangle t_device_viewport;
 	t_device_viewport = logicaltoscreenrect(t_virtual_viewport);
 
-	HWND hwndsnap = CreateWindowExA(WS_EX_TRANSPARENT | WS_EX_TOPMOST,
+	DWORD t_ex_options = WS_EX_TRANSPARENT | WS_EX_TOPMOST;
+	// use layered if we don't need to select the snapshot area via cursor
+	if (window != 0 || r.x != -32768)
+	{
+		t_ex_options |= WS_EX_LAYERED;
+	}
+
+	HWND hwndsnap = CreateWindowExA(t_ex_options,
 	                               MC_SNAPSHOT_WIN_CLASS_NAME,"", WS_POPUP, t_device_viewport . x, t_device_viewport . y,
 	                               t_device_viewport . width, t_device_viewport . height, invisiblehwnd,
 	                               NULL, MChInst, NULL);
@@ -1421,7 +1458,7 @@ void MCScreenDC::redrawbackdrop(void)
 		if (backdrop_badge != NULL && backdrop_hard)
 		{
 			MCContext *t_gfxcontext = nil;
-			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+			t_success = nil != (t_gfxcontext = new (nothrow) MCGraphicsContext(t_context));
 
 			if (t_success)
 			{

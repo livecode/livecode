@@ -38,6 +38,9 @@ public foreign handler MCNothingEvalIsNothingEqualTo(in Left as nothing, in Righ
 public foreign handler MCNothingEvalIsNotEqualToNothing(in Left as optional any, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCNothingEvalIsNothingNotEqualTo(in Left as nothing, in Right as optional any, out Value as CBool) returns nothing binds to "<builtin>"
 
+public foreign handler MCNothingEvalIsNothingEqualToNothing(in Left as nothing, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
+public foreign handler MCNothingEvalIsNothingNotEqualToNothing(in Left as nothing, in Right as nothing, out Value as CBool) returns nothing binds to "<builtin>"
+
 /**
 Summary:    Determines whether <Target> is empty or not.
 
@@ -86,6 +89,7 @@ syntax NothingIsNothing is neutral binary operator with comparison precedence
 begin
     MCNothingEvalIsEqualToNothing(Left, Right, output)
     MCNothingEvalIsNothingEqualTo(Left, Right, output)
+    MCNothingEvalIsNothingEqualToNothing(Left, Right, output)
 end syntax
 
 /**
@@ -112,6 +116,7 @@ syntax NothingIsNotNothing is neutral binary operator with comparison precedence
 begin
     MCNothingEvalIsNotEqualToNothing(Left, Right, output)
     MCNothingEvalIsNothingNotEqualTo(Left, Right, output)
+    MCNothingEvalIsNothingNotEqualToNothing(Left, Right, output)
 end syntax
 
 --

@@ -230,6 +230,11 @@ MCRectangle MCStack::view_platform_getwindowrect() const
 	return t_rect;
 }
 
+bool MCStack::view_platform_dirtyviewonresize() const
+{
+	return false;
+}
+
 // IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
 MCRectangle MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 {

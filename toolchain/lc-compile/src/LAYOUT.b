@@ -1,2 +1,2 @@
 \  { AdvanceCurrentPosition(1); }
-\t {  }
+\t { AdvanceCurrentPosition(1); }

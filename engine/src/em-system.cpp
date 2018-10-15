@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "em-system.h"
+#include "em-javascript.h"
 #include "em-filehandle.h"
 #include "em-util.h"
 
@@ -26,11 +27,23 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "variable.h"
 
+#include "globals.h"
+#include "variable.h"
+
+#include <foundation-system.h>
+
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <emscripten.h>
+
+/* ----------------------------------------------------------------
+ * Functions implemented in em-system.js
+ * ---------------------------------------------------------------- */
+
+extern "C" bool MCEmscriptenSystemInitializeJS(void);
+extern "C" void MCEmscriptenSystemFinalizeJS(void);
 
 /* ================================================================
  * System abstraction layer
@@ -102,12 +115,14 @@ MCEmscriptenSystem::Initialize()
 	IO_stdout = OpenFd(1, kMCOpenFileModeWrite);
 	IO_stderr = OpenFd(2, kMCOpenFileModeWrite);
 
+	MCEmscriptenSystemInitializeJS();
 	return true;
 }
 
 void
 MCEmscriptenSystem::Finalize()
 {
+	MCEmscriptenSystemFinalizeJS();
 }
 
 /* ----------------------------------------------------------------
@@ -146,7 +161,7 @@ MCEmscriptenSystem::Debug(MCStringRef p_string)
 		return;
 	}
 
-	emscripten_log(EM_LOG_CONSOLE, "%s", *t_utf8_string);
+	emscripten_log(0, "%s", *t_utf8_string);
 }
 
 /* ----------------------------------------------------------------
@@ -209,13 +224,6 @@ MCEmscriptenSystem::GetProcessId()
 	/* Emscripten usually returns 42.  The PID is a fairly meaningless
 	 * value. */
 	return getpid();
-}
-
-bool
-MCEmscriptenSystem::GetExecutablePath(MCStringRef & r_path)
-{
-	MCEmscriptenNotImplemented();
-	return false;
 }
 
 /* ----------------------------------------------------------------
@@ -362,6 +370,8 @@ MCEmscriptenSystem::ResolveAlias(MCStringRef p_target,
 bool
 MCEmscriptenSystem::GetCurrentFolder(MCStringRef & r_path)
 {
+	return MCSFileGetCurrentDirectory(r_path);
+
 	/* FIXME use get_current_dir_name() once it's available in Emscripten's
 	 * libc. */
 
@@ -602,23 +612,23 @@ MCEmscriptenSystem::GetStandardFolder(MCNameRef p_type,
 	MCAutoStringRef t_path;
 
 	/* Decode the requested standard folder name */
-	if (MCNameIsEqualTo(p_type, MCN_engine))
+	if (MCNameIsEqualToCaseless(p_type, MCN_engine))
 	{
 		t_path_chars = kMCEmscriptenStandardFolderEngine;
 	}
-	else if (MCNameIsEqualTo(p_type, MCN_resources))
+	else if (MCNameIsEqualToCaseless(p_type, MCN_resources))
 	{
 		t_path_chars = kMCEmscriptenStandardFolderResources;
 	}
-	else if (MCNameIsEqualTo(p_type, MCN_temporary))
+	else if (MCNameIsEqualToCaseless(p_type, MCN_temporary))
 	{
 		t_path_chars = kMCEmscriptenStandardFolderTemporary;
 	}
-	else if (MCNameIsEqualTo(p_type, MCN_fonts))
+	else if (MCNameIsEqualToCaseless(p_type, MCN_fonts))
 	{
 		t_path_chars = kMCEmscriptenStandardFolderFonts;
 	}
-	else if (MCNameIsEqualTo(p_type, MCN_home))
+	else if (MCNameIsEqualToCaseless(p_type, MCN_home))
 	{
 		t_path_chars = kMCEmscriptenStandardFolderHome;
 	}
@@ -1016,33 +1026,6 @@ MCEmscriptenSystem::TextConvertToUnicode(uint32_t p_input_encoding,
 }
 
 /* ----------------------------------------------------------------
- * Loadable modules
- * ---------------------------------------------------------------- */
-
-/* Emscripten doesn't support dynamic linking */
-
-MCSysModuleHandle
-MCEmscriptenSystem::LoadModule(MCStringRef p_path)
-{
-	MCEmscriptenNotImplemented();
-	return NULL;
-}
-
-MCSysModuleHandle
-MCEmscriptenSystem::ResolveModuleSymbol(MCSysModuleHandle p_module,
-                                        MCStringRef p_symbol)
-{
-	MCEmscriptenNotImplemented();
-	return NULL;
-}
-
-void
-MCEmscriptenSystem::UnloadModule(MCSysModuleHandle p_module)
-{
-	/* Successfully do nothing */
-}
-
-/* ----------------------------------------------------------------
  * Subprocesses
  * ---------------------------------------------------------------- */
 
@@ -1119,20 +1102,6 @@ MCEmscriptenSystem::LaunchUrl(MCStringRef p_document)
 	MCresult -> sets("no association");
 }
 
-void
-MCEmscriptenSystem::DoAlternateLanguage(MCStringRef p_script,
-                    MCStringRef p_language)
-{
-	/* Successfully do nothing */
-}
-
-bool
-MCEmscriptenSystem::AlternateLanguages(MCListRef & r_list)
-{
-	/* No alternate languages available */
-	return false;
-}
-
 bool
 MCEmscriptenSystem::GetDNSservers(MCListRef & r_list)
 {
@@ -1150,4 +1119,279 @@ MCEmscriptenSystem::ShowMessageDialog(MCStringRef p_title,
 	MCAutoStringRefAsUTF16String t_message_u16;
 	t_message_u16.Lock(p_message);
 	MCEmscriptenDialogShowAlert(t_message_u16.Ptr(), t_message_u16.Size());
+}
+
+/* ----------------------------------------------------------------
+ * Interface with browser JavaScript
+ * ---------------------------------------------------------------- */
+
+void
+MCEmscriptenSystem::DoAlternateLanguage(MCStringRef p_script,
+                    MCStringRef p_language)
+{
+	if (!MCStringIsEqualToCString(p_language, "javascript", kMCStringOptionCompareCaseless))
+	{
+		MCresult -> sets("alternate language not found");
+		return;
+	}
+
+	bool t_success = true;
+
+	MCAutoValueRef t_result;
+	t_success = MCEmscriptenJSEvaluateScript(p_script, &t_result);
+
+	if (!t_success)
+	{
+		MCresult->sets("execution error");
+		return;
+	}
+
+	MCresult->setvalueref(*t_result);
+}
+
+bool
+MCEmscriptenSystem::AlternateLanguages(MCListRef & r_list)
+{
+	MCAutoListRef t_list;
+	MCAutoStringRef t_js_string;
+
+	return MCStringCreateWithCString("javascript", &t_js_string) && \
+		MCListCreateMutable('\n', &t_list) && \
+		MCListAppend(*t_list, *t_js_string) && \
+		MCListCopy(*t_list, r_list);
+}
+
+//////////
+
+#include "dispatch.h"
+
+MCStack* _emscripten_get_stack(void *p_stack_ptr)
+{
+	MCStack *t_stacks = MCdispatcher->getstacks();
+	
+	MCStack *t_stack = t_stacks;
+	do
+	{
+		if (t_stack == p_stack_ptr)
+			return t_stack;
+		
+		t_stack = t_stack->next();
+	}
+	while (t_stack != t_stacks);
+	
+	return nil;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCProperListRef MCEmscriptenSystemGetJavascriptHandlersOfStack(void *p_stack)
+{
+	MCStackHandle t_stack(_emscripten_get_stack(p_stack));
+
+	// Ensure stack pointer is valid
+	if (!t_stack.IsValid())
+		return MCValueRetain(kMCEmptyProperList);
+	
+	bool t_success = true;
+	
+	// get javascripthandlers property
+	MCExecValue t_value;
+	MCExecContext ctxt(nil, nil, nil);
+	bool t_lock_messages = MClockmessages;
+	MClockmessages = true;
+	t_success = t_stack->getcustomprop(ctxt, t_stack->getdefaultpropsetname(), MCNAME("cjavascripthandlers"), nil, t_value);
+	MClockmessages = t_lock_messages;
+	
+	MCAutoStringRef t_prop_string;
+	if (t_success)
+	{
+		MCExecTypeConvertAndReleaseAlways(ctxt, t_value.type, &t_value, kMCExecValueTypeStringRef, &(&t_prop_string));
+		t_success = *t_prop_string != nil;
+	}
+
+	MCAutoProperListRef t_list;
+	if (t_success)
+		t_success = MCStringSplitByDelimiter(*t_prop_string, kMCLineEndString, kMCStringOptionCompareExact, &t_list);
+	
+	if (!t_success)
+		return MCValueRetain(kMCEmptyProperList);
+	
+	return t_list.Take();
+}
+
+extern void MCEngineFreeScriptParameters(MCParameter* p_params);
+extern bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListRef p_arguments, MCParameter*& r_script_params);
+
+extern Exec_stat _MCEngineExecDoDispatch(MCExecContext &ctxt, int p_handler_type, MCNameRef p_message, MCObjectPtr *p_target, MCParameter *p_parameters);
+
+extern "C" MC_DLLEXPORT_DEF
+MCValueRef MCEmscriptenSystemCallStackHandler(void *p_stack, MCStringRef p_handler, MCProperListRef p_params)
+{
+	bool t_success = true;
+	
+	// Ensure stack pointer is valid
+	MCStackHandle t_stack;
+	
+	if (t_success)
+	{
+		t_stack = _emscripten_get_stack(p_stack);
+		t_success = t_stack.IsValid();
+	}
+	
+	// Ensure handler is allowed to be called from JavaScript
+	if (t_success)
+	{
+		MCAutoProperListRef t_handler_list;
+		t_handler_list.Give(MCEmscriptenSystemGetJavascriptHandlersOfStack(p_stack));
+		bool t_found = false;
+		for (uint32_t i = 0; !t_found && i < MCProperListGetLength(*t_handler_list); i++)
+		{
+			MCStringRef t_handler = static_cast<MCStringRef>(MCProperListFetchElementAtIndex(*t_handler_list, i));
+			t_found = MCStringIsEqualTo(t_handler, p_handler, kMCStringOptionCompareCaseless);
+		}
+		
+		t_success = t_found;
+	}
+	
+	MCNewAutoNameRef t_handler_name;
+	if (t_success)
+		t_success = MCNameCreate(p_handler, &t_handler_name);
+	
+	MCExecContext ctxt;
+	MCAutoCustomPointer<MCParameter, MCEngineFreeScriptParameters> t_params;
+	if (t_success)
+		t_success = MCEngineConvertToScriptParameters(ctxt, p_params, &t_params);
+
+	if (t_success)
+	{
+		MCObjectPtr t_stack_obj(t_stack, 0);
+		MCresult->clear();
+		
+		Exec_stat t_stat;
+		// try to dispatch handler as message
+		t_stat = _MCEngineExecDoDispatch(ctxt, HT_MESSAGE, *t_handler_name, &t_stack_obj, *t_params);
+		t_success = t_stat != ES_ERROR;
+		
+		if (t_success && t_stat != ES_NORMAL)
+		{
+			// not handled as message, try as function
+			t_stat = _MCEngineExecDoDispatch(ctxt, HT_FUNCTION, *t_handler_name, &t_stack_obj, *t_params);
+			t_success = t_stat != ES_ERROR;
+		}
+	}
+	
+	// fetch result (as string)
+	MCAutoValueRef t_result;
+	if (t_success)
+		t_success = MCresult->eval(ctxt, &t_result);
+	
+	if (!t_success)
+		return nil;
+	
+	return t_result.Take();
+}
+
+// Return the named stack, or NULL if not found
+extern "C" MC_DLLEXPORT_DEF
+MCStack *MCEmscriptenResolveStack(MCStringRef p_name)
+{
+	MCNewAutoNameRef t_name;
+	if (!MCNameCreate(p_name, &t_name))
+		return nil;
+	
+	return MCdispatcher->findstackname(*t_name);
+}
+
+//////////
+
+extern "C" MC_DLLEXPORT_DEF
+MCValueRef MCEmscriptenSystemCallHandler(MCHandlerRef p_handler, MCProperListRef p_params)
+{
+	MCProperListRef t_in_out_params = MCValueRetain(p_params);
+	
+	MCErrorRef t_error = nil;
+	MCValueRef t_result = nil;
+	t_error = MCHandlerTryToInvokeWithList(p_handler, t_in_out_params, t_result);
+	
+	MCValueRelease(t_in_out_params);
+	
+	if (t_error)
+	{
+		MCValueRelease(t_error);
+		return nil;
+	}
+	
+	return t_result;
+}
+
+//////////
+
+extern "C" MC_DLLEXPORT_DEF
+MCNullRef MCEmscriptenUtilCreateNull()
+{
+	return MCValueRetain(kMCNull);
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCBooleanRef MCEmscriptenUtilCreateBoolean(bool p_value)
+{
+	MCBooleanRef t_boolean;
+	if (!MCBooleanCreateWithBool(p_value, t_boolean))
+		return nil;
+	
+	return t_boolean;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+bool MCEmscriptenUtilGetBooleanValue(MCBooleanRef p_boolean)
+{
+	return p_boolean == kMCTrue;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCNumberRef MCEmscriptenUtilCreateNumberWithReal(real64_t p_value)
+{
+	MCNumberRef t_number = nil;
+	if (!MCNumberCreateWithReal(p_value, t_number))
+		return nil;
+		
+	return t_number;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCStringRef MCEmscriptenUtilCreateStringWithCharsAndRelease(unichar_t *p_utf16_string, uint32_t p_length)
+{
+	MCStringRef t_string = nil;
+	if (!MCStringCreateWithCharsAndRelease(p_utf16_string, p_length, t_string))
+		return nil;
+	
+	return t_string;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCStringRef MCEmscriptenUtilFormatAsString(MCValueRef p_value)
+{
+	MCStringRef t_string = nil;
+	if (!MCStringFormat(t_string, "%@", p_value))
+		return nil;
+	return t_string;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCProperListRef MCEmscriptenUtilCreateMutableProperList()
+{
+	MCProperListRef t_list = nil;
+	if (!MCProperListCreateMutable(t_list))
+		return nil;
+	
+	return t_list;
+}
+
+extern "C" MC_DLLEXPORT_DEF
+MCDataRef MCEmscriptenUtilCreateDataWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count)
+{
+	MCDataRef t_data = nil;
+	if (!MCDataCreateWithBytesAndRelease(p_bytes, p_byte_count, t_data))
+		return nil;
+	
+	return t_data;
 }

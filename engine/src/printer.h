@@ -613,7 +613,7 @@ private:
 	MCArrayRef m_device_options;
 };
 
-Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCCustomPrinter*& r_printer);
+bool MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCCustomPrinter*& r_printer);
 
 ////////////////////////////////////////////////////////////////////////////////
 

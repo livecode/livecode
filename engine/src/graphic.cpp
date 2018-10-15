@@ -130,18 +130,18 @@ MCGraphic::MCGraphic(const MCGraphic &gref) : MCControl(gref)
 	markerlsize = gref.markerlsize;
 	if (gref.dashes != NULL)
 	{
-		dashes = new uint1[ndashes];
+		dashes = new (nothrow) uint1[ndashes];
 		memcpy(dashes, gref.dashes, ndashes);
 	}
 	else
 		dashes = NULL;
 	points = NULL;
 	if (gref.realpoints != NULL)
-		realpoints = new MCPoint[nrealpoints];
+		realpoints = new (nothrow) MCPoint[nrealpoints];
 	else
 		realpoints = NULL;
 	if (gref.markerpoints != NULL)
-		markerpoints = new MCPoint[nmarkerpoints];
+		markerpoints = new (nothrow) MCPoint[nmarkerpoints];
 	else
 		markerpoints = NULL;
 	uint2 i;
@@ -252,7 +252,7 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 	        && (getstyleint(flags) == F_CURVE || getstyleint(flags) == F_POLYGON
 	            || getstyleint(flags) == F_LINE))
 	{
-		realpoints = new MCPoint[MCscreen->getmaxpoints()];
+		realpoints = new (nothrow) MCPoint[MCscreen->getmaxpoints()];
 		MCU_snap(rect.x);
 		MCU_snap(rect.y);
 		startx = rect.x;
@@ -290,11 +290,11 @@ Boolean MCGraphic::mfocus(int2 x, int2 y)
 				real8 dx = (real8)(mx - startx);
 				real8 dy = (real8)(my - starty);
 				real8 length = sqrt(dx * dx + dy * dy);
-				real8 angle = atan2(dy, dx);
+				real8 t_angle = atan2(dy, dx);
 				real8 quanta = M_PI * 2.0 / (real8)MCslices;
-				angle = floor((angle + quanta / 2.0) / quanta) * quanta;
-				mx = startx + (int2)(cos(angle) * length);
-				my = starty + (int2)(sin(angle) * length);
+				t_angle = floor((t_angle + quanta / 2.0) / quanta) * quanta;
+                mx = startx + (int2)(cos(t_angle) * length);
+				my = starty + (int2)(sin(t_angle) * length);
 			}
 			realpoints[nrealpoints - 1].x = mx;
 			realpoints[nrealpoints - 1].y = my;
@@ -434,6 +434,13 @@ Boolean MCGraphic::doubleup(uint2 which)
 
 void MCGraphic::applyrect(const MCRectangle &nrect)
 {
+    /* If we are editing, then we must update the edit tool's selection
+     * layer. */
+    if (opened && m_edit_tool != nullptr)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
+
 	if (realpoints != NULL)
 	{
 		if (nrect.width != rect.width || nrect.height != rect.height)
@@ -441,7 +448,7 @@ void MCGraphic::applyrect(const MCRectangle &nrect)
 			MCRectangle trect = reduce_minrect(nrect);
 			if (oldpoints == NULL)
 			{
-				oldpoints = new MCPoint[nrealpoints];
+				oldpoints = new (nothrow) MCPoint[nrealpoints];
 				uint2 i = nrealpoints;
 				while (i--)
 					oldpoints[i] = realpoints[i];
@@ -485,6 +492,13 @@ void MCGraphic::applyrect(const MCRectangle &nrect)
 
 	rect = nrect;
 	delpoints();
+    
+    /* If we are editing, then we must update the edit tool's selection
+     * layer. */
+    if (opened && m_edit_tool != nullptr)
+    {
+        getcard()->dirtyselection(m_edit_tool->drawrect());
+    }
 }
 
 void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &nrect)
@@ -586,7 +600,6 @@ bool MCGraphic::get_points_for_regular_polygon(MCPoint *&r_points, uindex_t &r_p
 // MDW-2014-07-06: [[ oval_points ]] treat an oval like a rounded rect with radius = 1/2 max(width, height)
 bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uindex_t& r_point_count)
 {
-	MCRectangle trect;
 	int	tRadius;
 	
 	r_points = NULL;
@@ -602,7 +615,7 @@ bool MCGraphic::get_points_for_oval(MCPoint*& r_points, uindex_t& r_point_count)
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
 {
-	MCGraphic *newgraphic = new MCGraphic(*this);
+	MCGraphic *newgraphic = new (nothrow) MCGraphic(*this);
 	if (attach)
 		newgraphic->attach(p, invisible);
 	return newgraphic;
@@ -737,12 +750,12 @@ void MCGraphic::draw_arrow(MCDC *dc, MCPoint &p1, MCPoint &p2)
 	if (arrowsize == 0 || (dx == 0.0 && dy == 0.0))
 		return;
 	MCPoint pts[3];
-	real8 angle = atan2(dy, dx);
-	real8 a1 = angle + 3.0 * M_PI / 4.0;
-	real8 a2 = angle - 3.0 * M_PI / 4.0;
+	real8 t_angle = atan2(dy, dx);
+	real8 a1 = t_angle + 3.0 * M_PI / 4.0;
+	real8 a2 = t_angle - 3.0 * M_PI / 4.0;
 	real8 size = get_arrow_size();
-	pts[0].x = p2.x + (int2)(cos(angle) * size);
-	pts[0].y = p2.y + (int2)(sin(angle) * size);
+	pts[0].x = p2.x + (int2)(cos(t_angle) * size);
+	pts[0].y = p2.y + (int2)(sin(t_angle) * size);
 	pts[1].x = p2.x + (int2)(cos(a1) * size);
 	pts[1].y = p2.y + (int2)(sin(a1) * size);
 	pts[2].x = p2.x + (int2)(cos(a2) * size);
@@ -996,21 +1009,6 @@ void MCGraphic::compute_minrect()
 	}
 }
 
-MCRectangle MCGraphic::geteffectiverect(void) const
-{
-	MCRectangle t_effectiverect;
-	t_effectiverect = MCControl::geteffectiverect();
-
-	if (m_edit_tool != NULL)
-	{
-		MCRectangle t_tool_rect = m_edit_tool->drawrect();
-		if (t_tool_rect.width != 0 && t_tool_rect.height != 0)
-			t_effectiverect = MCU_union_rect(t_effectiverect, t_tool_rect);
-	}
-
-	return t_effectiverect;
-}
-
 void MCGraphic::delpoints()
 {
 	if (points != NULL)
@@ -1065,7 +1063,7 @@ bool MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
         
         if (t_count)
 		{
-            MCPoint *newpts = new MCPoint[npts+t_count] ;
+			MCPoint *newpts = new (nothrow) MCPoint[npts+t_count] ;
 			startpt = pts ;
 			MCPoint *currentpt = newpts ;
 			*(currentpt++) = pts[0] ;
@@ -1426,12 +1424,19 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 	if (!p_isolated)
 	{
 		dc -> end();
-        
-        if (m_edit_tool != NULL)
-            m_edit_tool->drawhandles(dc);
 	}
 
 	dc -> setquality(QUALITY_DEFAULT);
+}
+
+void MCGraphic::drawselection(MCDC *p_dc, const MCRectangle& p_dirty)
+{
+    MCControl::drawselection(p_dc, p_dirty);
+    
+    if (m_edit_tool != nullptr)
+    {
+        m_edit_tool->drawhandles(p_dc);
+    }
 }
 
 MCGradientFill *MCGraphic::getgradient()
@@ -1456,9 +1461,6 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 	{
 		MCRectangle drect = rect;
 
-		MCRectangle t_old_effective_rect;
-		t_old_effective_rect = geteffectiverect();
-
 		realpoints[i].x = x;
 		realpoints[i].y = y;
 
@@ -1479,6 +1481,9 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
                 }
             }
 			compute_minrect();
+            
+            /* If the minrect has changed, then invalidate the old coords in the
+             * gradients. */
 			if (rect.x != drect.x || rect.y != drect.y
 					|| rect.width != drect.width || rect.height != drect.height)
 			{
@@ -1487,15 +1492,14 @@ void MCGraphic::setpoint(uint4 i, int2 x, int2 y, bool redraw)
 					m_fill_gradient->old_origin.x = MININT2;
 					m_fill_gradient->old_origin.y = MININT2;
 				}
-				if (resizeparent())
-					return;
+				if (m_stroke_gradient != NULL)
+				{
+					m_stroke_gradient->old_origin.x = MININT2;
+					m_stroke_gradient->old_origin.y = MININT2;
+				}
 			}
+            
 			Redraw(drect);
-			if (opened)
-			{
-				// MW-2011-08-18: [[ Layers ]] Notify of the change in effective rect and invalidate.
-				layer_effectiverectchangedandredrawall(t_old_effective_rect);
-			}
 		}
 	}
 }
@@ -1915,7 +1919,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (nmarkerpoints != 0)
 		{
-			markerpoints = new MCPoint[nmarkerpoints];
+			markerpoints = new (nothrow) MCPoint[nmarkerpoints];
 			for (i = 0 ; i < nmarkerpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&markerpoints[i].x, stream)) != IO_NORMAL)
@@ -1932,7 +1936,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (nrealpoints != 0)
 		{
-			realpoints = new MCPoint[nrealpoints];
+			realpoints = new (nothrow) MCPoint[nrealpoints];
 			for (i = 0 ; i < nrealpoints ; i++)
 			{
 				if ((stat = IO_read_int2(&realpoints[i].x, stream)) != IO_NORMAL)
@@ -1954,7 +1958,7 @@ IO_stat MCGraphic::load(IO_handle stream, uint32_t version)
 		if (ndashes != 0)
 		{
 			flags |= F_DASHES;
-			dashes = new uint1[ndashes];
+			dashes = new (nothrow) uint1[ndashes];
 			for (i = 0 ; i < ndashes ; i++)
 				if ((stat = IO_read_uint1(&dashes[i], stream)) != IO_NORMAL)
 					return checkloadstat(stat);

@@ -4,6 +4,7 @@ set -e
 
 SYMBOLS=$1
 SYMBOLS_FILE=$2
+COPY_PATH=$3
 
 DEPS=`cat "$SRCROOT/$PRODUCT_NAME.ios"`
 DEPS=${DEPS//library /-l}
@@ -127,7 +128,22 @@ fi
 
 if [ $BUILD_DYLIB -eq 1 ]; then
 	ln -sf "$PRODUCT_NAME.dylib" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.ios-extension"
+	OUTPUT=$(/usr/bin/codesign -f -s "$CODE_SIGN_IDENTITY" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib")
+	RESULT=$?
+	if [ $RESULT -ne 0 ]; then
+		echo "Signing $BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib failed:"
+		echo $OUTPUT
+		exit $RESULT
+	fi
 else
 	ln -sf "$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.ios-extension"
 fi
 
+if [ "$COPY_PATH" != "" ]; then
+	mkdir -p "$COPY_PATH"
+	if [ $BUILD_DYLIB -eq 1 ]; then
+		cp -f "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$COPY_PATH/$PRODUCT_NAME.dylib"
+	else
+		cp -f "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$COPY_PATH/$PRODUCT_NAME.lcext"
+	fi
+fi

@@ -1,5 +1,8 @@
 library com.livecode.lcs_tests.core.extension
 
+use com.livecode.engine
+use com.livecode.lcs_tests.core.extension.support
+
 public handler TestExtensionBridgeNames_ExecuteScript()
 	execute script "return the version"
 	return the result is a string
@@ -20,20 +23,15 @@ public handler TestExtensionBridgeNames_Send()
 	return the result is a string
 end handler
 
-public handler TestExtensionLog_String()
-	log "log"
+public handler TestExtensionBridgeArrays_EmptyToEmptyList(in pList as List) returns Boolean
+	return pList is the empty list
 end handler
 
-public handler TestExtensionLog_Integer()
-	log 1
+public handler TestExtensionLibraryHandler(in pValue as Number)
 end handler
 
-public handler TestExtensionLog_List()
-	log [1,2,3]
-end handler
-
-public handler TestExtensionLog_Array()
-	log {"a": 1}
+public handler TestExtensionSupportModule_Handler()
+	return SupportHandler() is "support handler"
 end handler
 
 end library

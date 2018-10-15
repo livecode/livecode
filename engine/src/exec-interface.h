@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef EXEC_INTERFACE_H
 #define EXEC_INTERFACE_H
 
+#include "mctristate.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCInterfaceImagePaletteSettings
@@ -191,22 +193,9 @@ struct MCMultimediaQTVRConstraints
 
 //////////
 
-enum MCInterfaceTriStateType
-{
-    kMCInterfaceTriStateMixed,
-    kMCInterfaceTriStateBoolean
-};
-
 struct MCInterfaceTriState
 {
-    MCInterfaceTriStateType type;
-    
-    union
-    {
-        bool state;
-        uint2 mixed;
-    };
-    
+    MCTristate value;
 };
 
 void MCInterfaceTriStateParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceTriState& r_output);

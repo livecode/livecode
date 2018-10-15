@@ -6,7 +6,7 @@ Syntax: openControl
 
 Summary:
 Sent to a <group> right after you go to the card that contains it or to
-a <background group> right after going from a card where it was is not
+a <background|background group> right after going from a card where it was is not
 placed on to one where it is.
 
 Associations: group
@@ -28,8 +28,8 @@ Handle the <openControl> message to change a group's objects or perform
 other updates, when a card with the group on is visited.
 
 For groups with their <backgroundBehavior> <property> set to true, the
-<openControl> message is sent immediately after the <openBackground
-message> is sent to the card being opened. For non-background groups, it
+<openControl> message is sent immediately after the <openBackground>
+<message> is sent to the card being opened. For non-background groups, it
 is sent after the <openCard> <message>.
 
 For nested groups, the <openControl> message is sent to the parent group
@@ -38,7 +38,7 @@ passes though each child group in reverse layer order (i.e from highest
 to lowest).
 
 References: preOpenBackground (message), openCard (message),
-openBackground message (message), preOpenControl (message),
+openBackground (message), preOpenControl (message),
 closeControl (message), message (glossary), group (object),
-background group (property), backgroundBehavior (property), property (glossary)
+backgroundBehavior (property), property (glossary), background (glossary)
 

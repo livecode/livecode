@@ -42,7 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-const char *MCliststylestrings[] =
+const char * const MCliststylestrings[] =
 {
 	"",
 	"disc",
@@ -191,7 +191,7 @@ Boolean MCField::find(MCExecContext &ctxt, uint4 cardid, Find_mode mode,
 			{
 				uindex_t t_length = MCStringGetLength(tpgptr->GetInternalStringRef());
 				MCRange t_range, t_where;
-				t_range = MCRangeMake(oldoffset, t_length - oldoffset);
+				t_range = MCRangeMakeMinMax(oldoffset, t_length);
 				while (MCStringFind(tpgptr->GetInternalStringRef(), t_range, tofind, 
 									ctxt.GetStringComparisonType(),
 									&t_where))
@@ -592,7 +592,7 @@ Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)
 
             MCStringRef t_paragraph_text;
             if (t_pos != t_start)
-                MCStringCopySubstring(p_text, MCRangeMake(t_start, t_pos - t_start), t_paragraph_text);
+                MCStringCopySubstring(p_text, MCRangeMakeMinMax(t_start, t_pos), t_paragraph_text);
             else
                 t_paragraph_text = MCValueRetain(kMCEmptyString);
 
@@ -602,7 +602,7 @@ Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)
                 MCStringFindAndReplaceChar(t_paragraph_text, '\n', ' ', kMCStringOptionCompareExact);
 			}
 
-			MCParagraph *tpgptr = new MCParagraph;
+			MCParagraph *tpgptr = new (nothrow) MCParagraph;
 			tpgptr->setparent(this);
 			tpgptr->appendto(pgptr);
 
@@ -626,7 +626,7 @@ Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean formatted)
 	}
 	else
 	{
-		pgptr = new MCParagraph;
+		pgptr = new (nothrow) MCParagraph;
 		pgptr->setparent(this);
 	}
 	setparagraphs(pgptr, parid);
@@ -706,7 +706,7 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 	MCParagraph *t_initial_pgptr;
 	t_initial_pgptr = pgptr;
 	
-	int32_t t_initial_height;
+	int32_t t_initial_height = 0;
 	if (opened && fptr == fdata)
 		t_initial_height = t_initial_pgptr -> getheight(fixedheight);
 	
@@ -785,7 +785,7 @@ Exec_stat MCField::settextindex(uint4 parid, findex_t si, findex_t ei, MCStringR
 	// MM-2014-04-09: [[ Bug 12088 ]] Get the width of the paragraph before insertion and layout.
 	//  If as a result of the update the width of the field has changed, we need to recompute.
     // MW-2014-06-06: [[ Bug 12385 ]] Don't do anything layout related if not open.
-	int2 t_initial_width;
+	int2 t_initial_width = 0;
     if (opened != 0)
         t_initial_width = pgptr -> getwidth();
 	
@@ -1660,7 +1660,7 @@ MCParagraph *MCField::cloneselection()
 		{
 			if (pgptr->gethilite())
 			{
-				MCParagraph *tpgptr = new MCParagraph(*pgptr);
+				MCParagraph *tpgptr = new (nothrow) MCParagraph(*pgptr);
 				tpgptr->appendto(cutptr);
 			}
 			pgptr = pgptr->next();
@@ -1777,7 +1777,7 @@ void MCField::pastetext(MCParagraph *newtext, Boolean dodel)
 		Ustruct *us = MCundos->getstate();
 		if (us == NULL || MCundos->getobject() != this)
 		{
-			us = new Ustruct;
+			us = new (nothrow) Ustruct;
 			findex_t si, ei;
 			selectedmark(False, si, ei, False);
 			us->ud.text.index = si;
@@ -1825,7 +1825,7 @@ void MCField::movetext(MCParagraph *newtext, findex_t p_to_index)
 		Ustruct *us = MCundos->getstate();
 		if (us == NULL || MCundos->getobject() != this)
 		{
-			us = new Ustruct;
+			us = new (nothrow) Ustruct;
 			us->ud.text.index = si;
 			us->ud.text.newline = False;
 			us->ud.text.data = NULL;
@@ -1864,7 +1864,7 @@ void MCField::deletetext(findex_t si, findex_t ei)
 		return;
 
 	Ustruct *us;
-	us = new Ustruct;
+	us = new (nothrow) Ustruct;
 	us->type = UT_DELETE_TEXT;
 	us->ud.text.index=si;
 	us->ud.text.data = t_deleted_text;
@@ -1921,7 +1921,7 @@ void MCField::insertparagraph(MCParagraph *newtext)
 		oldstack = NULL;
 	do
 	{
-		MCParagraph *newptr = new MCParagraph(*pgptr);
+		MCParagraph *newptr = new (nothrow) MCParagraph(*pgptr);
 		newptr->setparent(this);
 		newptr->open(m_font);
 		tfptr->append(newptr);

@@ -1,0 +1,65 @@
+/*
+Copyright (C) 2015 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+module com.livecode.compiler.namespace.tests
+
+use com.livecode.__INTERNAL._testlib
+
+public constant ThisModule is "com.livecode.compiler.namespace.tests"
+public handler MCUnitTestHandlerThrows() returns Number
+	return 5
+end handler
+public type Thunk is Number
+
+public handler TestConstantQualification()
+	test "unqualified constant value" when ThisModule is "com.livecode.compiler.namespace.tests"
+	test "qualified constant value" when com.livecode.compiler.namespace.tests.ThisModule is "com.livecode.compiler.namespace.tests"
+	test "qualified import constant value" when com.livecode.__INTERNAL._testlib.ThisModule is "com.livecode.__INTERNAL._testlib"
+end handler
+
+handler type TestLibThrows(in pHandler as any, in pDescription as String) returns nothing
+handler DoesntThrow() returns nothing
+	variable tUnitTestHandler as TestLibThrows
+	put com.livecode.__INTERNAL._testlib.MCUnitTestHandlerThrows into tUnitTestHandler
+end handler
+
+public handler TestHandlerQualification()
+	test "unqualified handler call" when MCUnitTestHandlerThrows() is 5
+	test "handler call" when com.livecode.compiler.namespace.tests.MCUnitTestHandlerThrows() is 5
+	MCUnitTestHandlerDoesntThrow(DoesntThrow, "qualified import handler call")
+end handler
+
+handler __Thunk() returns optional any
+	return nothing
+end handler
+
+public handler TestTypeQualification()
+	variable tTestThis as Thunk
+	put 5 into tTestThis
+	test "unqualified type use" when tTestThis is 5
+	
+	variable tTestThisQualified as com.livecode.compiler.namespace.tests.Thunk
+	put 5 into tTestThisQualified
+	test "unqualified type use" when tTestThisQualified is 5
+	
+	// Thunk in _testlib is a handler type
+	variable tTestThat as com.livecode.__INTERNAL._testlib.Thunk
+	put __Thunk into tTestThat
+	test "qualified import type use" when tTestThat() is nothing
+end handler
+
+end module

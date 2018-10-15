@@ -62,7 +62,7 @@ void MCCdata::CloneData(const MCCdata& cref, MCField* p_new_owner)
 			do
 			{
 				// Clone the paragraph
-				MCParagraph *newparagraph = new MCParagraph(*tptr);
+				MCParagraph *newparagraph = new (nothrow) MCParagraph(*tptr);
 				newparagraph->setparent(p_new_owner);
 				
 				newparagraph->appendto(paragraphs);
@@ -140,7 +140,7 @@ IO_stat MCCdata::load(IO_handle stream, MCObject *parent, uint32_t version)
 				case OT_PARAGRAPH:
 				case OT_PARAGRAPH_EXT:
 					{
-						MCParagraph *newpar = new MCParagraph;
+						MCParagraph *newpar = new (nothrow) MCParagraph;
 						newpar->setparent((MCField *)parent);
 						
 						// MW-2012-03-04: [[ StackFile5500 ]] If the paragraph tab was the extended
@@ -226,13 +226,15 @@ MCParagraph *MCCdata::getparagraphs()
 		char *eptr = (char *)data;
 		while ((eptr = strtok(eptr, "\n")) != NULL)
 		{
-			MCParagraph *tpgptr = new MCParagraph;
+			MCParagraph *tpgptr = new (nothrow) MCParagraph;
 			tpgptr->appendto(paragraphs);
 			uint2 l = strlen(eptr) + 1;
-			char *sptr = new char[l];
-			memcpy(sptr, eptr, l);
+			/* UNCHECKED */ MCAutoPointer<char_t[]> sptr =
+				new (nothrow) char_t[l];
+			memcpy(sptr.Get(), eptr, l);
 			MCAutoStringRef t_string;
-			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)sptr, l, &t_string);
+			/* UNCHECKED */ MCStringCreateWithNativeChars(sptr.Get(), l,
+			                                              &t_string);
 			tpgptr->settext(*t_string);
 			eptr = NULL;
 		}
@@ -241,7 +243,7 @@ MCParagraph *MCCdata::getparagraphs()
 		id &= ~COMPACT_PARAGRAPHS;
 	}
 	if (data == NULL)
-		data = paragraphs = new MCParagraph;
+		data = paragraphs = new (nothrow) MCParagraph;
 	else
 		paragraphs = (MCParagraph *)data;
 	return paragraphs;

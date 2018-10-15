@@ -5,7 +5,7 @@ Type: property
 Syntax: set the recordFormat to <fileFormat>
 
 Summary:
-Specifies the file <format> for sound files recorded with the <record
+Specifies the file format for sound files recorded with the <record
 sound> <command>.
 
 Introduced: 2.0
@@ -22,29 +22,25 @@ set the recordFormat to the storedSoundFormat of me
 
 The result:
 >*Important:*  If the <recordFormat> is set to "movie", the resulting
-> <file> is in the <QuickTime> file format. <QuickTime> files cannot be
+> file is in the <QuickTime> file format. <QuickTime> files cannot be
 > played as <audio clip|audio clips>. To play such a sound, either
 > create a <player> and set its <filename> <property> to the <file
 > path|path> of the <file> you recorded, or use the play videoclip form
 > of the <play> <command>.
 
-Value (enum):
-
--   aiff: records a file in AIFF format (default)
--   wave: records a file in WAV format
--   ulaw: records a file in AU format
--   movie: records a file in QuickTime format
-
+Value(string): The file format of the created recording.
 
 Description:
 Use the <recordFormat> <property> to specify what kind of file to create
 when recording a sound, depending on how the file will be used.
 
 The <recordFormat> <property> determines what kind of file is created
-when you use the <record sound> <command> to record sound.
+when you use the <record sound> <command> to record sound. The 
+<recordFormats> <function> returns a list of supported <recordFormat> 
+values.
 
 Not all sound file formats are compatible with all supported codecs. If
-you try to record sound using a recordCompressionType that is not
+you try to record sound using a <recordCompression> that is not
 compatible with the <recordFormat>, the <compress|compression> type will
 be changed automatically to a <codec> that is compatible with the
 specified <recordFormat>.
@@ -58,9 +54,12 @@ longer supports any <QuickTime> features and setting the <dontUseQT> and
 not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
-References: record sound (command), play (command), format (function),
+From 9.0, the list of valid <recordFormats> is no longer a fixed list,
+but is determined by the current platform support.
+
+References: record sound (command), play (command), function (glossary),
 property (glossary), compress (glossary), audio clip (glossary),
 QuickTime (glossary), file path (glossary), command (glossary),
-codec (glossary), file (keyword), player (keyword),
-recordFormat (property), filename (property)
+codec (glossary), player (keyword), filename (property), 
+recordFormats (function), recordCompression (property)
 

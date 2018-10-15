@@ -58,8 +58,8 @@ read-only media.
 
 Description:
 Use the <open file> <command> to create a <file(keyword)> or prepare an
-existing <file(keyword)> for use by the <read from file> or <write to
-file> <command|commands>.
+existing <file(keyword)> for use by the <read from file> or 
+<write to file> <command|commands>.
 
 You can optionally specify either text or binary mode. If you specify
 text mode, when you use the write to file <command> to put data in the
@@ -79,7 +79,7 @@ opened for writing, the write to file <command> replaces the
 <file(glossary)|file's> contents from the starting point to the end of
 the file.
 
->*Important:* : Before opening any file for writing, remember to back up
+>*Important:* Before opening any file for writing, remember to back up
 > the file contents as LiveCode will erase them even if you do not write
 > to the file after opening it.
 
@@ -103,10 +103,10 @@ in the <fileType> <property>.
 Any files you have opened are closed automatically when you quit the
 application. 
 
-You can use the <open file> <command> to open a serial <port> on <Mac
-OS> or <Windows|Windows systems>. On <Mac OS|Mac OS systems>, specify
-either "printer:" or "modem:". On Windows systems, specify either
-"COM1:", "COM2:", or up to "COM9:". Set the serialControlString
+You can use the <open file> <command> to open a serial <port> on 
+<Mac OS> or <Windows|Windows systems>. On <Mac OS|Mac OS systems>, 
+specify either "printer:" or "modem:". On Windows systems, specify
+either "COM1:", "COM2:", or up to "COM9:". Set the serialControlString
 <property> before opening the <port> to specify the baud rate and other
 settings. 
 
@@ -151,13 +151,14 @@ BOM is ignored.
 References: write to file (command), open file (command), put (command),
 constant (command), read from file (command), get (command),
 close file (command), answer file (command), return (constant),
-function (control structure), tempName (function), return (glossary),
-null (glossary), property (glossary), file (glossary), port (glossary),
-command (glossary), Windows (glossary), textDecode (glossary),
-OS X (glossary), type signature (glossary), creator signature (glossary),
-result (glossary), textEncode (glossary), Mac OS (glossary),
-Unix (glossary), ASCII (glossary), characters (keyword), file (keyword),
-URL keyword (keyword), fileType (property), umask (property)
+function (control structure), result (function),  tempName (function), 
+textDecode (function), textEncode (function), return (glossary), 
+null (glossary),  property (glossary), file (glossary), port (glossary), 
+command (glossary), Windows (glossary), textDecode (glossary), 
+OS X (glossary), type signature (glossary), creator signature (glossary), 
+Mac OS (glossary), Unix (glossary), ASCII (glossary), 
+characters (keyword), file (keyword), URL (keyword), fileType (property), 
+umask (property)
 
 Tags: file system
 

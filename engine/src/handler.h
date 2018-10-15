@@ -81,21 +81,13 @@ public:
 		return name;
 	}
 	
-	const char *getname_cstring(void)
-	{
-        char *t_name;
-        /* UNCHECKED */ MCStringConvertToCString(MCNameGetString(name), t_name);
-		return t_name;
-	}
-	
 	bool hasname(MCNameRef other_name)
 	{
-		return MCNameIsEqualTo(name, other_name, kMCCompareCaseless);
+		return MCNameIsEqualToCaseless(name, other_name);
 	}
 
 	Parse_stat parse(MCScriptPoint &sp, Boolean isprop);
     Exec_stat exec(MCExecContext &, MCParameter *);
-	void compile(MCSyntaxFactoryRef factory);
 	
     MCVariable *getvar(uint2 index, Boolean isparam);
     MCContainer *getcontainer(uint2 index, Boolean isparam);
@@ -159,12 +151,6 @@ public:
 	{
 		r_vars = vars;
 		r_var_count = nvnames;
-	}
-	
-	void getparamlist(MCContainer**& r_vars, uint32_t& r_param_count)
-	{
-		r_vars = params;
-		r_param_count = npnames;
 	}
 	
 	void getgloballist(MCVariable**& r_vars, uint32_t& r_var_count)

@@ -75,16 +75,40 @@ static Boolean byte_swapped()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_open(int argc, MCStringRef argv[], MCStringRef envp[]);
-extern void X_clear_globals(void);
-extern void MCU_initialize_names();
-
-static char apppath[PATH_MAX];
-
-bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
+static void
+X_initialize_mccmd(const X_init_options& p_options)
 {
-	int i;
-	MCstackbottom = (char *)&i;
+    MCSAutoLibraryRef t_self;
+    MCSLibraryCreateWithAddress(reinterpret_cast<void *>(X_initialize_mccmd),
+                                &t_self);
+    MCSLibraryCopyPath(*t_self,
+                       MCcmd);
+}
+
+static void
+X_initialize_mcappcodepath(const X_init_options& p_options)
+{
+    if (p_options.app_code_path != nullptr)
+    {
+        MCappcodepath = MCValueRetain(p_options.app_code_path);
+        return;
+    }
+    
+    MCU_path_split(MCcmd,
+                   &MCappcodepath,
+                   nullptr);
+}
+
+bool X_init(const X_init_options& p_options)
+{
+    int argc = p_options.argc;
+    MCStringRef *argv = p_options.argv;
+    MCStringRef *envp = p_options.envp;
+
+    void *t_bottom;
+    MCstackbottom = (char *)&t_bottom;
+
+    MCmainwindowcallback = p_options.main_window_callback;
 	
 #ifdef _WINDOWS_DESKTOP
 	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
@@ -97,7 +121,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	////
 	
 	X_clear_globals();
-	
+    
 	////
 
 #ifndef _WINDOWS_DESKTOP
@@ -106,7 +130,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	
 	////
 	
-	MCU_initialize_names();
+	X_initialize_names();
 
 	////
 	
@@ -129,8 +153,8 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	// Make sure certain things are already created before MCS_init. This is
 	// required right now because the Windows MCS_init uses MCS_query_registry
 	// which needs these things.
-	MCperror = new MCError();
-	MCeerror = new MCError();
+	MCperror = new (nothrow) MCError();
+	MCeerror = new (nothrow) MCError();
 	/* UNCHECKED */ MCVariable::create(MCresult);
 #endif
 
@@ -138,15 +162,19 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCS_init();
 #endif
 
+    /* Set up MCcmd correctly - this is the path to the loadable object
+     * containing this folder. */
+    X_initialize_mccmd(p_options);
+    
+    /* Set up MCappcodepath correctly if not already set - on desktop this is
+     * the folder containing MCcmd. */
+    X_initialize_mcappcodepath(p_options);
+
 #ifdef _WINDOWS_DESKTOP
 	delete MCperror;
 	delete MCeerror;
 	delete MCresult;
 #endif
-	
-    // ST-2014-12-18: [[ Bug 14259 ]] Update to get the executable file from the system
-    // since ResolvePath must behave differently on Linux
-	MCsystem -> GetExecutablePath(MCcmd);
 
     // Create the basic locale and the system locale
     if (!MCLocaleCreateWithName(MCSTR("en_US"), kMCBasicLocale))
@@ -190,17 +218,16 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 			MCsecuremode = MC_SECUREMODE_ALL;
 			continue;
 		}
-		
+
+		/* TODO Remove -g,-geometry flag because it's not used any more */
 		if (MCStringIsEqualToCString(argv[i], "-g", kMCCompareExact)
 			|| MCStringIsEqualToCString(argv[i], "-geometry", kMCCompareExact))
 		{
-			char *geometry = NULL;
 			if (++i >= argc)
 			{
 				fprintf(stderr, "%s: bad geometry\n", *t_mccmd_utf8);
 				return False;
 			}
-            /* UNCHECKED */ MCStringConvertToCString(argv[i], geometry);
 			continue;
 		}
 		
@@ -308,7 +335,7 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
             MCValueRelease(MCstacknames[i]);
 		}
         MCnstacks = 0;
-		delete MCstacknames;
+        delete[] MCstacknames; /* Allocated with new[] */
 		MCstacknames = NULL;
 		MCeerror->clear();
 	}
@@ -316,10 +343,13 @@ bool X_init(int argc, MCStringRef argv[], MCStringRef envp[])
 	return true;
 }
 
-void X_main_loop_iteration()
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
+bool X_main_loop_iteration()
 {
-	int i;
-	MCstackbottom = (char *)&i;
+    void *t_bottom;
+    MCstackbottom = (char *)&t_bottom;
 
 	////
 
@@ -329,7 +359,7 @@ void X_main_loop_iteration()
 		//   (the result is used by the development environment bootstrap code)
 		MCdefaultstackptr->getcard()->message(MCM_shut_down, (MCParameter *)NULL, True, True);
 		MCquit = True;
-		return;
+		return false;
 	}
 	MCscreen->wait(MCmaxwait, True, True);
 	MCU_resetprops(True);
@@ -350,6 +380,8 @@ void X_main_loop_iteration()
 	MCscreen->siguser();
 	MCdefaultstackptr = MCstaticdefaultstackptr;
 	MCS_alarm(0.0);
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -317,7 +317,6 @@ void MCMacPlatformSurface::Unlock(void)
         // IM-2014-10-03: [[ Bug 13432 ]] Render with copy blend mode to replace destination alpha with the source alpha.
         MCMacRenderRasterToCG(m_cg_context, t_dst_rect, m_raster, MCGRectangleMake(0, 0, m_raster.width, m_raster.height), 1.0, kMCGBlendModeCopy);
         
-        free(m_raster . pixels);
         m_raster . pixels = nil;
     }
 
@@ -328,7 +327,7 @@ MCGFloat MCMacPlatformSurface::GetBackingScaleFactor(void)
 {
 	if ([m_window -> GetHandle() respondsToSelector: @selector(backingScaleFactor)])
     {
-        return objc_msgSend_fpret_type<CGFloat>(m_window -> GetHandle(), @selector(backingScaleFactor));
+        return static_cast<MCGFloat>([m_window -> GetHandle() backingScaleFactor]);
     }
 	return 1.0f;
 }
@@ -396,9 +395,10 @@ static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
 			return kCGBlendModeColor;
 		case kMCGBlendModeLuminosity:
 			return kCGBlendModeLuminosity;
+		default:
+			MCUnreachableReturn(kCGBlendModeNormal); // unknown blend mode
 	}
 	
-	MCUnreachableReturn(kCGBlendModeNormal); // unknown blend mode
 }
 
 static void MCMacRenderCGImage(CGContextRef p_target, CGRect p_dst_rect, CGImageRef p_src, MCGFloat p_alpha, MCGBlendMode p_blend)

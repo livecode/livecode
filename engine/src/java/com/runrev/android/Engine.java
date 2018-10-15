@@ -98,7 +98,9 @@ public class Engine extends View implements EngineApi
     private CalendarEvents m_calendar_module;
     
     private OpenGLView m_opengl_view;
-	private OpenGLView m_old_opengl_view;
+	private boolean m_disabling_opengl;
+    private boolean m_enabling_opengl;
+    
 	private BitmapView m_bitmap_view;
 
 	private File m_temp_image_file;
@@ -117,6 +119,7 @@ public class Engine extends View implements EngineApi
     private NativeControlModule m_native_control_module;
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
+	private NFCModule m_nfc_module;
     private RelativeLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
@@ -174,6 +177,7 @@ public class Engine extends View implements EngineApi
         m_native_control_module = new NativeControlModule(this, ((LiveCodeActivity)getContext()).s_main_layout);
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
+		m_nfc_module = new NFCModule(this);
         m_view_layout = null;
         
         // MM-2012-08-03: [[ Bug 10316 ]] Initialise the wake lock object.
@@ -205,8 +209,9 @@ public class Engine extends View implements EngineApi
 
 		// We have no opengl view to begin with.
 		m_opengl_view = null;
-		m_old_opengl_view = null;
-
+        m_disabling_opengl = false;
+        m_enabling_opengl = false;
+        
 		// But we do have a bitmap view.
 		m_bitmap_view = new BitmapView(getContext());
         
@@ -329,10 +334,12 @@ public class Engine extends View implements EngineApi
 		}
 		catch ( UnsatisfiedLinkError e )
 		{
+            Log.i("revandroid", e.toString());
 			return null;
 		}
 		catch ( SecurityException e )
 		{
+            Log.i("revandroid", e.toString());
 			return null;
 		}
 	}
@@ -497,12 +504,12 @@ public class Engine extends View implements EngineApi
 					// IM-2013-02-21: [[ BZ 10684 ]]
 					// allow BaseInputConnection to do the handling of commitText(), etc
 					// and instead catch the raw key events that are generated.
-					if (key.getKeyCode() == KeyEvent.KEYCODE_UNKNOWN)
+					if (t_key_code == KeyEvent.KEYCODE_UNKNOWN)
 					{
 						// handle string of chars
 						CharSequence t_chars = key.getCharacters();
 						for (int i = 0; i < t_chars.length(); i++)
-							doKeyPress(0, t_chars.charAt(i), 0);
+							handleKey(t_key_code, t_chars.charAt(i));
 					}
 					else
 					{
@@ -543,10 +550,10 @@ public class Engine extends View implements EngineApi
 				
 				// send backspaces
 				for (int i = 0; i < t_current_length - t_match_length; i++)
-					doKeyPress(0, 0, 0xff08);
+					handleKey(KeyEvent.KEYCODE_DEL, 0);
 				// send new text
 				for (int i = t_match_length; i < t_new_length; i++)
-					doKeyPress(0, p_new.charAt(i), 0);
+					handleKey(KeyEvent.KEYCODE_UNKNOWN, p_new.charAt(i));
 				
 				m_composing_text = p_new;
 				
@@ -1146,6 +1153,11 @@ public class Engine extends View implements EngineApi
         if (m_wake_on_event)
             doProcess(false);
     }
+    
+    public void onAskPermissionDone(boolean p_granted)
+    {
+        doAskPermissionDone(p_granted);
+    }
 
 ////////////////////////////////////////////////////////////////////////////////
 	
@@ -1208,8 +1220,8 @@ public class Engine extends View implements EngineApi
 	private Rect getEffectiveWorkarea()
 	{
 		Rect t_workrect = new Rect();
-		getGlobalVisibleRect(t_workrect);
-		return t_workrect;
+        getWindowVisibleDisplayFrame(t_workrect);
+        return t_workrect;
 	}
 
 	public String getEffectiveWorkareaAsString()
@@ -1854,23 +1866,121 @@ public class Engine extends View implements EngineApi
 		return new String(t_directions);
 	}
 
-	public void showPhotoPicker(String p_source, int p_width, int p_height)
-	{
-		m_photo_width = p_width;
-		m_photo_height = p_height;
-
-		if (p_source.equals("camera"))
-			showCamera();
-		else if (p_source.equals("album"))
-			showLibrary();
-		else if (p_source.equals("library"))
-			showLibrary();
-		else
-		{
-			doPhotoPickerError("source not available");
-		}
-	}
-
+    public static final int PERMISSION_REQUEST_CODE = 1;
+    public boolean askPermission(String p_permission)
+    {
+        if (Build.VERSION.SDK_INT >= 23 && getContext().checkSelfPermission(p_permission)
+            != PackageManager.PERMISSION_GRANTED)
+        {
+            Activity t_activity = (LiveCodeActivity)getContext();
+            t_activity.requestPermissions(new String[]{p_permission}, PERMISSION_REQUEST_CODE);
+        }
+        else
+            onAskPermissionDone(true);
+        return true;
+    }
+    
+    public boolean checkHasPermissionGranted(String p_permission)
+    {
+        if (Build.VERSION.SDK_INT >= 23)
+        {
+            return getContext().checkSelfPermission(p_permission) == PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
+    }
+    
+    
+    public boolean checkPermissionExists(String p_permission)
+    {
+        if (Build.VERSION.SDK_INT >= 23)
+        {
+            List<PermissionGroupInfo> t_group_info_list = getAllPermissionGroups();
+            if (t_group_info_list == null)
+                return false;
+            
+            ArrayList<String> t_group_name_list = new ArrayList<String>();
+            for (PermissionGroupInfo t_group_info : t_group_info_list)
+            {
+                String t_group_name = t_group_info.name;
+                if (t_group_name != null)
+                    t_group_name_list.add(t_group_name);
+            }
+            
+            for (String t_group_name : t_group_name_list)
+            {
+                ArrayList<String> t_permission_name_list = getPermissionsForGroup(t_group_name);
+                
+                if (t_permission_name_list.contains(p_permission))
+                    return true;
+            }
+            return false;
+        }
+        return true;
+    }
+    
+    private List<PermissionGroupInfo> getAllPermissionGroups()
+    {
+        final PackageManager t_package_manager = getContext().getPackageManager();
+        if (t_package_manager == null)
+            return null;
+        
+        return t_package_manager.getAllPermissionGroups(0);
+    }
+    
+    private ArrayList<String> getPermissionsForGroup(String p_group_name)
+    {
+        final PackageManager t_package_manager = getContext().getPackageManager();
+        final ArrayList<String> t_permission_name_list = new ArrayList<String>();
+        
+        try
+        {
+            List<PermissionInfo> t_permission_info_list =
+            t_package_manager.queryPermissionsByGroup(p_group_name, PackageManager.GET_META_DATA);
+            if (t_permission_info_list != null)
+            {
+                for (PermissionInfo t_permission_info : t_permission_info_list)
+                {
+                    String t_permission_name = t_permission_info.name;
+                    t_permission_name_list.add(t_permission_name);
+                }
+            }
+        }
+        catch (PackageManager.NameNotFoundException e)
+        {
+            // e.printStackTrace();
+            Log.d(TAG, "permissions not found for group = " + p_group_name);
+        }
+        
+        Collections.sort(t_permission_name_list);
+        
+        return t_permission_name_list;
+    }
+    
+    
+    public void showPhotoPicker(String p_source, int p_width, int p_height)
+    {
+        m_photo_width = p_width;
+        m_photo_height = p_height;
+        
+        if (p_source.equals("camera"))
+            showCamera();
+        else if (p_source.equals("album"))
+            showLibrary();
+        else if (p_source.equals("library"))
+            showLibrary();
+        else
+        {
+            doPhotoPickerError("source not available");
+        }
+        
+    }
+    
+    // sent by the callback
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults)
+    {
+        onAskPermissionDone(grantResults[0] == PackageManager.PERMISSION_GRANTED);
+    }
+    
 	public void showCamera()
 	{
 		// 2012-01-18-IM temp file may be created in app cache folder, in which case
@@ -1914,12 +2024,15 @@ public class Engine extends View implements EngineApi
 			doPhotoPickerError("error: could not create temporary image file");
 			return;
 		}
-		
 
-		Uri t_tmp_uri = Uri.fromFile(m_temp_image_file);
+		String t_path = m_temp_image_file.getPath();
+
+		Uri t_uri;
+		t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", true, ParcelFileDescriptor.MODE_WRITE_ONLY);
 
 		Intent t_image_capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_tmp_uri);
+		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_uri);
+		t_image_capture.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 		t_activity.startActivityForResult(t_image_capture, IMAGE_RESULT);
 	}
 
@@ -1976,7 +2089,7 @@ public class Engine extends View implements EngineApi
 			}
 			if (m_temp_image_file != null)
 			{
-				m_temp_image_file.delete();
+				FileProvider.getProvider(getContext()).removePath(m_temp_image_file.getPath());
 				m_temp_image_file = null;
 			}
 		}
@@ -2007,9 +2120,7 @@ public class Engine extends View implements EngineApi
 
 	public void prepareEmail(String address, String cc, String bcc, String subject, String message_body, boolean is_html)
 	{
-        String t_provider_authority = getContext().getPackageName();
-        t_provider_authority += ".attachmentprovider";
-		m_email = new Email(address, cc, bcc, subject, message_body, t_provider_authority, is_html);
+		m_email = new Email(address, cc, bcc, subject, message_body, is_html);
 	}
 
 	public void addAttachment(String path, String mime_type, String name)
@@ -2031,7 +2142,7 @@ public class Engine extends View implements EngineApi
 
 	private void onEmailResult(int resultCode, Intent data)
 	{
-		m_email.cleanupAttachments(getActivity().getContentResolver());
+		m_email.cleanupAttachments(getContext());
 
 		if (resultCode == Activity.RESULT_CANCELED)
 		{
@@ -2129,63 +2240,108 @@ public class Engine extends View implements EngineApi
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
+    
+    private boolean openGLViewEnabled()
+    {
+        return m_opengl_view != null && m_opengl_view.getParent() != null;
+    }
+    
+    private void ensureBitmapViewVisibility()
+    {
+        if (openGLViewEnabled())
+        {
+            m_bitmap_view.setVisibility(View.INVISIBLE);
+        }
+        else
+        {
+            m_bitmap_view.setVisibility(View.VISIBLE);
+        }
+    }
 
 	public void enableOpenGLView()
 	{
-		// If OpenGL is already enabled, do nothing.
-		if (m_opengl_view != null)
-			return;
-
-		Log.i("revandroid", "enableOpenGLView");
-
-
-		// If we have an old OpenGL view, use it.
-		if (m_old_opengl_view != null)
-		{
-			m_opengl_view = m_old_opengl_view;
-			m_old_opengl_view = null;
-		}
-
-		// Create the OpenGL view, if needed.
-		if (m_opengl_view == null)
-		{
-			m_opengl_view = new OpenGLView(getContext());
+        Log.i("revandroid", "enableOpenGLView");
+        
+        if (m_disabling_opengl)
+        {
+            m_disabling_opengl = false;
+        }
+        
+        if (!m_enabling_opengl)
+        {
+            m_enabling_opengl = true;
             
-			// Add the view to the hierarchy - we add at the bottom and bring to
-			// the front as soon as we've shown the first frame.
-			((ViewGroup)getParent()).addView(m_opengl_view, 0,
-											 new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
-																		  FrameLayout.LayoutParams.MATCH_PARENT));
-		}
+            post(new Runnable() {
+                public void run() {
+                    Log.i("revandroid", "enableOpenGLView callback");
+                    
+                    if (!m_disabling_opengl && m_enabling_opengl)
+                    {
+                        if (!openGLViewEnabled())
+                        {
+                            Log.i("revandroid", "enableOpenGLView adding");
+                            if (m_opengl_view == null)
+                            {
+                                m_opengl_view = new OpenGLView(getContext());
+                            }
+                            
+                            // Add the view to the hierarchy - we add at the bottom and bring to
+                            // the front as soon as we've shown the first frame.
+                            ((ViewGroup)getParent()).addView(m_opengl_view, 0,
+                                                             new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                                                                                          FrameLayout.LayoutParams.MATCH_PARENT));
+                        }
+                        else
+                        {
+                            // We need to call this explicitly here as we must re-enable drawing
+                            m_opengl_view.doSurfaceChanged(m_opengl_view);
+                        }
+                    }
+                    
+                    m_enabling_opengl = false;
+                    ensureBitmapViewVisibility();
+                }
+            });
+        }
 	}
 
 	public void disableOpenGLView()
 	{
-		// If OpenGL is not enabled, do nothing.
-		if (m_opengl_view == null)
-			return;
+        Log.i("revandroid", "disableOpenGLView");
+        
+        if (m_enabling_opengl)
+        {
+            m_enabling_opengl = false;
+        }
+        
+        if (!m_disabling_opengl)
+        {
+            m_disabling_opengl = true;
+            
+            // Before removing the OpenGL mode, make sure we show the bitmap view.
+            m_bitmap_view.setVisibility(View.VISIBLE);
 
-		Log.i("revandroid", "disableOpenGLView");
-
-		// Before removing the OpenGL mode, make sure we show the bitmap view.
-		m_bitmap_view.setVisibility(View.VISIBLE);
-
-		// Move the current opengl view to old.
-		m_old_opengl_view = m_opengl_view;
-		m_opengl_view = null;
-
-		// Post an runnable that removes the OpenGL view. Doing that here will
-		// cause a black screen.
-		post(new Runnable() {
-			public void run() {
-				if (m_old_opengl_view == null)
-					return;
-
-				Log.i("revandroid", "disableOpenGLView callback");
-				((ViewGroup)m_old_opengl_view.getParent()).removeView(m_old_opengl_view);
-				m_old_opengl_view = null;
-		}
-		});
+            // Move the current opengl view to old.
+            // Post an runnable that removes the OpenGL view. Doing that here will
+            // cause a black screen.
+            post(new Runnable() {
+                public void run() {
+                    Log.i("revandroid", "disableOpenGLView callback");
+                    
+                    if (!m_enabling_opengl && m_disabling_opengl)
+                    {
+                       if (openGLViewEnabled())
+                        {
+                            Log.i("revandroid", "disableOpenGLView removing");
+                            ((ViewGroup)m_opengl_view.getParent()).removeView(m_opengl_view);
+                        }
+                    }
+                    
+                    m_disabling_opengl = false;
+                    ensureBitmapViewVisibility();
+                }
+            });
+        }
 	}
     
     // MW-2015-05-06: [[ Bug 15232 ]] Post a runnable to prevent black flash when enabling openGLView
@@ -2193,15 +2349,14 @@ public class Engine extends View implements EngineApi
     {
         post(new Runnable() {
             public void run() {
-                if (m_opengl_view == null)
-                    return;
-                m_bitmap_view.setVisibility(View.INVISIBLE);
+                ensureBitmapViewVisibility();
             }
         });
     }
     
 	public void showBitmapView()
 	{
+        // force visible for visual effects
 		m_bitmap_view.setVisibility(View.VISIBLE);
 	}
 
@@ -2791,6 +2946,29 @@ public class Engine extends View implements EngineApi
 
 ////////
 
+	// NFC
+	public boolean isNFCAvailable()
+	{
+		return m_nfc_module.isAvailable();
+	}
+	
+	public boolean isNFCEnabled()
+	{
+		return m_nfc_module.isEnabled();
+	}
+	
+	public void enableNFCDispatch()
+	{
+		m_nfc_module.setDispatchEnabled(true);
+	}
+	
+	public void disableNFCDispatch()
+	{
+		m_nfc_module.setDispatchEnabled(false);
+	}
+	
+////////
+
     // if the app was launched to handle a Uri view intent, return the Uri as a string, else return null
     public String getLaunchUri(Intent intent)
     {
@@ -2992,6 +3170,9 @@ public class Engine extends View implements EngineApi
 		if (m_native_control_module != null)
 			m_native_control_module.onPause();
 		
+		if (m_nfc_module != null)
+			m_nfc_module.onPause();
+		
 		if (m_video_is_playing)
 			m_video_control . suspend();
 
@@ -3014,6 +3195,9 @@ public class Engine extends View implements EngineApi
 		
 		if (m_native_control_module != null)
 			m_native_control_module.onResume();
+		
+		if (m_nfc_module != null)
+			m_nfc_module.onResume();
 
 		if (m_video_is_playing)
 			m_video_control . resume();
@@ -3022,6 +3206,9 @@ public class Engine extends View implements EngineApi
 
 		if (m_new_intent)
 		{
+			if (m_nfc_module != null)
+				m_nfc_module.onNewIntent(((Activity)getContext()).getIntent());
+				
 			doLaunchDataChanged();
 			
 			String t_launch_url;
@@ -3206,6 +3393,14 @@ public class Engine extends View implements EngineApi
     {
         Log.i("revandroid", "compareInternational"); 
         return m_collator.compare(left, right);
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    
+    public Object createTypefaceFromAsset(String path)
+    {
+        Log.i("revandroid", "createTypefaceFromAsset");
+        return Typeface.createFromAsset(getContext().getAssets(),path);
     }
     
     ////////////////////////////////////////////////////////////////////////////////
@@ -3463,6 +3658,115 @@ public class Engine extends View implements EngineApi
 
     ////////////////////////////////////////////////////////////////////////////////
 
+    public interface ServiceListener
+    {
+        public void onStart(Context context);
+        public void onFinish(Context context);
+    }
+    
+    Context m_service_context = null;
+    ArrayList<ServiceListener> m_running_services = null;
+    ArrayList<ServiceListener> m_pending_services = null;
+    
+    private int serviceListFind(ArrayList<ServiceListener> p_list, ServiceListener p_obj)
+    {
+        for(int i = 0; i < p_list.size(); i++)
+        {
+            if (p_list.get(i) == p_obj)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    public void startService(ServiceListener p_listener)
+    {
+        if (m_running_services == null)
+        {
+            m_pending_services = new ArrayList<ServiceListener>();
+        }
+        
+        m_pending_services.add(p_listener);
+        
+        Intent t_service = new Intent(getContext(), getServiceClass());
+        getContext().startService(t_service);
+    }
+    
+    public void stopService(ServiceListener p_listener)
+    {
+        if (serviceListFind(m_pending_services, p_listener) != -1)
+        {
+            m_pending_services.remove(serviceListFind(m_pending_services, p_listener));
+            return;
+        }
+        
+        if (serviceListFind(m_running_services, p_listener) != -1)
+        {
+            p_listener.onFinish(m_service_context);
+            m_running_services.remove(serviceListFind(m_running_services, p_listener));
+        }
+        
+        if (m_pending_services.isEmpty() &&
+            m_running_services.isEmpty())
+        {
+            Intent t_service = new Intent(getContext(), getServiceClass());
+            getContext().stopService(t_service);
+        }
+    }
+    
+    public int handleStartService(Context p_service_context, Intent p_intent, int p_flags, int p_start_id)
+    {
+        if (m_pending_services == null ||
+            m_pending_services.isEmpty())
+        {
+            if (m_running_services == null ||
+                m_running_services.isEmpty())
+            {
+                Intent t_service = new Intent(getContext(), getServiceClass());
+                getContext().stopService(t_service);
+                return Service.START_NOT_STICKY;
+            }
+            return Service.START_STICKY;
+        }
+        
+        m_service_context = p_service_context;
+        
+        ServiceListener t_listener = m_pending_services.get(0);
+        m_pending_services.remove(0);
+        
+        if (m_running_services == null)
+        {
+            m_running_services = new ArrayList<ServiceListener>();
+        }
+        
+        m_running_services.add(t_listener);
+        t_listener.onStart(p_service_context);
+        
+        return Service.START_STICKY;
+    }
+    
+    public void handleFinishService(Context p_service_context)
+    {
+        m_pending_services = null;
+        
+        while(!m_running_services.isEmpty())
+        {
+            m_running_services.get(0).onFinish(p_service_context);
+            m_running_services.remove(0);
+        }
+        m_running_services = null;
+        
+        m_service_context = null;
+    }
+    
+    public Class getServiceClass()
+    {
+        return ((LiveCodeActivity)getContext()).getServiceClass();
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////////
+    
     // url launch callback
     public static native void doLaunchFromUrl(String url);
 	// intent launch callback
@@ -3538,6 +3842,7 @@ public class Engine extends View implements EngineApi
     public static native void doDatePickerDone(int year, int month, int day, boolean done);
     public static native void doTimePickerDone(int hour, int minute, boolean done);
     public static native void doListPickerDone(int index, boolean done);
+    public static native void doAskPermissionDone(boolean granted);
 
 	public static native void doMovieStopped();
 	public static native void doMovieTouched();

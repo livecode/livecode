@@ -18,19 +18,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 -- Library modules add public handlers to the bottom of the message path.
 --
 /**
-This simple library gives access to the LiveCode Builder canvas syntax from LiveCode Script by wrapping in a few simple handlers.
+Gives access to the LiveCode Builder canvas syntax from LiveCode Script 
 
-	Example usage:
+Description:
+This library wraps a few simple handlers of the LiveCode Builder Canvas
+module to provide access to the syntax for creating and manipulating
+canvas objects.
 
-	  canvasCreate 100, 100
-	  canvasSetColor 1, 0, 0, 1
-	  canvasFillCircle 50, 50, 25
-	  canvasApplyToImage "image 1"
-      canvasDestroy
+For example:
+
+    canvasCreate 100, 100
+	canvasSetColor 1, 0, 0, 1
+	canvasFillCircle 50, 50, 25
+	canvasApplyToImage "image 1"
+    canvasDestroy
   
-   This creates a canvas of size 100x100, fills a circle of radius 25 at
-   the centre, then copies the contents of the canvas to 'image 1' (which
-   must already exist).
+This creates a canvas of size 100x100, fills a circle of radius 25 at
+the centre, then copies the contents of the canvas to 'image 1' (which
+must already exist).
    
 Tags: Canvas Library
 */
@@ -49,6 +54,8 @@ variable sCanvas as optional Canvas
 
 /**
 Summary: Creates a canvas of the given size for the other handlers to use.
+
+Parameters:
 pWidth:  The width of the created canvas.
 pHeight:  The height of the created canvas.
 
@@ -77,6 +84,8 @@ end handler
 
 /**
 Summary: Sets the current color of the canvas to the given RGBA value.
+
+Parameters:
 pRed: The red component of the color to set.
 pGreen: The green component of the color to set.
 pBlue: The blue component of the color to set.
@@ -91,9 +100,12 @@ end handler
 
 /**
 Summary: Draws a filled circle.
+
+Parameters:
 pX: The x-coordinate of the centre of the circle.
 pY: The y-coordinate of the centre of the circle.
 pRadius: The radius of the circle.
+
 Description:
 Fills a circle of the given radius at the given position in the canvas.
 */
@@ -103,6 +115,8 @@ end handler
 
 /**
 Summary: Copies the current contents of the canvas to the specified image object.
+
+Parameters:
 pObjectId: A string which is an object chunk referring to an image.
 
 Description:
@@ -122,6 +136,24 @@ public handler canvasApplyToImage(in pObjectId as String) returns nothing
 
   -- Finally set the image data of the image object.
   set property "imageData" of tObject to the pixel data of sCanvas
+end handler
+
+/**
+Summary: Returns the bounding box of an SVG path.
+
+Parameters:
+pPathString: The SVG Path string to process
+
+Description:
+Parses the SVG path string and computes the tight bounding box.
+*/
+public handler canvasComputeBoundingBoxOfPath(in pPathString as String) returns Array
+  variable tPath as Path
+  put path pPathString into tPath
+
+  variable tBBox as Rectangle
+  put the bounding box of tPath into tBBox
+  return { "left": the left of tBBox, "top": the top of tBBox, "right": the right of tBBox, "bottom": the bottom of tBBox }
 end handler
 
 end library

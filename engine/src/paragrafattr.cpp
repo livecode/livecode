@@ -42,29 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static struct {const char *name; Properties prop; } kMCParagraphAttrsProps[] =
-{
-	{"textAlign", P_TEXT_ALIGN},
-	{"listStyle", P_LIST_STYLE},
-	{"listDepth", P_LIST_DEPTH},
-	{"listIndent", P_LIST_INDENT},
-	{"firstIndent", P_FIRST_INDENT},
-	{"leftIndent", P_LEFT_INDENT},
-	{"rightIndent", P_RIGHT_INDENT},
-	{"spaceAbove", P_SPACE_ABOVE},
-	{"spaceBelow", P_SPACE_BELOW},
-	{"tabStops", P_TAB_STOPS},
-	{"backgroundColor", P_BACK_COLOR},
-	{"borderWidth", P_BORDER_WIDTH},
-	{"borderColor", P_BORDER_COLOR},
-	{"hGrid", P_HGRID},
-	{"vGrid", P_VGRID},
-	{"dontWrap", P_DONT_WRAP},
-	{"padding", P_PADDING},
-    {"listIndex", P_LIST_INDEX},
-	{nil, P_UNDEFINED},
-};
-
 bool MCParagraph::hasattrs(void)
 {
 	return attrs != nil;
@@ -126,13 +103,28 @@ void MCParagraph::fetchattrs(MCArrayRef src)
 
         if (MCField::parsetabstops(P_TAB_STOPS, t_stringref_value, t_uint16_tabs, t_count))
         {
-            /* UNCHECKED */ MCMemoryAllocate(t_count, t_tabstops . elements);
+            /* UNCHECKED */ MCMemoryAllocate(sizeof(uinteger_t) * t_count, t_tabstops . elements);
             for (uint16_t i = 0; i < t_count; ++i)
                 t_tabstops . elements[i] = t_uint16_tabs[i];
 
+			t_tabstops . count = t_count;
             SetTabStops(ctxt, t_tabstops);
             MCMemoryDeallocate(t_tabstops . elements);
             MCMemoryDeallocate(t_uint16_tabs);
+        }
+
+        MCValueRelease(t_stringref_value);
+    }
+
+    if (ctxt . CopyElementAsString(src, MCNAME("tabAlign"), false, t_stringref_value))
+    {
+		MCInterfaceFieldTabAlignments t_alignments;
+		MCMemoryClear(t_alignments);
+
+		if (MCField::parsetabalignments(t_stringref_value, t_alignments.m_alignments, t_alignments.m_count))
+        {
+			SetTabAlignments(ctxt, t_alignments);
+			MCMemoryDeallocate(t_alignments.m_alignments);
         }
 
         MCValueRelease(t_stringref_value);
@@ -186,6 +178,14 @@ void MCParagraph::fetchattrs(MCArrayRef src)
 	// PM-2016-02-26: [[ Bug 17019 ]] Make sure listIndex is set correctly
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("listIndex"), false, t_uint_value))
         SetListIndex(ctxt, &t_uint_value);
+    
+    if (ctxt . CopyElementAsBoolean(src, MCNAME("hidden"), false, t_boolean_value))
+    {
+        bool t_bool;
+        t_bool = t_boolean_value == kMCTrue;
+        SetInvisible(ctxt, t_bool);
+        MCValueRelease(t_boolean_value);
+    }
 }
 
 IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
@@ -215,7 +215,7 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 	// Initialize the paragraph attrs to default values.
     if (t_stat == IO_NORMAL)
     {
-        attrs = new MCParagraphAttrs;
+        attrs = new (nothrow) MCParagraphAttrs;
         attrs -> flags = t_flags;
     }
 
@@ -253,7 +253,7 @@ IO_stat MCParagraph::loadattrs(IO_handle stream, uint32_t version)
 		t_stat = checkloadstat(IO_read_uint2(&attrs -> tab_count, stream));
 		if (t_stat == IO_NORMAL)
 		{
-			attrs -> tabs = new uint16_t[attrs -> tab_count];
+			attrs -> tabs = new (nothrow) uint16_t[attrs -> tab_count];
 			for(uint32_t i = 0; i < attrs -> tab_count && t_stat == IO_NORMAL; i++)
 				t_stat = checkloadstat(IO_read_uint2(&attrs -> tabs[i], stream));
 		}
@@ -500,7 +500,7 @@ void MCParagraph::copyattrs(const MCParagraph& other)
 		return;
 
 	// Make a new attrs structure.
-	attrs = new MCParagraphAttrs;
+	attrs = new (nothrow) MCParagraphAttrs;
 	
 	// Copy across all the fields byte-wise.
 	memcpy(attrs, other . attrs, sizeof(MCParagraphAttrs));
@@ -508,8 +508,14 @@ void MCParagraph::copyattrs(const MCParagraph& other)
 	// If the struct has tabs, then copy them properly.
 	if ((other . attrs -> flags & PA_HAS_TABS) != 0)
 	{
-		attrs -> tabs = new uint16_t[other . attrs -> tab_count];
+		attrs -> tabs = new (nothrow) uint16_t[other . attrs -> tab_count];
 		memcpy(attrs -> tabs, other . attrs -> tabs, sizeof(uint16_t) * other . attrs -> tab_count);
+	}
+
+	// If the struct has tabalignments then copy them properly
+	if ((other . attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+	{
+		/* UNCHECKED */ MCMemoryAllocateCopy(other . attrs -> alignments, sizeof(intenum_t) * other . attrs -> alignments_count, attrs -> alignments);
 	}
 
 	// MW-2012-12-04: [[ Bug 10577 ]] If the struct has metadata, then copy it properly.
@@ -526,6 +532,10 @@ void MCParagraph::clearattrs(void)
 	// If we have tabs, then delete them.
 	if ((attrs -> flags & PA_HAS_TABS) != 0)
 		delete attrs -> tabs;
+
+	// If we have tab alignments then delete them.
+	if ((attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+		MCMemoryDeallocate(attrs -> alignments);
 
 	// MW-2012-11-13: [[ ParaMetadata ]] If we have metadata, delete it.
 	if ((attrs -> flags & PA_HAS_METADATA) != 0)
@@ -586,6 +596,12 @@ void MCParagraph::exportattrs(MCFieldParagraphStyle& x_style)
 		x_style . has_tabs = true;	
 		x_style . tabs = attrs -> tabs;
 		x_style . tab_count = attrs -> tab_count;
+	}
+	if ((attrs -> flags & PA_HAS_TAB_ALIGNMENTS) != 0)
+	{
+		x_style . has_tab_alignments = true;
+		x_style . tab_alignments = attrs -> alignments;
+		x_style . tab_alignment_count = attrs -> alignments_count;
 	}
 	if ((attrs -> flags & PA_HAS_BACKGROUND_COLOR) != 0)
 	{
@@ -652,7 +668,7 @@ void MCParagraph::importattrs(const MCFieldParagraphStyle& p_style)
 {
 	clearattrs();
 	
-	attrs = new MCParagraphAttrs;
+	attrs = new (nothrow) MCParagraphAttrs;
 	if (p_style . has_text_align)
 	{
 		attrs -> flags |= PA_HAS_TEXT_ALIGN;
@@ -693,8 +709,14 @@ void MCParagraph::importattrs(const MCFieldParagraphStyle& p_style)
 	{
 		attrs -> flags |= PA_HAS_TABS;
 		attrs -> tab_count = p_style . tab_count;
-		attrs -> tabs = new uint16_t[p_style . tab_count];
+		attrs -> tabs = new (nothrow) uint16_t[p_style . tab_count];
 		memcpy(attrs -> tabs, p_style . tabs, sizeof(uint16_t) * p_style . tab_count);
+	}
+	if (p_style . has_tab_alignments)
+	{
+		attrs -> flags |= PA_HAS_TAB_ALIGNMENTS;
+		attrs -> alignments_count = p_style . tab_alignment_count;
+		/* UNCHECKED */ MCMemoryAllocateCopy(p_style . tab_alignments, sizeof(intenum_t) * p_style . tab_alignment_count, attrs -> alignments);
 	}
 	if (p_style . has_background_color)
 	{
@@ -775,7 +797,7 @@ void MCParagraph::setliststyle(uint32_t p_new_list_style)
 	else
 	{
 		if (attrs == nil)
-			attrs = new MCParagraphAttrs;
+			attrs = new (nothrow) MCParagraphAttrs;
 		if ((attrs -> flags & PA_HAS_LIST_STYLE) == 0)
 		{
 			attrs -> flags |= PA_HAS_LIST_STYLE;
@@ -798,7 +820,7 @@ void MCParagraph::setmetadata(MCStringRef p_metadata)
 		return;
 
 	if (attrs == nil)
-		attrs = new MCParagraphAttrs;
+		attrs = new (nothrow) MCParagraphAttrs;
     attrs -> flags |= PA_HAS_METADATA;
     /* UNCHECKED */ MCValueInter(p_metadata, attrs -> metadata);
 }
@@ -816,7 +838,7 @@ void MCParagraph::setlistindex(uint32_t p_new_list_index)
 	else
 	{
 		if (attrs == nil)
-			attrs = new MCParagraphAttrs;
+			attrs = new (nothrow) MCParagraphAttrs;
 
 		attrs -> flags |= PA_HAS_LIST_INDEX;
 		attrs -> list_index = p_new_list_index;
@@ -1199,7 +1221,7 @@ void MCParagraph::computerects(int32_t x, int32_t y, int32_t p_layout_width, uin
 	t_total_width = r_inner . width + t_left_margin + t_right_margin;
 	if (t_total_width > p_layout_width)
 	{
-		int32_t t_offset;
+		int32_t t_offset = 0;
 		switch(gettextalign())
 		{
 		case kMCParagraphTextAlignLeft:
@@ -1212,6 +1234,8 @@ void MCParagraph::computerects(int32_t x, int32_t y, int32_t p_layout_width, uin
 		case kMCParagraphTextAlignRight:
 			t_offset = p_layout_width - t_total_width;
 			break;
+		default:
+			MCUnreachableReturn();
 		}
 		r_inner . x += t_offset;
 		r_outer . x += t_offset;
@@ -1246,7 +1270,7 @@ void MCParagraph::computeparaoffsetandwidth(int32_t& r_offset, int32_t& r_width)
 	t_layout_width = parent -> getlayoutwidth();
 	t_para_width = getwidth();
 
-    int32_t t_offset;
+    int32_t t_offset = 0;
 	if (getdontwrap())
 	{
 		switch(gettextalign())
@@ -1274,7 +1298,8 @@ void MCParagraph::computeparaoffsetandwidth(int32_t& r_offset, int32_t& r_width)
 // left of the inner paragraph box. It also returns the width of the paragraph box.
 void MCParagraph::computeboxoffsetandwidth(int32_t& r_offset, int32_t& r_width) const
 {
-	MCRectangle t_outer, t_inner;
+	MCRectangle t_outer(kMCEmptyRectangle);
+	MCRectangle t_inner(kMCEmptyRectangle);
 	computerects(0, 0, parent -> getlayoutwidth(), getwidth(), 0, t_outer, t_inner);
 	r_offset = t_inner . x;
 	r_width = t_inner . width;

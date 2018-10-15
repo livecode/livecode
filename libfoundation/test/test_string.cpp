@@ -123,6 +123,16 @@ TEST(string, format_stringref_with_range)
 	ASSERT_STREQ(MCStringGetCString(*t_string), "hello");
 }
 
+TEST(string, format_null_valueref)
+//
+// Checks that a nullptr valueref maps to (null) [ Bug 19866 ]
+//
+{	MCAutoStringRef t_string;
+
+	ASSERT_TRUE(MCStringFormat(&t_string, "%@", nullptr));
+	ASSERT_STREQ(MCStringGetCString(*t_string), "(null)");
+}
+
 TEST(string, format_everything)
 //
 // Checks formatting with lots of different options
@@ -147,7 +157,8 @@ static void check_bidi_of_surrogate_range(int p_lower, int p_upper)
 		ASSERT_TRUE(t_pua_chars.Resize(t_size * 2));
     for(int i = 0; i < t_size; i++)
     {
-        MCUnicodeCodepointToSurrogates(i + p_lower, t_pua_chars.Ptr() + i * 2);
+        MCUnicodeCodepointToSurrogates(i + p_lower,
+                                       t_pua_chars[i*2], t_pua_chars[i*2 + 1]);
     }
 
 		MCAutoArray<uint8_t> t_props;

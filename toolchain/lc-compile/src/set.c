@@ -44,7 +44,7 @@ static void EnsureSetStackDepth(int p_depth)
         Fatal_InternalInconsistency("Incorrect depth of set stack for operation");
 }
 
-static void EnsureSetIndexInRange(long p_index)
+static void EnsureSetIndexInRange(intptr_t p_index)
 {
     if (p_index < 0 || p_index > 31)
         Fatal_InternalInconsistency("Index out of range for set operation");
@@ -87,7 +87,7 @@ void UnionSet(void)
     s_set_count -= 1;
 }
 
-int IsIndexInSet(long p_index)
+int IsIndexInSet(intptr_t p_index)
 {
     EnsureSetStackDepth(1);
     EnsureSetIndexInRange(p_index);
@@ -98,7 +98,7 @@ int IsIndexInSet(long p_index)
     return 0;
 }
 
-void IncludeIndexInSet(long p_index)
+void IncludeIndexInSet(intptr_t p_index)
 {
     EnsureSetStackDepth(1);
     EnsureSetIndexInRange(p_index);
@@ -106,7 +106,7 @@ void IncludeIndexInSet(long p_index)
     s_sets[s_set_count - 1] |= (1 << p_index);
 }
 
-void ExcludeIndexFromSet(long p_index)
+void ExcludeIndexFromSet(intptr_t p_index)
 {
     EnsureSetStackDepth(1);
     EnsureSetIndexInRange(p_index);

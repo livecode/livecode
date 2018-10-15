@@ -1,0 +1,51 @@
+Name: else if
+
+Type: keyword
+
+Syntax: else if <condition> then
+   <statementList>
+
+Summary:
+Used within an <if> <control structure> to evaluate an alternate <condition|conditional expression> and contain
+a <statement> or <statementlist|statement list> to be executed if its
+<condition|conditional expression> is true.
+
+Introduced: 1.0
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Example:
+
+if tPH < 7 then
+   put "acid" into tDescription
+else if tPH > 7 then
+   put "alkaline" into tDescription
+else
+   put "neutral" into tDescription
+end if
+
+
+Parameters:
+condition (bool):
+Any <expression>. (If the <condition> <evaluate|evaluates> to true, 
+the <statement|statements> execute for that <condition>.
+If the <condition> <evaluate|evaluates> to false, the <statement> or 
+<statementlist|statement list> following that <condition> is
+skipped.)
+
+statementList:
+Of one or more <LiveCode> <statement|statements>, and can also include
+<if>, <switch>, <try>, or <repeat> <control structure|control
+structures>. 
+
+Description:
+Use the <else if> <keyword> to add an alternate <condition|conditional expression> to be evaluated in the
+<if> <control structure>. If the <conditional expression|condition> evaluates to true then the <statement> or
+<statementlist|statement list> following the <else if><keyword> will be executed.
+
+References: if (control structure), break (control structure),
+keyword (glossary), control structure (glossary), then (keyword),
+end (keyword), else (keyword), control (keyword), switch control structure),
+repeat (control structure), try (control structure)

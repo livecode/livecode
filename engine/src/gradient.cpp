@@ -63,7 +63,7 @@ static Exec_stat MCGradientFillLookupProperty(MCNameRef p_token, MCGradientFillP
 	uint4 tablesize = ELEMENTS(gradientprops);
 	while (tablesize--)
 	{
-		if (MCNameIsEqualToCString(p_token, gradientprops[tablesize].token, kMCCompareCaseless))
+		if (MCStringIsEqualToCString(MCNameGetString(p_token), gradientprops[tablesize].token, kMCCompareCaseless))
 		{
 			r_prop = gradientprops[tablesize].value;
 			return ES_NORMAL;
@@ -76,13 +76,13 @@ static Exec_stat MCGradientFillLookupProperty(MCNameRef p_token, MCGradientFillP
 
 void MCGradientFillInit(MCGradientFill *&r_gradient, MCRectangle p_rect)
 {
-	r_gradient = new MCGradientFill;
+	r_gradient = new (nothrow) MCGradientFill;
 	r_gradient->kind = kMCGradientKindLinear;
 	r_gradient->quality = kMCGradientQualityNormal;
 	r_gradient->mirror = false;
 	r_gradient->wrap = false;
 	r_gradient->repeat = 1;
-	r_gradient->ramp = new MCGradientFillStop[2];
+	r_gradient->ramp = new (nothrow) MCGradientFillStop[2];
 	r_gradient->ramp[0].offset = 0;
 	r_gradient->ramp[0].color = MCGPixelPack(kMCGPixelFormatBGRA, 0, 0, 0, 255); // black
 	r_gradient->ramp[0].hw_color = MCGPixelPackNative(0, 0, 0, 255);
@@ -112,11 +112,11 @@ MCGradientFill *MCGradientFillCopy(const MCGradientFill *p_gradient)
 	if (p_gradient == NULL)
 		return NULL;
 
-	MCGradientFill *t_gradient = new MCGradientFill;
+	MCGradientFill *t_gradient = new (nothrow) MCGradientFill;
 	t_gradient->kind = p_gradient->kind;
 	
 	t_gradient->ramp_length = p_gradient->ramp_length;
-	t_gradient->ramp = new MCGradientFillStop[t_gradient->ramp_length];
+	t_gradient->ramp = new (nothrow) MCGradientFillStop[t_gradient->ramp_length];
 
 	memcpy(t_gradient->ramp, p_gradient->ramp, sizeof(MCGradientFillStop)*t_gradient->ramp_length);
 
@@ -244,22 +244,16 @@ bool MCGradientFillGetProperties(MCExecContext& ctxt, MCGradientFill* p_gradient
     while (t_success && tablesize--)
     {
         MCValueRef t_prop_value;
-        MCNewAutoNameRef t_key;
         
-        t_success = MCNameCreateWithCString(gradientprops[tablesize].token, &t_key);
-        
+        MCExecValue t_value;
+        t_success = MCGradientFillFetchProperty(ctxt, p_gradient, gradientprops[tablesize].value, t_value);
         if (t_success)
         {
-            MCExecValue t_value;
-            t_success = MCGradientFillFetchProperty(ctxt, p_gradient, gradientprops[tablesize].value, t_value);
-			if (t_success)
-			{
-				MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &t_prop_value);
-				t_success = !ctxt . HasError();
-			}
+            MCExecTypeConvertAndReleaseAlways(ctxt, t_value . type, &t_value , kMCExecValueTypeValueRef, &t_prop_value);
+            t_success = !ctxt . HasError();
         }
         if (t_success)
-            t_success = MCArrayStoreValue(*v, kMCCompareExact, *t_key, t_prop_value);
+            t_success = MCArrayStoreValue(*v, false, MCNAME(gradientprops[tablesize].token), t_prop_value);
     }
     
     MCerrorlock--;
@@ -529,7 +523,7 @@ bool MCGradientFillSetProperties(MCExecContext& ctxt, MCGradientFill*& x_gradien
             {
                 MCValueRef t_prop_value;
                 
-                if (MCArrayFetchValue(*t_array, kMCCompareExact, MCNAME(gradientprops[tablesize].token), t_prop_value))
+                if (MCArrayFetchValue(*t_array, false, MCNAME(gradientprops[tablesize].token), t_prop_value))
                 {
                     MCExecValue t_value;
                     t_value . valueref_value = MCValueRetain(t_prop_value);
@@ -665,15 +659,13 @@ IO_stat MCGradientFillSerialize(MCGradientFill *p_gradient, MCObjectOutputStream
 		t_stat = p_stream . WriteU8(p_gradient -> repeat);
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteU8(p_gradient -> ramp_length);
-	
-	MCPoint *t_point;
-	t_point = &p_gradient -> origin;
-	for(int i = 0; i < 3 && t_stat == IO_NORMAL; ++i)
-	{
-		t_stat = p_stream . WriteS16(t_point[i] . x);
-		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteS16(t_point[i] . y);
-	}
+
+    if (t_stat == IO_NORMAL)
+        t_stat = p_stream.WritePoint(p_gradient->origin);
+    if (t_stat == IO_NORMAL)
+        t_stat = p_stream.WritePoint(p_gradient->primary);
+    if (t_stat == IO_NORMAL)
+        t_stat = p_stream.WritePoint(p_gradient->secondary);
 
 	for(int i = 0; i < p_gradient -> ramp_length; ++i)
 	{
@@ -709,7 +701,7 @@ IO_stat MCGradientFillUnserialize(MCGradientFill *p_gradient, MCObjectInputStrea
 	{
 		if (p_gradient != NULL)
 			delete[] p_gradient -> ramp; /* Allocated with new[] */
-		p_gradient -> ramp = new MCGradientFillStop[p_gradient -> ramp_length];
+		p_gradient -> ramp = new (nothrow) MCGradientFillStop[p_gradient -> ramp_length];
 		for(int i = 0; i < p_gradient -> ramp_length && t_stat == IO_NORMAL; ++i)
 		{
 			uint16_t t_offset;
@@ -747,43 +739,30 @@ IO_stat MCGradientFillUnserialize(MCGradientFill *p_gradient, MCObjectInputStrea
 	return t_stat;
 }
 
-uint1 *MCGradientFillSerialize(MCGradientFill *p_gradient, uint4 &r_length)
+template <typename IntType>
+static IntType
+MCGradientFillUnserializeInt(MCSpan<byte_t>::const_iterator& p_data)
 {
-	uint1 *t_data = (uint1*)malloc(GRADIENT_HEADER_SIZE + p_gradient->ramp_length * (2 + 4));
-	uint1 *t_ptr = t_data;
+	IntType t_value;
+    const byte_t &t_data = *p_data;
+    p_data += sizeof(t_value);
+	MCMemoryCopy(&t_value, &t_data, sizeof(t_value));
+	return MCSwapIntHostToNetwork(t_value);
+}
 
-	*t_ptr++ = ((p_gradient->kind << 4) | (p_gradient->quality << 2) | 
-		(p_gradient->mirror << 1) | (p_gradient->wrap));
-	*t_ptr++ = p_gradient->repeat;
-	*t_ptr++ = p_gradient->ramp_length;
-
-	MCPoint *t_point = &p_gradient->origin;
-
-	//write out 3 byte-swapped pairs of coordinates
-	for (int i = 0; i < 3; i++)
-	{
-		*((uint2*)t_ptr) = MCSwapInt16HostToNetwork((uint2) t_point[i].x);
-		t_ptr += 2;
-		*((uint2*)t_ptr) = MCSwapInt16HostToNetwork((uint2) t_point[i].y);
-		t_ptr += 2;
-	}
-
-	//write out byte-swapped ramp
-	for (int i = 0; i < p_gradient->ramp_length; i++)
-	{
-		*((uint2*)t_ptr) = MCSwapInt16HostToNetwork((uint2)p_gradient->ramp[i].offset);
-		t_ptr += 2;
-		*((uint4*)t_ptr) = MCSwapInt32HostToNetwork(p_gradient->ramp[i].color);
-		t_ptr += 4;
-	}
-
-	r_length = t_ptr - t_data;
-	return t_data;
+static MCPoint
+MCGradientFillUnserializePoint(MCSpan<byte_t>::const_iterator& p_data)
+{
+	MCPoint t_point;
+	t_point.x = MCGradientFillUnserializeInt<int16_t>(p_data);
+	t_point.y = MCGradientFillUnserializeInt<int16_t>(p_data);
+	return t_point;
 }
 
 void MCGradientFillUnserialize(MCGradientFill *p_gradient, uint1 *p_data, uint4 &r_length)
 {
-	uint1 *t_ptr = p_data;
+    MCSpan<byte_t> t_span(p_data, r_length);
+    MCSpan<byte_t>::const_iterator t_ptr = t_span.cbegin();
 
 	uint1 t_packed = *t_ptr++;
 	p_gradient->kind = t_packed >> 4;
@@ -793,31 +772,22 @@ void MCGradientFillUnserialize(MCGradientFill *p_gradient, uint1 *p_data, uint4 
 
 	p_gradient->repeat = *t_ptr++;
 	p_gradient->ramp_length = *t_ptr++;
-	MCPoint *t_points = &p_gradient->origin;
-
-	for (int i=0; i < 3; i++)
-	{
-		t_points[i].x = MCSwapInt16NetworkToHost(*((uint2*)t_ptr));
-		t_ptr += 2;
-		t_points[i].y = MCSwapInt16NetworkToHost(*((uint2*)t_ptr));
-		t_ptr += 2;
-	}
+	p_gradient->origin = MCGradientFillUnserializePoint(t_ptr);
+	p_gradient->primary = MCGradientFillUnserializePoint(t_ptr);
+	p_gradient->secondary = MCGradientFillUnserializePoint(t_ptr);
 
 	if (p_gradient->ramp != NULL)
 		delete p_gradient->ramp;
-	p_gradient->ramp = new MCGradientFillStop[p_gradient->ramp_length];
+	p_gradient->ramp = new (nothrow) MCGradientFillStop[p_gradient->ramp_length];
 
 	for (uint4 i = 0; i < p_gradient->ramp_length; i++)
 	{
-		p_gradient->ramp[i].offset = MCSwapInt16NetworkToHost(*((uint2*)t_ptr));
-		t_ptr += 2;
-
-		p_gradient->ramp[i].color = MCSwapInt32NetworkToHost(*((uint4*)t_ptr));
-		t_ptr += 4;
+		p_gradient->ramp[i].offset = MCGradientFillUnserializeInt<uint16_t>(t_ptr);
+		p_gradient->ramp[i].color = MCGradientFillUnserializeInt<uint32_t>(t_ptr);
 	}
 	for (uint4 i = 1; i < p_gradient->ramp_length; i++)
 		if (p_gradient->ramp[i].offset != p_gradient->ramp[i - 1].offset)
 			p_gradient->ramp[i - 1].difference = STOP_DIFF_MULT / (p_gradient->ramp[i].offset - p_gradient->ramp[i - 1].offset);
 
-	r_length = t_ptr - p_data;
+	r_length = t_span.cend() - t_ptr;
 }

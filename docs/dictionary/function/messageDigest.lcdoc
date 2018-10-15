@@ -1,0 +1,109 @@
+Name: messageDigest
+
+Type: function
+
+Syntax: messageDigest(<message>, <digestType>)
+
+Summary:
+Computes a cryptographic message digest.
+
+Introduced: 9.0
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Example:
+-- Compute a message digest and store the result in "it"
+get messageDigest("LiveCode", "SHA3-256")
+
+Example:
+-- Compute a simplified hash-based message authentication code (HMAC)
+-- for a message using SHA3-256.  Consider using the full RFC 2104
+-- HMAC algorithm.
+put randomBytes(32) into tKey -- Save this key for later!
+put textEncode("Try my LiveCode app", "UTF-8") into tMessage
+get messageDigest(tKey & messageDigest(tKey & tMessage, \
+            "SHA3-256"), "SHA3-256")
+
+Example:
+-- You can use a message digest to detect changes in data.
+-- For example, you could store the checksum alongside or as
+-- part of a file on disk.
+put textEncode("My very large data", "UTF-8") into tOriginal
+put messageDigest(tOriginal, "SHA3-256") into tChecksum
+-- ... some time later ...
+put textEncode("My very large data", "UTF-8") into tLoaded
+if messageDigest(tLoaded, "SHA3-256") is not tChecksum then
+   put "The data changed and may be corrupted!"
+end if
+
+Parameters:
+message(data): A <binary data> string.
+digestType(enum): The cryptographic hash function to use.
+- "SHA3-224":
+- "SHA3-256":
+- "SHA3-384":
+- "SHA3-512":
+- "SHA-224":
+- "SHA-256":
+- "SHA-384":
+- "SHA-512":
+- "SHA-1": Use only for backwards compatibility
+- "MD5": Use only for backwards compatibility
+
+Returns(data):
+Returns the message digest of the <message> as <binary data>.
+
+Description:
+Compute a message digest of <message> using the cryptographic hash
+function <digestType>.
+
+A cryptographic hash function is a mathematical algorithm that maps
+data of an arbitrary length to a fixed-length <binary data> string.
+It has the special property that it is designed to be a one-way
+function; if you are given the output of the cryptographic hash
+function (the "message digest"), it should be impossible to guess the
+input to the function (the "message").
+
+Even a very small change to the <message> will make a very large
+change to the <messageDigest>.  This makes it useful for whether data
+has changed.
+
+The <messageDigest> <function> can be used:
+
+- as a <checksum> to ensure that the <message> has not been corrupted
+  or modified in storage or transmission
+- as a "fingerprint" that summarizes the <message>
+- as part of an authentication system
+- to detect duplicate data
+
+The <messageDigest> function supports the following standardised
+cryptographic hash functions.  Numbers like "256", "384" etc. indicate
+the number of <bit|bits> of binary data that the <messageDigest>
+function returns; for example, if you specify the "SHA3-256"
+<digestType>, then <messageDigest> will return 32 bytes of data.
+
+| Name  | <digestType> | Notes
+| ----- | ------------ | -----
+| MD5   | "MD5"        | MD5 is cryptographically broken and unsuitable for further use.  Do not use for security-critical purposes, unless required for backward compatibility with existing systems.
+| SHA-1 | "SHA-1"      | SHA-1 has been severely weakened and there are practical approaches for generating collisions.  Do not use for security-critical purposes, unless required for backward compatibility with existing systems.
+| SHA-2 | "SHA-224", "SHA-256", "SHA-384", "SHA-512" | SHA-2 has been found to have some minor weaknesses.
+| SHA-3 | "SHA3-224", "SHA3-256", "SHA3-384", "SHA3-512" | SHA-3 has no known weaknesses
+
+When generating a <messageDigest> for a string, it is a good idea to
+encode it to binary data using the <textEncode> function.  Otherwise,
+the <messageDigest> could be different, depending on the <platform> on
+which your application is running.
+
+In some cases you may wish to use a irreversible, keyed one-way
+transform of data, for example in a password storage scheme.  You can
+use the <messageDigest> function to implement a keyed-hash message
+authentication code, as described in [RFC
+2014](https://tools.ietf.org/html/rfc2104).
+
+References: md5digest (function), sha1digest (function),
+	textEncode (function), binary data (glossary), checksum (glossary),
+	function (glossary), platform (glossary)
+
+Tags: math

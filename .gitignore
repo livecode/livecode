@@ -20,10 +20,12 @@ encryptedstack.cpp
 encryptedstack.h
 stacksecurity_encrypted.cpp
 util/perfect/perfect.linux-*
-extensions/*/*/*.xml
-extensions/*/*/*.lci
-extensions/*/*/*.lcm
-extensions/*/*/*.lce
+**/extensions/*/*/*.xml
+**/extensions/*/*/*.lci
+**/extensions/*/*/*.lcm
+**/extensions/*/*/*.lce
+**/extensions/*/*/api.lcdoc
+*/src/.lci/*
 
 # Compiled source and intermediates #
 ###################
@@ -116,11 +118,14 @@ sdks/
 
 # Ignore prebuilts #
 ###################
+prebuilt/bin
 prebuilt/include
 prebuilt/lib
+prebuilt/share
 prebuilt/build
 prebuilt/packaged
 prebuilt/fetched
+prebuilt/unpacked
 
 # Stamp files and generated C files
 ###################################

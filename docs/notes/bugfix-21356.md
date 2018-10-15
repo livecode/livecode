@@ -1,0 +1,1 @@
+# Fix black screen on Android when setting acceleratedRendering at startup

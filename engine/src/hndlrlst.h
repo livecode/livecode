@@ -128,7 +128,6 @@ public:
 	void newglobal(MCNameRef name);
 	
 	Parse_stat parse(MCObject *, MCStringRef);
-	void compile(MCSyntaxFactoryRef ctxt);
 	
 	Exec_stat findhandler(Handler_type, MCNameRef name, MCHandler *&);
 	bool hashandler(Handler_type type, MCNameRef name);

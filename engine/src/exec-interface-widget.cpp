@@ -23,11 +23,6 @@
 
 #include "exec-interface.h"
 
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoBackInWidget, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoForwardInWidget, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, LaunchUrlInWidget, 2)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, DoInWidget, 2);
-
 void MCInterfaceExecGoBackInWidget(MCExecContext& ctxt, MCWidget *p_widget)
 {
 	MCWidgetPost(p_widget->getwidget(), MCNAME("OnGoBack"), kMCEmptyProperList);

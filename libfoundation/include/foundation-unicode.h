@@ -23,10 +23,34 @@
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-codepoint_t MCUnicodeSurrogatesToCodepoint(uint16_t first, uint16_t second);
-// We assume that the unichar_t pointer already has enough memory to handle the addition of the surrogate pair
-// Returns true in case the codepoint actually generated a surrogate pair
-bool MCUnicodeCodepointToSurrogates(codepoint_t t_codepoint, unichar_t* r_surrogates);
+constexpr inline codepoint_t
+MCUnicodeSurrogatesToCodepoint(uint16_t first, uint16_t second)
+{
+    return 0x10000 + ((first & 0x3FF) << 10) + (second & 0x3FF);
+}
+
+/* Split p_codepoint into a surrogate pair, storing the leading
+ * component in r_leading and the trailing component in
+ * r_trailing.  If p_codepoint is in the BMP, set r_leading
+ * to p_codepoint, clear r_trailing, and return false. */
+inline bool MCUnicodeCodepointToSurrogates(codepoint_t p_codepoint,
+                                           unichar_t& r_leading,
+                                           unichar_t& r_trailing)
+{
+    if (p_codepoint < 0x10000)
+    {
+        r_leading = MCNarrowCast<unichar_t>(p_codepoint);
+        r_trailing = 0;
+        return false;
+    }
+    else
+    {
+        p_codepoint -= 0x10000;
+        r_leading = 0xD800 + (p_codepoint >> 10);
+        r_trailing = 0xDC00 + (p_codepoint & 0x3FF);
+        return true;
+    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

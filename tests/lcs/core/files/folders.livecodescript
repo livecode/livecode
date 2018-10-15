@@ -44,6 +44,8 @@ on TestFilesOfFolder
 
    TestAssert "list non-current directory", tTestFile is among the lines of files(tFolder)
 
+   TestAssert "list non-current directory (detailed)", the number of items in line 1 of files(tFolder, "detailed") > 1
+
    local tOldFolder
    put the defaultFolder into tOldFolder
    set the defaultFolder to tFolder
@@ -63,6 +65,8 @@ on TestFoldersOfFolder
    TestDiagnostic the result
 
    TestAssert "list non-current directory", tTestFolder is among the lines of folders(tFolder)
+
+   TestAssert "list non-current directory (detailed)", the number of items in line 2 of folders(tFolder, "detailed") > 1
 
    local tOldFolder
    put the defaultFolder into tOldFolder
@@ -128,10 +132,11 @@ on TestFoldersInEmptyFolder
 end TestFoldersInEmptyFolder
 
 on TestFoldersOfTilde
+   TestSkipIfNot "platform", "MacOS,Linux"
 	TestAssert "folders(~) is the same as folders($HOME)", folders($HOME) is folders("~")
 end TestFoldersOfTilde
 
 on TestFilesOfTilde
+   TestSkipIfNot "platform", "MacOS,Linux"
 	TestAssert "files(~) is the same as files($HOME)", files($HOME) is files("~")
 end TestFilesOfTilde
-

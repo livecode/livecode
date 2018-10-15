@@ -1,5 +1,6 @@
 /* --PATCH-- */ #include <stdlib.h>
 /* --PATCH-- */ #include <stdio.h>
+/* --PATCH-- */ #include <stdint.h>
 /*
    GENTLE 97 CAMPUS EDITION
 
@@ -18,16 +19,16 @@ typedef struct IdentRec *Ident;
 struct IdentRec
 {
    char  *firstposptr;
-   long  length;
+   intptr_t  length;
    Ident next;
 
-   long  symbol_class;
+   intptr_t  symbol_class;
      
-   long  GlobalMeaning;
-   long  LocalMeaning;
-   long  LocalMeaning2;
-   long  FunctorMeaning;
-   long  ExportFlag;
+   intptr_t  GlobalMeaning;
+   intptr_t  LocalMeaning;
+   intptr_t  LocalMeaning2;
+   intptr_t  FunctorMeaning;
+   intptr_t  ExportFlag;
 
 };
 
@@ -79,7 +80,7 @@ slice_to_id (idstart, idstop, ref_id)
    char *idstop;  /* position  a f t e r  last character */
    Ident *ref_id;
 {
-   long  hash, length;
+	   intptr_t  hash, length;
    Ident chain;
    Ident  NewId;
 
@@ -182,7 +183,7 @@ id_to_string (id, repr)
 
 void init_idtab ()
 {
-   long i;
+	intptr_t i;
 
    for (i = 0; i<=HashTabSize-1; i++) HashTab[i] = 0;
 
@@ -211,7 +212,7 @@ init_id_attributes (new)
 
 /*----------------------------------------------------------------------------*/
 
-DefGlobalMeaning (id, m, f) Ident id; long m; long f;
+DefGlobalMeaning (id, m, f) Ident id; intptr_t m; intptr_t f;
 {
    id->GlobalMeaning = m;
    id->ExportFlag = f;
@@ -219,14 +220,14 @@ DefGlobalMeaning (id, m, f) Ident id; long m; long f;
 
 /*----------------------------------------------------------------------------*/
 
-DefFunctorMeaning (id, m) Ident id; long m;
+DefFunctorMeaning (id, m) Ident id; intptr_t m;
 {
    id->FunctorMeaning = m;
 }
 
 /*----------------------------------------------------------------------------*/
 
-DefLocalMeaning (id, m1, m2) Ident id; long m1; long m2;
+DefLocalMeaning (id, m1, m2) Ident id; intptr_t m1; intptr_t m2;
 {
    id->LocalMeaning = m1;
    id->LocalMeaning2 = m2;
@@ -241,7 +242,7 @@ ForgetLocalMeaning (id) Ident id;
 
 /*----------------------------------------------------------------------------*/
 
-long GetGlobalMeaning (id, m) Ident id; long *m;
+long GetGlobalMeaning (id, m) Ident id; intptr_t *m;
 {
    if (id->GlobalMeaning == 0)
       return 0;
@@ -251,7 +252,7 @@ long GetGlobalMeaning (id, m) Ident id; long *m;
 
 /*----------------------------------------------------------------------------*/
 
-long GetExportFlag (id, f) Ident id; long *f;
+long GetExportFlag (id, f) Ident id; intptr_t *f;
 {
    if (id->GlobalMeaning == 0)
       return 0;
@@ -261,7 +262,7 @@ long GetExportFlag (id, f) Ident id; long *f;
 
 /*----------------------------------------------------------------------------*/
 
-long GetFunctorMeaning (id, m) Ident id; long *m;
+long GetFunctorMeaning (id, m) Ident id; intptr_t *m;
 {
    if (id->FunctorMeaning == 0)
       return 0;
@@ -271,7 +272,7 @@ long GetFunctorMeaning (id, m) Ident id; long *m;
 
 /*----------------------------------------------------------------------------*/
 
-long GetLocalMeaning (id, m) Ident id; long *m;
+long GetLocalMeaning (id, m) Ident id; intptr_t *m;
 {
    if (id->LocalMeaning == 0)
       return 0;
@@ -281,7 +282,7 @@ long GetLocalMeaning (id, m) Ident id; long *m;
 
 /*----------------------------------------------------------------------------*/
 
-long GetLocalMeaning2 (id, m) Ident id; long *m;
+long GetLocalMeaning2 (id, m) Ident id; intptr_t *m;
 {
    if (id->LocalMeaning == 0)
       return 0;

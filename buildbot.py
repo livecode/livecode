@@ -34,27 +34,10 @@ import uuid
 
 # LiveCode build configuration script
 import config
+import fetch
 
-# The set of platforms for which this branch supports automated builds
-BUILDBOT_PLATFORM_TRIPLES = (
-    'x86-linux-debian7',
-    'x86_64-linux-debian7',
-    'armv6-android-api8',
-    'universal-mac-macosx10.6', # Minimum deployment target
-    'universal-ios-iphoneos11.2',
-    'universal-ios-iphoneos10.2',
-    'universal-ios-iphoneos9.2',
-    'universal-ios-iphonesimulator11.2',
-    'universal-ios-iphonesimulator10.2',
-    'universal-ios-iphonesimulator9.2',
-    'universal-ios-iphonesimulator8.2',
-    'universal-ios-iphonesimulator7.1',
-    'universal-ios-iphonesimulator6.1',
-    'x86-win32', # TODO[2017-03-23] More specific ABI
-    'js-emscripten-sdk1.35',
-)
 # The set of build tasks that this branch supports
-BUILDBOT_TARGETS = ('config', 'compile', 'bin-archive', 'bin-extract',
+BUILDBOT_TARGETS = ('fetch', 'config', 'compile', 'bin-archive', 'bin-extract',
     'dist-notes', 'dist-docs', 'dist-server', 'dist-tools', 'dist-upload',
     'distmac-archive', 'distmac-extract', 'distmac-disk')
 
@@ -102,7 +85,7 @@ def get_build_edition():
 def check_target_triple():
     # Check that this branch can actually be built for the specified platform
     triple = get_target_triple()
-    if not triple in BUILDBOT_PLATFORM_TRIPLES:
+    if not triple in config.BUILDBOT_PLATFORM_TRIPLES:
         print('Buildbot build for "{}" platform is not supported'.format(triple))
         sys.exit(SKIP_EXIT_STATUS)
 
@@ -114,6 +97,18 @@ def exec_buildbot_make(target):
     args = ["make", "-f", "buildbot.mk", target]
     print(' '.join(args))
     sys.exit(subprocess.call(args))
+
+################################################################
+# Fetch prebuilts
+################################################################
+
+def exec_fetch(args):
+    print('fetch.py ' + ' '.join(args))
+    sys.exit(fetch.fetch(args))
+
+def do_fetch():
+    check_target_triple()
+    exec_fetch(['--target', get_target_triple()])
 
 ################################################################
 # Configure with gyp
@@ -187,7 +182,7 @@ class UniqueMspdbsrv(object):
         os.environ['_MSPDBSRV_ENDPOINT_'] = str(uuid.uuid4())
 
         mspdbsrv_exe = os.path.join(config.get_program_files_x86(),
-            'Microsoft Visual Studio 10.0\\Common7\\IDE\\mspdbsrv.exe')
+            'Microsoft Visual Studio\\2017\\BuildTools\\VC\\Tools\\MSVC\\14.10.25017\\bin\\HostX86\\x86\\mspdbsrv.exe')
         args = [mspdbsrv_exe, '-start', '-shutdowntime', '-1']
         print(' '.join(args))
         self.proc = subprocess.Popen(args, close_fds=True)
@@ -257,7 +252,9 @@ def buildbot_task(target):
         print('Buildbot build step "{}" is not supported'.format(target))
         sys.exit(SKIP_EXIT_STATUS)
 
-    if target == 'config':
+    if target == 'fetch':
+        return do_fetch()
+    elif target == 'config':
         return do_configure()
     elif target == 'compile':
         return do_compile()

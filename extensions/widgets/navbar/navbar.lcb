@@ -36,7 +36,7 @@ itemNames(property), itemStyle(property)
 
 Name: hiliteChanged
 Type: message
-Syntax: on hiliteChanged
+Syntax: hiliteChanged
 Summary: Sent when a navigation item is selected
 
 Example:
@@ -111,7 +111,7 @@ widget com.livecode.widget.navbar
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 use com.livecode.library.widgetutils
 --
 
@@ -385,7 +385,7 @@ property hilitedItemName	get getNavSelectedItemName	set setNavSelectedItemName
 metadata hilitedItemName.label is "Selected item name"
 
 /**
-Syntax: set the editMode of <widget> to (true | false)
+Syntax: set the editMode of <widget> to {true | false}
 Syntax: get the editMode of <widget>
 
 Summary: Whether the widget is in edit mode

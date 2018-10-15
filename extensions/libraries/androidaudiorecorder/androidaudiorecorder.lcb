@@ -1,0 +1,311 @@
+/**
+This library provides Android audio recording functionality, via the 
+android.media.MediaRecorder class.
+
+Description:
+Use this library to record audio on Android. 
+
+>*Note:* This library requires RECORD_AUDIO, WRITE_EXTERNAL_STORAGE and
+> CAPTURE_AUDIO_OUTPUT permissions. These will be automatically added to 
+> the application manifest when an application including this library is 
+> built.
+*/
+
+library com.livecode.library.androidaudiorecorder
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "Android Audio Recorder"
+
+-- We need permissions to record audio and write to the external
+-- storage directory.
+metadata android.permissions is "RECORD_AUDIO,CAPTURE_AUDIO_OUTPUT"
+
+use com.livecode.foreign
+use com.livecode.java
+
+__safe foreign handler _JNI_MediaRecorderConstructor() returns JObject \
+	binds to "java:android.media.MediaRecorder>new()"
+__safe foreign handler _JNI_MediaRecorderSetRecordInput(in pRecorder as JObject, in pSource as JInt) returns nothing \
+	binds to "java:android.media.MediaRecorder>setAudioSource(I)V"
+__safe foreign handler _JNI_MediaRecorderSetRecordFormat(in pRecorder as JObject, in pFormat as JInt) returns nothing \
+	binds to "java:android.media.MediaRecorder>setOutputFormat(I)V"
+__safe foreign handler _JNI_MediaRecorderSetRecordEncoder(in pRecorder as JObject, in pEncoder as JInt) returns nothing \
+	binds to "java:android.media.MediaRecorder>setAudioEncoder(I)V"
+__safe foreign handler _JNI_MediaRecorderSetRecordOutputFile(in pRecorder as JObject, in pFile as JString) returns nothing \
+	binds to "java:android.media.MediaRecorder>setOutputFile(Ljava/lang/String;)V"
+__safe foreign handler _JNI_MediaRecorderPrepare(in pRecorder as JObject) returns nothing \
+	binds to "java:android.media.MediaRecorder>prepare()V"
+__safe foreign handler _JNI_MediaRecorderStart(in pRecorder as JObject) returns nothing \
+	binds to "java:android.media.MediaRecorder>start()V"
+__safe foreign handler _JNI_MediaRecorderStop(in pRecorder as JObject) returns nothing \
+	binds to "java:android.media.MediaRecorder>stop()V"
+__safe foreign handler _JNI_MediaRecorderReset(in pRecorder as JObject) returns nothing \
+	binds to "java:android.media.MediaRecorder>reset()V"
+__safe foreign handler _JNI_MediaRecorderGetMaxAmplitude(in pRecorder as JObject) returns JInt \
+    binds to "java:android.media.MediaRecorder>getMaxAmplitude()I"
+
+-- This will store an instance of a MediaRecorder
+private variable mRecorder as optional JObject
+
+constant kRecordInputs is { \
+    "Default" : 0, \
+    "Mic" : 1, \
+    "VoiceUplink" : 2, \
+    "VoiceDownlink" : 3, \
+    "VoiceCall" : 4, \
+    "Camcorder" : 5, \
+    "VoiceRecognition" : 6, \
+    "VoiceCommunication" : 7, \
+    "RemoteSubmix" : 8, \
+    "Unprocessed" : 9 \
+}
+constant kRecordCompressionTypes is { \
+    "Default" : 0, \
+    "AMR NB" : 1, \
+    "AMR WB" : 2, \
+    "AAC" : 3, \
+    "HE AAC" : 4, \
+    "AAC ELD" : 5, \
+    "Vorbis" : 6 \
+}
+constant kRecordFormats is { \
+    "ThreeGPP" : 1, \
+    "MPEG-4" : 2, \
+    "AMR WB" : 4, \
+    "AAC ADTS" : 6, \
+    "WebM" : 9 \
+}
+
+private variable mRecordInput as optional String
+private variable mRecordFormat as optional String
+private variable mRecordCompressionType as optional String
+
+private handler IsAndroid() returns Boolean
+    return the operating system is "android"
+end handler
+
+handler GetOptionalProperty(in pVar as optional String, in pDefault as String) returns String
+    if pVar is not nothing then
+        return pVar
+    end if
+    return pDefault
+end handler
+
+handler SetRecorderProperties() returns nothing
+    if not IsAndroid() then
+        throw "Not supported on this platform"
+    end if
+
+    if mRecorder is nothing then
+        return 
+    end if
+
+    variable tRecordInput as String
+    put GetOptionalProperty(mRecordInput, "Mic") into tRecordInput
+    variable tRecordFormat as String
+    put GetOptionalProperty(mRecordFormat, "ThreeGPP") into tRecordFormat
+    variable tRecordCompressionType as String
+    put GetOptionalProperty(mRecordCompressionType, "AMR NB") into tRecordCompressionType
+    
+    _JNI_MediaRecorderSetRecordInput(mRecorder, kRecordInputs[tRecordInput])
+    _JNI_MediaRecorderSetRecordFormat(mRecorder, kRecordFormats[tRecordFormat])
+    _JNI_MediaRecorderSetRecordEncoder(mRecorder, kRecordCompressionTypes[tRecordCompressionType])
+end handler
+
+handler CreateRecorder() returns nothing
+    if mRecorder is nothing then
+        put _JNI_MediaRecorderConstructor() into mRecorder
+    end if
+
+    SetRecorderProperties()
+end handler
+
+/**
+Summary: Start recording an audio file, using the given filename
+
+Example:
+   local tFilePath
+   put specialFolderPath("external documents") & slash & "recording.mp4" \
+      into tFilePath   
+   androidRecorderStartRecording tFilePath
+
+Parameters:
+pFileName: The absolute filename of the output file
+
+Description:
+Use the <androidRecorderStartRecording> handler to start recording audio
+on Android using the input source, compression type and output format 
+selected using the <androidRecorderSetRecordInput>, 
+<androidRecorderSetRecordCompressionType>, and <androidRecorderSetRecordFormat>
+handlers. The default input source, compression and output format are 
+built-in microphone, AMR-NB and 3gpp respectively.
+
+References:
+androidRecorderSetRecordInput (handler), 
+androidRecorderSetRecordCompressionType (handler), 
+androidRecorderSetRecordFormat (handler)
+*/
+public handler androidRecorderStartRecording(in pFileName as String) returns nothing
+    if not IsAndroid() then
+        throw "Not supported on this platform"
+    end if
+
+    CreateRecorder()
+    
+    if mRecorder is nothing then
+        throw "unable to create recorder"
+    end if
+    
+    _JNI_MediaRecorderSetRecordOutputFile(mRecorder, StringToJString(pFileName))
+    _JNI_MediaRecorderPrepare(mRecorder)
+    _JNI_MediaRecorderStart(mRecorder)
+end handler
+
+/**
+Summary: Stop recording
+
+Example:
+on mouseUp
+    try
+        androidRecorderStopRecording
+    catch tError
+        answer tError
+    end try
+end mouseUp
+
+Description:
+Use the <androidRecorderStopRecording> handler to stop the current 
+recording. If no recording is currently happening, this handler will
+throw an error.
+*/
+public handler androidRecorderStopRecording()
+	-- Don't do anything if there is no recorder object
+	if mRecorder is nothing then
+		throw "recording has not been started!"
+		return
+	end if
+	
+	_JNI_MediaRecorderStop(mRecorder)
+	_JNI_MediaRecorderReset(mRecorder)
+end handler
+
+/**
+Summary: Returns the max amplitude of the recording since last sampled
+
+Example:
+-- Poll amplitude every 30 millisecs, and output values
+command LogAmplitude
+   put androidRecorderGetMaxAmplitude()
+   send "LogAmplitude" to me in 30 millisecs
+end LogAmplitude
+    
+Description:
+Use the <androidRecorderGetMaxAmplitude> handler to retrieve the maximum
+amplitude value reached during recording from the selected input source
+since the amplitude was last retrieved.
+
+<androidRecorderGetMaxAmplitude> returns 0 if no recording is currently
+happening.
+*/
+
+-- 
+public handler androidRecorderGetMaxAmplitude() returns Integer
+	if mRecorder is nothing then
+		return 0
+	end if
+	return _JNI_MediaRecorderGetMaxAmplitude(mRecorder)
+end handler
+
+/**
+Summary: Set the record input source
+
+Example:
+androidRecorderSetRecordInput "mic"
+
+Parameters:
+pInputSource (enum): The record input source
+- "Default": The device's default record input source
+- "Mic": Microphone audio source
+- "VoiceUplink": Voice call uplink (Tx) audio source
+- "VoiceDownlink": Voice call uplink (Tx) audio source.
+- "VoiceCall": Voice call uplink + downlink audio source
+- "Camcorder": Microphone audio source tuned for video recording, with the same orientation as the camera if available
+- "VoiceRecognition": Microphone audio source tuned for voice recognition
+- "VoiceCommunication": Microphone audio source tuned for voice recognition
+- "RemoteSubmix": Audio source for a submix of audio streams to be presented remotely
+- "Unprocessed": Microphone audio source tuned for unprocessed (raw) sound if available, behaves like Default otherwise
+
+Description:
+Use the <androidRecorderSetRecordInput> handler to control the source 
+and tuning of the record input.
+*/
+public handler androidRecorderSetRecordInput(in pInputSource as String)
+	if pInputSource is not among the keys of kRecordInputs then
+		throw "unrecognised source"
+		return
+	end if
+	
+	put pInputSource into mRecordInput
+	SetRecorderProperties()
+end handler
+
+/**
+Summary: Set the record compression type
+
+Example:
+androidRecorderSetRecordCompressionType "AMR NB"
+
+Parameters:
+pCompressionType (enum): The record compression type
+- "Default": The default compression type
+- "AMR NB": AMR Narrowband
+- "AMR WB": AMR Wideband
+- "AAC": AAC Low Complexity (AAC-LC)
+- "HE AAC": High Efficiency AAC (HE-AAC)
+- "AAC ELD": Enhanced Low Delay AAC (AAC-ELD)
+- "Vorbis" : Ogg Vorbis
+
+Description:
+Use the <androidRecorderSetRecordCompressionType> handler to control the 
+audio encoding used by the audio recorder.
+*/
+public handler androidRecorderSetRecordCompressionType(in pCompressionType as String)
+	if pCompressionType is not among the keys of kRecordCompressionTypes then
+		throw "unrecognised compression type"
+		return
+	end if
+	
+	put pCompressionType into mRecordCompressionType
+	SetRecorderProperties()
+end handler
+
+/**
+Summary: Set the record output format
+
+Example:
+androidRecorderSetRecordFormat "ThreeGPP"
+
+Parameters:
+pRecordFormat (enum): The record output format
+"ThreeGPP":
+"MPEG-4":
+"AMR WB":
+"AAC ADTS":
+"WebM":
+
+Description:
+Use the <androidRecorderSetRecordFormat> handler to set the format of 
+the output file.
+*/
+
+public handler androidRecorderSetRecordFormat(in pRecordFormat as String)
+	if pRecordFormat is not among the keys of kRecordFormats then
+		throw "unrecognised source"
+		return
+	end if
+	
+	put pRecordFormat into mRecordFormat
+	SetRecorderProperties()
+end handler
+end library

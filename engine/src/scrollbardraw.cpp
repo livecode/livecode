@@ -138,7 +138,7 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
 			if (!issbdisabled() && flags & F_OPAQUE
 			        && (MClook == LF_MOTIF || flags & F_PROGRESS
 			            || getstyleint(flags) == F_VERTICAL
-			            || IsMacEmulatedLF() && !(flags & F_SB_STYLE)))
+			            || (IsMacEmulatedLF() && !(flags & F_SB_STYLE))))
 			{ //filled
 				setforeground(dc, DI_SHADOW, False);
 				dc->fillrect(trect);

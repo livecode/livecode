@@ -105,7 +105,7 @@ struct export_html_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static const char *s_export_html_tag_strings[] =
+static const char * const s_export_html_tag_strings[] =
 {
 	"a",
 	"span",
@@ -122,7 +122,7 @@ static const char *s_export_html_tag_strings[] =
 	"font"
 };
 
-static const char *s_export_html_list_types[] =
+static const char * const s_export_html_list_types[] =
 {
 	"",
 	"disc",
@@ -138,7 +138,7 @@ static const char *s_export_html_list_types[] =
 
 // This is the list of HTML entities for ISO8859-1 (unicode) codepoints in the range
 // 0x00A0 to 0x00FF inclusive.
-static const char *s_export_html_native_entities[] =
+static const char * const s_export_html_native_entities[] =
 {
 	"nbsp", "iexcl", "cent", "pound", "curren", "yen", "brvbar", "sect", 
 	"uml", "copy", "ordf", "laquo", "not", "shy", "reg", "macr", 
@@ -154,7 +154,7 @@ static const char *s_export_html_native_entities[] =
 	"oslash", "ugrave", "uacute", "ucirc", "uuml", "yacute", "thorn", "yuml", 
 };
 
-static struct { const char *entity; uint32_t codepoint; } s_export_html_unicode_entities[] =
+static const struct { const char *entity; uint32_t codepoint; } s_export_html_unicode_entities[] =
 {
 	{ "OElig", 0x0152 }, { "oelig", 0x0153 }, { "Scaron", 0x0160 }, 
 	{ "scaron", 0x0161 }, { "Yuml", 0x0178 }, { "fnof", 0x0192 }, { "circ", 0x02C6 }, 
@@ -600,6 +600,12 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 					/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, i == 0 ? "%d" : ",%d", t_style.tabs[i]);
 				/* UNCHECKED */ MCStringAppendChar(ctxt.m_text, '"');
 			}
+			if (ctxt . effective || t_style . has_tab_alignments)
+			{
+				MCAutoStringRef t_formatted_tabalign;
+				/* UNCHECKED */ MCField::formattabalignments(t_style.tab_alignments, t_style.tab_alignment_count, &t_formatted_tabalign);
+				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " tabalign=\"%@\"", *t_formatted_tabalign);
+			}
 			if (t_style . has_background_color)
 				/* UNCHECKED */ MCStringAppendFormat(ctxt.m_text, " bgcolor=\"%s\"", export_html_hexcolor(t_style . background_color));
 			if (t_style . has_border_width || ctxt . effective)
@@ -837,6 +843,7 @@ enum import_html_attr_type_t
 	kImportHtmlAttrSpaceAbove,
 	kImportHtmlAttrSpaceBelow,
 	kImportHtmlAttrTabStops,
+	kImportHtmlAttrTabAlignments,
 	kImportHtmlAttrBorderWidth,
 	kImportHtmlAttrBorderColor,
 	kImportHtmlAttrPadding,
@@ -875,6 +882,7 @@ static struct { const char *attr; import_html_attr_type_t type; } s_import_html_
 	{ "spaceabove", kImportHtmlAttrSpaceAbove},
 	{ "spacebelow", kImportHtmlAttrSpaceBelow },
 	{ "tabstops", kImportHtmlAttrTabStops },
+	{ "tabalign", kImportHtmlAttrTabAlignments },
 	{ "borderwidth", kImportHtmlAttrBorderWidth },
 	{ "bordercolor", kImportHtmlAttrBorderColor },
 	{ "padding", kImportHtmlAttrPadding },
@@ -894,7 +902,7 @@ static struct { const char *attr; import_html_attr_type_t type; } s_import_html_
 	{ "start", kImportHtmlAttrStart },
 };
 
-static struct { const char *entity; uint32_t codepoint; } s_import_html_entities[] =
+static const struct { const char *entity; uint32_t codepoint; } s_import_html_entities[] =
 {
 	{ "AElig", 0x00C6 }, { "Aacute", 0x00C1 }, { "Acirc", 0x00C2 }, { "Agrave", 0x00C0 }, 
 	{ "Alpha", 0x0391 }, { "Aring", 0x00C5 }, { "Atilde", 0x00C3 }, { "Auml", 0x00C4 }, 
@@ -1028,7 +1036,7 @@ static void import_html_copy_style(const MCFieldCharacterStyle& p_src, MCFieldCh
 	if (p_src . has_metadata)
 		r_dst . metadata = MCValueRetain(p_src . metadata);
 	if (p_src . has_text_font)
-		MCNameClone(p_src . text_font, r_dst . text_font);
+        r_dst.text_font = MCValueRetain(p_src.text_font);
 }
 
 static void import_html_free_style(MCFieldCharacterStyle& p_style)
@@ -1036,7 +1044,7 @@ static void import_html_free_style(MCFieldCharacterStyle& p_style)
 	MCValueRelease(p_style . link_text);
 	MCValueRelease(p_style . image_source);
 	MCValueRelease(p_style . metadata);
-	MCNameDelete(p_style . text_font);
+	MCValueRelease(p_style . text_font);
 }
 
 static bool import_html_equal_style(const MCFieldCharacterStyle& left, const MCFieldCharacterStyle& right)
@@ -1725,7 +1733,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 						{
 							t_style . has_text_font = true;
 							if (t_style . text_font != nil)
-								MCNameDelete(t_style . text_font);
+								MCValueRelease(t_style . text_font);
 							MCNameCreate(p_tag . attrs[i] . value, t_style . text_font);
 						}
 						break;
@@ -1934,6 +1942,20 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 					r_style . has_tabs = true;
                 }
             }
+			break;
+			case kImportHtmlAttrTabAlignments:
+			{
+				if (r_style . has_tab_alignments)
+				{
+					MCMemoryDeallocate(r_style . tab_alignments);
+					r_style . tab_alignments = nil;
+					r_style . tab_alignment_count = 0;
+				}
+				if (MCField::parsetabalignments(t_value, r_style . tab_alignments, r_style . tab_alignment_count))
+				{
+					r_style . has_tab_alignments = true;
+				}
+			}
 			break;
 			case kImportHtmlAttrBgColor:
             {
@@ -2238,8 +2260,8 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                         {
                             import_html_begin(ctxt, nil);
                             
-                            MCFieldCharacterStyle t_char_style;
-                            t_char_style = ctxt . styles[ctxt . style_index] . style;
+                            MCFieldCharacterStyle t_tag_style;
+                            t_tag_style = ctxt . styles[ctxt . style_index] . style;
                             
                             uint32_t t_font_size, t_font_style;
                             t_font_size = 0;
@@ -2269,11 +2291,11 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                             }
                             
                             if (t_font_style != 0)
-                                t_char_style . has_text_style = true, t_char_style . text_style = t_font_style;
+                                t_tag_style . has_text_style = true, t_tag_style . text_style = t_font_style;
                             if (t_font_size != 0)
-                                t_char_style . has_text_size = true, t_char_style . text_size = t_font_size;
+                                t_tag_style . has_text_size = true, t_tag_style . text_size = t_font_size;
 							
-                            import_html_push_tag(ctxt, t_tag . type, t_char_style);
+                            import_html_push_tag(ctxt, t_tag . type, t_tag_style);
                         }
                         else
                             import_html_pop_tag(ctxt, t_tag . type, true);

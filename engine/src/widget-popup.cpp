@@ -171,7 +171,7 @@ private:
 		if (m_widget != nil)
 			return true;
 		
-		m_widget = new MCWidget();
+		m_widget = new (nothrow) MCWidget();
 		if (m_widget == nil)
 			return MCErrorThrowOutOfMemory();
 		
@@ -245,7 +245,6 @@ private:
 	
 	void getwidgetgeometry(uint32_t &r_width, uint32_t &r_height)
 	{
-		MCPoint t_size;
 		if (!getwidgetpreferredsize(r_width, r_height))
 		{
 			MCRectangle t_rect;
@@ -372,7 +371,7 @@ bool MCWidgetPopupAtLocationWithProperties(MCNameRef p_kind, const MCPoint &p_at
 	MCWidgetPopup *t_popup;
 	t_popup = nil;
 	
-	t_popup = new MCWidgetPopup();
+	t_popup = new (nothrow) MCWidgetPopup();
 	if (t_popup == nil)
 	{
 		// TODO - throw memory error
@@ -470,7 +469,7 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopupWithResult(MCValueRef p_r
 	s_widget_popup->close();
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopup(MCValueRef p_result)
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecClosePopup()
 {
 	MCWidgetExecClosePopupWithResult(kMCNull);
 }

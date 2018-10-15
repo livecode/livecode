@@ -131,6 +131,8 @@ private command __TestMinStackFileVersion pStack, pVersion
 end __TestMinStackFileVersion
 
 on TestSaveAsFormat
+   TestSkipIfNot "write"
+   
    local tVersion
 
    set the itemdelimiter to ","
@@ -146,6 +148,7 @@ on TestSaveAsFormat
 end TestSaveAsFormat
 
 on TestSaveAsNewestFormat
+   TestSkipIfNot "write"
    local tVersion
 
    set the itemdelimiter to ","
@@ -155,6 +158,7 @@ on TestSaveAsNewestFormat
 end TestSaveAsNewestFormat
 
 on TestSaveAsGlobalFormat
+   TestSkipIfNot "write"
    local tVersion
 
    set the itemdelimiter to ","
@@ -170,6 +174,8 @@ on TestSaveAsGlobalFormat
 end TestSaveAsGlobalFormat
 
 on TestSaveAsDefaultFormat
+   TestSkipIfNot "write"
+   
    local tVersion
    set the itemdelimiter to ","
    __TestSaveAsDefaultFormat sTestStack, item 1 of kVersions
@@ -178,6 +184,8 @@ on TestSaveAsDefaultFormat
 end TestSaveAsDefaultFormat
 
 on TestMinStackFileVersion
+   
+   TestSkipIfNot "write"
    set the itemdelimiter to ","
    __TestMinStackFileVersion sTestStack, kMinVersion
    __TestMinStackFileVersion sTestStackWidget, kWidgetMinVersion

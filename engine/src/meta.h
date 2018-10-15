@@ -261,7 +261,7 @@ private:
 
 		if (t_items != NULL)
 		{
-			f_items = new simple_string[t_count];
+			f_items = new (nothrow) simple_string[t_count];
 			if (f_items != NULL)
 			{
 				f_count = t_count;
@@ -276,7 +276,7 @@ private:
 		}
 		else
 		{
-			f_items = new simple_string[1];
+			f_items = new (nothrow) simple_string[1];
 			if (f_items != NULL)
 			{
 				f_count = 1;

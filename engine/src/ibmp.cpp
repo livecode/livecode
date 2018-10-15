@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2015 LiveCode Ltd.
+/* Copyright (C) 2003-2016 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -347,9 +347,6 @@ bool MCImageEncodeBMP(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 			t_success = IO_NORMAL == IO_write(t_color, sizeof(uint8_t), 4, p_stream);
 		}
 
-		uint32_t t_pixel_mask = (1 << t_depth) - 1;
-		uint32_t t_first_shift = 8 - t_depth;
-
 		// bmp row order is bottom to top, so point to last row
 		uint8_t *t_src_ptr = (uint8_t*)t_indexed->data + (t_height - 1) * t_indexed->stride;
 		while (t_success && t_src_ptr >= t_indexed->data)
@@ -636,7 +633,8 @@ bool bmp_read_rle4_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitm
 			else
 			{
 				// absolute mode
-				uint8_t t_byte, t_upper, t_lower;
+				uint8_t t_byte, t_upper;
+				uint8_t t_lower = 0;
 				
 				uint8_t t_run_buffer[128];
 				uint32_t t_run_bytes;
@@ -733,8 +731,6 @@ bool bmp_read_rle8_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitm
 			else
 			{
 				// absolute mode
-				uint8_t t_byte, t_upper, t_lower;
-				
 				uint8_t t_run_buffer[256];
 				uint32_t t_run_bytes;
 				t_run_bytes = (t_value + 1) & ~0x1;
@@ -792,9 +788,8 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 				uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
 				
 				uint32_t t_current_shift = t_first_shift;
-				uint8_t t_byte = 0;
-
-				for (uint32_t x = 0; x < p_bitmap->width; x++)
+				
+                for (uint32_t x = 0; x < p_bitmap->width; x++)
 				{
 					*t_dst_row++ = p_color_table[(*t_src_row >> t_current_shift) & t_pixel_mask];
 					if (t_current_shift == 0)
@@ -891,22 +886,28 @@ static void bmp_convert_bitfield_row(uint32_t *p_dst, const uint8_t *p_src, uint
 
 bool bmp_read_bitfield_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p_bitmap, uindex_t p_depth, uint32_t p_a_mask, uint32_t p_r_mask, uint32_t p_g_mask, uint32_t p_b_mask, bool p_top_down)
 {
-	bool t_success = true;
-
 	uindex_t t_src_stride = MCBMPStride(p_bitmap->width, p_depth);
-	uint8_t *t_src_buffer = nil;
 	uint8_t *t_dst_ptr = (uint8_t*)p_bitmap->data;
 
 	if (!p_top_down)
 		t_dst_ptr += (p_bitmap->height - 1) * p_bitmap->stride;
 
-	t_success = MCMemoryNewArray(t_src_stride, t_src_buffer);
+    MCAutoPointer<uint8_t[]> t_src_buffer = new (std::nothrow) uint8_t[t_src_stride];
+    if (!t_src_buffer)
+    {
+        return false;
+    }
 
-	for (uindex_t y = 0; t_success && y < p_bitmap->height; y++)
+	for (uindex_t y = 0; y < p_bitmap->height; y++)
 	{
-		t_success = IO_NORMAL == MCS_readfixed(t_src_buffer, t_src_stride, p_stream);
-		if (t_success)
-			bmp_convert_bitfield_row((uint32_t*)t_dst_ptr, t_src_buffer, p_bitmap->width, p_depth, p_a_mask, p_r_mask, p_g_mask, p_b_mask);
+        if (IO_NORMAL != MCS_readfixed(t_src_buffer.Get(), t_src_stride, p_stream))
+        {
+            return false;
+        }
+
+        bmp_convert_bitfield_row((uint32_t*)t_dst_ptr, t_src_buffer.Get(),
+                                 p_bitmap->width, p_depth,
+                                 p_a_mask, p_r_mask, p_g_mask, p_b_mask);
 
 		if (p_top_down)
 			t_dst_ptr += p_bitmap->stride;
@@ -914,10 +915,9 @@ bool bmp_read_bitfield_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImage
 			t_dst_ptr -= p_bitmap->stride;
 	}
 
-	if (t_success)
-		x_bytes_read += t_src_stride * p_bitmap->height;
+    x_bytes_read += t_src_stride * p_bitmap->height;
 
-	return t_success;
+    return true;
 }
 
 bool bmp_read_rgb_bitfields(IO_handle p_stream, uindex_t &x_bytes_read, uint32_t &r_r_mask, uint32_t &r_g_mask, uint32_t &r_b_mask)
@@ -1108,7 +1108,7 @@ bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageB
 	MCBitmapStructImageLoader *t_loader;
     t_loader = NULL;
 	if (t_success)
-		t_success = nil != (t_loader = new MCBitmapStructImageLoader(p_stream));
+		t_success = nil != (t_loader = new (nothrow) MCBitmapStructImageLoader(p_stream));
 
 	MCBitmapFrame *t_frames;
 	t_frames = nil;
@@ -1175,7 +1175,7 @@ bool MCBitmapImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint
 bool MCImageLoaderCreateForBMPStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCBitmapImageLoader *t_loader;
-	t_loader = new MCBitmapImageLoader(p_stream);
+	t_loader = new (nothrow) MCBitmapImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -1503,7 +1503,7 @@ bool MCNetPBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint
 	uindex_t t_token_size;
 
 	if (t_success)
-		t_success = nil != (m_reader = new MCNetPBMTokenReader(GetStream()));
+		t_success = nil != (m_reader = new (nothrow) MCNetPBMTokenReader(GetStream()));
 
 	if (t_success)
 		t_success = m_reader->GetToken(t_token, t_token_size);
@@ -1557,7 +1557,7 @@ bool MCNetPBMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count
 	uindex_t t_token_size;
 	
 	bool t_binary;
-	uindex_t t_depth;
+	uindex_t t_depth = 1;
 	uindex_t t_channel_count = 1;
 	uindex_t t_stride;
 
@@ -1678,7 +1678,7 @@ bool MCNetPBMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count
 bool MCImageLoaderCreateForNetPBMStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCNetPBMImageLoader *t_loader;
-	t_loader = new MCNetPBMImageLoader(p_stream);
+	t_loader = new (nothrow) MCNetPBMImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -1909,6 +1909,8 @@ bool MCXBMImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 						case kMCDefineYHot:
 							t_yhot = t_value;
 							break;
+						default:
+							MCUnreachable();
 						}
 					}
 				}
@@ -2046,7 +2048,7 @@ bool MCXBMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForXBMStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCXBMImageLoader *t_loader;
-	t_loader = new MCXBMImageLoader(p_stream);
+	t_loader = new (nothrow) MCXBMImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -2122,8 +2124,7 @@ static bool xpm_next_color(const char *p_line, uindex_t p_line_start, uindex_t p
 {
 	uindex_t t_next_token_start, t_next_token_end;
 	uindex_t t_key;
-	bool t_have_color = false;
-
+	
 	r_color_end = r_color_start = p_line_start;
 
 	if (!xpm_next_token(p_line, p_line_start, p_line_end, r_color_start, r_color_end))
@@ -2188,7 +2189,6 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 	if (p_color_end - p_color_start < 6)
 		return false;
 	
-	uint32_t t_value = 0;
 	uint8_t t_color[3];
 	for (uint32_t i = 0; i < 3; i++)
 	{
@@ -2204,8 +2204,6 @@ static bool xpm_parse_color(const char *p_line, uindex_t p_color_start, uindex_t
 
 static bool xpm_parse_v3_color_line(const char *p_line, uint32_t p_chars_per_pixel, uint32_t &r_color, uint32_t &r_color_char)
 {
-	bool t_success = true;
-
 	uindex_t t_line_start, t_line_end;
 	
 	if (!c_get_string_content_bounds(p_line, t_line_start, t_line_end))
@@ -2312,8 +2310,6 @@ bool xpm_read_v3_header(IO_handle p_stream, uindex_t &r_width, uindex_t &r_heigh
 
 static bool xpm_parse_v1_color_line(const char *p_line, uint32_t p_chars_per_pixel, uint32_t &r_color, uint32_t &r_color_char)
 {
-	bool t_success = true;
-
 	uindex_t t_line_start, t_line_end;
 	
 	if (!c_get_string_content_bounds(p_line, t_line_start, t_line_end))
@@ -2382,13 +2378,13 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 						//t_hotspot.y = t_height / 2;
 						break;
 
-					//case kMCDefineXHot:
+					case kMCDefineXHot:
 					//	t_hotspot.x = t_value;
-					//	break;
+						break;
 
-					//case kMCDefineYHot:
+					case kMCDefineYHot:
 					//	t_hotspot.y = t_value;
-					//	break;
+						break;
 
 					case kMCDefineFormat:
 						t_format = t_value;
@@ -2400,6 +2396,10 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 
 					case kMCDefineCharsPerPixel:
 						t_chars_per_pixel = t_value;
+						break;
+							
+					case kMCDefineUnknown:
+						MCUnreachable();
 						break;
 					}
 				}
@@ -2477,6 +2477,7 @@ static bool xpm_read_v1_header(IO_handle p_stream, char x_line[XPM_MAX_LINE], ui
 		MCMemoryDeleteArray(t_color_chars);
 	}
 
+    MCCStringFree(t_name);
 	return t_success;
 }
 
@@ -2626,7 +2627,7 @@ bool MCXPMImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 bool MCImageLoaderCreateForXPMStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCXPMImageLoader *t_loader;
-	t_loader = new MCXPMImageLoader(p_stream);
+	t_loader = new (nothrow) MCXPMImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -2741,141 +2742,128 @@ bool MCXWDImageLoader::LoadHeader(uint32_t &r_width, uint32_t &r_height, uint32_
 
 bool MCXWDImageLoader::LoadFrames(MCBitmapFrame *&r_frames, uint32_t &r_count)
 {
-	bool t_success = true;
-	
 	IO_handle stream;
 	stream = GetStream();
 	
-	MCColor *colors = nil;
-	colors = new MCColor[m_fh.ncolors];
-	t_success = colors != nil;
+    MCAutoPointer<MCColor[]> colors = new (nothrow) MCColor[m_fh.ncolors];
+    if (!colors)
+        return false;
 
-	for (uint32_t i = 0 ; t_success && i < (uint2)m_fh.ncolors ; i++)
+	for (uint32_t i = 0 ; i < (uint2)m_fh.ncolors ; i++)
 	{
 		uint32_t t_pixel;
 		uint8_t t_flags, t_pad;
-		t_success = IO_read_uint4(&t_pixel, stream) == IO_NORMAL &&
-			IO_read_uint2(&colors[i].red, stream) == IO_NORMAL &&
-			IO_read_uint2(&colors[i].green, stream) == IO_NORMAL &&
-			IO_read_uint2(&colors[i].blue, stream) == IO_NORMAL &&
-			IO_read_uint1(&t_flags, stream) == IO_NORMAL &&
-			IO_read_uint1(&t_pad, stream) == IO_NORMAL;
+        if (IO_read_uint4(&t_pixel, stream) != IO_NORMAL ||
+            IO_read_uint2(&colors[i].red, stream) != IO_NORMAL ||
+            IO_read_uint2(&colors[i].green, stream) != IO_NORMAL ||
+            IO_read_uint2(&colors[i].blue, stream) != IO_NORMAL ||
+            IO_read_uint1(&t_flags, stream) != IO_NORMAL ||
+            IO_read_uint1(&t_pad, stream) != IO_NORMAL)
+        {
+            return false;
+        }
 	}
 
-	char *t_newimage_data = nil;
+    if (m_fh.pixmap_depth == 24)
+        m_fh.pixmap_depth = 32;
+    if (m_fh.pixmap_depth == 1)
+        m_fh.pixmap_format = XYPixmap;
+    uint4 bytes = m_fh.bytes_per_line * m_fh.pixmap_height;
+    if (m_fh.bits_per_pixel == 1)
+        bytes *= m_fh.pixmap_depth;
 
-	if (t_success)
-	{
-		if (m_fh.pixmap_depth == 24)
-			m_fh.pixmap_depth = 32;
-		if (m_fh.pixmap_depth == 1)
-			m_fh.pixmap_format = XYPixmap;
-		uint4 bytes = m_fh.bytes_per_line * m_fh.pixmap_height;
-		if (m_fh.bits_per_pixel == 1)
-			bytes *= m_fh.pixmap_depth;
-		t_newimage_data = new char[bytes];
-		t_success = t_newimage_data != nil &&
-			IO_read(t_newimage_data, bytes, stream) == IO_NORMAL;
-	}
+    MCAutoPointer<char[]> t_newimage_data = new (nothrow) char[bytes];
+    if (!t_newimage_data)
+        return false;
 
-	uint32_t t_width, t_height;
-	if (t_success)
-		t_success = GetGeometry(t_width, t_height);
+    if (IO_read(t_newimage_data.Get(), bytes, stream) != IO_NORMAL)
+        return false;
 
-	MCBitmapFrame *t_frame;
-	t_frame = nil;
-	
-	if (t_success)
-		t_success = MCMemoryNew(t_frame);
-	
-	if (t_success)
-		t_success = MCImageBitmapCreate(t_width, t_height, t_frame->image);
+    uint32_t t_width, t_height;
+    if (!GetGeometry(t_width, t_height))
+        return false;
 
-	uint2 redshift, greenshift, blueshift, redbits, greenbits, bluebits;
+    MCBitmapFrame *t_frame = nullptr;
+    if (!MCMemoryNew(t_frame))
+        return false;
 
-	if (t_success)
-	{
-		if (m_fh.bits_per_pixel > 8)
-		{
-			MCU_getshift(m_fh.red_mask, redshift, redbits);
-			MCU_getshift(m_fh.green_mask, greenshift, greenbits);
-			MCU_getshift(m_fh.blue_mask, blueshift, bluebits);
-		}
+    if (!MCImageBitmapCreate(t_width, t_height, t_frame->image))
+    {
+        MCImageFreeFrames(t_frame, 1);
+        return false;
+    }
 
-		uint32_t t_black, t_white;
-		t_black = MCGPixelPackNative(0, 0, 0, 255);
-		t_white = MCGPixelPackNative(255, 255, 255, 255);
-		uint2 y;
-		for (y = 0 ; y < t_height ; y++)
-		{
-			uint4 *dptr = (uint4 *) ((uint8_t*)t_frame->image->data + y * t_frame->image->stride);
-			uint1 *oneptr = (uint1 *)&t_newimage_data[y * m_fh.bytes_per_line];
-			uint2 *twoptr = (uint2 *)oneptr;
-			uint4 *fourptr = (uint4 *)oneptr;
-			uint2 x;
-			for (x = 0 ; x < t_width ; x++)
-			{
-				uint4 pixel;
-				switch (m_fh.bits_per_pixel)
-				{
-				case 1:
-					*dptr++ = 0x80 >> (x & 0x7) & oneptr[x >> 3] ? t_white : t_black;
-					break;
-				case 4:
-					pixel = oneptr[x >> 1] >> 4 * (x & 1) & 0x0F;
-					*dptr++ = MCColorGetPixel(colors[pixel]);
-					break;
-				case 8:
-					pixel = oneptr[x];
-					*dptr++ = MCColorGetPixel(colors[pixel]);
-					break;
-				case 16:
-					pixel = twoptr[x];
-					*dptr++ = MCGPixelPackNative(
-										   ((pixel & m_fh.red_mask) >> redshift) << (8 - redbits),
-										   ((pixel & m_fh.green_mask) >> greenshift) << (8 - greenbits),
-										   ((pixel & m_fh.blue_mask) >> blueshift) << (8 - bluebits),
-										   255);
-					break;
-				case 32:
-					if (MCswapbytes)
-						swap_uint4(&fourptr[x]);
-					*dptr++ = MCGPixelPackNative(
-										   (fourptr[x] >> 24) & 0xFF,
-										   (fourptr[x] >> 16) & 0xFF,
-										   (fourptr[x] >> 8) & 0xFF,
-										   255);
-					break;
-				default:
-					*dptr++ = MCGPixelPackNative(
-										   (fourptr[x] >> 24) & 0xFF,
-										   (fourptr[x] >> 16) & 0xFF,
-										   (fourptr[x] >> 8) & 0xFF,
-										   255);
-					break;
-				}
-			}
-		}
-	}
+    uint2 redshift, greenshift, blueshift, redbits, greenbits, bluebits;
 
-	delete t_newimage_data;
-	delete colors;
+    if (m_fh.bits_per_pixel > 8)
+    {
+        MCU_getshift(m_fh.red_mask, redshift, redbits);
+        MCU_getshift(m_fh.green_mask, greenshift, greenbits);
+        MCU_getshift(m_fh.blue_mask, blueshift, bluebits);
+    }
 
-	if (t_success)
-	{
-		r_frames = t_frame;
-		r_count = 1;
-	}
-	else
-		MCImageFreeFrames(r_frames, 1);
+    uint32_t t_black = MCGPixelPackNative(0,   0,   0,   255);
+    uint32_t t_white = MCGPixelPackNative(255, 255, 255, 255);
+    for (uint2 y = 0 ; y < t_height ; y++)
+    {
+        uint4 *dptr = (uint4 *) ((uint8_t*)t_frame->image->data + y * t_frame->image->stride);
+        uint1 *oneptr = (uint1 *)&t_newimage_data[y * m_fh.bytes_per_line];
+        uint2 *twoptr = (uint2 *)oneptr;
+        uint4 *fourptr = (uint4 *)oneptr;
+        uint2 x;
+        for (x = 0 ; x < t_width ; x++)
+        {
+            uint4 pixel;
+            switch (m_fh.bits_per_pixel)
+            {
+            case 1:
+                *dptr++ = 0x80 >> (x & 0x7) & oneptr[x >> 3] ? t_white : t_black;
+                break;
+            case 4:
+                pixel = oneptr[x >> 1] >> 4 * (x & 1) & 0x0F;
+                *dptr++ = MCColorGetPixel(colors[pixel]);
+                break;
+            case 8:
+                pixel = oneptr[x];
+                *dptr++ = MCColorGetPixel(colors[pixel]);
+                break;
+            case 16:
+                pixel = twoptr[x];
+                *dptr++ = MCGPixelPackNative(
+                    ((pixel & m_fh.red_mask) >> redshift) << (8 - redbits),
+                    ((pixel & m_fh.green_mask) >> greenshift) << (8 - greenbits),
+                    ((pixel & m_fh.blue_mask) >> blueshift) << (8 - bluebits),
+                    255);
+                break;
+            case 32:
+                if (MCswapbytes)
+                    swap_uint4(&fourptr[x]);
+                *dptr++ = MCGPixelPackNative(
+                    (fourptr[x] >> 24) & 0xFF,
+                    (fourptr[x] >> 16) & 0xFF,
+                    (fourptr[x] >> 8) & 0xFF,
+                    255);
+                break;
+            default:
+                *dptr++ = MCGPixelPackNative(
+                    (fourptr[x] >> 24) & 0xFF,
+                    (fourptr[x] >> 16) & 0xFF,
+                    (fourptr[x] >> 8) & 0xFF,
+                    255);
+                break;
+            }
+        }
+    }
 
-	return t_success;
+    r_frames = t_frame;
+    r_count = 1;
+    return true;
 }
 
 bool MCImageLoaderCreateForXWDStream(IO_handle p_stream, MCImageLoader *&r_loader)
 {
 	MCXWDImageLoader *t_loader;
-	t_loader = new MCXWDImageLoader(p_stream);
+	t_loader = new (nothrow) MCXWDImageLoader(p_stream);
 	
 	if (t_loader == nil)
 		return false;
@@ -2915,6 +2903,8 @@ bool MCImageEncodeRawTrueColor(MCImageBitmap *p_bitmap, IO_handle p_stream, Expo
 		case EX_RAW_ABGR:
 			MCBitmapConvertRow<EX_RAW_ABGR>(t_row_buffer, (uint32_t*)t_src_ptr, p_bitmap->width);
 			break;
+		default:
+			MCUnreachable();
 		}
 		t_success = IO_NORMAL == IO_write(t_row_buffer, sizeof(uint8_t), t_stride, p_stream);
 		t_byte_count += t_stride;

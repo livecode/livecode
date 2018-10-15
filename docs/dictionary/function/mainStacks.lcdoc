@@ -7,8 +7,8 @@ Syntax: the mainStacks
 Syntax: mainStacks()
 
 Summary:
-<return|Returns> a list of the <main stack|main stacks> that are <loaded
-into memory>.
+<return|Returns> a list of the <main stack|main stacks> that are 
+<loaded into memory>.
 
 Introduced: 1.0
 

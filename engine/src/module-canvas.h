@@ -64,6 +64,8 @@ void MCImageRepUnlock(MCImageRep *p_image_rep, uint32_t p_index, MCGImageFrame &
 bool MCImageRepLockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCGFloat p_density, MCImageBitmap *&r_raster);
 void MCImageRepUnlockRaster(MCImageRep *p_image_rep, uint32_t p_index, MCImageBitmap *p_raster);
 
+void MCImageRepRender(MCImageRep *p_image_rep, MCGContextRef p_gcontext, uint32_t p_index, MCGRectangle p_src_rect, MCGRectangle p_dst_rect, MCGImageFilter p_filter);
+
 //////////
 
 bool MCImageRepGetTransformed(MCImageRep *p_image_rep, const MCGAffineTransform &p_transform, const MCGSize *p_output_size, MCGImageFilter p_resize_quality, MCImageRep *&r_transformed);
@@ -289,6 +291,7 @@ extern "C" MC_DLLEXPORT void MCCanvasTransformTranslate(MCCanvasTransformRef &x_
 extern "C" MC_DLLEXPORT void MCCanvasTransformTranslateWithList(MCCanvasTransformRef &x_transform, MCProperListRef p_list);
 extern "C" MC_DLLEXPORT void MCCanvasTransformSkew(MCCanvasTransformRef &x_transform, MCCanvasFloat p_x_skew, MCCanvasFloat p_y_skew);
 extern "C" MC_DLLEXPORT void MCCanvasTransformSkewWithList(MCCanvasTransformRef &x_transform, MCProperListRef p_list);
+extern "C" MC_DLLEXPORT void MCCanvasTransformMultiply(MCCanvasTransformRef p_left, MCCanvasTransformRef p_right, MCCanvasTransformRef &r_transform);
 
 //////////
 
@@ -298,6 +301,7 @@ extern "C" MC_DLLEXPORT void MCCanvasTransformSkewWithList(MCCanvasTransformRef 
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &x_image);
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithData(MCDataRef p_data, MCCanvasImageRef &x_image);
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithPixels(integer_t p_width, integer_t p_height, MCDataRef p_pixels, MCCanvasImageRef &x_image);
+extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithPixelsInFormat(integer_t p_width, integer_t p_height, MCDataRef p_pixels, MCGPixelFormat p_format, MCCanvasImageRef &x_image);
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithPixelsWithSizeAsList(MCProperListRef p_size, MCDataRef p_pixels, MCCanvasImageRef &x_image);
 extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithResourceFile(MCStringRef p_resource, MCCanvasImageRef &r_image);
 
@@ -499,6 +503,7 @@ extern "C" MC_DLLEXPORT void MCCanvasFontGetItalic(MCCanvasFontRef p_font, bool 
 extern "C" MC_DLLEXPORT void MCCanvasFontSetItalic(bool p_italic, MCCanvasFontRef &x_font);
 extern "C" MC_DLLEXPORT void MCCanvasFontGetSize(MCCanvasFontRef p_font, uinteger_t &r_size);
 extern "C" MC_DLLEXPORT void MCCanvasFontSetSize(uinteger_t p_size, MCCanvasFontRef &x_font);
+extern "C" MC_DLLEXPORT void MCCanvasFontGetHandle(MCCanvasFontRef p_font, void*& r_handle);
 
 // Operations
 extern "C" MC_DLLEXPORT void MCCanvasFontMeasureTextTypographicBounds(MCStringRef p_text, MCCanvasFontRef p_font, MCCanvasRectangleRef& r_rect);

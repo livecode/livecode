@@ -10,6 +10,8 @@
 		{
 			'target_name': 'encode_version',
 			'type': 'none',
+
+			'toolsets': ['host', 'target'],
 			
 			'actions':
 			[
@@ -30,6 +32,7 @@
 					[
 						'<@(perl)',
 						'../util/encode_version.pl',
+						'-<(git_revision)',
 						'.',
 						'<(SHARED_INTERMEDIATE_DIR)',
 					],
@@ -49,6 +52,8 @@
 			'target_name': 'quicktime_stubs',
 			'type': 'none',
 			
+			'toolsets': ['host', 'target'],
+
 			'actions':
 			[
 				{

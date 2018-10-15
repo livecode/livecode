@@ -28,6 +28,9 @@
 
 'var' ModuleDependencyList : NAMELIST
 
+-- Keep a list of all modules for which bytecode is being generated
+'var' CompiledModuleList : NAMELIST
+
 'var' IgnoredModuleList : NAMELIST
 
 'var' GeneratingModuleIndex : INT
@@ -35,6 +38,8 @@
 'action' GenerateModules(MODULELIST)
 
     'rule' GenerateModules(List):
+        ModuleDependencyList <- nil
+        CompiledModuleList <- nil
         GeneratingModuleIndex <- 1
         EmitStart()
         GenerateForEachModule(List)
@@ -54,6 +59,7 @@
 'action' Generate(MODULE)
 
     'rule' Generate(Module):
+        CompiledModuleList <- nil
         GeneratingModuleIndex <- 1
         EmitStart()
         GenerateSingleModule(Module)
@@ -61,11 +67,20 @@
 
 'action' GenerateSingleModule(MODULE)
 
+    'rule' GenerateSingleModule(Module:module(_, import, Id, Definitions)):
+		-- do nothing for import modules
+
     'rule' GenerateSingleModule(Module:module(_, Kind, Id, Definitions)):
-        ModuleDependencyList <- nil
+
+        (|
+            -- If this is not a bootstrap compile, don't reinit the dependency list
+            IsBootstrapCompile()
+            ModuleDependencyList <- nil
+        ||
+        |)
         
         QueryModuleId(Id -> Info)
-        Id'Name -> ModuleName
+        GetQualifiedName(Id -> ModuleName)
         (|
             where(Kind -> module)
             EmitBeginModule(ModuleName -> ModuleIndex)
@@ -77,6 +92,9 @@
             where(Kind -> library)
             EmitBeginLibraryModule(ModuleName -> ModuleIndex)
         |)
+
+        AddModuleToCompiledList(ModuleName)
+
         Info'Index <- ModuleIndex
         GeneratingModuleIndex -> Generator
         Info'Generator <- Generator
@@ -122,7 +140,7 @@
         ImportContainsCanvas(Right)
         
     'rule' ImportContainsCanvas(import(_, Id)):
-        Id'Name -> Name
+        GetQualifiedName(Id -> Name)
         MakeNameLiteral("com.livecode.canvas" -> CanvasModuleName)
         IsNameEqualToName(Name, CanvasModuleName)
 
@@ -132,7 +150,7 @@
 
     'rule' GenerateManifest(module(_, Kind, Id, Definitions)):
         OutputBeginManifest()
-        Id'Name -> Name
+    	GetQualifiedName(Id -> Name)
         OutputWrite("<package version=\"0.0\">\n")
         OutputWriteI("  <name>", Name, "</name>\n")
         [|
@@ -183,12 +201,33 @@
 'action' AddModuleToDependencyList(NAME)
 
     'rule' AddModuleToDependencyList(Name):
+        -- If this is in the list of compiled modules, then don't
+        -- include in list of required modules in manifest - in
+        -- particular if we are creating a multi-module assembly,
+        -- then this is not an external dependency.
+        CompiledModuleList -> NoDependencyList
+        IsNameInList(Name, NoDependencyList)
+
+    'rule' AddModuleToDependencyList(Name):
         ModuleDependencyList -> List
         IsNameInList(Name, List)
         
     'rule' AddModuleToDependencyList(Name):
         ModuleDependencyList -> List
         ModuleDependencyList <- namelist(Name, List)
+
+'action' AddModuleToCompiledList(NAME)
+
+    'rule' AddModuleToCompiledList(Name):
+        IsNotBytecodeOutput()
+
+    'rule' AddModuleToCompiledList(Name):
+        CompiledModuleList -> List
+        IsNameInList(Name, List)
+
+    'rule' AddModuleToCompiledList(Name):
+        CompiledModuleList -> List
+        CompiledModuleList <- namelist(Name, List)
         
 'action' GenerateManifestRequires(NAMELIST)
 
@@ -446,7 +485,7 @@
         
         -- Ensure we have a dependency for the module
         GenerateModuleDependency(ModuleId -> ModuleIndex)
-        ModuleId'Name -> ModuleName
+        GetQualifiedName(ModuleId -> ModuleName)
         AddModuleToDependencyList(ModuleName)
         
         -- Fetch the info about the symbol.
@@ -497,8 +536,8 @@
         [|
             -- If the module has been depended on yet, it will have index -1
             ne(CurrentGenerator, Generator)
-            Id'Name -> ModuleName
-            
+            GetQualifiedName(Id -> ModuleName)
+
             -- Emit a dependency for the module and get its index
             EmitModuleDependency(ModuleName -> NewModuleIndex)
             ModuleInfo'Index <- NewModuleIndex
@@ -871,6 +910,18 @@
     'rule' DestroyParameterRegisters(nil):
         -- nothing
 
+'action' RemoveIndexFromInvokeSignature(INVOKESIGNATURE, INT -> INVOKESIGNATURE)
+
+    'rule' RemoveIndexFromInvokeSignature(invokesignature(_, Index, Remaining), RemoveIndex -> Remaining):
+        eq(Index, RemoveIndex)
+
+    'rule' RemoveIndexFromInvokeSignature(invokesignature(Mode, Index, Tail), RemoveIndex -> ChangedSig):
+        RemoveIndexFromInvokeSignature(Tail, RemoveIndex -> ChangedTail)
+        where(invokesignature(Mode, Index, ChangedTail) -> ChangedSig)
+
+    'rule' RemoveIndexFromInvokeSignature(nil, _ -> nil):
+
+
 'sweep' DestroyVariableRegisters(ANY)
 
     'rule' DestroyVariableRegisters(STATEMENT'variable(_, Id, _)):
@@ -1081,21 +1132,34 @@
         
         EmitPosition(Position)
         EmitCreateRegister(-> IteratorReg)
+        EmitCreateRegister(-> IterationVarTempReg)
         EmitAssignUndefined(IteratorReg)
+        EmitAssignUndefined(IterationVarTempReg)
         GenerateExpression(Result, Context, Container -> TargetReg)
-        
-        EmitResolveLabel(RepeatHead)
+
+        -- Remove the variable of iteration from the argument list as a
+        -- temporary will be used in the invoke
         GenerateDefinitionGroupForInvokes(IteratorInvokes, iterate, Arguments -> Index, Signature)
-        GenerateInvoke_EvaluateArguments(Result, Context, Signature, Arguments)
+        RemoveIndexFromInvokeSignature(Signature, 0 -> RemainingSignature)
+        where(Arguments -> expressionlist(IterationVar, RemainingArgs))
+
+        EmitResolveLabel(RepeatHead)
+        GenerateInvoke_EvaluateArgumentForOut(Result, Context, IterationVar)
+        GenerateInvoke_EvaluateArguments(Result, Context, RemainingSignature, RemainingArgs)
         EmitCreateRegister(-> ContinueReg)
         EmitBeginInvoke(Index, Context, ContinueReg)
         EmitContinueInvoke(IteratorReg)
-        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitContinueInvoke(IterationVarTempReg)
+        GenerateInvoke_EmitInvokeArguments(RemainingArgs)
         EmitContinueInvoke(TargetReg)
         EmitEndInvoke()
 
         EmitJumpIfFalse(ContinueReg, RepeatTail)
-        
+
+        -- Iteration successful, copy the temporary iteration var into its place
+        EmitGetRegisterAttachedToExpression(IterationVar -> IterationVarReg)
+        EmitAssign(IterationVarReg, IterationVarTempReg)
+
         GenerateInvoke_AssignArguments(Result, Context, Signature, Arguments)
         GenerateInvoke_FreeArguments(Arguments)
         
@@ -1105,8 +1169,9 @@
         
         EmitJump(RepeatHead)
         
-        EmitDestroyRegister(IteratorReg)
         EmitDestroyRegister(TargetReg)
+        EmitDestroyRegister(IterationVarTempReg)
+        EmitDestroyRegister(IteratorReg)
 
         EmitResolveLabel(RepeatTail)
 
@@ -1164,6 +1229,7 @@
     'rule' GenerateBody(Result, Context, get(Position, Value)):
         GenerateExpression(Result, Context, Value -> Reg)
         EmitAssign(Result, Reg)
+        EmitDestroyRegister(Reg)
 
     'rule' GenerateBody(Result, Context, invoke(Position, Invokes, Arguments)):
         EmitPosition(Position)
@@ -1321,6 +1387,13 @@
     'rule' GenerateInvoke_EvaluateArguments(_, _, nil, _):
         -- do nothing.
 
+'action' GenerateInvoke_EvaluateVariadicArgument(INT, INT, EXPRESSIONLIST, INT)
+
+    'rule' GenerateInvoke_EvaluateVariadicArgument(ResultReg, ContextReg, Args, Index):
+        GetExpressionAtIndex(Args, Index -> Expr)
+        GenerateInvoke_EvaluateArgumentForIn(ResultReg, ContextReg, Expr)
+        GenerateInvoke_EvaluateVariadicArgument(ResultReg, ContextReg, Args, Index + 1)
+
 -- In arguments are simple, just evaluate the expr into a register attached to the
 -- node.
 'action' GenerateInvoke_EvaluateArgumentForIn(INT, INT, EXPRESSION)
@@ -1437,15 +1510,12 @@
     'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Invoke:invoke(_, Invokes, Arguments)):
         EmitGetRegisterAttachedToExpression(Invoke -> InputReg)
         GenerateDefinitionGroupForInvokes(Invokes, assign, Arguments -> Index, Signature)
-        [|
-            ne(Signature, nil)
-            EmitCreateRegister(-> IgnoredResultReg)
-            EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
-            EmitContinueInvoke(InputReg)
-            GenerateInvoke_EmitInvokeArguments(Arguments)
-            EmitEndInvoke()
-            EmitDestroyRegister(IgnoredResultReg)
-        |]
+        EmitCreateRegister(-> IgnoredResultReg)
+        EmitBeginInvoke(Index, ContextReg, IgnoredResultReg)
+        EmitContinueInvoke(InputReg)
+        GenerateInvoke_EmitInvokeArguments(Arguments)
+        EmitEndInvoke()
+        EmitDestroyRegister(IgnoredResultReg)
         GenerateInvoke_AssignArguments(ResultReg, ContextReg, Signature, Arguments)
         
     'rule' GenerateInvoke_AssignArgument(ResultReg, ContextReg, Slot:slot(_, Id)):
@@ -1640,7 +1710,11 @@
         Info'Kind -> Kind
         Info'Type -> Type
         FullyResolveType(Type -> handler(_, _, signature(HandlerSig, _)))
-        GenerateCall_GetInvokeSignature(HandlerSig, 0 -> InvokeSig)
+
+        -- Pass the actual argument count to invoke sig computation to take into
+        -- account variadic parameters.
+        QueryExpressionListLength(Arguments -> ArgCount)
+        GenerateCall_GetInvokeSignature(HandlerSig, 0, ArgCount -> InvokeSig)
 
         (|
             -- If the Id is not a handler it must be a variable
@@ -1670,12 +1744,22 @@
             EmitDestroyRegister(HandlerReg)
         |]
 
-'action' GenerateCall_GetInvokeSignature(PARAMETERLIST, INT -> INVOKESIGNATURE)
+'action' GenerateCall_GetInvokeSignature(PARAMETERLIST, INT, INT -> INVOKESIGNATURE)
 
-    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest), Index -> invokesignature(Mode, Index, InvokeRest)):
-        GenerateCall_GetInvokeSignature(ParamRest, Index + 1 -> InvokeRest)
+    -- When we encounter a variadic parameter, we generate in parameters for the
+    -- rest of the arg list.
+    'rule' GenerateCall_GetInvokeSignature(ParamRest:parameterlist(parameter(_, variadic, _, _), _), Index, ArgCount -> invokesignature(in, Index, InvokeRest)):
+        (|
+            lt(Index, ArgCount)
+            GenerateCall_GetInvokeSignature(ParamRest, Index + 1, ArgCount -> InvokeRest)
+        ||
+            where(INVOKESIGNATURE'nil -> InvokeRest)
+        |)
+
+    'rule' GenerateCall_GetInvokeSignature(parameterlist(parameter(_, Mode, _, _), ParamRest), Index, ArgCount -> invokesignature(Mode, Index, InvokeRest)):
+        GenerateCall_GetInvokeSignature(ParamRest, Index + 1, ArgCount -> InvokeRest)
     
-    'rule' GenerateCall_GetInvokeSignature(nil, _ -> nil):
+    'rule' GenerateCall_GetInvokeSignature(nil, _, ArgCount -> nil):
         -- do nothing
 
 ----
@@ -2042,7 +2126,7 @@
             where(Type -> handler(_, _, _))
             where(ThisType -> Base)
         ||
-            where(Type -> record(_, _, _))
+            where(Type -> record(_, _))
             where(ThisType -> Base)
         ||
             where(Type -> Base)
@@ -2077,9 +2161,8 @@
     'rule' GenerateBaseType(foreign(_, Binding) -> Index):
         EmitForeignType(Binding -> Index)
 
-    'rule' GenerateBaseType(record(_, Base, Fields) -> Index):
-        GenerateType(Base -> BaseTypeIndex)
-        EmitBeginRecordType(BaseTypeIndex)
+    'rule' GenerateBaseType(record(_, Fields) -> Index):
+        EmitBeginRecordType()
         GenerateRecordTypeFields(Fields)
         EmitEndRecordType(-> Index)
 
@@ -2150,9 +2233,12 @@
         ||
             where(Mode -> inout)
             EmitHandlerTypeInOutParameter(Name, TypeIndex)
+        ||
+            where(Mode -> variadic)
+            EmitHandlerTypeVariadicParameter(Name)
         |)
         GenerateHandlerTypeParameters(Rest)
-        
+
     'rule' GenerateHandlerTypeParameters(nil):
         -- nothing
 
@@ -2164,7 +2250,6 @@
         -- Ungenerated if generator is not the current generator
         QuerySymbolId(Id -> Info)
         Info'Generator -> Generator
-        Id'Name -> Name
         GeneratingModuleIndex -> CurrentGenerator
         ne(Generator, CurrentGenerator)
 
@@ -2204,6 +2289,7 @@
         
 -- Defined in check.g
 'action' QueryId(ID -> MEANING)
+'action' GetQualifiedName(ID -> NAME)
 'condition' QuerySyntaxId(ID -> SYNTAXINFO)
 'condition' QuerySyntaxMarkId(ID -> SYNTAXMARKINFO)
 

@@ -45,7 +45,7 @@ command deployDo pTargetStack, pTargetDevice
    put empty into tError
    
    local tSettings
-   put the customProperties["cRevStandaloneSettings"] of stack pTargetStack into tSettings
+   put revSBGetSettings(pTargetStack, true) into tSettings
    
    local tIdentifier
    put tSettings["android,identifier"] into tIdentifier
@@ -179,7 +179,7 @@ function deployIsValidJDK pPath
 end deployIsValidJDK
 
 function deployRequiredSDK
-   return "Android 4.0.3 (API 15)"
+   return "Android 8.0 (API 26)"
 end deployRequiredSDK
 
 function deployIsValidSDK pPath 
@@ -190,10 +190,8 @@ function deployIsValidSDK pPath
       return false
    end if
    
-   // We need API 15 in order to be able to give the value 'screenSize' to the manifest variable configChanges
-   // That was introduced in the API 13, but the SDK manager only have API 15 nowadays
-   if there is no folder (pPath & slash & "platforms/android-15") then
-      --return "could not find install of SDK level 8, make sure it has been installed with the Android SDK Manager"
+   if there is no folder (pPath & slash & "platforms/android-26") then
+      --return "could not find install of SDK level 26, make sure it has been installed with the Android SDK Manager"
       return false
    end if
    
@@ -243,11 +241,16 @@ end deployGetJDK
 // SN-2015-05-13: [[ AndroidVersions ]] Make the available Android minimum versions
 //  something changeable from a script-only stack
 function deployGetVersionsList
-   return "2.3.3 - Gingerbread,3.0 - Honeycomb,3.1,3.2,4.0 - IceCream Sandwich,4.1 - Jelly Bean,4.2,4.3,4.4 - KitKat,5.0 - Lollipop,5.1"
+   return "4.1 - Jelly Bean,4.2,4.3," & \
+         "4.4 - KitKat," & \
+         "5.0 - Lollipop,5.1," & \
+         "6.0 - Marshmallow," & \
+         "7.0 - Nougat,7.1," & \
+         "8.0 - Oreo,8.1" 
 end deployGetVersionsList
 
 function deployGetAPIsList
-   return "10,11,12,13,14,16,17,18,19,21,22"
+   return "16,17,18,19,21,22,23,24,25,26,27"
 end deployGetAPIsList
 
 function deployGetApiFromVersion pVersion
@@ -318,7 +321,7 @@ function pathToRootClasses pRoot
    if pRoot is empty then
       put sAndroidRoot into pRoot
    end if
-   return pRoot & slash & "platforms/android-15/android.jar"
+   return pRoot & slash & "platforms/android-26/android.jar"
 end pathToRootClasses
 
 function pathToSDKClasses pRoot
@@ -491,6 +494,13 @@ function pathToJarSigner pRoot
    end if
    return pRoot & slash & "bin" & slash & executableName("jarsigner")
 end pathToJarSigner
+
+function pathToJar pRoot
+   if pRoot is empty then
+      put sJavaRoot into pRoot
+   end if
+   return pRoot & slash & "bin" & slash & executableName("jar")
+end pathToJar
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -27,6 +27,7 @@
 #include "unicode/timezone.h"
 #include "unicode/uclean.h"
 
+#include "foundation.h"
 #include "foundation-auto.h"
 
 
@@ -196,16 +197,6 @@ bool __MCLocaleInitialize()
     bool t_success;
     t_success = true;
     
-    // DIRTY EVIL HACK FOR TESTING
-    //u_setDataDirectory("/Users/frasergordon/Workspace/livecode/prebuilt/data/icu");
-    
-    // FG-2014-07-28: [[ Bugfix 12974 ]]
-    // This is required to work around an ICU crashing bug in 52.1 - according
-    // to the ICU docs, it is completely un-necessary. It also only happens in
-    // Linux standalones, strangely.
-    UErrorCode t_error = U_ZERO_ERROR;
-    u_init(&t_error);
-    
     // Create the well-known locales
     // The default locale to be used needs to be determined using setlocale
     if (t_success)
@@ -267,7 +258,7 @@ bool MCLocaleCreateWithName(MCStringRef p_name, MCLocaleRef &r_locale)
     
     // Convert it into an engine locale
     __MCLocale *t_locale;
-    t_locale = new __MCLocale(*t_icu_locale);
+    t_locale = new (nothrow) __MCLocale(*t_icu_locale);
     
     // All done
     r_locale = t_locale;
@@ -729,7 +720,7 @@ bool MCTimeZoneCreate(MCStringRef p_name, MCTimeZoneRef &r_tz)
         return false;
     
     // Create the LiveCode time zone object
-    r_tz = new __MCTimeZone(*t_tz);
+    r_tz = new (nothrow) __MCTimeZone(*t_tz);
     return true;
 }
 
@@ -1003,7 +994,7 @@ bool MCLocaleBreakIteratorCreate(MCLocaleRef p_locale, MCBreakIteratorType p_typ
     MCAssert(p_locale != nil);
     
     // Create the iterator with the requested type
-    icu::BreakIterator *t_iter;
+    icu::BreakIterator *t_iter = nullptr;
     UErrorCode t_error = U_ZERO_ERROR;
     switch (p_type)
     {
@@ -1046,7 +1037,7 @@ bool MCLocaleBreakIteratorCreate(MCLocaleRef p_locale, MCBreakIteratorType p_typ
         return false;
     
     // Use the ICU break iterator object to create the engine object
-    r_iter = new __MCBreakIterator(*t_iter);
+    r_iter = new (nothrow) __MCBreakIterator(*t_iter);
     return true;
 }
 

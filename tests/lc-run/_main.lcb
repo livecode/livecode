@@ -1,0 +1,11 @@
+module com.livecode.lc_run.tests.main
+
+use com.livecode.lc_run.tests.lib1
+use com.livecode.lc_run.tests.lib2
+
+public handler Main()
+	write Hello1() to the output stream
+	write Hello2() to the output stream
+end handler
+
+end module

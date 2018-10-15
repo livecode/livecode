@@ -259,6 +259,11 @@ public:
     //  in the resource mapping array of MCdispatcher.
     void addlibrarymapping(MCStringRef p_mapping);
     bool fetchlibrarymapping(MCStringRef p_name, MCStringRef &r_path);
+    MCArrayRef getlibrarymappings(void)
+    {
+        return m_library_mapping;
+    }
+    bool haslibrarymapping(MCStringRef p_name);
     
     virtual bool recomputefonts(MCFontRef parent_font, bool force);
     
@@ -300,6 +305,7 @@ public:
     // if required.
     void processstack(MCStringRef p_openpath, MCStack* &x_stack);
     
+    void resolveparentscripts(void);
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.

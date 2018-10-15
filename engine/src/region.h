@@ -42,10 +42,6 @@ bool MCRegionOffset(MCRegionRef region, int32_t dx, int32_t dy);
 
 bool MCRegionTransform(MCRegionRef p_region, const MCGAffineTransform &p_transform, MCRegionRef &r_transformed_region);
 
-#ifdef OLD_GRAPHICS
-bool MCRegionCalculateMask(MCRegionRef region, int32_t width, int32_t height, MCBitmap*& r_mask);
-#endif
-
 typedef bool (*MCRegionForEachRectCallback)(void *context, const MCRectangle& rect);
 bool MCRegionForEachRect(MCRegionRef region, MCRegionForEachRectCallback callback, void *context);
 

@@ -104,9 +104,15 @@ Bool MCquitisexplicit;
 int MCidleRate = 200;
 
 Boolean MCaqua;
-MCStringRef MCcmd;
-MCStringRef MCfiletype;
-MCStringRef MCstackfiletype;
+
+/* The path to the base folder which contains the application's code resources.
+ * This is used to resolve references to code resources. This is added as a
+ * prefix to the (relative) paths computed in MCU_library_load. */
+MCStringRef MCappcodepath = nullptr;
+
+MCStringRef MCcmd = nullptr;
+MCStringRef MCfiletype = nullptr;
+MCStringRef MCstackfiletype = nullptr;
 
 
 #ifdef TARGET_PLATFORM_LINUX
@@ -216,10 +222,10 @@ Boolean MCselectintersect = True;
 MCRectangle MCwbr;
 uint2 MCjpegquality = 100;
 Export_format MCpaintcompression = EX_PBM;
-uint2 MCrecordformat = EX_AIFF;
 uint2 MCrecordchannels = 1;
 uint2 MCrecordsamplesize = 8;
 real8 MCrecordrate = 22.050;
+intenum_t MCrecordformat;
 char MCrecordcompression[5] = "raw ";
 char MCrecordinput[5] = "dflt";
 Boolean MCuselzw;
@@ -466,8 +472,9 @@ Boolean MCcursorcanbecolor = False;
 Boolean MCcursorbwonly = True;
 int32_t MCcursormaxsize = 32;
 
-uint32_t MCstacklimit = 1024 * 1024;
-uint32_t MCpendingstacklimit = 1024 * 1024;
+#define kMCStackLimit 8 * 1024 * 1024
+uint32_t MCstacklimit = kMCStackLimit;
+uint32_t MCpendingstacklimit = kMCStackLimit;
 
 Boolean MCappisactive = False;
 
@@ -505,6 +512,9 @@ MCArrayRef MCcommandarguments;
 
 MCHook *MChooks = nil;
 
+// The main window callback to compute the window to parent root modal dialogs to (if any)
+MCMainWindowCallback MCmainwindowcallback = nullptr;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCUIDC *MCCreateScreenDC(void);
@@ -529,7 +539,8 @@ void X_clear_globals(void)
 	MCquit = False;
 	MCquitisexplicit = False;
 	MCidleRate = 200;
-	/* FRAGILE */ MCcmd = MCValueRetain(kMCEmptyString);
+	/* FRAGILE */ MCcmd = nullptr;
+    MCappcodepath = nullptr;
 	MCfiletype = MCValueRetain(kMCEmptyString);
 	MCstackfiletype = MCValueRetain(kMCEmptyString);
 	MCstacknames = nil;
@@ -610,7 +621,7 @@ void X_clear_globals(void)
 	memset(&MCwbr, 0, sizeof(MCRectangle));
 	MCjpegquality = 100;
 	MCpaintcompression = EX_PBM;
-	MCrecordformat = EX_AIFF;
+	MCrecordformat = 0;
 	MCrecordchannels = 1;
 	MCrecordsamplesize = 8;
 	MCrecordrate = 22.050;
@@ -845,6 +856,8 @@ void X_clear_globals(void)
     
     MChooks = nil;
 
+    memset(&MClicenseparameters, 0, sizeof(MCLicenseParameters));
+    
 #if defined(MCSSL)
     MCSocketsInitialize();
 #endif
@@ -1043,10 +1056,13 @@ X_open_environment_variables(MCStringRef envp[])
 
 /* ---------------------------------------------------------------- */
 
+// Important: This function is on the emterpreter whitelist. If its
+// signature function changes, the mangled name must be updated in
+// em-whitelist.json
 bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 {
-	MCperror = new MCError();
-	MCeerror = new MCError();
+	MCperror = new (nothrow) MCError();
+	MCeerror = new (nothrow) MCError();
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCresult"), MCresult);
     MCresultmode = kMCExecResultModeReturn;
 
@@ -1083,7 +1099,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     
     ////
     
-	MCpatternlist = new MCImageList();
+	MCpatternlist = new (nothrow) MCImageList();
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_msg, MCmb);
 	MCmb -> setmsg();
@@ -1135,32 +1151,32 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     MCDeletedObjectsSetup();
 
 	/* UNCHECKED */ MCStackSecurityCreateStack(MCtemplatestack);
-	MCtemplateaudio = new MCAudioClip;
+	MCtemplateaudio = new (nothrow) MCAudioClip;
 	MCtemplateaudio->init();
-	MCtemplatevideo = new MCVideoClip;
-	MCtemplategroup = new MCGroup;
-	MCtemplatecard = new MCCard;
-	MCtemplatebutton = new MCButton;
-	MCtemplategraphic = new MCGraphic;
-	MCtemplatescrollbar = new MCScrollbar;
-	MCtemplateplayer = new MCPlayer;
-	MCtemplateimage = new MCImage;
-	MCtemplatefield = new MCField;
+	MCtemplatevideo = new (nothrow) MCVideoClip;
+	MCtemplategroup = new (nothrow) MCGroup;
+	MCtemplatecard = new (nothrow) MCCard;
+	MCtemplatebutton = new (nothrow) MCButton;
+	MCtemplategraphic = new (nothrow) MCGraphic;
+	MCtemplatescrollbar = new (nothrow) MCScrollbar;
+	MCtemplateplayer = new (nothrow) MCPlayer;
+	MCtemplateimage = new (nothrow) MCImage;
+	MCtemplatefield = new (nothrow) MCField;
 	
-	MCtooltip = new MCTooltip;
+	MCtooltip = new (nothrow) MCTooltip;
 
     MCclipboard = MCClipboard::CreateSystemClipboard();
     MCdragboard = MCClipboard::CreateSystemDragboard();
     MCselection = MCClipboard::CreateSystemSelectionClipboard();
     MCclipboardlockcount = 0;
 	
-	MCundos = new MCUndolist;
-	MCselected = new MCSellist;
-	MCstacks = new MCStacklist(true);
+	MCundos = new (nothrow) MCUndolist;
+	MCselected = new (nothrow) MCSellist;
+	MCstacks = new (nothrow) MCStacklist(true);
 	// IM-2016-11-22: [[ Bug 18852 ]] Changes to MCtodestroy shouldn't affect MCtopstack
-    MCtodestroy = new MCStacklist(false);
-	MCrecent = new MCCardlist;
-	MCcstack = new MCCardlist;
+    MCtodestroy = new (nothrow) MCStacklist(false);
+	MCrecent = new (nothrow) MCCardlist;
+	MCcstack = new (nothrow) MCCardlist;
 
 #ifdef _LINUX_DESKTOP
 	MCValueAssign(MCvcplayer, MCSTR("xanim"));
@@ -1182,7 +1198,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 		MCValueAssign(MCstackfiletype, MCSTR("RevoRSTK"));
 	MCValueAssign(MCserialcontrolsettings, MCSTR("baud=9600 parity=N data=8 stop=1"));
 
-	MCdispatcher = new MCDispatch;
+	MCdispatcher = new (nothrow) MCDispatch;
     MCdispatcher -> add_transient_stack(MCtooltip);
 
 	// IM-2014-08-14: [[ Bug 12372 ]] Pixel scale setup needs to happen before the
@@ -1191,7 +1207,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCResInitPixelScaling();
 	
 	if (MCnoui)
-		MCscreen = new MCUIDC;
+		MCscreen = new (nothrow) MCUIDC;
 	else
 	{
 		MCscreen = MCCreateScreenDC();
@@ -1210,7 +1226,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
-	MCtemplateeps = new MCEPS;
+	MCtemplateeps = new (nothrow) MCEPS;
 
 	MCsystemFS = MCscreen -> hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS);
 	MCsystemCS = MCscreen -> hasfeature(PLATFORM_FEATURE_OS_COLOR_DIALOGS);
@@ -1236,7 +1252,14 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
 	
-    MCwidgeteventmanager = new MCWidgetEventManager;
+    MCwidgeteventmanager = new (nothrow) MCWidgetEventManager;
+    
+    /* Now that the script engine state has been initialized, we can load all
+     * builtin extensions. */
+    if (!MCExtensionInitialize())
+    {
+        return false;
+    }
     
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
@@ -1249,6 +1272,12 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 
 int X_close(void)
 {
+    // MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
+    MCFontFinalize();
+    
+    /* Finalize all builtin extensions */
+    MCExtensionFinalize();
+
 	// MW-2008-01-18: [[ Bug 5711 ]] Make sure we disable the backdrop here otherwise we
 	//   get crashiness on Windows due to hiding the backdrop calling WindowProc which
 	//   attempts to access stacks that have been deleted...
@@ -1313,6 +1342,7 @@ int X_close(void)
 	while (MCsavegroupptr != NULL)
 	{
 		MCControl *gptr = MCsavegroupptr->remove(MCsavegroupptr);
+        gptr -> removereferences();
 		delete gptr;
 	}
 
@@ -1466,7 +1496,7 @@ int X_close(void)
 	for(uint4 i = 0; i < MCnstacks; ++i)
 		MCValueRelease(MCstacknames[i]);
 
-	delete MCstacknames;
+	delete[] MCstacknames; /* allocated with new[] */
 
 	// Cleanup the parentscript stuff
 	MCParentScript::Cleanup();
@@ -1476,8 +1506,6 @@ int X_close(void)
 	
 	// MW-2012-02-23: [[ LogFonts ]] Finalize the font table module.
 	MCLogicalFontTableFinalize();
-	// MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
-	MCFontFinalize();
 	
 	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
 	MCGraphicsFinalize();
@@ -1512,6 +1540,11 @@ int X_close(void)
         MCLocaleRelease(kMCSystemLocale);
     if (kMCBasicLocale != nil)
         MCLocaleRelease(kMCBasicLocale);
+    
+    if (MCappcodepath != nullptr)
+        MCValueRelease(MCappcodepath);
+    if (MCcmd != nullptr)
+        MCValueRelease(MCcmd);
     
 	return MCretcode;
 }

@@ -121,26 +121,26 @@ bool MCSellist::getids(MCListRef& r_list)
 
 void MCSellist::Clean()
 {
-    if (objects == nil)
-        return;
-    
-    // Remove any dead objects from the selected list
-    MCSelnode* t_cursor = objects;
-    do
-    {
-        if (!t_cursor->m_ref)
-        {
-            MCSelnode* t_next = t_cursor->next();
-            t_cursor->remove(objects);
-            delete t_cursor;
-            t_cursor = t_next;
-        }
-        else
-        {
-            t_cursor = t_cursor->next();
-        }
-    }
-    while (t_cursor != objects);
+	if (objects == nil)
+		return;
+
+	// Remove any dead objects from the selected list
+	MCSelnode* t_cursor = objects;
+	bool t_continue = true;
+
+	while (t_continue && objects != nil)
+	{
+		// If the next object wraps around then we've reached the end of the list
+		MCSelnode* t_next = t_cursor->next();
+		t_continue = t_next != objects;
+		if (!t_cursor->m_ref)
+		{
+			t_cursor->remove(objects);
+			delete t_cursor;
+		}
+
+		t_cursor = t_next;
+	}
 }
 
 void MCSellist::clear(Boolean message)
@@ -199,8 +199,8 @@ void MCSellist::add(MCObject *objptr, bool p_sendmessage)
     
 	if (MCactivefield)
 		MCactivefield->unselect(True, True);
-
-	MCSelnode *nodeptr = new MCSelnode(objptr->GetHandle());
+    
+	MCSelnode *nodeptr = new (nothrow) MCSelnode(objptr->GetHandle());
 
 	nodeptr->appendto(objects);
     
@@ -210,6 +210,9 @@ void MCSellist::add(MCObject *objptr, bool p_sendmessage)
 
 void MCSellist::remove(MCObject *objptr, bool p_sendmessage)
 {
+    // Remove any dead objects before removing objptr
+    Clean();
+
 	if (objects != NULL)
 	{
 		MCSelnode *tptr = objects;
@@ -396,7 +399,8 @@ Exec_stat MCSellist::group(uint2 line, uint2 pos, MCGroup*& r_group_ptr)
 		else
 			gptr = (MCGroup *)MCsavegroupptr->remove(MCsavegroupptr);
 		gptr->makegroup(controls, parent);
-		objects = new MCSelnode(MCObjectHandle(gptr));
+
+		objects = new (nothrow) MCSelnode(MCObjectHandle(gptr));
 		gptr->message(MCM_selected_object_changed);
 		
 		r_group_ptr = gptr;
@@ -579,10 +583,10 @@ Boolean MCSellist::del()
             MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
             uint2 num = 0;
             cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
-        
+
             if (cptr->del(true))
             {
-                Ustruct *us = new Ustruct;
+                Ustruct *us = new (nothrow) Ustruct;
                 us->type = UT_DELETE;
                 us->ud.layer = num;
                 MCundos->savestate(cptr, us);
@@ -615,7 +619,7 @@ bool MCSellist::IsDeletable()
         t_object = t_object->next();
     }
     while (t_object != objects);
-    
+
     return true;
 }
 
@@ -697,7 +701,7 @@ Boolean MCSellist::endmove()
 		if (tptr->m_ref)
 		{
 			MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
-			Ustruct *us = new Ustruct;
+			Ustruct *us = new (nothrow) Ustruct;
 			us->type = UT_MOVE;
 			us->ud.deltas.x = lastx - startx;
 			us->ud.deltas.y = lasty - starty;

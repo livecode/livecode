@@ -45,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifndef _MACOSX
 //normal, control, alt, alt-control
-Keytranslations MCField::emacs_keys[] =
+const Keytranslations MCField::emacs_keys[] =
 {
 	{XK_Home, {FT_HOME, FT_FOCUSFIRST, FT_HOME, FT_FOCUSFIRST}},
 	{XK_Left, {FT_LEFTCHAR, FT_LEFTWORD, FT_LEFTCHAR, FT_FOCUSPREV}},
@@ -107,7 +107,7 @@ Keytranslations MCField::emacs_keys[] =
 	{0x0000, {FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED}},
 };
 
-Keytranslations MCField::std_keys[] =
+const Keytranslations MCField::std_keys[] =
 {
 	{XK_Home, {FT_BOL, FT_BOF, FT_BOF, FT_FOCUSFIRST}},
 	{XK_Left, {FT_LEFTCHAR, FT_LEFTWORD, FT_LEFTCHAR, FT_FOCUSPREV}},
@@ -152,7 +152,7 @@ Keytranslations MCField::std_keys[] =
 	{0x0000, {FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED, FT_UNDEFINED}},
 };
 
-Field_translations MCField::trans_lookup(Keytranslations table[], KeySym key,
+Field_translations MCField::trans_lookup(const Keytranslations table[], KeySym key,
 										 uint2 modifiers)
 {
 	uint2 i = 0;
@@ -403,7 +403,7 @@ MCCdata *MCField::getcarddata(MCCdata *&list, uint4 parid, Boolean create)
 	}
 	if (foundptr == NULL && create)
 	{
-		foundptr = new MCCdata(parid);
+		foundptr = new (nothrow) MCCdata(parid);
 		foundptr->appendto(list);
 	}
 	return foundptr;
@@ -646,7 +646,11 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 			// MW-2012-08-06: Use XOR to render the caret so it remains visible regardless
 			//   of background color (apart from 128,128,128!).
 			p_context->setforeground(p_context->getwhite());
-			p_context->setfunction(GXxor);
+            
+            /* The XOR blend is no longer supported, fortunately exlusion
+             * (and difference) are the same as XOR when the source is white or
+             * black. */
+			p_context->setfunction(GXblendExclusion);
 			
 			// MW-2012-09-19: [[ Bug 10393 ]] Draw the caret inside a layer to ensure the XOR
 			//   ink works correctly.
@@ -1636,7 +1640,7 @@ Boolean MCField::deleteselection(Boolean force)
 
 		findex_t si, ei;
 		selectedmark(False, si, ei, False);
-		Ustruct *us = new Ustruct;
+		Ustruct *us = new (nothrow) Ustruct;
 		us->type = UT_DELETE_TEXT;
 		us->ud.text.index = si;
 		us->ud.text.data = cloneselection();
@@ -1861,7 +1865,7 @@ void MCField::finsertnew(Field_translations function, MCStringRef p_string, KeyS
 		else
 		{
 			MCundos->freestate();
-			us = new Ustruct;
+			us = new (nothrow) Ustruct;
 			us->type = UT_TYPE_TEXT;
 			
 			// MW-UNDO-FIX: Store the index this record starts at
@@ -1914,7 +1918,7 @@ void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key
 				focusedy -= focusedparagraph->getheight(fixedheight);
 				joinparagraphs();
 				firstparagraph = lastparagraph = NULL;
-				us = new Ustruct;
+				us = new (nothrow) Ustruct;
 				us->ud.text.newline = True;
 				us->ud.text.data = NULL;
 			}
@@ -1933,14 +1937,14 @@ void MCField::fdel(Field_translations function, MCStringRef p_string, KeySym key
 				{
 					joinparagraphs();
 					firstparagraph = lastparagraph = NULL;
-					us = new Ustruct;
+					us = new (nothrow) Ustruct;
 					us->ud.text.newline = True;
 					us->ud.text.data = NULL;
 				}
 			}
 			else
 			{
-				us = new Ustruct;
+				us = new (nothrow) Ustruct;
 				us->ud.text.data = undopgptr;
 				us->ud.text.newline = False;
 				updateparagraph(True, False);
@@ -1988,7 +1992,7 @@ void MCField::fcut(Field_translations function, MCStringRef p_string, KeySym key
 
 void MCField::fcutline(Field_translations function, MCStringRef p_string, KeySym key)
 {
-#ifdef OLD_CLIPBOARD
+#ifdef FIELD_CUTLINE_ACTION
 	if (!(state & CS_DELETING))
 		MCclipboard->clear();
 	unselect(False, True);
@@ -2001,7 +2005,7 @@ void MCField::fcutline(Field_translations function, MCStringRef p_string, KeySym
 		joinparagraphs();
 		if (focusedparagraph->gettextsize())
 			state &= ~CS_PARTIAL;
-		cutptr = new MCParagraph;
+		cutptr = new (nothrow) MCParagraph;
 		cutptr->setparent(this);
 	}
 	else

@@ -57,7 +57,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objptr.h"
 #include "stacksecurity.h"
 
-#include "syntax.h"
 #include "graphics_util.h"
 
 MCClone::~MCClone()
@@ -74,7 +73,7 @@ Parse_stat MCClone::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_INVISIBLE) == PS_NORMAL)
 		visible = False;
 
-	source = new MCChunk(False);
+	source = new (nothrow) MCChunk(False);
 	if (source->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -118,22 +117,6 @@ void MCClone::exec_ctxt(MCExecContext& ctxt)
 	MCInterfaceExecClone(ctxt, optr, *t_new_name, visible == False);
 }
 
-void MCClone::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	source -> compile_object_ptr(ctxt);
-	if (newname != nil)
-		newname -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstantNil(ctxt);
-	MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCloneMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 
 MCClipboardCmd::~MCClipboardCmd(void)
@@ -155,7 +138,7 @@ Parse_stat MCClipboardCmd::parse(MCScriptPoint& sp)
 	MCerrorlock--;
 	if (sp.skip_token(SP_FACTOR, TT_TO, PT_TO) == PS_NORMAL)
 	{
-		dest = new MCChunk(False);
+		dest = new (nothrow) MCChunk(False);
 		if (dest->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_COPY_BADDEST, sp);
@@ -270,64 +253,6 @@ void MCClipboardCmd::exec_ctxt(MCExecContext& ctxt)
             }
         }
     }
-}
-
-void MCClipboardCmd::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (targets == NULL)
-	{
-		if (iscut())
-			MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutMethodInfo);
-		else
-			MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyMethodInfo);
-	}
-	else
-	{
-		uindex_t t_count;
-		t_count = 0;
-
-		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr = chunkptr -> next)
-		{
-			chunkptr -> compile_object_ptr(ctxt);
-			t_count++;
-		}
-		
-		if (dest != nil)
-		{
-			MCSyntaxFactoryEvalList(ctxt, t_count);
-			dest -> compile_object_ptr(ctxt);
-
-			if (iscut())
-				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCutObjectsToContainerMethodInfo);
-			else
-				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCopyObjectsToContainerMethodInfo);
-		}
-		else if (t_count > 1)
-		{
-			MCSyntaxFactoryEvalList(ctxt, t_count);
-
-			if (iscut())
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutObjectsToClipboardMethodInfo);
-			else
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyObjectsToClipboardMethodInfo);
-		}
-		else
-		{
-			if (iscut())
-			{
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutTextToClipboardMethodInfo);
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutObjectsToClipboardMethodInfo);
-			}
-			else
-			{
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyTextToClipboardMethodInfo);
-				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyObjectsToClipboardMethodInfo);
-			}
-		}
-	}
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -542,7 +467,7 @@ Parse_stat MCCreate::parse(MCScriptPoint &sp)
         {
             if (!script_only_stack)
             {
-                container = new MCChunk(False);
+                container = new (nothrow) MCChunk(False);
                 if (container->parse(sp, False) != PS_NORMAL)
                 {
                     MCperror->add
@@ -587,7 +512,6 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
         if (!ctxt . EvalOptionalExprAsNullableStringRef(newname, EE_CREATE_BADEXP, &t_new_name))
             return;
 
-        MCObject *optr;
         if (script_only_stack)
             MCInterfaceExecCreateScriptOnlyStack(ctxt, *t_new_name);
         else
@@ -615,7 +539,20 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
             }
                 break;
             case CT_CARD:
-                MCInterfaceExecCreateCard(ctxt, *t_new_name, visible == False);
+            {
+                MCObject *parent = nil;
+                if (container != nil)
+                {
+                    uint32_t parid;
+                  
+                    if (!container->getobj(ctxt, parent, parid, True) || parent->gettype() != CT_STACK)
+                    {
+                        ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
+                        return;
+                    }
+                }
+                MCInterfaceExecCreateCard(ctxt, *t_new_name, static_cast<MCStack *>(parent), visible==False);
+            }
                 break;
             case CT_WIDGET:
             {
@@ -631,13 +568,14 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
                 {
                     uint32_t parid;
                     
-                    if (!container->getobj(ctxt, parent, parid, True) || parent->gettype() != CT_GROUP)
+                    if (!container->getobj(ctxt, parent, parid, True) 
+							|| (parent->gettype() != CT_GROUP && parent->gettype() != CT_CARD))
                     {
                         ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
                         return;
                     }
                 }
-                MCInterfaceExecCreateWidget(ctxt, *t_new_name, *t_kind, (MCGroup *)parent, visible == False);
+                MCInterfaceExecCreateWidget(ctxt, *t_new_name, *t_kind, parent, visible == False);
                 break;
             }
             default:
@@ -648,92 +586,18 @@ void MCCreate::exec_ctxt(MCExecContext& ctxt)
                     uint4 parid;
 
                     if (!container->getobj(ctxt, parent, parid, True)
-                            || parent->gettype() != CT_GROUP)
+                            || (parent->gettype() != CT_GROUP && parent->gettype() != CT_CARD) )
                     {
                         ctxt . LegacyThrow(EE_CREATE_BADBGORCARD);
                         return;
                     }
                 }
-                MCInterfaceExecCreateControl(ctxt, *t_new_name, otype, (MCGroup *)parent, visible == False);
+                MCInterfaceExecCreateControl(ctxt, *t_new_name, otype, parent, visible == False);
             }
                 break;
             }
         }
 	}
-}
-
-void MCCreate::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (directory)
-	{
-		newname -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecCreateFolderMethodInfo);
-	}
-	else if (alias)
-	{
-		file -> compile(ctxt);
-		newname -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecCreateAliasMethodInfo);
-	}
-	else 
-	{
-		switch (otype)
-		{
-		case CT_STACK:
-			if (container != nil)
-				container -> compile_object_ptr(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-			
-			if (newname != nil)
-				newname -> compile(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-
-			MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
-			
-			if (container != nil)
-				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateStackWithGroupMethodInfo); 
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateStackMethodInfo);
-			break;
-
-		case CT_CARD:
-			if (newname != nil)
-				newname -> compile(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-
-			MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateCardMethodInfo);
-			break;
-
-		default:
-			if (newname != nil)
-				newname -> compile(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-
-			MCSyntaxFactoryEvalConstantInt(ctxt, otype);
-
-			if (container != nil)
-				container -> compile_object_ptr(ctxt);
-			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
-
-			MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateControlMethodInfo);
-			break;
-		}
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCCustomProp::~MCCustomProp()
@@ -755,7 +619,7 @@ Parse_stat MCCustomProp::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 	sp.skip_token(SP_FACTOR, TT_OF);
-	target = new MCChunk(False);
+	target = new (nothrow) MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -1021,54 +885,6 @@ void MCDelete::exec_ctxt(MCExecContext& ctxt)
 		MCInterfaceExecDelete(ctxt);
 }
 
-void MCDelete::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (var != nil)
-	{
-		var -> compile(ctxt);
-		
-		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecDeleteVariableMethodInfo);
-	}
-	else if (file != NULL)
-	{
-		file -> compile(ctxt);
-
-		if (url)
-			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecDeleteUrlMethodInfo);
-		else
-			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecDeleteFileMethodInfo);
-	}
-	else if (targets != nil)
-	{
-		uindex_t t_count;
-		t_count = 0;
-
-		for (MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
-		{
-			t_chunk -> compile_object_ptr(ctxt);
-			t_count++;
-		}
-		
-		MCSyntaxFactoryEvalList(ctxt, t_count);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecDeleteVariableChunksMethodInfo);
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDeleteObjectChunksMethodInfo);
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDeleteObjectsMethodInfo); 
-	}
-	else if (session)
-	{
-#ifdef _SERVER
-		MCSyntaxFactoryExecMethod(ctxt, kMCServerExecDeleteSessionMethodInfo);
-#endif
-	}
-	else
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDeleteMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCChangeProp::~MCChangeProp()
 {
 	deletetargets(&targets);
@@ -1153,45 +969,6 @@ void MCChangeProp::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-void MCChangeProp::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	targets -> compile(ctxt);
-
-	switch(prop)
-	{
-	case P_DISABLED:
-		if (value)
-		{
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDisableChunkOfButtonMethodInfo);
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDisableObjectMethodInfo);
-		}
-		else
-		{
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecEnableChunkOfButtonMethodInfo);
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecEnableObjectMethodInfo);
-		}
-		break;
-	case P_HILITE:
-		if (value)
-		{
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHiliteChunkOfButtonMethodInfo);
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHiliteObjectMethodInfo);
-		}
-		else
-		{
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUnhiliteChunkOfButtonMethodInfo);
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUnhiliteObjectMethodInfo);
-		}
-		break;
-	default:
-		break;
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCFlip::~MCFlip()
 {
 	delete image;
@@ -1216,7 +993,7 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 	// PM-2015-08-07: [[ Bug 1751 ]] Allow more flexible parsing: 'flip the selobj ..', 'flip last img..' etc
 	
 	// Parse an arbitrary chunk. If it does not resolve as an image, a runtime error will occur in MCFlip::exec
-	image = new MCChunk(False);
+	image = new (nothrow) MCChunk(False);
 	if (image->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_FLIP_BADIMAGE, sp);
@@ -1262,27 +1039,6 @@ void MCFlip::exec_ctxt(MCExecContext& ctxt)
         MCGraphicsExecFlipSelection(ctxt, direction == FL_HORIZONTAL);
 }
 
-void MCFlip::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (image != nil)
-	{
-		image -> compile(ctxt);
-		MCSyntaxFactoryEvalConstantBool(ctxt, direction == FL_HORIZONTAL);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecFlipImageMethodInfo);
-	}
-	else
-	{
-		MCSyntaxFactoryEvalConstantBool(ctxt, direction == FL_HORIZONTAL);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecFlipSelectionMethodInfo);
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCGrab::~MCGrab()
 {
 	delete control;
@@ -1312,17 +1068,6 @@ void MCGrab::exec_ctxt(MCExecContext& ctxt)
 		return;
 	}
 	MCInterfaceExecGrab(ctxt, static_cast<MCControl *>(optr));
-}
-
-void MCGrab::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	control -> compile(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGrabMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCLaunch::~MCLaunch()
@@ -1381,7 +1126,7 @@ Parse_stat MCLaunch::parse(MCScriptPoint &sp)
 
 	if (t_is_url && sp.skip_token(SP_FACTOR, TT_IN) == PS_NORMAL)
 	{
-		widget = new MCChunk(False);
+		widget = new (nothrow) MCChunk(False);
 		if (widget->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add(PE_LAUNCH_BADWIDGETEXP, sp);
@@ -1428,38 +1173,6 @@ void MCLaunch::exec_ctxt(MCExecContext& ctxt)
 		else
 			MCFilesExecLaunchDocument(ctxt, *t_document);
 	}
-}
-
-void MCLaunch::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	
-	if (app != nil)
-	{
-		app -> compile(ctxt);
-		doc -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchAppMethodInfo);
-	}
-	else if (doc != nil)
-	{	
-		doc -> compile(ctxt);
-
-		if (as_url)
-		{
-			if (widget)
-			{
-				widget->compile(ctxt);
-				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecLaunchUrlInWidgetMethodInfo);
-			}
-			else
-				MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchUrlMethodInfo);
-		}
-		else
-			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchDocumentMethodInfo);
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCLoad::~MCLoad()
@@ -1590,22 +1303,6 @@ void MCLoad::exec_ctxt(MCExecContext& ctxt)
     }
 }
 
-void MCLoad::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	
-	url -> compile(ctxt);
-
-	if (message != nil)
-		message -> compile(ctxt);
-	else
-		MCSyntaxFactoryEvalConstant(ctxt, kMCEmptyName);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecLoadUrlMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCUnload::~MCUnload()
 {
 	delete url;
@@ -1639,17 +1336,6 @@ void MCUnload::exec_ctxt(MCExecContext &ctxt)
 		MCEngineExecUnloadExtension(ctxt, *t_url);
 	else
 		MCNetworkExecUnloadUrl(ctxt, *t_url);
-}
-
-void MCUnload::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-	
-	url -> compile(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecUnloadUrlMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCPost::~MCPost()
@@ -1695,18 +1381,6 @@ void MCPost::exec_ctxt(MCExecContext &ctxt)
         return;
 
     MCNetworkExecPostToUrl(ctxt, *t_data, *t_url);
-}
-
-void MCPost::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	source -> compile(ctxt);
-	dest -> compile(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecPostToUrlMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCMakeGroup::~MCMakeGroup()
@@ -1755,30 +1429,6 @@ void MCMakeGroup::exec_ctxt(MCExecContext& ctxt)
 		MCInterfaceExecGroupSelection(ctxt);
 }
 
-void MCMakeGroup::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (targets != nil)
-	{
-		uindex_t t_count;
-		t_count = 0;
-		for (MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
-		{
-			t_chunk -> compile_object_ptr(ctxt);
-			t_count++;
-		}
-
-		MCSyntaxFactoryEvalList(ctxt, t_count);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGroupControlsMethodInfo);
-	}
-	else
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGroupSelectionMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCPasteCmd::~MCPasteCmd()
 {
 }
@@ -1794,15 +1444,6 @@ void MCPasteCmd::exec_ctxt(MCExecContext& ctxt)
     MCPasteboardExecPaste(ctxt);
 }
 
-void MCPasteCmd::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecPasteMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCPlace::~MCPlace()
 {
 	delete group;
@@ -1812,7 +1453,7 @@ MCPlace::~MCPlace()
 Parse_stat MCPlace::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
-	group = new MCChunk(False);
+	group = new (nothrow) MCChunk(False);
 	if (group->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -1821,7 +1462,7 @@ Parse_stat MCPlace::parse(MCScriptPoint &sp)
 	}
 	while (sp.skip_token(SP_FACTOR, TT_PREP) == PS_NORMAL)
 		;
-	card = new MCChunk(False);
+	card = new (nothrow) MCChunk(False);
 	if (card->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -1865,18 +1506,6 @@ void MCPlace::exec_ctxt(MCExecContext& ctxt)
     
 	MCCard *cptr = (MCCard *)optr;
 	MCInterfaceExecPlaceGroupOnCard(ctxt, gptr, cptr);
-}
-
-void MCPlace::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	group -> compile_object_ptr(ctxt);
-	card -> compile_object_ptr(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecPlaceGroupOnCardMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCRecord::~MCRecord()
@@ -1924,17 +1553,6 @@ void MCRecord::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
-void MCRecord::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	file -> compile(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecRecordMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 void MCRedo::exec_ctxt(MCExecContext &)
 {
 }
@@ -1955,7 +1573,7 @@ Parse_stat MCRemove::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_FACTOR, TT_PROPERTY, P_SCRIPT) == PS_NORMAL)
 	{
 		sp.skip_token(SP_FACTOR, TT_OF);
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -1994,7 +1612,7 @@ Parse_stat MCRemove::parse(MCScriptPoint &sp)
 		return PS_NORMAL;
 	}
 
-	target = new MCChunk(False);
+	target = new (nothrow) MCChunk(False);
 	if (target->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -2003,7 +1621,7 @@ Parse_stat MCRemove::parse(MCScriptPoint &sp)
 	}
 	while (sp.skip_token(SP_FACTOR, TT_FROM) == PS_NORMAL)
 		;
-	card = new MCChunk(False);
+	card = new (nothrow) MCChunk(False);
 	if (card->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add
@@ -2056,37 +1674,6 @@ void MCRemove::exec_ctxt(MCExecContext& ctxt)
 	}
 }
 
-void MCRemove::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (all)
-	{
-		MCSyntaxFactoryEvalConstantBool(ctxt, where == IP_FRONT);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecRemoveAllScriptsFromMethodInfo);
-	}
-	else
-	{
-		target -> compile_object_ptr(ctxt);
-
-		if (script)
-		{
-			MCSyntaxFactoryEvalConstantBool(ctxt, where == IP_FRONT);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecRemoveScriptOfObjectFromMethodInfo);
-		}
-		else
-		{
-			card -> compile_object_ptr(ctxt);
-
-			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRemoveGroupFromCardMethodInfo);
-		}
-	}
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCRename::~MCRename()
 {
 	delete source;
@@ -2127,18 +1714,6 @@ void MCRename::exec_ctxt(MCExecContext &ctxt)
     MCFilesExecRename(ctxt, *t_from, *t_to);
 }
 
-void MCRename::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	source -> compile(ctxt);
-	dest -> compile(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecRenameMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCReplace::~MCReplace()
@@ -2163,7 +1738,7 @@ Parse_stat MCReplace::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 	sp.skip_token(SP_FACTOR, TT_IN, PT_IN);
-	container = new MCChunk(True);
+	container = new (nothrow) MCChunk(True);
 	if (container->parse(sp, False) != PS_NORMAL)
 	{
 		MCperror->add(PE_REPLACE_BADCONTAINER, sp);
@@ -2254,19 +1829,6 @@ void MCReplace::exec_ctxt(MCExecContext& ctxt)
 	}
 }
 
-void MCReplace::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	pattern -> compile(ctxt);
-	replacement -> compile(ctxt);
-	container -> compile_inout(ctxt);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecReplaceMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCRevert::~MCRevert()
 {
     delete stack;
@@ -2281,7 +1843,7 @@ Parse_stat MCRevert::parse(MCScriptPoint &sp)
     
     // Otherwise backup and parse a chunk
     sp.backup();
-    stack = new MCChunk(False);
+    stack = new (nothrow) MCChunk(False);
     if (stack->parse(sp, False) != PS_NORMAL)
     {
         MCperror->add(PE_REVERT_BADSTACK, sp);
@@ -2311,22 +1873,6 @@ void MCRevert::exec_ctxt(MCExecContext& ctxt)
         MCInterfaceExecRevert(ctxt);
 }
 
-void MCRevert::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-    if (stack != nil)
-    {
-        stack -> compile_object_ptr(ctxt);
-        
-        MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRevertStackMethodInfo);
-    }
-    else
-        MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRevertMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCRotate::~MCRotate()
 {
 	delete angle;
@@ -2339,7 +1885,7 @@ Parse_stat MCRotate::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
 	{
 		sp.backup();
-		image = new MCChunk(False);
+		image = new (nothrow) MCChunk(False);
 		if (image->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -2389,27 +1935,6 @@ void MCRotate::exec_ctxt(MCExecContext& ctxt)
 #endif
 }
 
-void MCRotate::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (image != nil)
-	{
-		image -> compile_object_ptr(ctxt);
-		angle -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecRotateImageMethodInfo);
-	}
-	else
-	{
-		angle -> compile(ctxt);
-
-		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecRotateSelectionMethodInfo);
-	}
-	
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 MCCrop::~MCCrop()
 {
 	delete newrect;
@@ -2422,7 +1947,7 @@ Parse_stat MCCrop::parse(MCScriptPoint &sp)
 	if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_IMAGE) == PS_NORMAL)
 	{
 		sp.backup();
-		image = new MCChunk(False);
+		image = new (nothrow) MCChunk(False);
 		if (image->parse(sp, False) != PS_NORMAL)
 		{
 			MCperror->add
@@ -2467,26 +1992,6 @@ void MCCrop::exec_ctxt(MCExecContext& ctxt)
     
 	MCGraphicsExecCropImage(ctxt, iptr, t_rect);
  }
-
-void MCCrop::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (image != nil)
-	{
-		image -> compile_object_ptr(ctxt);
-		newrect -> compile(ctxt);
-	}
-	else
-	{
-		MCSyntaxFactoryEvalConstantNil(ctxt);
-		MCSyntaxFactoryEvalConstantLegacyRectangle(ctxt, MCRectangleMake(0,0,0,0));
-	}
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecCropImageMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
 
 MCSelect::~MCSelect()
 {
@@ -2613,61 +2118,9 @@ void MCSelect::exec_ctxt(MCExecContext& ctxt)
 	}
 }
 
-void MCSelect::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (targets == NULL)
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectEmptyMethodInfo);
-	else if (text && where == PT_AT)
-	{
-		targets -> compile_object_ptr(ctxt);
-		
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectAllTextOfFieldMethodInfo);
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectAllTextOfButtonMethodInfo);
-	}
-	else 
-	{
-		MCSyntaxFactoryEvalConstantInt(ctxt, where);
-		
-		uindex_t t_count;
-		t_count = 0;
-
-        if (!text)
-        {
-            for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr = chunkptr -> next)
-            {
-                chunkptr -> compile_object_ptr(ctxt);
-                t_count++;
-            }
-		}
-        
-		if (t_count > 1)
-		{
-			MCSyntaxFactoryEvalList(ctxt, t_count);
-			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectObjectsMethodInfo, 1);
-		}
-		else
-		{
-			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectTextOfFieldMethodInfo, 0, 1);
-			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectTextOfButtonMethodInfo, 0, 1);
-			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectObjectsMethodInfo, 1);
-		}
-	}
-}
-
 void MCUndoCmd::exec_ctxt(MCExecContext& ctxt)
 {
     MCInterfaceExecUndo(ctxt);
-}
-
-void MCUndoCmd::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUndoMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCUngroup::~MCUngroup()
@@ -2680,7 +2133,7 @@ Parse_stat MCUngroup::parse(MCScriptPoint &sp)
 	initpoint(sp);
 	MCScriptPoint oldsp(sp);
 	MCerrorlock++;
-	group = new MCChunk(False);
+	group = new (nothrow) MCChunk(False);
 	if (group->parse(sp, False) != PS_NORMAL)
 	{
 		delete group;
@@ -2714,21 +2167,6 @@ void MCUngroup::exec_ctxt(MCExecContext& ctxt)
 		MCInterfaceExecUngroupSelection(ctxt);
 }
 
-void MCUngroup::compile(MCSyntaxFactoryRef ctxt)
-{
-	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
-
-	if (group != nil)
-	{
-		group -> compile_object_ptr(ctxt);	
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUngroupObjectMethodInfo);
-	}
-	else
-		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUngroupSelectionMethodInfo);
-
-	MCSyntaxFactoryEndStatement(ctxt);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 MCRelayer::MCRelayer(void)
@@ -2752,7 +2190,7 @@ Parse_stat MCRelayer::parse(MCScriptPoint& sp)
 {
 	initpoint(sp);
 
-	control = new MCChunk(False);
+	control = new (nothrow) MCChunk(False);
 	if (control -> parse(sp, False) != PS_NORMAL)
 	{
 		MCperror -> add(PE_RELAYER_BADCONTROL, sp);
@@ -2800,7 +2238,7 @@ Parse_stat MCRelayer::parse(MCScriptPoint& sp)
 	else
 	{
 		form = kMCRelayerFormRelativeToControl;
-		target = new MCChunk(False);
+		target = new (nothrow) MCChunk(False);
 		if (target -> parse(sp, False) != PS_NORMAL)
 		{
 			MCperror -> add(PE_RELAYER_BADTARGET, sp);

@@ -31,10 +31,10 @@ Lower precedence numbers are more tightly-binding.
 |       | subscript         | `tList[1]`, `tArray["key"]`   |
 | 3     | property          | `the paint of this canvas`    |
 |       | subscript chunk   | `char 2 of tString`           |
-| 4     | conversion        | `tString parsed as number`    |
 |       | function chunk    | `the offset of "o" in "foo"`  |
-| 5     | modifier          | `-tNum`, `bitwise not`        |
-| 6     | exponentiation    | `^`                           |
+| 4     | conversion        | `tString parsed as number`    |
+| 5     | exponentiation    | `^`                           |
+| 6     | modifier          | `-tNum`, `bitwise not`        |
 | 7     | multiplication    | `/`,`*`,`mod`, `div`          |
 | 8     | addition          | `+`, `-`                      |
 |       | concatenation     | `&`, `&&`                     |
@@ -49,3 +49,7 @@ Lower precedence numbers are more tightly-binding.
 | 16    | logical and       | `Foo() and Bar()`             |
 | 17    | logical or        | `Foo() or Bar()`              |
 | 18    | sequence          | `,`                           |
+
+>**Important:** Prior to LiveCode 9, exponentiation and modifier 
+> precedence were reversed. In order to write code that operates as 
+> expected in both LC 9 and 8, please use parentheses where appropriate.

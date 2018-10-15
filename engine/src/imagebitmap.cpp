@@ -111,7 +111,6 @@ bool MCImageCopyBitmapRegion(MCImageBitmap *p_bitmap, MCRectangle &p_region, MCI
 	if (!MCImageBitmapCreate(p_region.width, p_region.height, r_copy))
 		return false;
 
-	MCPoint t_dst_offset = {0, 0};
 	MCImageBitmapCopyRegionToBitmap(p_bitmap, r_copy, p_region.x, p_region.y, 0, 0, p_region.width, p_region.height);
 
 	if (p_bitmap->has_transparency)
@@ -472,7 +471,6 @@ void MCImageBitmapFixPremultiplied(MCImageBitmap *p_bitmap)
 				t_pixel = 0;
 			else if (t_alpha != 255)
 			{
-				uint4 t_brokenbits = 0;
 				if ((t_pixel & 0xFF) > t_alpha)
 					t_pixel = (t_pixel & ~0xFF) | t_alpha;
 				if (((t_pixel >> 8) & 0xFF) > t_alpha)
@@ -773,7 +771,6 @@ bool MCImageForceBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_dither, MCImage
 {
 	bool t_success = true;
 
-	MCImageIndexedBitmap *t_indexed = nil;
 	if (MCImageConvertBitmapToIndexed(p_bitmap, false, r_indexed))
 		return true;
 

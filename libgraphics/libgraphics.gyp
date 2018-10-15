@@ -9,6 +9,8 @@
 		{
 			'target_name': 'libGraphics',
 			'type': 'static_library',
+
+			'toolsets': ['host', 'target'],
 			
 			'dependencies':
 			[
@@ -31,50 +33,63 @@
 				'src/blur.cpp',
 				'src/cachetable.cpp',
 				'src/context.cpp',
-				'src/coretext.cpp',
+				'src/coretext-skia.cpp',
+				'src/directwrite-skia.cpp',
 				'src/image.cpp',
-				'src/legacyblendmodes.cpp',
-				'src/legacygradients.cpp',
 				'src/lnxtext.cpp',
 				'src/harfbuzztext.cpp',
 				'src/hb-sk.cpp',
-				#'src/osxtext.cpp', # UNUSED?
 				'src/path.cpp',
 				'src/region.cpp',
 				'src/spread.cpp',
 				'src/utils.cpp',
-				'src/w32text.cpp',
+				'src/SkStippleMaskFilter.cpp',
+				'src/legacygradients.cpp',
+				'src/drawing.cpp',
 			],
 			
 			'conditions':
 			[
 				[
-					'OS != "mac" and OS != "ios"',
-					{
-						'sources!':
-						[
-							'src/coretext.cpp',
-						],
-					},
-				],
-				[
-					'OS != "android" and OS != "emscripten"',
-					{
-						'sources!':
-						[
-							'src/harfbuzztext.cpp',
-							'src/hb-sk.cpp',
-						],
-					},
-				],
-				[
-					'OS == "android" or OS == "emscripten"',
+					'OS in ("emscripten", "android")',
 					{
 						'dependencies':
 						[
 							'../prebuilt/libicu.gyp:libicu',
 							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
 							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
+						],
+					},
+				],
+			],
+
+			'target_conditions':
+			[
+				[
+					'toolset_os != "mac" and toolset_os != "ios"',
+					{
+						'sources!':
+						[
+							'src/coretext-skia.cpp',
+						],
+					},
+				],
+				[
+					'toolset_os != "win"',
+					{
+						'sources!':
+						[
+							'src/directwrite-skia.cpp',
+						],
+					},
+				],
+				[
+					'toolset_os != "android" and toolset_os != "emscripten"',
+					{
+						'sources!':
+						[
+							'src/harfbuzztext.cpp',
+							'src/hb-sk.cpp',
 						],
 					},
 				],

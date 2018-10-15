@@ -65,7 +65,9 @@ extern MCExecContext *MCECptr;
 // AL-2015-02-06: [[ SB Inclusions ]] Increment revision number of v0 external interface
 // SN-2015-03-12: [[ Bug 14413 ]] Increment revision number, for the addition of
 //  UTF-8 <-> native string functions.
-#define EXTERNAL_INTERFACE_VERSION 4
+// MW-2017-02-14: [[ SysLibrary ]] Increment revision number to V5 for
+//  copy_native_path_of_module
+#define EXTERNAL_INTERFACE_VERSION 5
 
 typedef struct _Xternal
 {
@@ -170,6 +172,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExternalV0::MCExternalV0(void)
+    : m_name(nullptr)
 {
 	m_table = nil;
 	m_free = nil;
@@ -189,7 +192,8 @@ bool MCExternalV0::Prepare(void)
 {
 	// IM-2014-03-06: [[ revBrowserCEF ]] call the setExternalInterfaceVersion() function if present
 	SETEXTERNALINTERFACEVERSION t_set_version;
-	t_set_version = (SETEXTERNALINTERFACEVERSION)MCS_resolvemodulesymbol(m_module, MCSTR("setExternalInterfaceVersion"));
+	t_set_version = (SETEXTERNALINTERFACEVERSION)MCU_library_lookup(*m_module,
+                                                                    MCSTR("setExternalInterfaceVersion"));
 	if (t_set_version != nil)
 		t_set_version(EXTERNAL_INTERFACE_VERSION);
 	
@@ -197,16 +201,19 @@ bool MCExternalV0::Prepare(void)
 	// as it is used to determine if its a V0 external!).
 
 	GETXTABLE t_getter;
-	t_getter = (GETXTABLE)MCS_resolvemodulesymbol(m_module, MCSTR("getXtable"));
+	t_getter = (GETXTABLE)MCU_library_lookup(*m_module,
+                                             MCSTR("getXtable"));
     t_getter(MCcbs, deleter, &m_name, &m_table, &m_free);
 	
 	CONFIGURESECURITY t_conf_security;
-	t_conf_security = (CONFIGURESECURITY)MCS_resolvemodulesymbol(m_module, MCSTR("configureSecurity"));
+	t_conf_security = (CONFIGURESECURITY)MCU_library_lookup(*m_module,
+                                                            MCSTR("configureSecurity"));
 	if (t_conf_security != nil)
 		t_conf_security(MCsecuritycbs);
 
 	SHUTDOWNXTABLE t_shutdown;
-	t_shutdown = (SHUTDOWNXTABLE)MCS_resolvemodulesymbol(m_module, MCSTR("shutdownXtable"));
+	t_shutdown = (SHUTDOWNXTABLE)MCU_library_lookup(*m_module,
+                                                    MCSTR("shutdownXtable"));
 	if (t_shutdown != nil)
 		m_shutdown = t_shutdown;
 
@@ -286,13 +293,23 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
     // If we want UTF8, then the type is lowercase.
     bool t_wants_utf8;
     t_wants_utf8 = islower(t_handler -> type[0]);
-    
+
+    // Count the number of arguments passed
+    size_t nargs = 0;
+    for (MCParameter *t_iter = p_parameters; t_iter != NULL; t_iter = t_iter->getnext())
+    {
+        ++nargs;
+    }
+
+    MCAutoCustomPointerArray<char*, MCMemoryDeleteArray> args;
+    if (!args.New(nargs))
+        return ES_ERROR;
+
     char *retval;
     Bool Xpass, Xerr;
-    int nargs = 0;
-    char **args = NULL;
     MCExecContext ctxt(p_context, nil, nil);
-    
+    size_t t_parameter_idx = 0;
+
     while (p_parameters != NULL)
     {
         // MW-2013-06-20: [[ Bug 10961 ]] Make sure we evaluate the parameter as an
@@ -303,26 +320,26 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
         
         if (!p_parameters->eval_argument(ctxt, &t_value))
             return ES_ERROR;
-        MCU_realloc((char **)&args, nargs, nargs + 1, sizeof(char *));
+		
+		if (!ctxt . ConvertToString(*t_value, &t_string))
+			return ES_ERROR;
         
-        if (!ctxt . ConvertToString(*t_value, &t_string))
-            return ES_ERROR;
-        
-        // If we want UTF8 use a different conversion method.
+		// If we want UTF8 use a different conversion method.
         if (t_wants_utf8)
-            MCStringConvertToUTF8String(*t_string, args[nargs++]);
+            MCStringConvertToUTF8String(*t_string, args[t_parameter_idx]);
         else
             // AL-2014-09-30: [[ Bug 13530 ]] Nativize string before conversion for legacy behavior
-            MCStringNormalizeAndConvertToCString(*t_string, args[nargs++]);
-        
+            MCStringNormalizeAndConvertToCString(*t_string, args[t_parameter_idx]);
+
+        ++t_parameter_idx;
         p_parameters = p_parameters -> getnext();
     }
     
     // Handling of memory allocation for C-strings
     MCExternalAllocPool *t_old_pool = MCexternalallocpool;
-    MCexternalallocpool = new MCExternalAllocPool;
+    MCexternalallocpool = new (nothrow) MCExternalAllocPool;
     
-    (t_handler -> call)(args, nargs, &retval, &Xpass, &Xerr);
+    (t_handler -> call)(args.Ptr(), args.Size(), &retval, &Xpass, &Xerr);
     
     MCExternalDeallocatePool(MCexternalallocpool);
     MCexternalallocpool = t_old_pool;
@@ -350,14 +367,6 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
         m_free(retval);
     }
     
-    if (args != NULL)
-    {
-        while (nargs--)
-	        MCMemoryDeleteArray(args[nargs]); /* Allocated with MCStringNormalizeAndConvertToCString */
-        
-        delete[] args; /* Allocated with new[] */
-    }
-    
     if (Xerr)
         return ES_ERROR;
 	else if (Xpass)
@@ -371,6 +380,40 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 MCExternal *MCExternalCreateV0(void)
 {
 	return new MCExternalV0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* Convert a libfoundation string to a buffer + length.
+ *
+ * Allocate a new buffer and fill it with the result of encoding
+ * p_string.  The new buffer pointer is returned in r_buffer and its
+ * length is returned in r_length.
+ *
+ * If p_is_text is true, the contents of p_string is encoded with
+ * UTF-8.  Otherwise, p_string is normalised and converted to the
+ * platform native encoding.
+*/
+static bool convert_from_string (MCStringRef p_string,
+                                 bool p_is_text,
+                                 char*& r_buffer,
+                                 uindex_t& r_length)
+{
+    if (p_is_text)
+    {
+        if (!MCStringConvertToUTF8(p_string, r_buffer, r_length))
+            return false;
+    }
+    else
+    {
+        char_t* t_buf = nullptr;
+        uindex_t t_len = 0;
+        if (!MCStringNormalizeAndConvertToNative(p_string, t_buf, t_len))
+            return false;
+        r_buffer = reinterpret_cast<char*>(t_buf);
+        r_length = t_len;
+    }
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -389,34 +432,30 @@ static int trans_stat(Exec_stat stat)
 	return xresNotImp;
 }
 
-static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname,MCVariable **tvar)
+static Exec_stat getvarptr(MCExecContext& ctxt, const MCString &vname, MCContainer& r_container)
 {
-	MCAutoNameRef t_name;
-	/* UNCHECKED */ t_name . CreateWithOldString(vname);
-
-	MCVarref *newvar;
-    
-    if (MCECptr -> FindVar(t_name, &newvar) != PS_NORMAL)
-		return ES_ERROR;
-	
-	if ((*tvar = newvar->evalvar(ctxt)) == NULL)
+	MCNewAutoNameRef t_name;
+    if (!MCNameCreateWithNativeChars((const char_t *)vname.getstring(), vname.getlength(), &t_name))
     {
-        // SN-2014-10-21: [[ Bug 13728 ]] The variable might be held in a container.
-        MCAutoPointer<MCContainer> t_container;
-        
-        if (!newvar->evalcontainer(*MCECptr, &t_container) ||
-                (*tvar = t_container->getvar()) == NULL)
-        {
-            delete newvar;
-            return ES_ERROR;
-        }
-	}
-	delete newvar;
+        return ES_ERROR;
+    }
+	
+	MCAutoPointer<MCVarref> newvar;
+    if (MCECptr -> FindVar(*t_name, &(&newvar)) != PS_NORMAL)
+    {
+		return ES_ERROR;
+    }
+    
+    if (!newvar->evalcontainer(ctxt,
+                               r_container))
+    {
+        return ES_ERROR;
+    }
 
 	return ES_NORMAL;
 }
 
-static Exec_stat getvarptr_utf8(MCExecContext& ctxt, const MCString &vname, MCVariable **tvar)
+static Exec_stat getvarptr_utf8(MCExecContext& ctxt, const MCString &vname, MCContainer& r_container)
 {
 	MCNewAutoNameRef t_name;
     MCAutoStringRef t_arg1_string;
@@ -425,17 +464,17 @@ static Exec_stat getvarptr_utf8(MCExecContext& ctxt, const MCString &vname, MCVa
             || !MCNameCreate(*t_arg1_string, &t_name))
         return ES_ERROR;
     
-	MCVarref *newvar;
+    MCAutoPointer<MCVarref> newvar;
+    if (MCECptr -> FindVar(*t_name, &(&newvar)) != PS_NORMAL)
+    {
+        return ES_ERROR;
+    }
     
-    if (MCECptr -> FindVar(*t_name, &newvar) != PS_NORMAL)
-		return ES_ERROR;
-	
-	if ((*tvar = newvar->evalvar(ctxt)) == NULL)
-	{
-		delete newvar;
-		return ES_ERROR;
-	}
-	delete newvar;
+    if (!newvar->evalcontainer(ctxt,
+                               r_container))
+    {
+        return ES_ERROR;
+    }
     
 	return ES_NORMAL;
 }
@@ -556,11 +595,13 @@ static char *eval_expr(const char *arg1, const char *arg2,
 		*retval = xresFail;
 		return NULL;
     }
-	
-	MCAutoStringRef t_return;
-	/* UNCHECKED */ MCECptr->ConvertToString(*t_result, &t_return);
+
+    MCAutoStringRef t_result_string;
+    /* UNCHECKED */ MCECptr->ConvertToString(*t_result, &t_result_string);
+    char *t_return = nullptr;
+    /* UNCHECKED */ MCStringConvertToCString(*t_result_string, t_return);
 	*retval = xresSucc;
-    return MCStringGetOldString(*t_return).clone();
+    return t_return;
 }
 
 static char *get_global(const char *arg1, const char *arg2,
@@ -588,7 +629,7 @@ static char *set_global(const char *arg1, const char *arg2,
                         const char *arg3, int *retval)
 {
 	MCNewAutoNameRef t_arg1;
-	/* UNCHECKED */ MCNameCreateWithCString(arg1, &t_arg1);
+	/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)arg1, strlen(arg1), &t_arg1);
 	MCVariable *tmp;
 	if (!MCVariable::ensureglobal(*t_arg1, tmp))
 	{
@@ -716,7 +757,7 @@ static char *show_image_by_id(const char *arg1, const char *arg2,
         /* UNCHECKED */ MCStringCreateWithCString(arg1, &arg1_str);
 		MCScriptPoint sp(*arg1_str);
 		MCChunk *t_chunk;
-		t_chunk = new MCChunk(False);
+		t_chunk = new (nothrow) MCChunk(False);
 		
 		Symbol_type t_next_type;
 		MCerrorlock++;
@@ -746,40 +787,47 @@ static char *show_image_by_id(const char *arg1, const char *arg2,
 static char *get_variable(const char *arg1, const char *arg2,
                           const char *arg3, int *retval)
 {
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
 	}
-	*retval = trans_stat(getvarptr(*MCECptr, arg1, &var));
-	if (var == NULL)
+    
+    MCContainer var;
+	*retval = trans_stat(getvarptr(*MCECptr, arg1, var));
+	if (*retval != xresSucc)
 		return NULL;
+    
     MCAutoValueRef t_value;
-	var -> eval(*MCECptr, &t_value);
+	var.eval(*MCECptr, &t_value);
+    
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
+    
     char *t_result;
     /* UNCHECKED */ MCStringNormalizeAndConvertToCString(*t_string, t_result);
-	return t_result;
+	
+    return t_result;
 }
 
 static char *set_variable(const char *arg1, const char *arg2,
                           const char *arg3, int *retval)
 {
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
-	if (var == NULL)
-		return NULL;
-	//MCECptr->GetEP().setsvalue(arg2);
+    }
+    
+    MCContainer var;
+    *retval = trans_stat(getvarptr(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
+        return NULL;
+    
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCStringCreateWithCString(arg2, &t_string);
-	var->set(*MCECptr, *t_string);
+	var.set(*MCECptr, *t_string);
+    
 	return NULL;
 }
 
@@ -787,28 +835,27 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
                              const char *arg3, int *retval)
 {
 	MCString *value = (MCString *)arg3;
-	Boolean array = False;
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr(*MCECptr, arg1, &var));
-	if (var == NULL)
+    }
+    
+    MCContainer var;
+    *retval = trans_stat(getvarptr(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
 		return NULL;
     
     MCAutoValueRef t_value;
-
 	if (arg2 != NULL && strlen(arg2) != 0)
 	{
 		MCNameRef t_key;
-		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
-		var -> eval(*MCECptr, &t_key, 1, &t_value);
+		/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)arg2, strlen(arg2), t_key);
+		var.eval_on_path(*MCECptr, {&t_key, 1}, &t_value);
 		MCValueRelease(t_key);
 	}
 	else
-		var -> eval(*MCECptr, &t_value);
+		var.eval(*MCECptr, &t_value);
     
     
     MCAutoStringRef t_string;
@@ -826,26 +873,28 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
 static char *set_variable_ex(const char *arg1, const char *arg2,
                              const char *arg3, int *retval)
 {
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
-	if (var == NULL)
+    }
+    
+    MCContainer var;
+    *retval = trans_stat(getvarptr(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
 		return NULL;
+    
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCStringCreateWithOldString(*(MCString*)arg3, &t_string);
 	if (arg2 != NULL && strlen(arg2) > 0)
 	{
 		MCNameRef t_key;
-		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
-		var->set(*MCECptr, *t_string, &t_key, 1);
+		/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)arg2, strlen(arg2), t_key);
+		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
 		MCValueRelease(t_key);
 	}
 	else
-		var->set(*MCECptr, *t_string);
+		var.set(*MCECptr, *t_string);
 
 	return NULL;
 }
@@ -899,24 +948,32 @@ static char *get_array(const char *arg1, const char *arg2,
                        const char *arg3, int *retval)
 {
 	MCarray *value = (MCarray *)arg3;
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
-	if (var == NULL)
-		return NULL;
+    }
+    
+    MCContainer var;
+    *retval = trans_stat(getvarptr(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
+        return NULL;
 
-	if (!var -> isarray())
+    MCAutoValueRef t_value;
+    if (!var.eval(*MCECptr,
+                  &t_value))
+    {
+        *retval = xresFail;
+        return NULL;
+    }
+    
+	if (!MCValueIsArray(*t_value))
+    {
+        value->nelements = 0;
 		return NULL;
+    }
 
-    MCArrayRef t_array;
-    t_array = (MCArrayRef)var -> getvalueref();
-	if (t_array == nil)
-		return NULL;
-
+    MCArrayRef t_array = (MCArrayRef)*t_value;
 	if (value->nelements == 0)
 	{
 		value->nelements = MCArrayGetCount(t_array);
@@ -933,58 +990,24 @@ static char *get_array(const char *arg1, const char *arg2,
 	MCArrayApply(t_array, get_array_element, &t_ctxt);
 
 	return NULL;
-
-#if 0
-	var -> getvalue() . getkeys(value->keys, value->nelements);
-	if (value->strings != NULL)
-	{
-
-		MCVariableValue& t_var_value = var -> getvalue();
-
-		for (unsigned int i = 0; i < value->nelements; i++)
-		{
-			MCString t_string;
-			MCstring *t_value_ptr;
-			t_value_ptr = &value -> strings[i];
-			
-			MCVariableValue *t_entry;
-			t_var_value . lookup_element(*MCEPptr, value -> keys[i], t_entry);
-			if (t_entry -> is_number())
-			{
-				t_entry -> ensure_string(*MCEPptr);
-				t_string = t_entry -> get_string();
-			}
-			else if (t_entry -> is_string())
-			{
-				t_string = t_entry -> get_string();
-			}
-			else
-			{
-				t_string = MCnullmcstring;
-			}
-
-			t_value_ptr -> length = t_string . getlength();
-			t_value_ptr -> sptr = t_string . getstring();
-		}
-	}
-	return NULL;
-#endif
 }
 
 static char *set_array(const char *arg1, const char *arg2,
                        const char *arg3, int *retval)
 {
 	MCarray *value = (MCarray *)arg3;
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr(*MCECptr, arg1,&var));
-	if (var == NULL)
+    }
+    
+    MCContainer var;
+    *retval = trans_stat(getvarptr(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
 		return NULL;
-	var->remove(*MCECptr, nil, 0);//clear variable
+	
+    var.remove(*MCECptr);//clear variable
 	char tbuf[U4L];
 	for (unsigned int i = 0; i <value->nelements; i++)
 	{
@@ -995,11 +1018,11 @@ static char *set_array(const char *arg1, const char *arg2,
 		if (value->keys == NULL ||  value->keys[i] == NULL)
 		{
 			sprintf(tbuf,"%d",i+1);
-			/* UNCHECKED */ MCNameCreateWithCString(tbuf, t_key);
+			/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)tbuf, strlen(tbuf), t_key);
 		}
 		else
-			/* UNCHECKED */ MCNameCreateWithCString(value -> keys[i], t_key);
-		var->set(*MCECptr, *t_string, &t_key, 1);
+			/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)value -> keys[i], strlen(value -> keys[i]), t_key);
+		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
 	}
 	return NULL;
 }
@@ -1256,7 +1279,7 @@ static char *show_image_by_id_utf8(const char *arg1, const char *arg2,
         /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)arg1, strlen(arg1), kMCStringEncodingUTF8, false, &arg1_str);
 		MCScriptPoint sp(*arg1_str);
 		MCChunk *t_chunk;
-		t_chunk = new MCChunk(False);
+		t_chunk = new (nothrow) MCChunk(False);
 		
 		Symbol_type t_next_type;
 		MCerrorlock++;
@@ -1286,17 +1309,17 @@ static char *show_image_by_id_utf8(const char *arg1, const char *arg2,
 static char *get_variable_utf8(const char *arg1, const char *arg2,
                           const char *arg3, int *retval)
 {
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr_utf8(*MCECptr, arg1, &var));
-	if (var == NULL)
-		return NULL;
+    }
+    MCContainer var;
+    *retval = trans_stat(getvarptr_utf8(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
+        return NULL;
     MCAutoValueRef t_value;
-	var -> eval(*MCECptr, &t_value);
+	var.eval(*MCECptr, &t_value);
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
     char *t_result;
@@ -1307,19 +1330,18 @@ static char *get_variable_utf8(const char *arg1, const char *arg2,
 static char *set_variable_utf8(const char *arg1, const char *arg2,
                           const char *arg3, int *retval)
 {
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr_utf8(*MCECptr, arg1,&var));
-	if (var == NULL)
-		return NULL;
-	//MCECptr->GetEP().setsvalue(arg2);
+    }
+    MCContainer var;
+    *retval = trans_stat(getvarptr_utf8(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
+        return NULL;
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)arg2, strlen(arg2), kMCStringEncodingUTF8, false, &t_string);
-	var->set(*MCECptr, *t_string);
+	var.set(*MCECptr, *t_string);
 	return NULL;
 }
 
@@ -1329,16 +1351,16 @@ static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
                                   const char *arg3, int *retval, Bool p_is_text)
 {
 	MCString *value = (MCString *)arg3;
-	Boolean array = False;
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr_utf8(*MCECptr, arg1, &var));
-	if (var == NULL)
-		return NULL;
+    }
+    
+    MCContainer var;
+    *retval = trans_stat(getvarptr_utf8(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
+        return NULL;
     
     MCAutoValueRef t_value;
     
@@ -1348,23 +1370,20 @@ static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
         MCAutoStringRef t_key_as_string;
         /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)arg2, strlen(arg2), kMCStringEncodingUTF8, false, &t_key_as_string);
 		/* UNCHECKED */ MCNameCreate(*t_key_as_string, t_key);
-		var -> eval(*MCECptr, &t_key, 1, &t_value);
+		var.eval_on_path(*MCECptr, {&t_key, 1}, &t_value);
 		MCValueRelease(t_key);
 	}
 	else
-		var -> eval(*MCECptr, &t_value);
+		var.eval(*MCECptr, &t_value);
     
     
     MCAutoStringRef t_string;
     /* UNCHECKED */ MCECptr -> ConvertToString(*t_value, &t_string);
-    
-    char *t_result;
-    uindex_t t_char_count;
-    if (p_is_text)
-        /* UNCHECKED */ MCStringConvertToUTF8(*t_string, t_result, t_char_count);
-    else
-        /* UNCHECKED */ MCStringNormalizeAndConvertToNative(*t_string, (char_t*&)t_result, t_char_count);
-    
+
+    char *t_result = nullptr;
+    uindex_t t_char_count = 0;
+    /* UNCHECKED */ convert_from_string(*t_string, p_is_text, t_result, t_char_count);
+
     // SN-2014-04-07 [[ Bug 12118 ]] revExecuteSQL writes incomplete data into SQLite BLOB columns
     // arg3 is not a char* but rather a MCString; whence setting the length should not be forgotten,
     // in case '\0' are present in the value fetched.
@@ -1390,15 +1409,16 @@ static char *set_variable_ex_utf8(const char *arg1, const char *arg2,
                              const char *arg3, int *retval, Bool p_is_text)
 {
     MCString *t_value = (MCString*)arg3;
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr_utf8(*MCECptr, arg1,&var));
-	if (var == NULL)
-		return NULL;
+    }
+    
+    MCContainer var;
+    *retval = trans_stat(getvarptr_utf8(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
+        return NULL;
     
     MCAutoStringRef t_string;
     if (p_is_text)
@@ -1412,11 +1432,11 @@ static char *set_variable_ex_utf8(const char *arg1, const char *arg2,
         MCAutoStringRef t_key_as_string;
         /* UNCHECKED */ MCStringCreateWithBytes((byte_t*)arg2, strlen(arg2), kMCStringEncodingUTF8, false, &t_key_as_string);
 		/* UNCHECKED */ MCNameCreate(*t_key_as_string, t_key);
-		var->set(*MCECptr, *t_string, &t_key, 1);
+		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
 		MCValueRelease(t_key);
 	}
 	else
-		var->set(*MCECptr, *t_string);
+		var.set(*MCECptr, *t_string);
     
 	return NULL;
 }
@@ -1449,17 +1469,14 @@ static bool get_array_element_utf8(void *p_context, MCArrayRef p_array, MCNameRe
 	if (ctxt -> strings != nil)
 	{
         // The value needs to be converted as a UTF8/C-string
-        uindex_t t_length;
-        char *t_chars;
+        uindex_t t_length = 0;
+        char *t_chars = nullptr;
         MCAutoStringRef t_string;
         
         if (!MCECptr -> ConvertToString(p_value, &t_string))
             t_string = kMCEmptyString;
         
-        if (ctxt -> is_text)
-            /* UNCHECKED */ MCStringConvertToUTF8(*t_string, t_chars, t_length);
-        else
-            /* UNCHECKED */ MCStringNormalizeAndConvertToNative(*t_string, (char_t*&)t_chars, t_length);
+        /* UNCHECKED */ convert_from_string(*t_string, ctxt->is_text, t_chars, t_length);
         
         ctxt -> strings[ctxt -> index] . length = (int)t_length;
         ctxt -> strings[ctxt -> index] . sptr = (const char*)t_chars;
@@ -1478,29 +1495,38 @@ static char *get_array_utf8(const char *arg1, const char *arg2,
                        const char *arg3, int *retval, bool p_is_text)
 {
 	MCarray *value = (MCarray *)arg3;
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr_utf8(*MCECptr, arg1,&var));
-	if (var == NULL)
-		return NULL;
+    }
     
-	if (!var -> isarray())
-		return NULL;
+    MCContainer var;
+    *retval = trans_stat(getvarptr_utf8(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
+        return NULL;
     
-    MCArrayRef t_array;
-    t_array = (MCArrayRef)var -> getvalueref();
-	if (t_array == nil)
-		return NULL;
+    MCAutoValueRef t_value;
+    if (!var.eval(*MCECptr,
+                  &t_value))
+    {
+        *retval = xresFail;
+        return NULL;
+    }
     
-	if (value->nelements == 0)
-	{
-		value->nelements = MCArrayGetCount(t_array);
-		return NULL;
-	}
+    if (!MCValueIsArray(*t_value))
+    {
+        value->nelements = 0;
+        return NULL;
+    }
+    
+    MCArrayRef t_array = (MCArrayRef)*t_value;
+    if (value->nelements == 0)
+    {
+        value->nelements = MCArrayGetCount(t_array);
+        return NULL;
+    }
+
     
 	value->nelements = MCU_min(value->nelements, MCArrayGetCount(t_array));
     
@@ -1513,42 +1539,6 @@ static char *get_array_utf8(const char *arg1, const char *arg2,
 	MCArrayApply(t_array, get_array_element_utf8, &t_ctxt);
     
 	return NULL;
-    
-#if 0
-	var -> getvalue() . getkeys(value->keys, value->nelements);
-	if (value->strings != NULL)
-	{
-        
-		MCVariableValue& t_var_value = var -> getvalue();
-        
-		for (unsigned int i = 0; i < value->nelements; i++)
-		{
-			MCString t_string;
-			MCstring *t_value_ptr;
-			t_value_ptr = &value -> strings[i];
-			
-			MCVariableValue *t_entry;
-			t_var_value . lookup_element(*MCEPptr, value -> keys[i], t_entry);
-			if (t_entry -> is_number())
-			{
-				t_entry -> ensure_string(*MCEPptr);
-				t_string = t_entry -> get_string();
-			}
-			else if (t_entry -> is_string())
-			{
-				t_string = t_entry -> get_string();
-			}
-			else
-			{
-				t_string = MCnullmcstring;
-			}
-            
-			t_value_ptr -> length = t_string . getlength();
-			t_value_ptr -> sptr = t_string . getstring();
-		}
-	}
-	return NULL;
-#endif
 }
 
 static char *get_array_utf8_text(const char *arg1, const char *arg2,
@@ -1569,16 +1559,18 @@ static char *set_array_utf8(const char *arg1, const char *arg2,
                        const char *arg3, int *retval, bool p_is_text)
 {
 	MCarray *value = (MCarray *)arg3;
-	MCVariable *var = NULL;
 	if (MCECptr == NULL)
 	{
 		*retval = xresFail;
 		return NULL;
-	}
-	*retval = trans_stat(getvarptr_utf8(*MCECptr, arg1,&var));
-	if (var == NULL)
-		return NULL;
-	var->remove(*MCECptr, nil, 0);//clear variable
+    }
+    
+    MCContainer var;
+    *retval = trans_stat(getvarptr(*MCECptr, arg1, var));
+    if (*retval != xresSucc)
+        return NULL;
+    
+	var.remove(*MCECptr);//clear variable
 	char tbuf[U4L];
 	for (unsigned int i = 0; i <value->nelements; i++)
 	{
@@ -1593,7 +1585,7 @@ static char *set_array_utf8(const char *arg1, const char *arg2,
 		if (value->keys == NULL ||  value->keys[i] == NULL)
 		{
 			sprintf(tbuf,"%d",i+1);
-			/* UNCHECKED */ MCNameCreateWithCString(tbuf, t_key);
+			/* UNCHECKED */ MCNameCreateWithNativeChars((const char_t*)tbuf, strlen(tbuf), t_key);
 		}
 		else
         {
@@ -1601,9 +1593,9 @@ static char *set_array_utf8(const char *arg1, const char *arg2,
             MCStringCreateWithBytes((byte_t*)value -> keys[i], strlen(value -> keys[i]), kMCStringEncodingUTF8, false, &t_key_as_string);
             /* UNCHECKED */ MCNameCreate(*t_key_as_string, t_key);
         }
-		var->set(*MCECptr, *t_string, &t_key, 1);
+		var.set_on_path(*MCECptr, {&t_key, 1}, *t_string);
         
-        MCNameDelete(t_key);
+        MCValueRelease(t_key);
 	}
 	return NULL;
 }
@@ -1688,23 +1680,23 @@ static char *window_to_stack_rect(const char *arg1, const char *arg2,
 static char *load_module(const char *arg1, const char *arg2,
                          const char *arg3, int *retval)
 {
-    MCSysModuleHandle *t_result;
-    t_result = (MCSysModuleHandle *)arg2;
+    void* *t_result;
+    t_result = (void* *)arg2;
+
+    *t_result = MCSupportLibraryLoad(arg1);
     
-    *t_result = (MCSysModuleHandle)MCU_loadmodule(arg1);
-    
-    if (*t_result == nil)
+    if (*t_result == nullptr)
         *retval = xresFail;
     else
         *retval = xresSucc;
     
-    return nil;
+    return nullptr;
 }
 
 static char *unload_module(const char *arg1, const char *arg2,
                           const char *arg3, int *retval)
 {
-    MCU_unloadmodule((MCSysModuleHandle)arg1);
+    MCSupportLibraryUnload((void *)arg1);
     *retval = xresSucc;
     return nil;
 }
@@ -1714,14 +1706,30 @@ static char *resolve_symbol_in_module(const char *arg1, const char *arg2,
 {
     void** t_resolved;
     t_resolved = (void **)arg3;
-    *t_resolved = MCU_resolvemodulesymbol((MCSysModuleHandle)arg1, arg2);
     
-    if (*t_resolved == nil)
+    *t_resolved = MCSupportLibraryLookupSymbol((MCSLibraryRef)arg1, arg2);
+
+    if (*t_resolved == nullptr)
         *retval = xresFail;
     else
         *retval = xresSucc;
     
-    return nil;
+    return nullptr;
+}
+
+// Added in V5
+static char *copy_native_path_of_module(const char *arg1, const char *arg2,
+                                        const char *arg3, int *retval)
+{
+    char *t_result =
+            MCSupportLibraryCopyNativePath((MCSLibraryRef)arg1);
+
+    if (t_result == nullptr)
+        *retval = xresFail;
+    else
+        *retval = xresSucc;
+
+    return t_result;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1868,6 +1876,8 @@ XCB MCcbs[] =
     /* V4 */ convert_from_native_to_utf8,
     /* V4 */ convert_to_native_from_utf8,
     
+    /* V5 */ copy_native_path_of_module,
+
 	NULL
 };
 

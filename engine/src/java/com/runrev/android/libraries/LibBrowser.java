@@ -19,6 +19,7 @@ package com.runrev.android.libraries;
 import com.runrev.android.Engine;
 import com.runrev.android.nativecontrol.NativeControlModule;
 
+import android.app.AlertDialog;
 import android.app.Activity;
 import android.content.*;
 import android.content.pm.*;
@@ -321,10 +322,46 @@ class LibBrowserWebView extends WebView
 					m_custom_view_callback = null;
 				}
 			}
+			
+			
+			public void showRequestAccessDialog(final String origin, final GeolocationPermissions.Callback callback, String p_title, String p_message, String p_ok_button, String p_cancel_button)
+			{
+				DialogInterface.OnClickListener t_listener;
+				t_listener = new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface p_dialog, int p_which)
+					{
+						boolean t_remember = true;
+						boolean t_allow = true;
+						if (p_which == DialogInterface.BUTTON_POSITIVE)
+							t_allow = true;
+						else if (p_which == DialogInterface.BUTTON_NEGATIVE)
+							t_allow = false;
+						callback.invoke(origin, t_allow, t_remember);
+					} };
+				
+				AlertDialog.Builder t_dialog;
+				t_dialog = new AlertDialog.Builder(getContext());
+				t_dialog . setTitle(p_title);
+				t_dialog . setMessage(p_message);
+				t_dialog . setPositiveButton(p_ok_button, t_listener);
+				if (p_cancel_button != null)
+					t_dialog . setNegativeButton(p_cancel_button, t_listener);
+				
+				t_dialog . show();
+			}
+			
+			public void onGeolocationPermissionsShowPrompt( String origin,  GeolocationPermissions.Callback callback) {
+				showRequestAccessDialog(origin, callback, "Location Access", origin + " would like to use your Current Location", "Allow", "Don't Allow");
+			}
+			
 		};
 		
 		setWebChromeClient(m_chrome_client);
 		getSettings().setJavaScriptEnabled(true);
+        getSettings().setAllowFileAccessFromFileURLs(true);
+        getSettings().setAllowUniversalAccessFromFileURLs(true);
+		getSettings().setGeolocationEnabled(true);
+		getSettings().setDomStorageEnabled(true);
 		getSettings().setPluginState(WebSettings.PluginState.ON);
 		getSettings().setBuiltInZoomControls(true);
 		addJavascriptInterface(new JSInterface(), "liveCode");

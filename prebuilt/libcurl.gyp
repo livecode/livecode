@@ -10,6 +10,8 @@
 			'target_name': 'libcurl',
 			'type': 'none',
 			
+			'toolsets': ['host', 'target'],
+
 			'dependencies':
 			[
 				'fetch.gyp:fetch',
@@ -18,18 +20,35 @@
 			
 			'direct_dependent_settings':
 			{
-				'include_dirs':
+				'target_conditions':
 				[
-					'../thirdparty/libcurl/include',
+					[
+						'toolset_os == "win"',
+						{
+							'include_dirs':
+							[
+								'unpacked/curl/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/include',
+							],
+						},
+					],
+					[
+						'toolset_os != "win"',
+						{
+							'include_dirs':
+							[
+								'../thirdparty/libcurl/include',
+							],
+						},
+					],
 				],
 			},
 			
 			'link_settings':
 			{
-				'conditions':
+				'target_conditions':
 				[
 					[
-						'OS == "mac"',
+						'toolset_os == "mac"',
 						{
 							'libraries':
 							[
@@ -38,11 +57,11 @@
 						},
 					],
 					[
-						'OS == "linux"',
+						'toolset_os == "linux"',
 						{
 							'library_dirs':
 							[
-								'lib/linux/<(target_arch)',
+								'lib/linux/>(toolset_arch)',
 							],
 							
 							'libraries':
@@ -53,11 +72,11 @@
 						},
 					],
 					[
-						'OS == "win"',
+						'toolset_os == "win"',
 						{
 							'library_dirs':
 							[
-								'lib/win32/<(target_arch)',
+								'unpacked/curl/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib',
 							],
 							
 							'libraries':

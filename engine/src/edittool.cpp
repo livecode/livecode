@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphic.h"
 #include "edittool.h"
 
+static const uint4 kInvalidEditPoint = MAXUINT4;
 
 MCGradientEditTool::MCGradientEditTool(MCGraphic *p_graphic,
                                        MCGradientFill *p_gradient,
@@ -45,7 +46,7 @@ MCGradientEditTool::MCGradientEditTool(MCGraphic *p_graphic,
     mode(p_mode),
     graphic(p_graphic),
     gradient(p_gradient),
-    m_gradient_edit_point(-1),
+    m_gradient_edit_point(kInvalidEditPoint),
     xoffset(0),
     yoffset(0)
 
@@ -112,7 +113,7 @@ bool MCGradientEditTool::mdown(int2 x, int2 y, uint2 which)
 
 bool MCGradientEditTool::mfocus(int2 x, int2 y)
 {
-	if (m_gradient_edit_point == -1)
+	if (m_gradient_edit_point == kInvalidEditPoint)
 	{
 		if (gradient != NULL)
 		{
@@ -127,8 +128,8 @@ bool MCGradientEditTool::mfocus(int2 x, int2 y)
 		return false;
 	}
 
-	MCRectangle t_old_effectiverect;
-	t_old_effectiverect = graphic -> geteffectiverect();
+    /* Dirty the current edit tool draw rect in the selection layer. */
+    graphic->getcard()->dirtyselection(drawrect());
 
 	switch (m_gradient_edit_point)
 	{
@@ -190,8 +191,11 @@ bool MCGradientEditTool::mfocus(int2 x, int2 y)
 	gradient->old_origin.x = MININT2;
 	gradient->old_origin.y = MININT2;
 
-	// MW-2011-08-18: [[ Layers ]] Notify the graphic its effective rect has changed and invalidate all.
-	graphic -> layer_effectiverectchangedandredrawall(t_old_effectiverect);
+    /* Dirty the new edit tool draw rect in the selection layer. */
+    graphic->getcard()->dirtyselection(drawrect());
+    
+    /* Mark the graphic's content as needing redrawn. */
+    graphic->layer_redrawall();
 
 	graphic->message_with_args(MCM_mouse_move, x, y);
 
@@ -203,9 +207,9 @@ bool MCGradientEditTool::mup(int2 x, int2 y, uint2 which)
 	// MM-2012-11-06: [[ Property Listener ]]
 	graphic -> signallistenerswithmessage(kMCPropertyChangedMessageTypeGradientEditEnded);
 	
-	if (m_gradient_edit_point != -1)
+	if (m_gradient_edit_point != kInvalidEditPoint)
 	{
-		m_gradient_edit_point = -1;
+		m_gradient_edit_point = kInvalidEditPoint;
 		return true;
 	}
 	else
@@ -270,42 +274,9 @@ MCRectangle MCGradientEditTool::drawrect()
 	return MCU_union_rect(drect, rects[2]);
 }
 
-MCRectangle MCGradientEditTool::minrect()
-{
-	int4 minx, miny, maxx, maxy;
-	minx = MAXINT4;  miny = MAXINT4;
-	maxx = MININT4;  maxy = MININT4;
-
-	MCRectangle rect = {MININT2,MININT2,0,0};
-
-	if (gradient != NULL)
-	{
-		minx = MCU_min(gradient->origin.x, gradient->primary.x);
-		maxx = MCU_max(gradient->origin.x, gradient->primary.x);
-
-		minx = MCU_min(minx, gradient->secondary.x);
-		maxx = MCU_max(maxx, gradient->secondary.x);
-
-		miny = MCU_min(gradient->origin.y, gradient->primary.y);
-		maxy = MCU_max(gradient->origin.y, gradient->primary.y);
-
-		miny = MCU_min(miny, gradient->secondary.y);
-		maxy = MCU_max(maxy, gradient->secondary.y);
-
-		if (minx <= maxx && miny <= maxy)
-		{
-			rect.x = minx;
-			rect.y = miny;
-			rect.width = maxx - minx ;
-			rect.height = maxy - miny;
-		}
-	}
-	return rect;
-}
-
 MCPolygonEditTool::MCPolygonEditTool(MCGraphic *p_graphic) :
     graphic(p_graphic),
-    m_polygon_edit_point(-1),
+    m_polygon_edit_point(kInvalidEditPoint),
     m_path_start_point(0),
     xoffset(0),
     yoffset(0)
@@ -346,7 +317,7 @@ bool MCPolygonEditTool::mdown(int2 x, int2 y, uint2 which)
 
 	point_rects(t_rects . Ptr());
 
-	m_path_start_point = -1;
+	m_path_start_point = kInvalidEditPoint;
 
 	uint4 i = 0;
 
@@ -373,12 +344,12 @@ bool MCPolygonEditTool::mdown(int2 x, int2 y, uint2 which)
 			break;
 		}
 	}
-	return (m_polygon_edit_point != -1);
+	return (m_polygon_edit_point != kInvalidEditPoint);
 }
 
 bool MCPolygonEditTool::mfocus(int2 x, int2 y)
 {
-	if (m_polygon_edit_point == -1)
+	if (m_polygon_edit_point == kInvalidEditPoint)
 	{
 		bool t_focus = false;
 		int t_npts;
@@ -403,7 +374,7 @@ bool MCPolygonEditTool::mfocus(int2 x, int2 y)
 		return t_focus;
 	}
 
-	bool closed = (m_path_start_point != -1);
+	bool closed = (m_path_start_point != kInvalidEditPoint);
 	graphic->setpoint(m_polygon_edit_point, x - xoffset, y - yoffset, !closed);
 	if (closed)
 		graphic->setpoint(m_path_start_point, x - xoffset, y - yoffset, true);
@@ -413,9 +384,9 @@ bool MCPolygonEditTool::mfocus(int2 x, int2 y)
 
 bool MCPolygonEditTool::mup(int2 x, int2 y, uint2 which)
 {
-	if (m_polygon_edit_point != -1)
+	if (m_polygon_edit_point != kInvalidEditPoint)
 	{
-		m_polygon_edit_point = -1;
+		m_polygon_edit_point = kInvalidEditPoint;
 		return true;
 	}
 	else
@@ -490,10 +461,4 @@ MCRectangle MCPolygonEditTool::drawrect()
 		drect = MCU_union_rect(drect, t_rects[i]);
 	}
 	return drect;
-}
-
-MCRectangle MCPolygonEditTool::minrect()
-{
-	MCRectangle rect = {MININT2,MININT2,0,0};
-	return rect;
 }

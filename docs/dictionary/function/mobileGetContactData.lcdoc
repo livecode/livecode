@@ -21,38 +21,78 @@ put mobileGetContactData (field "InputData ID") into tResultData
 
 Parameters:
 contactId:
-
-    (enum): <name/> Person Information - The personal information of the
-    contact is stored at the top level of the array and has the
-    following keys:
-- "firstname": The first name.
-- "middlename": The middle name.
-- "lastname": The last name.
-- "alternatename": The alternative name.
-- "nickname": The nick name (iOS only).
-- "firstnamephonetic": The phonetic transcription of the first name.
-- "middlenamephonetic": The phonetic transcription of the middle name.
-- "lastnamephonetic": The phonetic transcription of the last name.
-- "prefix": The name prefix.
-- "suffix": The name suffix.
-- "organization": The name of the organization.
-- "jobtitle": The job title (iOS only).
-- "department": The name of the department (iOS only).
-- "message": A person message (iOS only).
-- "note": A person note.
-
+The User ID of the contact who's data is required.
 
 The result:
 A nested array of data entries for the specified user ID.
 If no contact could be found, then no array is returned.
-Use a test like: "if the result is an array" to determine if contact
-information was returned. "if the result is empty" will always be empty,
-even if data is returned in an array.
+Use a test like:
+
+    "if the result is an array"     
+to determine if contact information was returned. 
+ 
+    "if the result is empty"  
+will always be empty, even if data is returned in an array.
 
 Description:
 Allows the user to extract contact data information from the contact
 list, based on a contact ID. The information returned is stored in a
-nested array repressentation with the following format:
+nested array as described below.
+
+Person Information - The personal information of the contact is stored at the top level 
+of the array and has the following keys:
+- "firstname" - The first name.       
+- "middlename" - The middle name.
+- "lastname" - The last name.
+- "alternatename" - The alternative name.
+- "nickname" - The nick name (iOS only).
+- "firstnamephonetic" - The phonetic transcription of the first name.
+- "middlenamephonetic" - The phonetic transcription of the middle name.
+- "lastnamephonetic" - The phonetic transcription of the last name.
+- "prefix" - The name prefix.
+- "suffix" - The name suffix.
+- "organization" - The name of the organization.
+- "jobtitle" - The job title (iOS only).
+- "department" - The name of the department (iOS only).
+- "message" - A person message (iOS only).
+- "note" - A person note.
+
+E-Mail Addresses - The e-mail addresses of the contact are stored in integer indexed 
+arrays starting at one under the key **email**. This allows any number of e-mail addresses 
+to be stored against a particular category. There are three categories of e-mail address:
+- "home" - The home e-mail address.       
+- "work" - The work e-mail address.
+- "other" - An alternative e-mail address.
+
+Telephone Numbers - The telephone numbers of the contact are stored in integer indexed 
+arrays starting at one under the key **phone**. This allows any number of telephone numbers 
+to be stored against a particular category. There are ten categories of phone numbers:
+- "mobile" - The mobile telephone number.       
+- "iphone" - The iPhone telephone number (iOS only).
+- "main" - The main telephone number (iOS only).
+- "home" - The home telephone number.
+- "work" - The work telephone number.
+- "homefax" - The home FAX number (iOS only).
+- "workfax" - The work FAX number (iOS only).
+- "otherfax" - The other FAX number (iOS >= 5.0 only).
+- "pager" - The pager number (iOS only).
+- "other" - An alternative telephone number.
+
+Address - Addresses of the contact are stored as sub arrays under the key **address**. 
+There are three categories of address:
+- "home" - The home address.       
+- "work" - The work address.
+- "other" - The other address.
+
+Address Subkey - Each address category is an integer indexed array, starting at one 
+under the key address. This allows any number of a addresses to be stored against a 
+particular category:
+- "street" - The address street.       
+- "city" - The address city.
+- "state" - The address state.
+- "zip" - The address ZIP code.
+- "country" - The address country.
+- "countrycode" - The address country code (iOS only).
 
 Use the <mobileGetContactData> function to read contact data from the
 contact list.

@@ -17,8 +17,8 @@ Example:
 repeat with x = 1 to the number of items in the hilitedLines of me
 
 Description:
-Use the <in> <keyword> as a synonym for the <of> <keyword> in <chunk
-expression|chunk expressions>.
+Use the <in> <keyword> as a synonym for the <of> <keyword> in 
+<chunk expression|chunk expressions>.
 
 When designating a part of a string, use the <in> <keyword> after the
 <chunk> type. For example, to specify the first <word> of a <string>,

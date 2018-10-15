@@ -99,8 +99,7 @@ void revSpeechUnload(char *args[], int nargs, char **retstring,
 {
 	*pass = False;
 	*error = False;
-	char *result = NULL;
-
+	
 	// OK-2007-04-17: Part of fix for bug 3611. NarratorUnload may fail, in particular if the OS X
 	// Speech Manager is still busy speaking, in this case we report an error.
 	if (!NarratorUnload())
@@ -193,8 +192,6 @@ void revSpeechPitch(char *args[], int nargs, char **retstring, Bool *pass, Bool 
 
 void revGetSpeechPitch(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-	char *result = NULL;
-
 	*pass = False;
 	*error = False;
 

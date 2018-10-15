@@ -82,22 +82,22 @@ MCBlock::MCBlock(const MCBlock &bref) : MCDLlist(bref)
 	flags = bref.flags;
 	if (flags & F_HAS_ATTS)
 	{
-		atts = new Blockatts;
+		atts = new (nothrow) Blockatts;
 		if (flags & F_HAS_COLOR)
 		{
-			atts->color = new MCColor;
+			atts->color = new (nothrow) MCColor;
 			*atts->color = *bref.atts->color;
 		}
 		if (flags & F_HAS_BACK_COLOR)
 		{
-			atts->backcolor = new MCColor;
+			atts->backcolor = new (nothrow) MCColor;
 			*atts->backcolor = *bref.atts->backcolor;
 		}
 
 		// MW-2012-02-17: [[ SplitTextAttrs ]] Copy across the font attrs the other
 		//   block has.
 		if ((flags & F_HAS_FNAME) != 0)
-			/* UNCHECKED */ MCNameClone(bref.atts->fontname, atts -> fontname);
+            atts->fontname = MCValueRetain(bref.atts->fontname);
 		if ((flags & F_HAS_FSIZE) != 0)
 			atts -> fontsize = bref . atts -> fontsize;
 		if ((flags & F_HAS_FSTYLE) != 0)
@@ -169,7 +169,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block, then work out
 	//   where to skip to when all the attrs currently recognized have been read.
-	int64_t t_attr_end;
+	int64_t t_attr_end = 0;
 	if (is_ext)
 	{
 		// Read the size.
@@ -193,7 +193,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	flags &= ~F_FLAGGED;
 
 	if (atts == NULL)
-		atts = new Blockatts;
+		atts = new (nothrow) Blockatts;
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If the font flag is present, it means there
 	//   is a font record to read.
@@ -215,7 +215,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			// MW-2012-02-17: [[ SplitTextAttrs ]] Only set the font attrs if they are
 			//   not inherited.
 			if (!getflag(F_INHERIT_FNAME))
-				MCNameClone(t_fontname, atts -> fontname);
+                atts->fontname = MCValueRetain(t_fontname);
 			if (!getflag(F_INHERIT_FSIZE))
 				atts -> fontsize = t_fontsize;
 			if (!getflag(F_INHERIT_FSTYLE))
@@ -239,7 +239,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
     }
 	if (flags & F_HAS_COLOR)
 	{
-		atts->color = new MCColor;
+		atts->color = new (nothrow) MCColor;
 		if ((stat = IO_read_mccolor(*atts->color, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
 		if (flags & F_HAS_COLOR_NAME)
@@ -257,7 +257,7 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 	}
 	if (flags & F_HAS_BACK_COLOR)
 	{
-		atts->backcolor = new MCColor;
+		atts->backcolor = new (nothrow) MCColor;
 		if ((stat = IO_read_mccolor(*atts->backcolor, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
 		if (version < kMCStackFileFormatVersion_2_0 || flags & F_HAS_BACK_COLOR_NAME)
@@ -266,10 +266,8 @@ IO_stat MCBlock::load(IO_handle stream, uint32_t version, bool is_ext)
 			//   so load, delete and unset the flag.
 			// MW-2013-11-19: [[ UnicodeFileFormat ]] The storage of this is ignored,
 			//   so is legacy,
-			char *backcolorname;
-			if ((stat = IO_read_cstring_legacy(backcolorname, stream, 2)) != IO_NORMAL)
+			if ((stat = IO_discard_cstring_legacy(stream, 2)) != IO_NORMAL)
 				return checkloadstat(stat);
-			delete backcolorname;
 			flags &= ~F_HAS_BACK_COLOR_NAME;
 		}
 	}
@@ -756,12 +754,12 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	if (t_next_block != parent -> getblocks())
 	{
 		if (t_next_block -> GetLength() == 0)
-			t_next_block_char = -2;
+			t_next_block_char = CODEPOINT_NONE-1;
 		else
 			t_next_block_char = parent->GetCodepointAtIndex(t_next_block -> m_index);
 	}
 	else
-		t_next_block_char = -1;
+		t_next_block_char = CODEPOINT_NONE;
 
     // FG-2013-10-21 [[ Field speedups ]]
     // Previously, we used to calculate the length of the entire block here in order
@@ -836,7 +834,7 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
                     t_end_of_block = true;
                 }
                 
-                if (t_next_char == -1 ||
+                if (t_next_char == CODEPOINT_NONE ||
                     MCUnicodeCanBreakBetween(t_this_char, t_next_char))
                 {
                     t_can_break = true;
@@ -860,7 +858,7 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 		else*/
         {
             MCRange t_range;
-            t_range = MCRangeMake(initial_i, i - initial_i);
+            t_range = MCRangeMakeMinMax(initial_i, i);
             // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
             t_width_float += MCFontMeasureTextSubstringFloat(m_font,  parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
         }
@@ -896,7 +894,7 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 
 void MCBlock::split(findex_t p_index)
 {
-	MCBlock *bptr = new MCBlock(*this);
+	MCBlock *bptr = new (nothrow) MCBlock(*this);
 	findex_t newlength = m_size - (p_index - m_index);
 	bptr->SetRange(p_index, newlength);
 	m_size -= newlength;
@@ -1076,7 +1074,7 @@ void MCBlock::drawstring(MCDC *dc, coord_t x, coord_t p_cell_left, coord_t p_cel
             // FG-2014-07-16: [[ Bug 12539 ]] Make sure not to draw tab characters
 			coord_t t_width;
 			MCRange t_range;
-			t_range = MCRangeMake(t_index, t_next_index - t_index);
+			t_range = MCRangeMakeMinMax(t_index, t_next_index);
             if (length > 0 && parent->GetCodepointAtIndex(t_next_index - 1) == '\t')
                 t_range.length--;
             t_width = MCFontMeasureTextSubstringFloat(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
@@ -1385,10 +1383,10 @@ void MCBlock::draw(MCDC *dc, coord_t x, coord_t lx, coord_t cx, int2 y, findex_t
 			if (IsMacLF() && !f->isautoarm())
 			{
 				MCPatternRef t_pattern;
-				int2 x, y;
+				int2 t_x, t_y;
 				MCColor fc, hc;
-				f->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc -> gettype(), f);
-				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc -> gettype(), f);
+				f->getforecolor(DI_FORE, False, True, fc, t_pattern, t_x, t_y, dc -> gettype(), f);
+				f->getforecolor(DI_HILITE, False, True, hc, t_pattern, t_x, t_y, dc -> gettype(), f);
 				if (MCColorGetPixel(hc) == MCColorGetPixel(fc))
 					f->setforeground(dc, DI_BACK, False, True);
                 else
@@ -1580,7 +1578,7 @@ void MCBlock::setshift(int2 in)
 	else
 	{
 		if (atts == NULL)
-			atts = new Blockatts;
+			atts = new (nothrow) Blockatts;
 		atts->shift = in;
 		flags |= F_HAS_SHIFT;
 	}
@@ -1615,9 +1613,9 @@ void MCBlock::setcolor(const MCColor *newcolor)
 	else
 	{
 		if (atts == NULL)
-			atts = new Blockatts;
+			atts = new (nothrow) Blockatts;
 		if (!(flags & F_HAS_COLOR))
-			atts->color = new MCColor;
+			atts->color = new (nothrow) MCColor;
 		*atts->color = *newcolor;
 		flags |= F_HAS_COLOR;
 	}
@@ -1636,9 +1634,9 @@ void MCBlock::setbackcolor(const MCColor *newcolor)
 	else
 	{
 		if (atts == NULL)
-			atts = new Blockatts;
+			atts = new (nothrow) Blockatts;
 		if (!(flags & F_HAS_BACK_COLOR))
-			atts->backcolor = new MCColor;
+			atts->backcolor = new (nothrow) MCColor;
 		*atts->backcolor = *newcolor;
 		flags |= F_HAS_BACK_COLOR;
 	}
@@ -1683,20 +1681,13 @@ findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool mo
     }
 
 	findex_t i = m_index;
-	coord_t cwidth;
-	findex_t tlen = 0;
-	coord_t twidth = 0;
-	coord_t toldwidth = 0;
-
+	
 	// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
 	//   complete runs.
 	// MW-2013-11-07: [[ Bug 11393 ]] We only want to measure complete runs now regardless of
 	//   platform.
 	coord_t t_last_width;
 	t_last_width = is_rtl() ? width : 0;
-    
-    MCRange t_char_range;
-    MCRange t_cp_range;
     
     coord_t t_pos = t_last_width;
     while(i < m_index + m_size)
@@ -1748,8 +1739,7 @@ coord_t MCBlock::getsubwidth(MCDC *dc, coord_t x /* IGNORED */, findex_t i, find
 	else
 	{
 		findex_t sptr = i;
-        findex_t t_length = l;
-		
+        
 		// MW-2012-02-12: [[ Bug 10662 ]] If the last char is a VTAB then ignore it.
         if (parent->TextIsLineBreak(parent->GetCodepointAtIndex(sptr + l - 1)))
 			l--;
@@ -1775,7 +1765,7 @@ coord_t MCBlock::getsubwidth(MCDC *dc, coord_t x /* IGNORED */, findex_t i, find
 					break;
 				
 				MCRange t_range;
-				t_range = MCRangeMake(sptr, eptr - sptr);
+				t_range = MCRangeMakeMinMax(sptr, eptr);
                 // MM-2014-04-16: [[ Bug 11964 ]] Pass through the transform of the stack to make sure the measurment is correct for scaled text.
                 twidth += MCFontMeasureTextSubstringFloat(m_font, parent->GetInternalStringRef(), t_range, parent -> getparent() -> getstack() -> getdevicetransform());
 
@@ -1847,7 +1837,7 @@ void MCBlock::freeatts()
 	freerefs();
 	// MW-2012-02-17: [[ SplitTextAttrs ]] Free the fontname name if we have that attr.
 	if (flags & F_HAS_FNAME)
-		MCNameDelete(atts -> fontname);
+		MCValueRelease(atts -> fontname);
 	if (flags & F_HAS_COLOR)
 		delete atts->color;
 	if (flags & F_HAS_BACK_COLOR)

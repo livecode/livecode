@@ -27,7 +27,9 @@ public foreign handler MCBinaryExecPutBytesAfter(in Source as Data, inout Target
 
 public foreign handler MCBinaryEvalConcatenateBytes(in Left as Data, in Right as Data, out Result as Data) returns nothing binds to "<builtin>"
 
+/* No implementation
 public foreign handler MCBinaryEvalContainsBytes(in Target as Data, in Needle as Data, out Value as CBool) returns nothing binds to "<builtin>"
+*/
 
 public foreign handler MCBinaryEvalIsEqualTo(in Left as Data, in Right as Data, out Value as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCBinaryEvalIsNotEqualTo(in Left as Data, in Right as Data, out Value as CBool) returns nothing binds to "<builtin>"

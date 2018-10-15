@@ -42,9 +42,9 @@ prevent the <player> from being created.
 
 References: copy (command), clone (command), paste (command),
 pass (control structure), object (glossary), property (glossary),
-templatePlayer (glossary), variable (glossary), message path (glossary),
-message (glossary), tool (glossary), it (glossary), trap (glossary),
-player (keyword), script (property)
+variable (glossary), message path (glossary), message (glossary), 
+tool (glossary), trap (glossary), it (keyword), player (keyword), 
+templatePlayer (keyword), script (property)
 
 Tags: objects
 

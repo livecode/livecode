@@ -36,10 +36,10 @@ a <handler>, the <focusIn> <message> is sent to it.
 
 References: select (command), select (glossary), handler (glossary),
 lock (glossary), message (glossary), unlock (glossary),
-menuMode (glossary), active control (glossary), combo box (glossary),
-selection (keyword), field (keyword), focusIn (message),
-exitField (message), closeField (message), field (object),
-button (object)
+active control (glossary), combo box (glossary), selection (keyword), 
+field (keyword), focusIn (message), exitField (message), 
+closeField (message), field (object), button (object),
+menuMode (property)
 
 Tags: ui
 

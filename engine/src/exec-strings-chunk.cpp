@@ -34,24 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, LinesOfTextByRange, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, LinesOfTextByExpression, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, LinesOfTextByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemsOfTextByRange, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemsOfTextByExpression, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, ItemsOfTextByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordsOfTextByRange, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordsOfTextByExpression, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, WordsOfTextByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TokensOfTextByRange, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TokensOfTextByExpression, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, TokensOfTextByOrdinal, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharsOfTextByRange, 4)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharsOfTextByExpression, 3)
-MC_EXEC_DEFINE_EVAL_METHOD(Strings, CharsOfTextByOrdinal, 3)
-
-////////////////////////////////////////////////////////////////////////////////
-
 struct MCChunkCountState
 {
     MCStringRef string;
@@ -243,7 +225,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             MCRange t_found_range;
             
             // calculate the start of the (p_first)th line or item
-            while (p_first && MCStringFind(p_string, MCRangeMake(t_offset, t_length - t_offset), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
+            while (p_first && MCStringFind(p_string, MCRangeMakeMinMax(t_offset, t_length), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
             {
                 p_first--;
                 t_offset = t_found_range . offset + t_found_range . length;
@@ -262,7 +244,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             // calculate the length of the next p_count lines / items
             while (p_count--)
             {
-                if (t_offset > t_end_index || !MCStringFind(p_string, MCRangeMake(t_offset, t_length - t_offset), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
+                if (t_offset > t_end_index || !MCStringFind(p_string, MCRangeMakeMinMax(t_offset, t_length), t_delimiter, ctxt . GetStringComparisonType(), &t_found_range))
                 {
                     r_end = t_length;
                     break;
@@ -300,7 +282,7 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             while (p_first)
             {
                 t_pg_offset = t_offset;
-                t_newline_found = MCStringFirstIndexOfCharInRange(p_string, '\n', MCRangeMake(t_offset, t_length - t_offset), kMCCompareExact, t_offset);
+                t_newline_found = MCStringFirstIndexOfCharInRange(p_string, '\n', MCRangeMakeMinMax(t_offset, t_length), kMCCompareExact, t_offset);
                 // AL-2014-07-21: [[ Bug 12162 ]] Ignore PS when calculating paragraph chunk.                
                 t_pg_found = false; /*MCStringFirstIndexOfChar(p_string, 0x2029, t_pg_offset, kMCCompareExact, t_pg_offset);*/
                 
@@ -328,8 +310,8 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
                 // AL-2014-05-26: [[ Bug 12527 ]] Make sure both newline and pg char are found if both present
                 if (t_offset <= t_end_index)
                 {
-                    t_newline_found = MCStringFirstIndexOfCharInRange(p_string, '\n', MCRangeMake(t_offset, t_length - t_offset), kMCCompareExact, t_offset);
-                    t_pg_found = MCStringFirstIndexOfCharInRange(p_string, 0x2029, MCRangeMake(t_pg_offset, t_length - t_pg_offset), kMCCompareExact, t_pg_offset);
+                    t_newline_found = MCStringFirstIndexOfCharInRange(p_string, '\n', MCRangeMakeMinMax(t_offset, t_length), kMCCompareExact, t_offset);
+                    t_pg_found = MCStringFirstIndexOfCharInRange(p_string, 0x2029, MCRangeMakeMinMax(t_pg_offset, t_length), kMCCompareExact, t_pg_offset);
                 }
                 else
                 {
@@ -386,8 +368,6 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
         case CT_WORD:
         {
 
-            uindex_t t_space_offset;
-            
             // if there are consecutive spaces at the beginning, skip them
             while (MCUnicodeIsWhitespace(MCStringGetCharAtIndex(p_string, t_offset)))
                 t_offset++;
@@ -440,7 +420,6 @@ void MCStringsMarkTextChunkInRange(MCExecContext& ctxt, MCStringRef p_string, MC
             MCScriptPoint sp(*t_string);
             MCerrorlock++;
             
-            uint2 t_pos;
             Parse_stat ps = sp.nexttoken();
             
             while (p_first-- && ps != PS_ERROR && ps != PS_EOF)
@@ -516,11 +495,11 @@ void MCStringsGetTextChunk(MCExecContext& ctxt, MCStringRef p_source, Chunk_term
     
     if (!p_eval_mutable)
     {
-        MCStringCopySubstring(p_source, MCRangeMake(t_start, t_end - t_start), r_result);
+        MCStringCopySubstring(p_source, MCRangeMakeMinMax(t_start, t_end), r_result);
     }
     else
     {
-        MCStringMutableCopySubstring(p_source, MCRangeMake(t_start, t_end - t_start), r_result);
+        MCStringMutableCopySubstring(p_source, MCRangeMakeMinMax(t_start, t_end), r_result);
     }
 }
 
@@ -548,7 +527,7 @@ void MCStringsSetTextChunk(MCExecContext& ctxt, MCStringRef p_source, Prepositio
             MCStringInsert(x_target, t_start, p_source);
             break;
         case PT_INTO:
-            MCStringReplace(x_target, MCRangeMake(t_start, t_end - t_start), p_source);
+            MCStringReplace(x_target, MCRangeMakeMinMax(t_start, t_end), p_source);
             break;
         case PT_AFTER:
             MCStringInsert(x_target, t_end, p_source);
@@ -746,7 +725,7 @@ void MCStringsExecSetCharsOfTextByOrdinal(MCExecContext& ctxt, MCStringRef p_sou
 
 void MCStringsGetTextChunk(MCExecContext& ctxt, MCStringRef p_source, integer_t p_start, integer_t p_end, MCStringRef& r_result)
 {
-    MCStringCopySubstring(p_source, MCRangeMake(p_start, p_end - p_start), r_result);
+    MCStringCopySubstring(p_source, MCRangeMakeMinMax(p_start, p_end), r_result);
 }
 
 void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, integer_t& x_start, integer_t& x_end, MCStringRef& r_result)
@@ -928,7 +907,7 @@ void MCStringsMarkTextChunkByRange(MCExecContext& ctxt, Chunk_term p_chunk_type,
 {
     // The incoming indices are for codeunits
     MCRange t_cu_range;
-    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+    t_cu_range = MCRangeMakeMinMax(x_mark . start, x_mark . finish);
 
     uinteger_t t_first, t_chunk_count;
     MCStringsGetExtentsByRangeInRange(ctxt, p_chunk_type, p_first, p_last, x_mark . text, &t_cu_range, t_first, t_chunk_count);
@@ -948,7 +927,7 @@ void MCStringsMarkTextChunkByOrdinal(MCExecContext& ctxt, Chunk_term p_chunk_typ
 {
     // The incoming indices are for codeunits
     MCRange t_cu_range;
-    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+    t_cu_range = MCRangeMakeMinMax(x_mark . start, x_mark . finish);
     
     uinteger_t t_first, t_chunk_count;
     MCStringsGetExtentsByOrdinalInRange(ctxt, p_chunk_type, p_ordinal_type, x_mark . text, &t_cu_range, t_first, t_chunk_count);
@@ -1076,7 +1055,7 @@ void MCStringsMarkBytesOfTextByRange(MCExecContext& ctxt, integer_t p_first, int
 {
     // The incoming indices are for codeunits
     MCRange t_cu_range;
-    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+    t_cu_range = MCRangeMakeMinMax(x_mark . start, x_mark . finish);
     
     // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
     if (MCValueGetTypeCode(x_mark . text) != kMCValueTypeCodeData)
@@ -1101,7 +1080,7 @@ void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
 {
     // The incoming indices are for codeunits
     MCRange t_cu_range;
-    t_cu_range = MCRangeMake(x_mark . start, x_mark . finish - x_mark . start);
+    t_cu_range = MCRangeMakeMinMax(x_mark . start, x_mark . finish);
     
     // AL-2014-09-10: [[ Bug 13400 ]] Keep marked strings the correct type where possible
     if (MCValueGetTypeCode(x_mark . text) != kMCValueTypeCodeData)
@@ -1125,7 +1104,7 @@ void MCStringsMarkBytesOfTextByOrdinal(MCExecContext& ctxt, Chunk_term p_ordinal
 
 MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type) : MCTextChunkIterator(p_text, p_chunk_type)
 {
-    m_sp = new MCScriptPoint(p_text);
+    m_sp = new (nothrow) MCScriptPoint(p_text);
 }
 
 MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text, MCChunkType p_chunk_type, MCRange p_restriction) : MCTextChunkIterator(p_text, p_chunk_type, p_restriction)
@@ -1133,7 +1112,7 @@ MCTextChunkIterator_Tokenized::MCTextChunkIterator_Tokenized(MCStringRef p_text,
     MCAutoStringRef t_substring;
     MCStringCopySubstring(m_text, p_restriction, &t_substring);
     MCValueAssign(m_text, *t_substring);
-    m_sp = new MCScriptPoint(m_text);
+    m_sp = new (nothrow) MCScriptPoint(m_text);
 }
 
 MCTextChunkIterator_Tokenized::~MCTextChunkIterator_Tokenized()
@@ -1146,7 +1125,6 @@ bool MCTextChunkIterator_Tokenized::Next()
     MCerrorlock++;
     
     bool t_found = true;
-    uint2 t_pos;
     Parse_stat ps = m_sp -> nexttoken();
     if (ps == PS_ERROR || ps == PS_EOF)
         t_found = false;
@@ -1168,7 +1146,7 @@ MCTextChunkIterator *MCStringsTextChunkIteratorCreate(MCExecContext& ctxt, MCStr
     if (p_chunk_type == CT_TOKEN)
     {
         MCTextChunkIterator *tci;
-        tci = new MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type));
+        tci = new (nothrow) MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type));
         return tci;
     }
     
@@ -1180,7 +1158,7 @@ MCTextChunkIterator *MCStringsTextChunkIteratorCreateWithRange(MCExecContext& ct
     if (p_chunk_type == CT_TOKEN)
     {
         MCTextChunkIterator *tci;
-        tci = new MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type), p_range);
+        tci = new (nothrow) MCTextChunkIterator_Tokenized(p_text, MCChunkTypeFromChunkTerm(p_chunk_type), p_range);
         return tci;
     }
     

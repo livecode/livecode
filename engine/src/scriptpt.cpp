@@ -42,15 +42,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define LOWERED_PAD 64
 
-extern uint8_t type_table[];
-extern uint8_t unicode_type_table[];
-extern Cvalue constant_table[];
+extern const uint8_t type_table[];
+extern const uint8_t unicode_type_table[];
+extern const Cvalue constant_table[];
 extern const uint4 constant_table_size;
-extern LT *table_pointers[];
-extern uint2 table_sizes[];
-extern LT command_table[];
+extern const LT * const table_pointers[];
+extern const uint2 table_sizes[];
+extern const LT command_table[];
 extern const uint4 command_table_size;
-extern LT factor_table[];
+extern const LT factor_table[];
 extern const uint4 factor_table_size;
 
 static struct { codepoint_t codepoint; Symbol_type type; } remainder_table[] =
@@ -158,15 +158,18 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 }
 
 MCScriptPoint::MCScriptPoint(MCExecContext &ctxt)
+    : utf16_script(MCValueRetain(kMCEmptyData)),
+      length(MCDataGetLength(utf16_script)/sizeof(unichar_t)),
+      curptr(reinterpret_cast<const unichar_t*>(MCDataGetBytePtr(utf16_script))),
+      tokenptr(curptr),
+      backupptr(curptr),
+      endptr(curptr + length)
 {
-    utf16_script = MCValueRetain(kMCEmptyData);
     codepoint = '\0';
     curlength = 1;
     curobj = ctxt . GetObject();
     curhlist = ctxt . GetHandlerList();
     curhandler = ctxt . GetHandler();
-    curptr = tokenptr = backupptr = (const unichar_t *)MCDataGetBytePtr(utf16_script);
-    endptr = curptr + length;
     line = pos = 0;
     escapes = False;
     tagged = False;
@@ -272,7 +275,7 @@ MCNameRef MCScriptPoint::gettoken_nameref(void)
     {
         MCAutoStringRef t_string_token;
         if (token_nameref != nil)
-            MCNameDelete(token_nameref);
+            MCValueRelease(token_nameref);
         /* UNCHECKED */ MCStringCreateWithBytes((const byte_t *)token . getstring(), (token . getlength() * 2), kMCStringEncodingUTF16, false, &t_string_token);
 		/* UNCHECKED */ MCNameCreate(*t_string_token, token_nameref);
     }
@@ -606,7 +609,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		in_tag = True;
 		
 		// Stores the length of the <? tag (if found)
-		uint32_t t_tag_length;
+		uint32_t t_tag_length = 0;
         
 		// Loop until a NUL char, or we find '<?rev'
 		bool t_in_comment;
@@ -1046,7 +1049,7 @@ Parse_stat MCScriptPoint::next(Symbol_type &type)
 		in_tag = True;
 		
 		// Stores the length of the <? tag (if found)
-		uint32_t t_tag_length;
+		uint32_t t_tag_length = 0;
 
 		// Loop until a NUL char, or we find '<?rev'
 		bool t_in_comment;
@@ -1371,15 +1374,15 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
                     MCAutoStringRef t_nul_string;
                     /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)"", 1, kMCStringEncodingASCII, false, &t_nul_string);
                     
-                    *dest = new MCConstant(*t_nul_string, BAD_NUMERIC);
+                    *dest = new (nothrow) MCConstant(*t_nul_string, BAD_NUMERIC);
 				}
                 else if (token.getlength() == 5 && MCU_strncasecmp(token_cstring, "empty", 5) == 0)
                 {
                     // Uses the kMCNull as a StringRef - that's what is expected from 'empty'
-                    *dest = new MCConstant(kMCEmptyString, BAD_NUMERIC);
+                    *dest = new (nothrow) MCConstant(kMCEmptyString, BAD_NUMERIC);
                 }
 				else
-					*dest = new MCConstant(MCSTR(constant_table[mid].svalue),
+					*dest = new (nothrow) MCConstant(MCSTR(constant_table[mid].svalue),
 					                       constant_table[mid].nvalue);
 				return PS_NORMAL;
 			}
@@ -1681,7 +1684,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 					}
 					break;
 				case TT_CHUNK:
-					newfact = new MCChunk(False);
+					newfact = new (nothrow) MCChunk(False);
 					backup();
 					if (newfact->parse(*this, doingthe) != PS_NORMAL)
 					{
@@ -1705,7 +1708,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 					if (newfact->parse(*this, doingthe) != PS_NORMAL)
 					{
 						delete newfact;
-						if (doingthe)
+						if (doingthe || !MCperror->isempty())
 						{
 							MCperror->add(PE_EXPRESSION_BADFUNCTION, *this);
 							return PS_ERROR;
@@ -1726,7 +1729,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 								return PS_ERROR;
 							}
 							else
-								newfact = new MCLiteral(gettoken_nameref());
+								newfact = new (nothrow) MCLiteral(gettoken_nameref());
 						newfact->parse(*this, doingthe);
 					}
 					insertfactor(newfact, curfact, top);
@@ -1735,7 +1738,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 				case TT_PROPERTY:
 					thesp = *this;
 					backup();
-					newfact = new MCProperty;
+					newfact = new (nothrow) MCProperty;
 					MCerrorlock++;
 					if (newfact->parse(*this, doingthe) != PS_NORMAL)
 					{
@@ -1747,7 +1750,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							MCperror->add(PE_PROPERTY_NOTOF, *this);
 							return PS_ERROR;
 						}
-						newfact = new MCLiteral(gettoken_nameref());
+						newfact = new (nothrow) MCLiteral(gettoken_nameref());
 					}
 					MCerrorlock--;
 					insertfactor(newfact, curfact, top);
@@ -1765,7 +1768,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 				{
 					backup();
 					thesp = *this;
-					newfact = new MCProperty;
+					newfact = new (nothrow) MCProperty;
 					MCerrorlock++;
 					if (newfact->parse(*this, doingthe) != PS_NORMAL)
 					{
@@ -1779,7 +1782,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							return PS_ERROR;
 						}
 
-						newfact = new MCFuncref(gettoken_nameref());
+						newfact = new (nothrow) MCFuncref(gettoken_nameref());
 						newfact->parse(*this, doingthe);
 					}
 					else
@@ -1798,8 +1801,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 						MCVarref *newvar;
 						newfact = NULL;
 
-						MCAutoNameRef t_name;
-						/* UNCHECKED */ t_name . Clone(gettoken_nameref());
+						MCNewAutoNameRef t_name = gettoken_nameref();
 
 						if (next(type) == PS_NORMAL)
 							backup();
@@ -1807,7 +1809,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							type = ST_ERR;
 						// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 						//   execution outwith a handler.
-						if (type != ST_LP && findvar(t_name, &newvar) == PS_NORMAL)
+						if (type != ST_LP && findvar(*t_name, &newvar) == PS_NORMAL)
 						{
 							newvar->parsearray(*this);
 							newfact = newvar;
@@ -1816,7 +1818,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							{
 								// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 								//   execution outwith a handler.
-							if (findnewvar(t_name, kMCEmptyName, &newvar) != PS_NORMAL)
+							if (findnewvar(*t_name, kMCEmptyName, &newvar) != PS_NORMAL)
 								{
 									MCperror->add(PE_EXPRESSION_NOTFACT, *this);
 									return PS_ERROR;
@@ -1825,7 +1827,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 								newfact = newvar;
 							}
 						else if (type == ST_LP)
-								newfact = new MCFuncref(t_name);
+								newfact = new (nothrow) MCFuncref(*t_name);
 						if (newfact == NULL)
 						{
 							if (MCexplicitvariables)
@@ -1837,7 +1839,7 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 							{
 								// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 								//   execution outwith a handler.
-								if (finduqlvar(t_name, &newvar) != PS_NORMAL)
+								if (finduqlvar(*t_name, &newvar) != PS_NORMAL)
 								{
 									MCperror->add(PE_EXPRESSION_NOTFACT, *this);
 									return PS_ERROR;

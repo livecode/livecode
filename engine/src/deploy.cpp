@@ -546,6 +546,17 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
             /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.redirects, i + 1, t_val);
 			t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeRedirect, (MCStringRef)t_val);
 		}
+
+    ////////
+    
+    // AL-2015-02-10: [[ Standalone Inclusions ]] Add the resource mappings, if any.
+    if (t_success)
+        for(uindex_t i = 0; i < MCArrayGetCount(p_params.library) && t_success; i++)
+        {
+            MCValueRef t_val;
+            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.library, i + 1, t_val);
+            t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeLibrary, (MCStringRef)t_val);
+        }
     
     ////////
     
@@ -595,16 +606,7 @@ bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_
 			if (t_success)
                 t_success = MCDeployCapsuleDefineFromStackFile(t_capsule, (MCStringRef)t_val, t_aux_stackfiles[i], false);
 		}
-	
-    // AL-2015-02-10: [[ Standalone Inclusions ]] Add the resource mappings, if any.
-    if (t_success)
-        for(uindex_t i = 0; i < MCArrayGetCount(p_params.library) && t_success; i++)
-        {
-            MCValueRef t_val;
-            /* UNCHECKED */ MCArrayFetchValueAtIndex(p_params.library, i + 1, t_val);
-            t_success = MCDeployCapsuleDefineString(t_capsule, kMCCapsuleSectionTypeLibrary, (MCStringRef)t_val);
-        }
-    
+
 	// Now add the externals, if any
 	if (t_success)
 		for(uindex_t i = 0; i < MCArrayGetCount(p_params.externals) && t_success; i++)
@@ -880,7 +882,7 @@ void MCIdeDeploy::exec_ctxt(MCExecContext& ctxt)
 		t_has_error = true;
 	}
 	
-	uint32_t t_platform;
+	uint32_t t_platform = PLATFORM_NONE;
 	switch(m_platform)
 	{
 		case PLATFORM_MACOSX:

@@ -17,13 +17,17 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 package com.runrev.android;
 
 import android.app.*;
+import android.app.Notification.Builder;
 import android.database.*;
 import android.database.sqlite.*;
 import android.content.*;
 import android.util.*;
+import android.os.Build;
+import android.graphics.Color;
 
 import java.io.*;
 import java.util.*;
+
 
 public class NotificationModule
 {
@@ -81,7 +85,6 @@ public class NotificationModule
         
         Intent t_intent = new Intent(context, t_receiver_class);
         t_intent.setAction(ACTION_DISPATCH_NOTIFICATIONS);
-        
         PendingIntent t_pending_intent = PendingIntent.getBroadcast(context, 0, t_intent, 0);
 
         long t_next_notification = getEarliestNotificationTime(context);
@@ -482,20 +485,8 @@ public class NotificationModule
         }
     }
     
-    public static void showStatusBarNotification(Context context, int p_id, String p_body, String p_title, boolean p_play_sound, int p_badge_value)
+    private static PendingIntent createNotificationContentIntent(Context context)
     {
-        // create status bar notification for activity
-        int t_icon;
-        t_icon = context.getResources().getIdentifier("drawable/notify_icon", null, context.getPackageName());
-          
-        NotificationManager t_notification_manager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
-        
-        Notification t_notification = new Notification(t_icon, p_title, System.currentTimeMillis());
-        t_notification . flags |= Notification.FLAG_AUTO_CANCEL;
-        t_notification . number = p_badge_value;
-        if (p_play_sound)
-            t_notification.defaults = Notification.DEFAULT_SOUND;
-        
         Class t_activity_class = null;
         
         String t_class_fqn = context.getPackageName() + ".mblandroid";
@@ -511,14 +502,60 @@ public class NotificationModule
         
         Intent t_intent = new Intent(context, t_activity_class);
         
-        Intent t_cancel_intent = new Intent(context, getReceiverClass(context));
-        t_cancel_intent.setAction(ACTION_CANCEL_NOTIFICATION);
-        t_cancel_intent.putExtra(NOTIFY_ID, p_id);
-
-        t_notification.setLatestEventInfo(context.getApplicationContext(), p_title, p_body, PendingIntent.getActivity(context, 0, t_intent, 0));
-        t_notification.deleteIntent = PendingIntent.getBroadcast(context, 0, t_cancel_intent, 0);
+        return PendingIntent.getActivity(context, 0, t_intent, 0);
+    }
+    
+    private static PendingIntent createNotificationCancelIntent(Context context, int p_id)
+    {
+        Intent t_intent = new Intent(context, getReceiverClass(context));
+        t_intent.setAction(ACTION_CANCEL_NOTIFICATION);
+        t_intent.putExtra(NOTIFY_ID, p_id);
         
-        t_notification_manager.notify(p_id, t_notification);
+        return PendingIntent.getBroadcast(context, 0, t_intent, 0);
+    }
+    
+    public static void showStatusBarNotification(Context context, int p_id, String p_body, String p_title, boolean p_play_sound, int p_badge_value)
+    {
+        // create status bar notification for activity
+        int t_icon;
+        t_icon = context.getResources().getIdentifier("drawable/notify_icon", null, context.getPackageName());
+          
+        NotificationManager t_notification_manager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+        
+        Notification.Builder t_builder = new Notification.Builder(context);
+        t_builder.setSmallIcon(t_icon);
+        t_builder.setAutoCancel(true);
+        t_builder.setNumber(p_badge_value);
+        
+        if (p_play_sound)
+        	t_builder.setDefaults(Notification.DEFAULT_SOUND);
+        
+        t_builder.setContentIntent(createNotificationContentIntent(context));
+        t_builder.setContentText(p_body);
+        t_builder.setContentTitle(p_title);
+        
+        // If the device runs Android OREO use NotificationChannel - Added in API level 26
+        // Note the constant value of Build.VERSION_CODES.O is 26
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        {
+            String t_channel_id = "android_channel_id";
+            String t_channel_description = "Notification Channel";
+            CharSequence t_channel_name = "My Notifications";
+            
+            NotificationChannel t_notification_channel = new NotificationChannel(t_channel_id, t_channel_name, NotificationManager.IMPORTANCE_MAX);
+            
+            // Configure the notification channel.
+            t_notification_channel.setDescription(t_channel_description);
+            t_notification_channel.enableLights(true);
+            t_notification_channel.enableVibration(true);
+            t_notification_manager.createNotificationChannel(t_notification_channel);
+            
+            t_builder.setChannelId(t_channel_id);
+        }
+		
+        t_builder.setDeleteIntent(createNotificationCancelIntent(context, p_id));
+
+        t_notification_manager.notify(p_id, t_builder.build());
     }
     
 ////////////////////////////////////////////////////////////////////////////////
@@ -537,6 +574,10 @@ public class NotificationModule
         try
         {
             Intent t_registration_intent = new Intent("com.google.android.c2dm.intent.REGISTER");
+            
+            // Needed for registering devices that run Android Oreo+
+            t_registration_intent.setPackage("com.google.android.gms");
+            
             t_registration_intent.putExtra("app", PendingIntent.getBroadcast(m_engine.getContext(), 0, new Intent(), 0));
             t_registration_intent.putExtra("sender", senderEmail);
             m_engine.getContext().startService(t_registration_intent);
@@ -590,7 +631,6 @@ public class NotificationModule
     {
         long t_row_id;
         t_row_id = insertNotification(context, NOTIFY_TYPE_REMOTE, System.currentTimeMillis(), body, title, user_info, play_sound, badge_value);
-        
         resetTimer(context);
     }
 

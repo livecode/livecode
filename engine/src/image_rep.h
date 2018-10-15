@@ -301,15 +301,13 @@ public:
 	uint32_t GetDataCompression();
 
 	uindex_t GetFrameCount() { return 1; }
-
+    
 	//////////
 
 	void GetData(void *&r_data, uindex_t &r_size)
 	{
 		r_data = m_data, r_size = m_size;
 	}
-
-	bool Render(MCDC *p_context, bool p_embed, MCRectangle &p_image_rect, MCRectangle &p_clip_rect);
 
 protected:
 	bool LoadImageFrames(MCBitmapFrame *&r_frames, uindex_t &r_frame_count, bool &r_frames_premultiplied);
@@ -464,7 +462,7 @@ bool MCImageRepCreateReferencedWithSearchKey(MCStringRef p_filename, MCStringRef
 
 bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep);
 bool MCImageRepGetResident(const void *p_data, uindex_t p_size, MCImageRep *&r_rep);
-bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
+bool MCImageRepGetVector(const void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);
 bool MCImageRepGetDensityMapped(MCStringRef p_filename, MCImageRep *&r_rep);
 

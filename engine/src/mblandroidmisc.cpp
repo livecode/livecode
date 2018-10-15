@@ -106,7 +106,7 @@ public:
 
 	void Destroy(void)
 	{
-		MCNameDelete(m_message);
+		MCValueRelease(m_message);
 		delete this;
 	}
 
@@ -116,7 +116,7 @@ protected:
 
 	bool setMessage(const char *p_message)
 	{
-		return MCNameCreateWithCString(p_message, m_message);
+		return MCNameCreateWithNativeChars((const char_t*)p_message, strlen(p_message), m_message);
 	}
 
 	bool setObject(MCObjectHandle p_object)
@@ -269,7 +269,56 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 
 bool MCSystemPick(MCStringRef p_options, bool p_use_checkmark, uint32_t p_initial_index, uint32_t& r_chosen_index, MCRectangle p_button_rect)
 {
-	return false;
+	r_chosen_index = 0;
+	
+	MCStringRef *t_options_array = nil;
+	MCPickList *t_pick_list = nil;
+	
+	MCAutoProperListRef t_options_list;
+	uindex_t t_count = 0;
+	
+	// Split the string on new lines
+	bool t_success = true;
+	t_success = MCStringSplitByDelimiter(p_options, kMCLineEndString, kMCStringOptionCompareExact, &t_options_list);
+	
+	if (t_success)
+	{
+		t_count = MCProperListGetLength(*t_options_list);
+		t_success = MCMemoryNewArray(t_count, t_options_array);
+		
+		for (uindex_t i = 0; t_success && i < t_count; i++)
+			t_options_array[i] = static_cast<MCStringRef>(MCProperListFetchElementAtIndex(*t_options_list, i));
+	}
+	
+	if (t_success)
+	{
+		t_success = MCMemoryNew(t_pick_list);
+		
+		t_pick_list -> options = t_options_array;
+		t_pick_list -> option_count = t_count;
+		t_pick_list -> initial = p_initial_index;
+	}
+	
+	if (t_success)
+	{
+		uindex_t *t_result = nil;
+		uint32_t t_chosen_index;
+		
+		bool t_cancelled;
+		
+		t_success = MCSystemPickOption(t_pick_list, 1, t_result, t_chosen_index, p_use_checkmark, false, false, false, t_cancelled, p_button_rect);
+		
+		r_chosen_index = t_cancelled ? 0 : *t_result;
+	}
+	
+	if (t_success)
+	{
+		// cleanup
+		MCMemoryDeleteArray(t_options_array);
+		MCMemoryDelete(t_pick_list);
+	}
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -683,7 +732,7 @@ bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces)
     MCAutoStringRef t_interfaces;
 	MCAndroidEngineCall("getNetworkInterfaces", "x", &(&t_interfaces));
 
-	if (*t_interfaces == nil)
+    if (MCStringIsEmpty(*t_interfaces))
 		r_interfaces = MCValueRetain(kMCEmptyString);
 	else
 		r_interfaces = MCValueRetain(*t_interfaces);
@@ -749,6 +798,26 @@ bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection
 bool MCSystemBuildInfo(MCStringRef p_key, MCStringRef& r_value)
 {
     return MCAndroidGetBuildInfo(p_key, r_value);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCSystemRequestPermission(MCStringRef p_permission, bool& r_granted)
+{
+    r_granted = MCAndroidCheckRuntimePermission(p_permission);
+    return true;
+}
+
+bool MCSystemPermissionExists(MCStringRef p_permission, bool& r_exists)
+{
+    r_exists = MCAndroidCheckPermissionExists(p_permission);
+    return true;
+}
+
+bool MCSystemHasPermission(MCStringRef p_permission, bool& r_permission_granted)
+{
+    r_permission_granted = MCAndroidHasPermission(p_permission);
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

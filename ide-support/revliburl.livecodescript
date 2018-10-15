@@ -1,23 +1,23 @@
 script "revLibURL"
 ##libUrl v1.2.0 2010-09-16
 #
-on revLoadLibrary
+on extensionInitialize
    if the target is me then
       # MW-2015-01-28: [[ ScriptifyLibURL ]] Use the scriptified stack.
       insert the script of stack "revLibUrl" into back
       // AL-2015-01-29: [[ Scriptify revLibUrl ]] Initialise custom properties when library is loaded
       initialiseCustomProps
    end if
-end revLoadLibrary
+end extensionInitialize
 
-on revUnloadLibrary
+on extensionFinalize
    if the target is me then
       remove the script of stack "revLibUrl" from back
       -- CW-2016-06-11: [[ External driver support ]] Ensure external driver is unloaded properly.
       # remove external library if in use
-      unloadExternalDriver
+      unloadExternalDriver true
    end if
-end revUnloadLibrary
+end extensionFinalize
 ---------------------------------------------------------------------
 ##shared locals
 local lvCount,lvBlockingUrl,lvBlockBypass,lvAuthBlockBypass,lvLogField, lvTickle
@@ -86,14 +86,17 @@ end libraryStack
 -- CW-2016-06-11: [[ External driver support ]] Add function to select external driver for use with libUrl.
 ## Set driver to use for libUrl
 on libUrlSetDriver pDriver
-   libUrlResetAll
-
+   # Do nothing if we are setting the driver to the currently used one.
    if lvExtDriver is not pDriver then
-      unloadExternalDriver
+      libUrlResetAll
+
+      unloadExternalDriver false
+      put pDriver into lvExtDriver
 
       if pDriver is not empty then
-         return loadExternalDriver(pDriver)
+         return loadExternalDriver()
       else
+         send "libUrlSetBehavior" to me in 0
          return empty
       end if
    else
@@ -101,34 +104,41 @@ on libUrlSetDriver pDriver
    end if
 end libUrlSetDriver
 
+command libUrlSetBehavior
+   if the behavior of me is not lvExtDriver then
+      set the behavior of me to lvExtDriver
+   end if
+end libUrlSetBehavior
+
 -- CW-2016-06-11: [[ External driver support ]] Call driver specific init/remove commands if external driver is in use.
 ## Send initialise command to external library
-private function loadExternalDriver pDriver
+private function loadExternalDriver
    local tResult
 
    # Add the external driver as a behavior for libURL, the script must already be loaded
-   set the behavior of me to pDriver
+   set the behavior of me to lvExtDriver
 
    put ulExtInitDriver() into tResult
-   if tResult is empty then
-      put pDriver into lvExtDriver
-   else
+   if tResult is not empty then
       # External driver initialisation failed, so don't use it as a behavior for libURL
-      set the behavior of me to empty
+      put empty into lvExtDriver
+      send "libUrlSetBehavior" to me in 0
    end if
 
    return tResult
 end loadExternalDriver
 
 ## Send shutdown command to external library
-private command unloadExternalDriver
+private command unloadExternalDriver pSetBehavior
    if lvExtDriver is not empty then
       ulExtRemoveDriver
       put empty into lvExtDriver
    end if
 
-   # Stop using the external driver as a behavior for libURL
-   set the behavior of me to empty
+   if pSetBehavior then
+      # Stop using the external driver as a behavior for libURL
+      set the behavior of me to empty
+   end if
 end unloadExternalDriver
 ------------------------------------------------
 on initialiseCustomProps
@@ -158,7 +168,7 @@ on initialiseCustomProps
 end initialiseCustomProps
 
 ## for debugging ##
-function md5 pString
+private function md5 pString
    local tHex
    get binaryDecode("h*", md5digest(pString), tHex)
    return tHex
@@ -3655,28 +3665,18 @@ function libUrlMultipartFormData @pFormData, pParam
       put "--" & tBoundary & CRLF after pFormData
       put "Content-Disposition: form-data; name=" & quote & item 1 of pParam[tKey] & quote after pFormData
       put item 2 to -1 of pParam[tKey] into tValue
-      if char 1 to 6 of tValue = "<file>" then
-        
-        put   tValue into tFile
+      if char 1 to 6 of tValue = "<file>" then  
+        put tValue into tFile
         put empty into tValue
-        put the number of items of tFile into tNumFiles
         put char 7 to -1 of tFile into tFilepath
-        if tNumFiles = 1 then ##single file
-          set the itemDel to "/"
-          put item -1 of tFilepath into tFilename
-          set the itemDel to comma
-          put ";" && "filename=" & quote & tFilename & quote after pFormData
-          put CRLF & "Content-Type: application/octet-stream" after pFormData
-          put url ("binfile:" & tFilepath) into tValue
-          if the result <> empty then
-            return "error" && the result
-          end if
-        else ##muliple files
-          put "__subPart__" & ulFormBoundary() into tSubBoundary
-          put CRLF & "Content-Type: multipart/mixed; boundary=" & quote & tSubBoundary & quote after pFormData
-          get ulSubForm(tValue, tFilepath, tSubBoundary)
-          if it is not empty then return it
-          
+        set the itemDel to "/"
+        put item -1 of tFilepath into tFilename
+        set the itemDel to comma
+        put ";" && "filename=" & quote & tFilename & quote after pFormData
+        put CRLF & "Content-Type: application/octet-stream" after pFormData
+        put url ("binfile:" & tFilepath) into tValue
+        if the result <> empty then
+          return "error" && the result
         end if
       end if
       put CRLF & CRLF after pFormData
@@ -3699,28 +3699,17 @@ function libUrlMultipartFormData @pFormData, pParam
         put param(i) into tValue
         
         if char 1 to 6 of tValue = "<file>" then
-          put   tValue into tFile
+          put tValue into tFile
           put empty into tValue
-          put the number of items of tFile into tNumFiles
-          put char 7 to -1 of tFile into tFilepath
-          if tNumFiles = 1 then ##single file
-            
-            set the itemDel to "/"
-            put item -1 of tFilepath into tFilename
-            set the itemDel to comma
-            put ";" && "filename=" & quote & tFilename & quote after pFormData
-            put CRLF & "Content-Type: application/octet-stream" after pFormData
-            put url ("binfile:" & tFilepath) into tValue
-            if the result <> empty then
-              return "error" && the result
-            end if
-            
-          else ##multiple files
-            put "__subPart__" & ulFormBoundary() into tSubBoundary
-            put CRLF & "Content-Type: multipart/mixed; boundary=" & quote & tSubBoundary & quote after pFormData
-            get ulSubForm(tValue, tFilepath, tSubBoundary)
-            if it is not empty then return it
-            
+          put char 7 to -1 of tFile into tFilepath            
+          set the itemDel to "/"
+          put item -1 of tFilepath into tFilename
+          set the itemDel to comma
+          put ";" && "filename=" & quote & tFilename & quote after pFormData
+          put CRLF & "Content-Type: application/octet-stream" after pFormData
+          put url ("binfile:" & tFilepath) into tValue
+          if the result <> empty then
+            return "error" && the result
           end if
         end if
         put CRLF & CRLF after pFormData
@@ -3749,33 +3738,21 @@ function libUrlMultipartFormAddPart @pFormData,pName,pValue,pMimeType,pEncoding
     
     put   pValue into tFile
     put empty into pValue
-    put the number of items of tFile into tNumFiles
     put char 7 to -1 of tFile into tFilepath
     
-    if tNumFiles = 1 then ##single file
-      set the itemDel to "/"
-      put item -1 of tFilepath into tFilename
-      set the itemDel to comma
-      put ";" && "filename=" & quote & tFilename & quote after tPartData
-      
-      put url ("binfile:" & tFilepath) into pValue
-      if the result <> empty then return "error" && the result
-      
-      if pMimeType is empty then put "application/octet-stream" into pMimeType
-      if pEncoding is empty then
-        put "Binary" into pEncoding
-      end if
-      
-    else ##multiple files
-      put "__subPart__" & ulFormBoundary() into tSubBoundary
-      put pMimeType into tSubMimeTypes
-      put pEncoding into tSubEncodings
-      put  "multipart/mixed; boundary=" & quote & tSubBoundary & quote into pMimeType
-      put empty into pEncoding
-      get ulSubForm(pValue, tFilepath, tSubBoundary, tSubMimeTypes, tSubEncodings)
-      if it is not empty then return it
-      
+    set the itemDel to "/"
+    put item -1 of tFilepath into tFilename
+    set the itemDel to comma
+    put ";" && "filename=" & quote & tFilename & quote after tPartData
+    
+    put url ("binfile:" & tFilepath) into pValue
+    if the result <> empty then return "error" && the result
+    
+    if pMimeType is empty then put "application/octet-stream" into pMimeType
+    if pEncoding is empty then
+      put "Binary" into pEncoding
     end if
+    
   end if
   if pMimeType <> empty then
     put CRLF & "Content-Type:" && pMimeType after tPartData
@@ -4605,7 +4582,7 @@ function ulSubForm @pData, ,pFiles, pSubBoundary, pMimeTypes, pEncodings
     put CRLF & "Content-Transfer-Encoding:" &&  tEnc after pData
     put CRLF & CRLF after pData
     put url ("binfile:" & tFile) after pData
-    if the result <> empty then return "error" & the result
+    if the result <> empty then return "error" && the result
     put CRLF after pData
   end repeat
   put "--" & pSubBoundary & "--" after pData
@@ -4777,9 +4754,15 @@ private command _proxyConfig_SetHTTPProxyUsingWPADAndPAC
       ulLogIt "pac file that wpad found: " & tPacURL
       _proxyConfig_ProcessPACURL tPacURL
       put the result into tError
-      ulLogIt "wpad pac error:" && tError      
    end if
-   
+
+   if tError is empty then
+      ulLogIt "using wpad PAC file"
+      put true into lvUsePACFileForProxy
+   else
+      ulLogIt "wpad pac error:" && tError
+   end if
+
    return tError
 end _proxyConfig_SetHTTPProxyUsingWPADAndPAC
 

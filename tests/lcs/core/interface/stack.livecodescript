@@ -28,3 +28,52 @@ on TestStackNameProp
 	TestAssert "Variable used to set stack name is unmodified", tVar is "Test 1,2,3"
 end TestStackNameProp
 
+on TestCreateControlInCard	
+	create stack "Temp"
+
+	create card "Other"
+	create card "Other2"
+
+	create button "Test" in card "Other"
+
+	TestAssert "test if the button was created in the correct card" , there is a button "Test" of card "Other"
+end TestCreateControlInCard
+
+on TestCreateCardInStack	
+	create stack "Temp"
+	create stack "Temp2"
+
+	create card "Other" in stack "Temp"
+
+
+	TestAssert "test if the card was created in the correct stack" , there is a card "Other" of stack "Temp"
+end TestCreateCardInStack
+
+on TestCreateWidgetInCard
+	create stack "Temp"
+
+	create card "Other" in stack "Temp"
+	create card "Other 2"
+
+	create widget "My Navbar" as "com.livecode.widget.navbar" in card "Other" of stack "Temp"
+
+	TestAssert "test if the widget was created in the correct card", there is a widget "My Navbar" of card "Other" of stack "Temp"
+end TestCreateWidgetInCard
+
+on TestCreateControlInContainerWithDefaultStackLocked
+	create stack "Temp"
+	
+	set the cantModify of stack "Temp" to true
+	
+	create stack "Temp2"
+	
+	set the defaultStack to "Temp2"
+	
+	create group "Bar"
+	
+	set the defaultStack to "Temp"
+	
+	create button "Foo" in group "Bar" of stack "Temp2"
+
+	TestAssert "testing no exceptions were thrown" , true
+end TestCreateControlInContainerWithDefaultStackLocked

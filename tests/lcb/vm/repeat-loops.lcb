@@ -1,0 +1,61 @@
+module __VMTEST.repeat_loops
+
+public handler TestRepeatForUpTo()
+	-- This test ensures that repeat up to loops perform the correct number of
+	-- iterations, motivated by a 'double' issue on emscripten. Rather than
+	-- use numbers to test, we use a string which accumulates a new char for
+	-- each iteration ensuring that the method of testing is entirely distinct
+	-- from what is being tested.
+
+	variable tLoopCount as String
+	variable tCount as Number
+
+	put the empty string into tLoopCount
+	repeat with tCount from 1 up to 12
+		put "X" after tLoopCount
+	end repeat
+	test "from 1 up to 12 gives 12 iterations" when tLoopCount is "XXXXXXXXXXXX"
+
+	put the empty string into tLoopCount
+	repeat with tCount from 1 up to 12 by 2
+		put "X" after tLoopCount
+	end repeat
+	test "from 1 up to 12 by 2 gives 6 iterations" when tLoopCount is "XXXXXX"
+
+	put the empty string into tLoopCount
+	repeat with tCount from 1 up to 12 by 0.5
+		put "X" after tLoopCount
+	end repeat
+	test "from 1 up to 12 by 0.5 gives 24 iterations" when tLoopCount is "XXXXXXXXXXXXXXXXXXXXXXX"
+end handler
+
+public handler TestRepeatForDownTo()
+	-- This test ensures that repeat down to loops perform the correct number of
+	-- iterations, motivated by a 'double' issue on emscripten. Rather than
+	-- use numbers to test, we use a string which accumulates a new char for
+	-- each iteration ensuring that the method of testing is entirely distinct
+	-- from what is being tested.
+
+	variable tLoopCount as String
+	variable tCount as Number
+
+	put the empty string into tLoopCount
+	repeat with tCount from 12 down to 1
+		put "X" after tLoopCount
+	end repeat
+	test "from 12 down to 1 gives 12 iterations" when tLoopCount is "XXXXXXXXXXXX"
+
+	put the empty string into tLoopCount
+	repeat with tCount from 12 down to 1 by -2
+		put "X" after tLoopCount
+	end repeat
+	test "from 12 down to 1 by 2 gives 6 iterations" when tLoopCount is "XXXXXX"
+
+	put the empty string into tLoopCount
+	repeat with tCount from 12 down to 1 by -0.5
+		put "X" after tLoopCount
+	end repeat
+	test "from 12 down to 1 by 0.5 gives 24 iterations" when tLoopCount is "XXXXXXXXXXXXXXXXXXXXXXX"
+end handler
+
+end module

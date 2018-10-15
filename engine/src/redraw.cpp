@@ -131,7 +131,7 @@ MCLayerModeHint MCControl::layer_computeattrs(bool p_commit)
 	// are part of the object.
 	//
 	bool t_is_unadorned;
-	if (getbitmapeffects() == nil && !getstate(CS_SELECTED))
+	if (getbitmapeffects() == nil)
 	{
 		switch(gettype())
 		{
@@ -389,6 +389,14 @@ void MCControl::layer_rectchanged(const MCRectangle& p_old_rect, bool p_redraw_a
 	bool t_is_visible;
 	t_is_visible = isvisible() || showinvisible();
 	
+    /* If the control is visible and selected, make sure we dirty the selection
+     * layer. */
+    if (t_is_visible && getselected())
+    {
+		getcard()->dirtyselection(p_old_rect);
+        getcard()->dirtyselection(rect);
+    }
+    
 	// If we are not a sprite, and are invisible there is nothing to do; otherwise
 	// we must at least try to dump cached updated parts of the sprite.
 	if (!layer_issprite() && !t_is_visible)
@@ -591,14 +599,10 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 	MCRectangle32 t_device_rect;
 	t_device_rect = MCRectangle32GetTransformedBounds(t_dirty_rect, t_transform);
 	
-	// Notify any tilecache of the changes.
-	if (t_tilecache != nil)
+    // Notify any tilecache of the changes
+    // If the layer id is zero, there is nothing to do.
+	if (t_tilecache != nil && t_control -> m_layer_id != 0)
 	{
-		// We must be in tile-cache mode with a top-level control, but if the layer
-		// id is zero, there is nothing to do.
-		if (t_control -> m_layer_id == 0)
-			return;
-
 		// How we handle the layer depends on whether it is a sprite or not.
 		if (!t_control -> layer_issprite())
 		{
@@ -872,7 +876,9 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		// layer below.
 		MCObjptr *t_objptr;
 		t_objptr = p_next;
-		while(t_objptr != p_previous && t_objptr -> getref() -> layer_getid() == p_control -> layer_getid())
+		while(t_objptr != p_previous &&
+              !t_objptr->getref()->layer_issprite() &&
+              t_objptr -> getref() -> layer_getid() == p_control -> layer_getid())
 		{
 			t_objptr -> getref() -> layer_setid(t_before_layer_id);
 			t_objptr = t_objptr -> next();
@@ -902,28 +908,6 @@ void MCCard::layer_setviewport(int32_t p_x, int32_t p_y, int32_t p_width, int32_
 }
 	else
 		layer_dirtyrect(rect);
-}
-
-void MCCard::layer_selectedrectchanged(const MCRectangle& p_old_rect, const MCRectangle& p_new_rect)
-{
-	MCTileCacheRef t_tilecache;
-	t_tilecache = getstack() -> view_gettilecache();
-
-	if (t_tilecache != nil)
-	{
-		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
-		// IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
-		MCGAffineTransform t_transform;
-		t_transform = getstack()->getdevicetransform();
-		
-		MCRectangle32 t_new_device_rect, t_old_device_rect;
-		t_new_device_rect = MCRectangle32GetTransformedBounds(p_new_rect, t_transform);
-		t_old_device_rect = MCRectangle32GetTransformedBounds(p_old_rect, t_transform);
-		MCTileCacheReshapeScenery(t_tilecache, m_fg_layer_id, t_old_device_rect, t_new_device_rect);
-	}
-
-	layer_dirtyrect(p_old_rect);
-	layer_dirtyrect(p_new_rect);
 }
 
 void MCCard::layer_dirtyrect(const MCRectangle& p_dirty_rect)
@@ -957,11 +941,11 @@ static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback
 	MCGContextConcatCTM(p_target, t_transform);
 	
 	MCGraphicsContext *t_gfx_context;
-	/* UNCHECKED */ t_gfx_context = new MCGraphicsContext(p_target);
+	/* UNCHECKED */ t_gfx_context = new (nothrow) MCGraphicsContext(p_target);
 	
 	MCRectangle t_user_rect;
 	t_user_rect = MCRectangleGetTransformedBounds(p_rectangle, MCGAffineTransformInvert(t_transform));
-	
+    
 	bool t_success;
 	t_success = p_callback(p_context, t_gfx_context, t_user_rect);
 	
@@ -1016,6 +1000,8 @@ static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target,
 {
 	MCControl *t_control;
 	t_control = (MCControl *)p_context;
+    
+    p_target->setclip(t_control->getstack()->getvisiblerect());
 
 	// IM-2014-07-02: [[ GraphicsPerformance ]] Use the redraw() method instead of 
 	// reproducing the visibility tests and context clipping here.
@@ -1033,16 +1019,13 @@ bool MCCard::tilecache_render_foreground(void *p_context, MCContext *p_target, c
 {
 	MCCard *t_card;
 	t_card = (MCCard *)p_context;
-
-	// IM-2014-07-02: [[ GraphicsPerformance ]] Remove unnecessary setclip call - p_dirty is already the bounds of the clip.
 	
 	p_target -> setfunction(GXcopy);
 	p_target -> setopacity(255);
-
-	// IM-2013-09-13: [[ RefactorGraphics ]] Use shared code to render card foreground
-	t_card -> drawselectionrect(p_target);
-
-    t_card -> drawselectedchildren(p_target);
+    
+    t_card -> drawcardborder(p_target, p_dirty);
+    t_card -> drawselection(p_target, p_dirty);
+    
 	return true;
 }
 
@@ -1094,29 +1077,17 @@ void MCCard::render(void)
 	MCRectangle t_visible_rect;
 	t_visible_rect = getstack()->getvisiblerect();
     
-    MCRectangle t_foreground_region;
-    t_foreground_region = selrect;
-    
-    // Recursively update the redraw region for selected children
-    bool t_child_selected;
-    t_child_selected = updatechildselectedrect(t_foreground_region);
-    
-	if (getstate(CS_SIZE) || t_child_selected)
-	{
-		MCTileCacheLayer t_fg_layer;
-		t_fg_layer . id = m_fg_layer_id;
-		t_fg_layer . region = MCRectangle32GetTransformedBounds(t_foreground_region, t_transform);
-		t_fg_layer . clip = MCRectangle32GetTransformedBounds(t_visible_rect, t_transform);
-		t_fg_layer . is_opaque = false;
-		t_fg_layer . opacity = 255;
-		t_fg_layer . ink = GXblendSrcOver;
-		t_fg_layer . callback = device_render_foreground;
-		t_fg_layer . context = this;
-		MCTileCacheRenderScenery(t_tiler, t_fg_layer);
-		m_fg_layer_id = t_fg_layer . id;
-	}
-	else
-		m_fg_layer_id = 0;
+    MCTileCacheLayer t_fg_layer;
+    t_fg_layer . id = m_fg_layer_id;
+    t_fg_layer . region = MCRectangle32GetTransformedBounds(rect, t_transform);
+    t_fg_layer . clip = MCRectangle32GetTransformedBounds(t_visible_rect, t_transform);
+    t_fg_layer . is_opaque = false;
+    t_fg_layer . opacity = 255;
+    t_fg_layer . ink = GXblendSrcOver;
+    t_fg_layer . callback = device_render_foreground;
+    t_fg_layer . context = this;
+    MCTileCacheRenderScenery(t_tiler, t_fg_layer);
+    m_fg_layer_id = t_fg_layer . id;
 	
     MCObjptr *t_objptrs;
     t_objptrs = getobjptrs();
@@ -1329,7 +1300,7 @@ void MCRedrawDirtyScreen(void)
 	do
 	{
 		MCStack *sptr = tptr->getstack();
-		sptr -> view_dirty_all();
+		sptr -> dirtyall();
 		tptr = tptr->prev();
 	}
 	while (tptr != t_stacks -> prev());

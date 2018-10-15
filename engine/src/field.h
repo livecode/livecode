@@ -44,6 +44,7 @@ struct MCFieldParagraphStyle
 	bool has_space_above : 1;
 	bool has_space_below : 1;
 	bool has_tabs : 1;
+	bool has_tab_alignments : 1;
 	bool has_background_color : 1;
 	bool has_border_width : 1;
 	bool has_list_indent : 1;
@@ -74,6 +75,8 @@ struct MCFieldParagraphStyle
 	int16_t space_below;
 	uint16_t tab_count;
 	uint16_t *tabs;
+	uindex_t tab_alignment_count;
+	intenum_t *tab_alignments;
 	uint32_t background_color;
 	uint32_t border_color;
     MCStringRef metadata;
@@ -255,8 +258,8 @@ private:
 	static Boolean contiguous;
 	static int2 narrowmargin;
 	static int2 widemargin;
-	static Keytranslations emacs_keys[];
-	static Keytranslations std_keys[];
+	static const Keytranslations emacs_keys[];
+	static const Keytranslations std_keys[];
 	static MCRectangle linkrect;
 	static MCBlock *linkstart;
 	static MCBlock *linkend;
@@ -339,7 +342,7 @@ public:
 	virtual void unlink(MCControl *p_control);
 
 	// MCField functions in fieldf.cc
-	static Field_translations trans_lookup(Keytranslations table[], KeySym key, uint2 modifiers);
+	static Field_translations trans_lookup(const Keytranslations table[], KeySym key, uint2 modifiers);
 	static Field_translations lookup_mac_keybinding(KeySym key, uint32_t modifiers);
 	
     void do_recompute(bool p_force_layout);
@@ -582,6 +585,10 @@ public:
 	//   routine to do both stops and widths.
 	static bool parsetabstops(Properties which, MCStringRef data, uint16_t*& r_tabs, uint16_t& r_tab_count);
 	static void formattabstops(Properties which, uint16_t *tabs, uint16_t tab_count, MCStringRef& r_result);
+
+	// IM-2016-09-22: [[ Bug 14645 ]] Convert tab alignments array to / from string
+	static bool parsetabalignments(MCStringRef p_data, intenum_t *&r_alignments, uindex_t &r_alignment_count);
+	static bool formattabalignments(const intenum_t *p_alignments, uindex_t p_alignment_count, MCStringRef &r_result);
 	
 	// MW-2012-02-22: [[ FieldChars ]] Count the number of characters (not bytes) between
 	//   start and end in the given field.

@@ -30,7 +30,7 @@ public handler TestZStringNative()
 	-- bug 14826
 	-- Check that strings containing embedded nuls can't be
 	-- bridged.
-	MCUnitTestHandlerThrowsBroken(TestZStringNative_Null, "ZStringNative (nulls", "bug 14829")
+	MCUnitTestHandlerThrows(TestZStringNative_Null, "ZStringNative (nulls)")
 end handler
 
 handler TestZStringUTF16_Null()
@@ -48,7 +48,7 @@ public handler TestZStringUTF16()
 	-- bug 14826
 	-- Check that strings containing embedded nuls can't be
 	-- bridged.
-	MCUnitTestHandlerThrowsBroken(TestZStringUTF16_Null, "ZStringUTF16 (nulls)", "bug 14829")
+	MCUnitTestHandlerThrows(TestZStringUTF16_Null, "ZStringUTF16 (nulls)")
 end handler
 
 ----------

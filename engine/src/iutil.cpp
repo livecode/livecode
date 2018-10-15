@@ -147,7 +147,7 @@ void MCImage::addneed(MCObject *p_object)
 	}
 
 	// not found - create new need & add to list
-	/* UNCHECKED */ t_need = new MCImageNeed(p_object);
+	/* UNCHECKED */ t_need = new (nothrow) MCImageNeed(p_object);
 	t_need->Add(m_needs);
 }
 
@@ -306,7 +306,6 @@ void MCImage::copyimage()
 {
 	bool t_success = true;
 	
-	MCImageBitmap *t_bitmap = nil;
 	MCAutoDataRef t_image_data;
 	
 	if (isediting())
@@ -377,7 +376,6 @@ void MCImage::pasteimage(MCImage *clipimage)
 
 void MCImage::compute_gravity(MCRectangle &trect, int2 &xorigin, int2 &yorigin)
 {
-	MCImageBitmap *t_bitmap = nil;
 	uint16_t t_width, t_height;
 	t_width = m_current_width;
 	t_height = m_current_height;
@@ -958,8 +956,6 @@ bool MCImageRotateRotate(MCImageBitmap *p_src, real64_t p_angle, uint32_t p_back
 	t_icosw += -t_isinh + (p_src->width << 7);
 	t_isinw += t_icosh + (p_src->height << 7);
 
-	uint1 t_byte;
-	uint1 t_bit = 0x80;
 	uint8_t *t_dst_ptr = (uint8_t*)r_rotated->data;
 	for (uint2 t_y=0; t_y < t_height; t_y++)
 	{
@@ -1248,7 +1244,6 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data)
 {
 	bool t_success = true;
 	
-	MCImageBitmap *t_bitmap = nil;
 	IO_handle t_stream = nil;
 	
 	void *t_bytes = nil;

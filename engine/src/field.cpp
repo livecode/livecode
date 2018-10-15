@@ -275,7 +275,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
     text_direction= fref.text_direction;
 	if (fref.vscrollbar != NULL)
 	{
-		vscrollbar = new MCScrollbar(*fref.vscrollbar);
+		vscrollbar = new (nothrow) MCScrollbar(*fref.vscrollbar);
 		vscrollbar->setparent(this);
 		vscrollbar->allowmessages(False);
 		vscrollbar->setflag(flags & F_3D, F_3D);
@@ -287,7 +287,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 		vscrollbar = NULL;
 	if (fref.hscrollbar != NULL)
 	{
-		hscrollbar = new MCScrollbar(*fref.hscrollbar);
+		hscrollbar = new (nothrow) MCScrollbar(*fref.hscrollbar);
 		hscrollbar->setparent(this);
 		hscrollbar->allowmessages(False);
 		hscrollbar->setflag(flags & F_3D, F_3D);
@@ -301,7 +301,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 	ntabs = fref.ntabs;
 	if (ntabs)
 	{
-		tabs = new uint2[ntabs];
+		tabs = new (nothrow) uint2[ntabs];
 		uint2 i;
 		for (i = 0 ; i < ntabs ; i++)
 			tabs[i] = fref.tabs[i];
@@ -311,7 +311,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
     nalignments = fref.nalignments;
     if (nalignments)
     {
-        alignments = new intenum_t[ntabs];
+        /* UNCHECKED */ alignments = new (nothrow) intenum_t[nalignments];
         uint2 i;
         for (i = 0; i < nalignments; i++)
             alignments[i] = fref.alignments[i];
@@ -324,7 +324,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 		MCCdata *fptr = fref.fdata;
 		do
 		{
-			MCCdata *newfdata = new MCCdata(*fptr, this);
+			MCCdata *newfdata = new (nothrow) MCCdata(*fptr, this);
 			newfdata->appendto(fdata);
 			fptr = fptr->next();
 		}
@@ -1353,7 +1353,7 @@ Boolean MCField::doubleup(uint2 which)
 
 void MCField::timer(MCNameRef mptr, MCParameter *params)
 {
-	if (MCNameIsEqualTo(mptr, MCM_internal, kMCCompareCaseless))
+	if (MCNameIsEqualToCaseless(mptr, MCM_internal))
 	{
 		if (opened && (state & CS_KFOCUSED)
 		        && !(state & CS_DRAG_TEXT))
@@ -1365,7 +1365,7 @@ void MCField::timer(MCNameRef mptr, MCParameter *params)
 			MCscreen->addtimer(this, MCM_internal, MCblinkrate);
 		}
 	}
-	else if (MCNameIsEqualTo(mptr, MCM_internal2, kMCCompareCaseless))
+	else if (MCNameIsEqualToCaseless(mptr, MCM_internal2))
 		{
 			if (opened)
 			{
@@ -1496,6 +1496,90 @@ void MCField::formattabstops(Properties which, uint16_t *tabs, uint16_t tab_coun
 		}
 	}
     /* UNCHECKED */ MCListCopyAsString(*t_list, r_result);
+}
+
+bool MCField::parsetabalignments(MCStringRef p_data, intenum_t *&r_alignments, uindex_t &r_alignment_count)
+{
+    MCAutoProperListRef t_list;
+    if (!MCStringSplitByDelimiter(p_data, MCSTR(","), kMCStringOptionCompareExact, &t_list))
+		return false;
+
+    uindex_t t_count;
+	t_count = MCProperListGetLength(*t_list);
+    
+    MCAutoArray<intenum_t> t_alignments;
+	if (!t_alignments.Extend(t_count))
+		return false;
+    
+    for (uindex_t i = 0; i < t_count; i++)
+    {
+        MCValueRef t_item;
+		t_item = MCProperListFetchElementAtIndex(*t_list, i);
+
+        if (MCStringIsEqualToCString((MCStringRef)t_item, "left", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignLeft;
+        }
+        else if (MCStringIsEqualToCString((MCStringRef)t_item, "right", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignRight;
+        }
+        else if (MCStringIsEqualToCString((MCStringRef)t_item, "center", kMCStringOptionCompareCaseless))
+        {
+            t_alignments[i] = kMCParagraphTextAlignCenter;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    
+    t_alignments . Take(r_alignments, r_alignment_count);
+	return true;
+}
+
+bool MCField::formattabalignments(const intenum_t *p_alignments, uindex_t p_alignment_count, MCStringRef &r_result)
+{
+    if (p_alignment_count == 0)
+    {
+        r_result = MCValueRetain(kMCEmptyString);
+        return true;
+    }
+    
+    MCAutoListRef t_list;
+    if (!MCListCreateMutable(',', &t_list))
+		return false;
+    
+    for (uindex_t i = 0; i < p_alignment_count; i++)
+    {
+        switch (p_alignments[i])
+        {
+            case kMCParagraphTextAlignLeft:
+                if (!MCListAppendCString(*t_list, "left"))
+					return false;
+                break;
+                
+            case kMCParagraphTextAlignRight:
+                if (!MCListAppendCString(*t_list, "right"))
+					return false;
+                break;
+                
+            case kMCParagraphTextAlignCenter:
+                if (!MCListAppendCString(*t_list, "center"))
+					return false;
+                break;
+                
+            case kMCParagraphTextAlignJustify:
+                if (!MCListAppendCString(*t_list, "justify"))
+					return false;
+                break;
+                
+            default:
+				MCUnreachableReturn(false);
+        }
+    }
+    
+    return MCListCopyAsString(*t_list, r_result);
 }
 
 void MCField::undo(Ustruct *us)
@@ -1665,7 +1749,7 @@ MCControl *MCField::clone(Boolean attach, Object_pos p, bool invisible)
 {
 	if (opened && fdata != NULL)
 		fdata->setparagraphs(paragraphs);
-	MCField *newfield = new MCField(*this);
+	MCField *newfield = new (nothrow) MCField(*this);
 	if (attach)
 		newfield->attach(p, invisible);
 	return newfield;
@@ -1731,7 +1815,7 @@ MCCdata *MCField::getdata(uint4 cardid, Boolean clone)
 		}
 		while (fptr != fdata);
 	}
-	MCCdata *newptr = new MCCdata(cardid);
+	MCCdata *newptr = new (nothrow) MCCdata(cardid);
 	return newptr;
 }
 
@@ -2214,7 +2298,7 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
         // Count the number of chars in this paragraph. The only paragraph
         // with a non-zero si valus is the first paragraph.
         MCRange t_cu_range, t_char_range;
-        t_cu_range = MCRangeMake(si, t_pg->gettextlength() - si);
+        t_cu_range = MCRangeMakeMinMax(si, t_pg->gettextlength());
         // SN-2014-09-11: [[ Bug 13361 ]] We need to remove the codeunits we skipped in the paragraph before counting.
         ei -= si;
         si = 0;
@@ -2235,7 +2319,7 @@ findex_t MCField::countchars(uint32_t p_part_id, findex_t si, findex_t ei)
     if (!t_stop)
     {
         MCRange t_char_range, t_cu_range;
-        t_cu_range = MCRangeMake(si, ei - si);
+        t_cu_range = MCRangeMakeMinMax(si, ei);
         /* UNCHECKED */ MCStringUnmapIndices(t_pg->GetInternalStringRef(), kMCCharChunkTypeGrapheme, t_cu_range, t_char_range);
         t_count += t_char_range.length;
     }
@@ -2439,7 +2523,7 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 
 	// MW-2009-06-14: If the field is opaque, then render the contents with that
 	//   marked.
-	bool t_was_opaque;
+	bool t_was_opaque = false;
 	if (getflag(F_OPAQUE))
 		t_was_opaque = dc -> changeopaque(true);
 	drawrect(dc, dirty);
@@ -2694,7 +2778,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 	{
 		if ((stat = IO_read_uint2(&ntabs, stream)) != IO_NORMAL)
 			return checkloadstat(stat);
-		tabs = new uint2[ntabs];
+		tabs = new (nothrow) uint2[ntabs];
 		uint2 i;
 		for (i = 0 ; i < ntabs ; i++)
 			if ((stat = IO_read_uint2(&tabs[i], stream)) != IO_NORMAL)
@@ -2717,7 +2801,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 			return checkloadstat(stat);
 		if (type == OT_FDATA)
 		{
-			MCCdata *newfdata = new MCCdata;
+			MCCdata *newfdata = new (nothrow) MCCdata;
 			if ((stat = newfdata->load(stream, this, version)) != IO_NORMAL)
 			{
 				delete newfdata;
@@ -2730,7 +2814,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 			{
 				if (flags & F_VSCROLLBAR && vscrollbar == NULL)
 				{
-					vscrollbar = new MCScrollbar;
+					vscrollbar = new (nothrow) MCScrollbar;
 					vscrollbar->setparent(this);
 					if ((stat = vscrollbar->load(stream, version)) != IO_NORMAL)
 						return checkloadstat(stat);
@@ -2742,7 +2826,7 @@ IO_stat MCField::load(IO_handle stream, uint32_t version)
 				else
 					if (flags & F_HSCROLLBAR && hscrollbar == NULL)
 					{
-						hscrollbar = new MCScrollbar;
+						hscrollbar = new (nothrow) MCScrollbar;
 						hscrollbar->setparent(this);
 						if ((stat = hscrollbar->load(stream, version)) != IO_NORMAL)
 							return checkloadstat(stat);
@@ -2791,17 +2875,20 @@ bool MCField::imagechanged(MCImage *p_image, bool p_deleting)
 	bool t_used = false;
 	MCParagraph *t_para = paragraphs;
 
-	do
+	if (t_para != NULL)
 	{
-		t_used = t_para->imagechanged(p_image, p_deleting) || t_used;
-		t_para = t_para->next();
-	}
-	while (t_para != paragraphs);
-
-	if (t_used)
-	{
-		do_recompute(true);
-		layer_redrawall();
+		do
+		{
+			t_used = t_para->imagechanged(p_image, p_deleting) || t_used;
+			t_para = t_para->next();
+		}
+		while (t_para != paragraphs);
+		
+		if (t_used)
+		{
+			do_recompute(true);
+			layer_redrawall();
+		}
 	}
 
 	return t_used;

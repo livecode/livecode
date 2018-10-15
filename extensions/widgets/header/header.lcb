@@ -41,7 +41,9 @@ References: firstItemLeft (property), itemIcons (property),
 
 Name: mouseUp
 Type: message
-Syntax: on mouseUp
+Syntax: mouseUp
+
+Summary: Sent when the header bar is clicked
 
 Example:
 	on mouseUp
@@ -51,6 +53,7 @@ Example:
 	      answer merge("The [[tActionName]] action was clicked")
 	   else
 	      answer "Try clicking on an action"
+	   end if
 	end mouseUp
 
 Description:
@@ -117,13 +120,13 @@ Related: showBorder (property)
 **/
 
 -- declaring the extension as a widget, followed by identifier
-widget com.livecode.widget.headerBar
+widget com.livecode.widget.headerbar
 
 -- dependency declarations
 use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
-use com.livecode.library.iconSVG
+use com.livecode.library.iconsvg
 use com.livecode.library.widgetutils
 
 -- metadata
