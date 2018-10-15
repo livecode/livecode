@@ -131,7 +131,7 @@ void MCStack::setgeom()
 void MCStack::applyscroll(void)
 {
 	int32_t t_new_scroll;
-	t_new_scroll = getnextscroll();
+	t_new_scroll = getnextscroll(false);
 	
 	// If the scroll isn't changing, do nothing.
 	if (t_new_scroll == m_scroll)

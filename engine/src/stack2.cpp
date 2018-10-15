@@ -552,7 +552,8 @@ Boolean MCStack::takewindow(MCStack *sptr)
     
     // sptr has not been closed so may still have a scroll while this stack has been closed
     // so has had clearscroll called on it so scroll will be 0. applyscroll is called later.
-    rect.height += sptr->getscroll();
+    rect.height += getnextscroll(true);
+    m_scroll = 0;
     
 	minwidth = sptr->minwidth;
 	minheight = sptr->minheight;
@@ -954,13 +955,13 @@ void MCStack::updatemenubar()
 
 // MW-2011-09-12: [[ MacScroll ]] Compute the scroll as it should be now taking
 //   into account the menubar and such.
-int32_t MCStack::getnextscroll()
+int32_t MCStack::getnextscroll(bool p_ignore_opened)
 {
 #ifdef _MACOSX
 	MCControl *mbptr;
 	if (!(state & CS_EDIT_MENUS) && hasmenubar()
 	        && (mbptr = curcard->getchild(CT_EXPRESSION, MCNameGetString(getmenubar()), CT_GROUP, CT_UNDEFINED)) != NULL
-	        && mbptr->getopened() && mbptr->isvisible())
+	        && (p_ignore_opened || mbptr->getopened()) && mbptr->isvisible())
 	{
 		MCRectangle r = mbptr->getrect();
 		return (r.y + r.height);
