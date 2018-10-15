@@ -42,7 +42,10 @@ function GetBuildPlatform
 end GetBuildPlatform
 
 private function GetTargetFolder
-	return TestGetIDERepositoryPath() & "/_tests/_build"
+	local tFolder
+	put TestGetIDERepositoryPath() & "/_tests/_build" into tFolder
+	revSBEnsureFolder tFolder
+	return tFolder
 end GetTargetFolder
 
 on StandaloneBuilderCleanupStandalones 

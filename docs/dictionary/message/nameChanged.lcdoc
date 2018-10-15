@@ -31,9 +31,9 @@ The object's new name.
 
 Description:
 Handle the <nameChanged> <message> if you want to make updates when an
-<object|object's> <name> is changed. For example, if you have a <popup
-menu> with the names of <stacks>, the <menu> should be updated when a
-<stack|stack's> name changes.
+<object|object's> <name> is changed. For example, if you have a 
+<popup menu> with the names of <stacks>, the <menu> should be updated 
+when a <stack|stack's> name changes.
 
 The actual change is not triggered by the <nameChanged> <message>, so
 <trap|trapping> the <message> and not allowing it to <pass> does not

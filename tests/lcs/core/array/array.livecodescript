@@ -113,6 +113,25 @@ on TestExtents
    TestAssert "Extents of dimensional arrays", the extents of tDimensionalArray is tExpectedExtents
 end TestExtents
 
+on TestExtentsDecimal
+   local tArray
+   repeat with i=1 to 5
+      put "true" into tArray[i]
+   end repeat
+   put "false" into tArray[1.0]
+   
+   TestAssert "Extents of array with a decimal key", the extents of tArray is empty
+   
+   delete variable tArray[1.0]
+   local tSequenceKeys
+   put __keysForArray(kSequenceArray) into tSequenceKeys
+   TestAssert "Extents of array without a decimal key", the extents of tArray is (item 1 of tSequenceKeys, item -1 of tSequenceKeys)
+   
+   put "false" into tArray[pi]
+   TestAssert "Extents of array with another decimal key", the extents of tArray is empty
+   
+end TestExtentsDecimal
+
 on __testIsAmong pUseIsAmong
    local tArray, tKeyList, tKeys
    

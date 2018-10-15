@@ -20,6 +20,7 @@ import platform
 import re
 import os
 import subprocess
+import shutil
 
 # The set of platforms for which this branch supports automated builds
 BUILDBOT_PLATFORM_TRIPLES = (
@@ -795,6 +796,7 @@ def configure_mac(opts):
     validate_target_arch(opts)
     validate_xcode_sdks(opts)
     validate_java_tools(opts)
+    copy_workspace_settings(opts)
 
     args = core_gyp_args(opts) + ['-Dtarget_sdk=' + opts['XCODE_TARGET_SDK'],
                                   '-Dhost_sdk=' + opts['XCODE_HOST_SDK'],
@@ -820,6 +822,24 @@ def configure(args):
         'ios': configure_ios,
     }
     configure_procs[opts['OS']](opts)
+
+def copy_workspace_settings(opts):
+    validate_gyp_settings(opts)
+    if opts['BUILD_EDITION'] == 'commercial':
+        project = os.path.join(opts['GENERATOR_OUTPUT'], '..', 'livecode-commercial.xcodeproj')
+    else:
+        project = os.path.join(opts['GENERATOR_OUTPUT'], 'livecode.xcodeproj')
+
+    xcshareddata = os.path.join(project, 'project.xcworkspace', 'xcshareddata')
+
+    if not os.path.exists(xcshareddata):
+        os.makedirs(xcshareddata)
+
+    workspacesettingsdest= os.path.join(xcshareddata, 'WorkspaceSettings.xcsettings')
+    workspacesettingssource = os.path.join('config', 'WorkspaceSettings.xcsettings')
+
+    if not os.path.exists(workspacesettingsdest):
+        shutil.copyfile(workspacesettingssource, workspacesettingsdest)
 
 if __name__ == '__main__':
     configure(sys.argv[1:])

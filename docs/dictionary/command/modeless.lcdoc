@@ -24,8 +24,8 @@ stack:
 Any stack reference.
 
 Description:
-Use the <modeless> <command> to display a <stack> as a custom <modeless
-dialog box>.
+Use the <modeless> <command> to display a <stack> as a custom 
+<modeless dialog box>.
 
 A modeless dialog box behaves like an ordinary window, except that it
 cannot be edited. Use modeless dialog boxes to ask the user for

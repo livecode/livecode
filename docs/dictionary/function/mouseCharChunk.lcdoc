@@ -37,10 +37,10 @@ The <mouseCharChunk> <function> only <return|returns> locations in a
 
 The first and second character numbers in the return value are always
 identical, unless the mouse is over a field but there is no text under
-it. In this case, the <mouseCharChunk> <return|returns> a <chunk
-expression> of the form char charNumber to charNumber - 1 of field
-fieldNumber, indicating the start of the <mouseLine>. For example, if
-the mouse is over an empty <field>, the <mouseCharChunk>
+it. In this case, the <mouseCharChunk> <return|returns> a 
+<chunk expression> of the form char charNumber to charNumber - 1 of 
+field fieldNumber, indicating the start of the <mouseLine>. For example, 
+if the mouse is over an empty <field>, the <mouseCharChunk>
 <return|returns> char 1 to 0 of field fieldNumber.
 
 To get the actual character clicked, use the <mouseChar> <function>.

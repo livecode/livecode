@@ -5522,7 +5522,7 @@ static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mo
 		FSRef launchedapp;
 		inLaunchSpec.numDocs = 0;
 		inLaunchSpec.itemRefs = NULL;
-		if (MCStringGetLength(docname))
+		if (!MCStringIsEmpty(docname))
 		{
 			if (MCS_mac_pathtoref(docname, t_doc_fsref) != noErr)
 			{
@@ -5541,7 +5541,7 @@ static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mo
 	}
     
 	errno = connectionInvalid;
-	if (MCStringGetLength(docname))
+	if (!MCStringIsEmpty(docname))
 	{
 		for (i = 0 ; i < MCnprocesses ; i++)
 			if (MCNameIsEqualTo(name, MCprocesses[i].name, kMCStringOptionCompareExact))

@@ -8,7 +8,7 @@ Syntax: print {<stack> | <card> |{marked| <number> |all} cards} [into <pageRect>
 
 Syntax: print {<stack> | <card> |{marked| <number> |all} cards} [from <topLeft> to <bottomRight>]
 
-Syntax: print break&gt;
+Syntax: print break
 
 Summary:
 Prints one or more <card|cards>.
@@ -99,12 +99,12 @@ the size of the cards and on whether you specify a <pageRect>.
 The print <marked> cards form prints all the cards in the current stack
 whose <mark> <property> is set to true.
 
-The print all cards form is equivalent to print this stack.
+The print all cards form is equivalent to `print this stack`.
 
 The print break form forces a page break.
 
->*Note:* If a <card(keyword)> is larger than a full page, the <print
-> command> prints only the first page of the <card(keyword)>, starting
+>*Note:* If a <card(keyword)> is larger than a full page, the <print>
+> command prints only the first page of the <card(keyword)>, starting
 > at the top left corner. To print the entire <card(keyword)>, use the
 > <print>...into pageRect form to scale the card to the page.
 
@@ -122,8 +122,7 @@ set the <lockScreen> <property> to true before you print.
 
 References: revPrintReport (command), answer page setup (command),
 mark (command), cancel printing (command), revBrowserPrint (command),
-open printing (command), print command (command),
-close printing (command), answer printer (command),
+open printing (command), close printing (command), answer printer (command),
 reset printing (command), object (glossary), property (glossary),
 Windows (glossary), Unix (glossary), command (glossary),
 PostScript (glossary), Mac OS (glossary), file (keyword),

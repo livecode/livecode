@@ -1220,8 +1220,8 @@ public class Engine extends View implements EngineApi
 	private Rect getEffectiveWorkarea()
 	{
 		Rect t_workrect = new Rect();
-		getGlobalVisibleRect(t_workrect);
-		return t_workrect;
+        getWindowVisibleDisplayFrame(t_workrect);
+        return t_workrect;
 	}
 
 	public String getEffectiveWorkareaAsString()

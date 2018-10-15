@@ -34,8 +34,8 @@ The period between <mouseStillDown> <message|messages> is specified by
 the <idleRate> and <idleTicks> <properties>.
 
 The <mouseStillDown> <message> is sent only when the <Browse tool> is
-being used. If an <unlock|unlocked> <field> is clicked with <mouse
-button> 1 or 2, no <mouseStillDown> <message> is sent.
+being used. If an <unlock|unlocked> <field> is clicked with 
+<mouse button> 1 or 2, no <mouseStillDown> <message> is sent.
 
 Usually, it is easier and more efficient to use the <mouseMove> <message>
 to track the movement of the mouse while the <mouse button> is being

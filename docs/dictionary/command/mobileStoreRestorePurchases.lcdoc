@@ -42,7 +42,7 @@ pState = "restored"
 > interacting with the Google Play Store in-app purchasing API, where
 > consumables are treated exactly the same way as non-consumables.
 
->*Note:*  : For iOS, non-renewing subscriptions cannot be restored, due
+>*Note:*  For iOS, non-renewing subscriptions cannot be restored, due
 > to technical restrictions imposed by Apple. This means that developers
 > are responsible for restoring non-renewing subscriptions and making
 > them available across all devices the users own.

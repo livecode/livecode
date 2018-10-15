@@ -7,8 +7,8 @@ Type: property
 Syntax: set the multipleHilites of <field> to {true | false}
 
 Summary:
-Specifies whether more than one <line> can be <selected> in a <list
-field>. 
+Specifies whether more than one <line> can be <selected> in a 
+<list field>. 
 
 Associations: field
 
@@ -27,8 +27,8 @@ By default, the <multipleHilites> <property> of newly created
 <field(object)|fields> is set to false.
 
 Description:
-Use the <multipleHilites> <property> to control the <behavior> of <list
-field|list fields>.
+Use the <multipleHilites> <property> to control the <behavior> of 
+<list field|list fields>.
 
 If the <multipleHilites> of a <field(keyword)> is set to true, the user
 can <select> more than one line by dragging within the <field(keyword)>,

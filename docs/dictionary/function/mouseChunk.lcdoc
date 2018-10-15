@@ -37,8 +37,8 @@ The <mouseChunk> <function> only <return|returns> locations in a
 
 The return value reports the word the mouse is over. The startChar is
 the first <character> of the <word>, and the endChar is the last
-<character>. If the <textStyle> of the text is "link", the <return
-value> specifies the entire <grouped text|text group>.
+<character>. If the <textStyle> of the text is "link", the 
+<return value> specifies the entire <grouped text|text group>.
 
 To get the text of the word or text group, use the mouseText <function>.
 

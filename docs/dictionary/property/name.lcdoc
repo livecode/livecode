@@ -69,12 +69,13 @@ named "My Button". The <card> also has a <card control|card field> named
     "/Drive/Folder/Stack.rev" 
 
 
->*Important:*  On <OS X|OS X systems>, <standalone
-> application|standalone applications> are stored as <application
-> bundle|application bundles>. A <application bundle|bundle> behaves
-> like a <file> but is actually a <folder>, and the <main stack> of a
-> <standalone application> is inside this <folder>. The <long> name of a
-> stack in an application is the location of the application inside the
+>*Important:*  On <OS X|OS X systems>, 
+> <standalone application|standalone applications> are stored as 
+> <application bundle|application bundles>. A 
+> <application bundle|bundle> behaves like a <file> but is actually a 
+> <folder>, and the <main stack> of a <standalone application> is 
+> inside this <folder>. The <long> name of a stack in an application 
+> is the location of the application inside the 
 > <application bundle|bundle>, not the <application bundle|bundle's>
 > location. For example, if the <bundle'sfile path> is
 > "/Volumes/Disk/MyApp.app/", the <long> name of the application's main
