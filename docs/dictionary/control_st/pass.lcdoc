@@ -68,13 +68,13 @@ When a handler executes a <pass> <statement>, the <message> is
 <pass|passed> to the next <object(glossary)> in the <message path>. If
 you use the pass...to top form of the <pass> <control structure>, the
 <message> is <pass|passed> directly to the <engine>, without being
-<pass|passed> through any other <object(glossary)> in the <message
-path>. 
+<pass|passed> through any other <object(glossary)> in the 
+<message path>. 
 
 To halt the current handler without passing the message on through the
 message path, use the <exit> <control structure> instead. To halt the
-current <handler> and return a result, use the <return> <control
-structure> instead.
+current <handler> and return a result, use the <return> 
+<control structure> instead.
 
 >*Important:*  You cannot use the <pass> <command> to pass a <message>
 > that was originally sent with the <send> <command>.

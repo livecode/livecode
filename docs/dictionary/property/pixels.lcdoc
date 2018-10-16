@@ -5,8 +5,8 @@ Type: property
 Syntax: pixels
 
 Summary:
-The <pixels> <property> is not implemented and is <reserved
-word|reserved>.
+The <pixels> <property> is not implemented and is 
+<reserved word|reserved>.
 
 Associations: image
 
