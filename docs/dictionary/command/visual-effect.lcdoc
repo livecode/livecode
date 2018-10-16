@@ -18,6 +18,14 @@ visual effect "dissolve"
 go next card
 
 Example:
+-- MacOS only.
+visual effect "CIPageCurlTransition" slow with Angle 1.0 and Radius 70 and Extent "30,30,300,300"
+go next card
+lock screen for visual effect in rect "30,30,300,300"
+go previous card
+unlock screen with visual effect "CIModTransition" with Angle -1 and Radius 70   
+
+Example:
 -- This handler in an object will cause to hide then show 
 --  with a visual effect when clicked.
 on mouseUp
@@ -51,8 +59,8 @@ effectName: One of the following.
   taken from the background color of the current stack, i.e. the card is
   cut out and flipped over the stack
 - an encoded <QuickTime> special effect description generated 
-by <answer effect> 
-- the name of a Core Image Transition Effect
+by <answer effect> (see Changes below)
+- the name of a Core Image Transition Effect (MacOS/iOS only; see note below)
 
 
 speed (enum):
@@ -153,24 +161,27 @@ documentation](http://stpeterandpaul.ca/tiger/documentation/QuickTime/RM/Effects
 
 The Core Image visual effects are only available on MacOS 10.4 and
 later. For technical information about these effects, see [Apple
-Computer' Core Image developer
-documentation](https://developer.apple.com/reference/coreimage). 
+Computer' Core Image developer documentation](https://developer.apple.com/reference/coreimage) 
+and [CICategoryTransition Reference](https://developer.apple.com/library/archive/documentation/GraphicsImaging/Reference/CoreImageFilterReference/index.html#//apple_ref/doc/filter/ci/CIAccordionFoldTransition). 
+The parameters used are the APIs 'Display name' (eg, Angle) rather than the parameter 
+name (inputAngle). Each parameter is optional. The Core Image 'Time' parameter 
+is not supported. Instead use the 'speed' parameter together with 
+the <effectRate> <property> to affect the effect time.
 
 Changes:
 The ability to use <QuickTime> special effects was introduced in version
 1.1. In previous versions, only the built-in visual effects listed in
 the Parameters section were available. 
 
+From LiveCode version 8.1 for Mac, the use of <QuickTime> was deprecated with
+new defaults for <dontUseQT> and <dontUseQTEffects> being set to true on all
+systems from macOS 10.8. Additionally <QuickTime> does not include 64 bit 
+support and therefore can not be supported on macOS 64-bit builds of LiveCode.
+Also, the Windows build of LiveCode version 8.1 deprecates all <QuickTime> 
+features, so setting <dontUseQT> and <dontUseQTEffects> will have no effect.
+
 The ability to use Core Image transition effects together with the
 enhanced syntax for parameter passing was introduced in version 2.6.
-
-The use of <QuickTime> was deprecated in version 8.1 of LiveCode with 
-new defaults for <dontUseQT> and <dontUseQTEffects> as true on all 
-systems apart from pre OS X 10.8. The Windows build of LiveCode no 
-longer supports any <QuickTime> features and setting the <dontUseQT> 
-and <dontUseQTEffects> will have no effect. Additionally <QuickTime> 
-does not include 64 bit support and therefore can not be supported on 
-OS X 64 bit builds of LiveCode.
 
 References: 
 alwaysBuffer (property), answer effect (command), black (keyword), 
