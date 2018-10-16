@@ -11,7 +11,7 @@ currently explained? Please consider submitting your proposed changes
 directly to the LiveCode repo on GitHub.
 
 Please consult the [documentation style guide](development/docs_style_guide.md)
-and the [documentation format specification](guides/LiveCode Documentation Format Reference.md)
+and the [documentation format specification](guides/LiveCode%20Documentation%20Format%20Reference.md)
 for information on the standards and structure we aim to maintain in our
 documentation.
 
