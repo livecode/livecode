@@ -37,7 +37,7 @@ If two controls overlap, a <mouseEnter> <message> is sent whenever the
 will never receive a <mouseEnter> <message>.
 
 If the mouse button is down when the <mouse pointer> enters the <control>,
-no <mouseEnter> <message> is sent unless the mouse button is released
+the <mouseEnter> <message> is not sent unless the mouse button is released
 while the pointer is still in the <control>.
 
 If a <control> is shown (by changing its visible <property> to true or
