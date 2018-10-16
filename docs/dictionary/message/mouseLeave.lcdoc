@@ -35,11 +35,11 @@ If two controls overlap, a <mouseLeave> <message> is sent whenever the
 <control> that is completely hidden by another <control> on top of it
 will never receive a <mouseLeave> <message>.
 
-If the mouse button is down when the <mouse pointer> leaves the control,
+If the mouse button is down when the <mouse pointer> leaves the <control>,
 the <mouseLeave> <message> is sent once the mouse button has been
 released. 
 
-If a control is hidden (by changing its visible <property> to false or
+If a <control> is hidden (by changing its visible <property> to false or
 using the <hide> <command>), and the <mouse pointer> is over the
 <control> when it is hidden, LiveCode sends a <mouseLeave> <message> to
 the <control>.
