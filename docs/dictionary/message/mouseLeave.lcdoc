@@ -35,8 +35,8 @@ If two controls overlap, a <mouseLeave> <message> is sent whenever the
 <control> that is completely hidden by another <control> on top of it
 will never receive a <mouseLeave> <message>.
 
-If the mouse button is down when the mouse pointer leaves the control,
-the <mouseLeave> <message> is not sent until the mouse button is
+If the mouse button is down when the <mouse pointer> leaves the control,
+the <mouseLeave> <message> is sent once the mouse button has been
 released. 
 
 If a control is hidden (by changing its visible <property> to false or
@@ -44,10 +44,18 @@ using the <hide> <command>), and the <mouse pointer> is over the
 <control> when it is hidden, LiveCode sends a <mouseLeave> <message> to
 the <control>.
 
+>*Note:* Take care when using both <mouseEnter> and <mouseLeave> in the
+> same <control> that an unintentional infinite <loop> may be invoked. 
+> To prevent a <loop>, use a condition in the <mouseLeave> <message> handler
+> to ensure the <mouse pointer> is still outside of the <control> or
+> in the <mouseEnter> <message> to check the <mouse pointer> is still inside
+> the <control>.
+
 References: focus (command), hide (command), mouseControl (function),
 property (glossary), Browse tool (glossary), mouse pointer (glossary),
 message (glossary), command (glossary), control (glossary),
-object (glossary), mouseWithin (message)
+object (glossary), mouseWithin (message), mouseEnter (message),
+loop (glossary)
 
 Tags: ui
 
