@@ -55,8 +55,8 @@ use the form:
 > private_key.pem and the public key in public_key.pem.
 
 For more information on these utilities see
-http://www.openssl.org/docs/apps/rsa.html and
-http://www.openssl.org/docs/apps/genrsa.html. 
+https://www.openssl.org/docs/manmaster/man1/rsa.html and
+https://www.openssl.org/docs/manmaster/man1/genrsa.html.
 
 References: decrypt (command), encrypt (command),
 encrypt using rsa (command)
