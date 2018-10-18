@@ -5,9 +5,9 @@ Synonyms: scheme, url scheme
 Type: glossary
 
 Description:
-A type of `<URL>`, specified by the part of the `<URL>` before the "://".
-URL schemes supported by LiveCode include `<http>`, `<ftp>`, `<file>`,
-`<resfile>`, and `<binfile>`.
+A type of <URL(glossary)>, specified by the part of the <URL(glossary)> before the "://".
+<URL(glossary)> schemes supported by LiveCode include <http(keyword)>, <ftp(keyword)>, <file(keyword)>,
+<resfile(keyword)>, and <binfile(keyword)>.
 
 References: URL (glossary), FTP (glossary), file (glossary),
 binfile (keyword), HTTP (glossary), resfile (keyword)
