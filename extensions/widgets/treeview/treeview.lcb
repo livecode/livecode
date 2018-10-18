@@ -83,7 +83,7 @@ use com.livecode.library.widgetutils
 use com.livecode.foreign
 
 metadata author is "LiveCode"
-metadata version is "2.1.0"
+metadata version is "2.2.0"
 metadata title is "Tree View"
 metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1s-6.3-14.1-14.1-14.1c-6.4,0-11.8,4.3-13.5,10.1h-10v-16.1c8.4-1.8,14.8-9.3,14.8-18.3c0-10.4-8.4-18.8-18.8-18.8s-18.8,8.4-18.8,18.8c0,9,6.3,16.5,14.7,18.3v58.8h18c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1S160.2,249.7,152.4,249.7z M128.7,202h-7.5v-7.5h-7.5V187h7.5v-7.5h7.5v7.5h7.5v7.5h-7.5V202z"
 metadata _ide is "true"
@@ -103,6 +103,23 @@ The arrayData is the data currently being displayed by the tree view widget.
 
 property arrayData 					get getArrayData 				set setArrayData
 metadata arrayData.label is "Array data"
+
+/**
+Syntax: set the foldedArrayData of <widget> to <pArray>
+Syntax: get the foldedArrayData of <widget>
+Summary: The array being displayed by the widget
+
+Parameters:
+pArray (array): The array data.
+
+Description:
+The arrayData is the data currently being displayed by the tree view widget.
+Setting the arrayData using the foldedArrayData property will reset the fold 
+state to fold all elements.
+**/
+
+property foldedArrayData 					get getFoldedArrayData			set setFoldedArrayData
+metadata foldedArrayData.user_visible is "false"
 
 /**
 Syntax: set the hilitedElement of <widget> to <pPath>
@@ -427,6 +444,8 @@ private variable mRecalculate as Boolean
 private variable mUpdateSeparator as Boolean
 private variable mUpdateDataList as Boolean
 private variable mRecalculateFit as Boolean
+private variable mRedraw as Boolean
+private variable mFoldChanged as Boolean
 
 private variable mAlternateRowBackgrounds as Boolean
 
@@ -520,6 +539,8 @@ public handler OnCreate() returns nothing
 	put true into mUpdateDataList
 	put true into mUpdateSeparator
 	put true into mRecalculateFit
+	put true into mRedraw
+	put false into mFoldChanged
 	
 	put false into mShowSeparator
 	put 0.5 into mSeparatorRatio
@@ -1356,6 +1377,20 @@ private handler getValueOnPath(in pPath as List, in pArray as Array) returns any
 	end if
 end handler
 
+-- Used to validate user input as a valid path
+-- An empty path is generally used to clear the selected row
+private handler pathIsValid(in pPath as List, in pArray as any) returns Boolean
+	if pPath is the empty list or not(pArray is an array) then
+		return false
+	else if (element 1 of pPath) is not among the keys of pArray then
+		return false
+	else if the number of elements in pPath is 1 then
+		return true
+	else
+		return pathIsValid(element 2 to -1 of pPath, pArray[element 1 of pPath])
+	end if
+end handler
+
 // Return the whole stored array
 private handler getArrayData() returns Array
 	return mData
@@ -1685,7 +1720,40 @@ private handler unfoldPath(in pPath as List)
 		// Changing fold state makes a recalculation necessary
 		put true into mRecalculate	
 		put true into mUpdateSeparator
-		redraw all
+		if mRedraw then
+			put false into mFoldChanged
+			redraw all
+		end if
+	end if
+end handler
+
+// Ensure all elements in a path are unfolded
+private handler unfoldFullPath(in pPath as List)
+	variable tTopPath as List
+	if mFirstDataItem > 1 then
+		put mDataList[mFirstDataItem]["path"] into tTopPath
+	end if
+
+	variable tElement as Integer
+	put false into mRedraw
+	repeat with tElement from 1 up to the number of elements in pPath
+		unfoldPath(element 1 to tElement of pPath)
+	end repeat
+	put true into mRedraw
+
+	if mFoldChanged and not(mScrollHilitedElementIntoView) and \
+			mFirstDataItem > 1 and \
+			mDataList[mFirstDataItem]["path"] is not tTopPath then
+		variable tCount as Integer
+		repeat with tCount from mFirstDataItem + 1 up to the number of elements in mDataList
+			if mDataList[tCount]["path"] is tTopPath then
+				variable tViewCount as Integer
+				put the ceiling of (mViewHeight / mRowHeight) into tViewCount
+				put 1 into mFirstDataItem
+				ensureElementInView(tCount + tViewCount - 1)
+				exit repeat
+			end if
+		end repeat
 	end if
 end handler
 
@@ -1713,18 +1781,16 @@ private handler selectPath(in pPath as List)
 	end if
 
 	if mSelectedElement is nothing or tPathNotAlreadySelected or \
-         mScrollHilitedElementIntoView then
-      if pPath is not the empty list and \
-            not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
-         put nothing into mSelectedElement
-      end if
-      if tPathNotAlreadySelected then
-         post "hiliteChanged"
-      end if
-      redraw all
+			mScrollHilitedElementIntoView or mFoldChanged then
+		put false into mFoldChanged
+		if not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
+			put nothing into mSelectedElement
+		end if
+		if tPathNotAlreadySelected then
+			post "hiliteChanged"
+		end if
+		redraw all
 	end if
-		
-	
 end handler
 
 // Unselect the key at the target path
@@ -1809,13 +1875,21 @@ private handler applyFoldStateKey(in pKey as String, in pLevel as Integer, in pS
 		if tElement["key"] is pKey and pLevel is tElement["indent"] then
 			// Either splice in the below elements
 			if pFoldState["folded"] is false then
-				put false into xList[tCount]["folded"] 
+				
+				if "folded" is not among the keys of xList[tCount] then
+					put true into xList[tCount]["folded"]
+				end if
+				
+				if xList[tCount]["folded"] then
+					put false into xList[tCount]["folded"]
+					put true into mFoldChanged
+				
+					splice convertArrayToList(pArray, pLevel + 1, tElement["path"]) after element tCount of xList
 			
-				splice convertArrayToList(pArray, pLevel + 1, tElement["path"]) after element tCount of xList
-		
-				// Apply the fold state on the subelements
-				if "array" is among the keys of pFoldState then
-					applyFoldState(pLevel + 1, tCount, pFoldState["array"], pArray, xList)
+					// Apply the fold state on the subelements
+					if "array" is among the keys of pFoldState then
+						applyFoldState(pLevel + 1, tCount, pFoldState["array"], pArray, xList)
+					end if
 				end if
 			// or delete them
 			else
@@ -1865,6 +1939,17 @@ private handler setArrayData(in pData as Array) returns nothing
 	redraw all
 end handler
 
+private handler getFoldedArrayData() returns Array
+	put the empty array into mFoldState
+	setArrayData(mData)
+	return mData
+end handler
+
+private handler setFoldedArrayData(in pData as Array) returns nothing
+	put the empty array into mFoldState
+	setArrayData(pData)
+end handler
+
 private handler setFrameBorder(in pFrameBorder as Boolean) returns nothing
 	put pFrameBorder into mFrameBorder
 	redraw all
@@ -1873,7 +1958,14 @@ end handler
 private handler setSelectedElement(in pElement as String)
 	variable tPath as List
 	split pElement by mPathDelimiter into tPath
-	selectPath(tPath)
+	if pathIsValid(tPath, mData) then
+		if the number of elements in tPath > 1 then
+			unfoldFullPath(element 1 to -2 of tPath)
+		end if
+		selectPath(tPath)
+	else
+		unselectPath(mSelectedElement)
+	end if
 end handler
 
 private handler getSelectedElement() returns String
