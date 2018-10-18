@@ -46,12 +46,12 @@ requirements:
 ## Mac
 The Mac engine supports:
 
-* 10.9.x (Mavericks) on Intel
-* 10.10.x (Yosemite) on Intel
-* 10.11.x (El Capitan) on Intel
-* 10.12.x (Sierra) on Intel
-* 10.13.x (High Sierra) on Intel
-* 10.14.x (Mojave) on Intel
+* 10.9.x (Mavericks)
+* 10.10.x (Yosemite)
+* 10.11.x (El Capitan)
+* 10.12.x (Sierra)
+* 10.13.x (High Sierra)
+* 10.14.x (Mojave)
 
 ## iOS
 iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcode is installed and has been set in LiveCode *Preferences* (in the *Mobile Support* pane).
