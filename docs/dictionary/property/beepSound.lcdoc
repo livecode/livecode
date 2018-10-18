@@ -25,6 +25,16 @@ set the beepSound to "internal"
 Example:
 set the beepSound to "vibrate"
 
+Example:
+-- on iOS there is no default beep sound, so you have to set one.
+on preopencard
+   set the beepsound to getBeepSound()
+end preopencard
+
+function getBeepSound
+   return specialFolderPath("resources") & slash & "myBeepSound.m4a"
+end getBeepSound
+
 Value:
 (enum): A string describing the beep method.
 
@@ -47,6 +57,10 @@ method specified by the <beepSound> property.
 >*Note:* The iPhone does not have a default system alert sound so if a
 > sounds is required one must be specified by using the <beepSound>
 > property. 
+> On iOS, there is no default beep sound, so you have to set one.
+> The sound file has to be included in the 'Copy Files' section of the
+> standalone application settings.
+>The file type must be m4a, other file types e.g. mp3 are not supported.
 
 >*Important:* If you use beep with <beepSound> set to "internal" be sure
 > to test your program on the machines you will be running it on. Some
