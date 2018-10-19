@@ -44,9 +44,8 @@ any parameters given to the JavaScript function.
 A LiveCode card has the following handler:
 
     on myLiveCodeHandler pID, pArg1, pArg2
-
-    answer "Browser ID" && pID &&
-    "called myLiveCodeHandler with arguments" && pArg1 && "and" && pArg2
+        answer "Browser ID" && pID &&
+        "called myLiveCodeHandler with arguments" && pArg1 && "and" && pArg2
     end myLiveCodeHandler
 
 
@@ -60,8 +59,7 @@ handler via the registered function:
 
 
     if (tIsRevBrowser)
-
-    liveCode.myBrowserHandler(tValue1, tValue2);
+        liveCode.myBrowserHandler(tValue1, tValue2);
 
 
 References: revBrowserStop (command), revBrowserPrint (command),

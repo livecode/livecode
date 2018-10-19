@@ -7,8 +7,7 @@ Type: function
 Syntax: revDatabaseColumnTypes(<recordSetID>)
 
 Summary:
-<return|Returns> the data types of the columns in a <record set
-(database cursor)(glossary)>.
+<return|Returns> the data types of the columns in a <record set>.
 
 Associations: database library
 
@@ -35,8 +34,7 @@ was created.
 
 Returns:
 The <revDatabaseColumnTypes> <function> returns a list of data types,
-one for each <column> in the <record set (database cursor)|record set>,
-separated by commas.
+one for each <column> in the <record set>, separated by commas.
 
 Description:
 Use the <revDatabaseColumnTypes> <function> to find out the data type of
@@ -83,7 +81,7 @@ References: function (control structure),
 revDatabaseColumnNames (function), revDatabaseColumnLengths (function),
 revDatabaseType (function), LiveCode custom library (glossary),
 return (glossary), binary file (glossary),
-record set (database cursor) (glossary),
+record set (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), column (glossary),
 database field (glossary), BLOB (glossary), field (keyword),

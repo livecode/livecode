@@ -5,7 +5,7 @@ Type: command
 Syntax: revCloseCursor <recordSetID>
 
 Summary:
-Closes a <record set (database cursor)(glossary)>.
+Closes a <redcord set|record set (database cursor)>.
 
 Associations: database library
 
@@ -32,8 +32,8 @@ The result:
 If the closure is not successful, the result is set to an error message.
 
 Description:
-Use the <revCloseCursor> <command> to clean up after using a <record set
-(database cursor)|record set> in a <database>.
+Use the <revCloseCursor> <command> to clean up after using a 
+<record set> in a <database>.
 
 All open record sets are closed automatically when the database they are
 associated with is closed. However, it is recommended practice to
@@ -53,7 +53,7 @@ revdb_disconnect (function), revQueryDatabase (function),
 revDataFromQuery (function), revdb_closecursor (function),
 Standalone Application Settings (glossary), database (glossary),
 standalone application (glossary),
-record set (database cursor) (glossary), command (glossary),
+record set (glossary), command (glossary),
 LiveCode custom library (glossary), Database library (library)
 
 Tags: database

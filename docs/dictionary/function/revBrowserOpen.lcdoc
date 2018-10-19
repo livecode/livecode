@@ -48,9 +48,9 @@ The result:
 If successful this will be an integer browser instance id, if
 unsuccessful, the result will be empty. The browser library functions
 will throw an execution error if they encounter a problem. These can be
-caught by handling the <errorDialog> <message> or by using a <try / catch
-block>. In general there is no need to check the <result>, as nearly all
-the commands and functions put empty into it.
+caught by handling the <errorDialog> <message> or by using a 
+<try|try/catch block>. In general there is no need to check the <result>, 
+as nearly all the commands and functions put empty into it.
 
 Description:
 The <revBrowserOpen> function opens a new browser in the window with the
@@ -72,7 +72,7 @@ and this command now does nothing, but is still included to prevent
 legacy code causing script errors.
 
 There is a sample stack for revBrowser at the following location in the
-LiveCode folder: Resources/Examples/Browser Samper.rev. This stack
+LiveCode folder: Resources/Examples/Browser Sampler.rev. This stack
 demonstrates, with many examples, how to use browser objects in an
 application. 
 
@@ -119,7 +119,7 @@ References: revBrowserStop (command), revBrowserPrint (command),
 revBrowserSet (command), revBrowserMakeTextBigger (command),
 revBrowserNavigate (command), XBrowser_Init (command),
 XBrowser_Focus (command), revBrowserClose (command),
-try / catch block (control structure), result (function),
+try (control structure), result (function),
 browserOver (message), browserNewInstance (message),
 browserNewUrlWindow (message), browserDownloadRequest (message),
 errorDialog (message), message (glossary), browserNavigateCompleteFrame (message)
