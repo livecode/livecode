@@ -1,0 +1,1 @@
+# Fix application lockup when invoking a handler from the browser widget on iOS 12
