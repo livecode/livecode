@@ -1,0 +1,1 @@
+# Fix display update issues on iOS 12 when not using accelerated rendering
