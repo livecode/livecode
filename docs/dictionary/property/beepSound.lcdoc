@@ -57,7 +57,7 @@ method specified by the <beepSound> property.
 > On iOS, there is no default beep sound, so you have to set one.
 > The sound file has to be included in the 'Copy Files' section of the
 > standalone application settings.
->The file type must be m4a, other file types e.g. mp3 are not supported.
+>The audio file type must be m4a; other file types such as mp3 are not supported.
 
 >*Important:* If you use beep with <beepSound> set to "internal" be sure
 > to test your program on the machines you will be running it on. Some
