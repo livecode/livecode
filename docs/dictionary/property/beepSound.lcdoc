@@ -28,9 +28,10 @@ set the beepSound to "vibrate"
 Example:
 -- on iOS there is no default beep sound, so you have to set one.
 on preopencard
+    local tBeepPath
     put specialFolderPath("resources") & "/myBeepSound.m4a" into tBeepPath
     set the beepsound to tBeepPath
- end preopencard
+end preopencard
 
 Value:
 (enum): A string describing the beep method.
