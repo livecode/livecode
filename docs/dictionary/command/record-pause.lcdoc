@@ -21,8 +21,8 @@ end if
 Description:
 Use the <record pause> command to pause a recording being made. 
 
-The <record pause> command pauses a recording started with the <record
-sound> command.
+The <record pause> command pauses a recording started with the 
+<record sound> command.
 
 The <recording> property remains true while a recording is paused.
 

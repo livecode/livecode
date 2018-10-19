@@ -27,11 +27,8 @@ Returns (enum):
 The <recordCompressionTypes> <function> <return|returns> a list of
 available audio <codec|codecs>, one per <line>. Each <line> consists of
 two <items> :
-
-        - the codec's name
-
-
--   the codec's four: character identifier
+- the codec's name
+- the codec's four: character identifier
 
 
 Description:

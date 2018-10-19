@@ -22,8 +22,8 @@ Description:
 Use the <record resume> command to resume a recording that has been
 paused. 
 
-The <record resume> command resumes a recording paused with the <record
-pause> command.
+The <record resume> command resumes a recording paused with the 
+<record pause> command.
 
 References: record pause (command), record sound (command),
 stop recording (command), recording (property)
