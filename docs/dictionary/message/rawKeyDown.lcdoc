@@ -28,7 +28,7 @@ The raw keycode of the pressed key.
 
 The result:
 If the <rawKeyDown> <message> is sent as the result of a keypress, the
-<message> is sent to the <active (focused) control(glossary)>, or to the
+<message> is sent to the <active control(glossary)>, or to the
 <current card> if no <control> is <focus|focused>.
 
 Description:
@@ -53,8 +53,8 @@ from being entered in the <field>.
 >*Cross-platform note:*  On <Mac OS|Mac OS systems>, no <message> is
 > sent when a <modifier key> (Shift, Option, Control, or Command) is
 > pressed, unless another key is pressed along with the <modifier key>.
-> Mouse wheels do not send a <rawKeyDown> <message> on <Mac OS|Mac OS
-> systems>. 
+> Mouse wheels do not send a <rawKeyDown> <message> on 
+> <Mac OS|Mac OS systems>. 
 
 References: pass (control structure), keysDown (function),
 object (glossary), pass (glossary), control (glossary), focus (glossary),
