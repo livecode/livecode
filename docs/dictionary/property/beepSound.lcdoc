@@ -28,12 +28,9 @@ set the beepSound to "vibrate"
 Example:
 -- on iOS there is no default beep sound, so you have to set one.
 on preopencard
-   set the beepsound to getBeepSound()
-end preopencard
-
-function getBeepSound
-   return specialFolderPath("resources") & slash & "myBeepSound.m4a"
-end getBeepSound
+    put specialFolderPath("resources") & "/myBeepSound.m4a" into tBeepPath
+    set the beepsound to tBeepPath
+ end preopencard
 
 Value:
 (enum): A string describing the beep method.
@@ -55,7 +52,7 @@ method specified by the <beepSound> property.
 > method is used regardless of its setting.
 
 >*Note:* The iPhone does not have a default system alert sound so if a
-> sounds is required one must be specified by using the <beepSound>
+> sound is required one must be specified using the <beepSound>
 > property. 
 > On iOS, there is no default beep sound, so you have to set one.
 > The sound file has to be included in the 'Copy Files' section of the
