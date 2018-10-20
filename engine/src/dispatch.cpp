@@ -1705,7 +1705,7 @@ MCDragAction MCDispatch::wmdragdrop(Window w)
 		dodrop(false);
 
     // The drag operation has ended. Remove the drag board contents.
-	MCmousestackptr = nil;
+    MCmousestackptr = findstackd(w);
     MCdragboard->Clear();
 	m_drag_target = false;
 
