@@ -22,7 +22,7 @@ You need a set of Visual Studio build tools and SDKS.  You can use either:
 
 
 - An appropriate edition of the
-  [Microsoft Visual Studio 2015](https://visualstudio.com/downloads/) IDE
+  [Microsoft Visual Studio 2015](https://visualstudio.microsoft.com/vs/older-downloads/) IDE
 
 In addition, you should install
 [Microsoft Speech SDK 5.1](https://www.microsoft.com/en-gb/download/details.aspx?id=10121)
