@@ -600,13 +600,14 @@ void MCStack::constrain(intptr_t lp)
 		mmptr -> ptMaxPosition . x = t_workarea . x - t_viewport . x;
 		mmptr -> ptMaxPosition . y = t_workarea . y - t_viewport . y;
 	}
+		
+	MCGFloat t_screenPixelScale = t_display->pixel_scale;
 
-	// MW-2007-07-27: In Windows 98 we need to clamp to 32767...
-	
-	mmptr -> ptMinTrackSize . x = minwidth + dx;
-	mmptr -> ptMinTrackSize . y = minheight + dy;
-	mmptr -> ptMaxTrackSize . x = MCU_min(32767, maxwidth + dx);
-	mmptr -> ptMaxTrackSize . y = MCU_min(32767, maxheight + dy);
+	// AB-2018-10-23: We no longer support Windows 98 -> remove clamping
+	mmptr -> ptMinTrackSize . x = minwidth * t_screenPixelScale + dx;
+	mmptr -> ptMinTrackSize . y = minheight * t_screenPixelScale + dy;
+	mmptr -> ptMaxTrackSize . x = maxwidth * t_screenPixelScale + dx;
+	mmptr -> ptMaxTrackSize . y = maxheight * t_screenPixelScale + dy;
 
 }
 
