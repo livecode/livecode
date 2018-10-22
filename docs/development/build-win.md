@@ -16,7 +16,7 @@ You will need to install [git for Windows](https://git-scm.com/download/win) in 
 
 You need a set of Visual Studio build tools and SDKS.  You can use either:
 
-- [Microsoft Visual Studio 2015 Build Tools](http://landinghub.visualstudio.com/visual-cpp-build-tools),
+- [Microsoft Visual Studio 2015 Build Tools](https://www.microsoft.com/en-us/download/details.aspx?id=48159),
   which contains _only_ the compilers and libraries, without any user
   interface; select everything in the installer
 
