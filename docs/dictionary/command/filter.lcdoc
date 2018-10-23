@@ -71,19 +71,16 @@ Description:
 Use the <filter> command to pick specific lines, items, keys or elements
 in a container or expression.
 
-The <filter>...with form and the <filter>...matching form retain the
+The '<filter>...with' form and the '<filter>...matching' form retain the
 lines, items, keys or elements that contain a match for the specified
 <filterPattern>.
 
-The <filter>...without form and the <filter>...not matching form discard
+The '<filter>...without' form and the '<filter>...not matching' form discard
 the lines, items, keys or elements that do not contain a match for the
 specified <filterPattern>. 
 
 If you don't specify lines, items, keys or elements then lines are
 filtered by default.
-
-If a regex pattern is specified, the <filterPattern> evaluates to a
-regular expression.
 
 If a wildcard <filterPattern> is specified, the <filterPattern> consists
 of a string of characters to match, which may be combined with any
@@ -111,11 +108,16 @@ You can match instances of special chars as follows:
 
 
 For example, the wildcard <filterPattern> `[[]A]*` will match any
-string beginning with `[A]`.
+string beginning with `[A]`. Broken down, there is '[[]' which equates
+to an open square bracket '[' followed by 'A]*' as the closing square
+bracket is not a special character.
 
 The three bracketed forms can be combined to create more complex
 character classes, for example the pattern [!abcA-C] matches any
 character which is not a, b or c (upper or lower case)
+
+If 'regex pattern' is specified, the <filterPattern> evaluates to a
+regular expression.
 
 If no <filterPattern> type is specified, the <filterPattern> is handled
 as a wildcard.
