@@ -54,7 +54,7 @@ The following <url scheme|URL schemes> are supported:
 > application to open and the requesting application to be quit. The
 > application will receive a shutdown message before this happens.
 
->*Android:* files in specialFolderPath("engine") and specialFolderPath("resources”)
+>*Android:* files in specialFolderPath("engine") and specialFolderPath("resources")
 > cannot be accessed via <launch url>.  
 
 References: revGoURL (command), launch (command),
