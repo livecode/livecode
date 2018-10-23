@@ -140,3 +140,23 @@ on TestFilesOfTilde
    TestSkipIfNot "platform", "MacOS,Linux"
 	TestAssert "files(~) is the same as files($HOME)", files($HOME) is files("~")
 end TestFilesOfTilde
+
+on TestResolveFolderAlias
+    if the platform is "Win32" then
+    	local tFolder
+	    put the longfilepath of the defaultFolder into tFolder
+
+	    local tFolderAlias
+	    put tFolder & ".lnk" into tFolderAlias
+
+	    create alias tFolderAlias to folder tFolder
+
+	    local tRef
+	    put the aliasReference of tFolderAlias into tRef
+
+	    TestAssert "test", tRef is not empty
+	
+	    delete file tFolderAlias
+    end if
+end TestResolveFolderAlias
+
