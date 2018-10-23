@@ -114,8 +114,6 @@ The print all cards form is equivalent to `print this stack`.
 
 The print break form forces a page break.
 
-If you
-
 >*Note:* If a <card(keyword)> is larger than a full page, the <print>
 > command prints only the first page of the <card(keyword)>, starting
 > at the top left corner. To print the entire <card(keyword)>, use the
