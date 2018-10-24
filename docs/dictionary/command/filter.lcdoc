@@ -2,7 +2,7 @@ Name: filter
 
 Type: command
 
-Syntax: filter [{lines | items | keys | element| without | [not] matching} [<patternType>] <filterPattern> [is} of] <filterSource> {with nto <targetContainer>]
+Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} [<patternType>] <filterPattern> [into <targetContainer>]
 
 Summary:
 Filters each line, item, key or element in a source container or
