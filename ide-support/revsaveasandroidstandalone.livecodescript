@@ -1024,6 +1024,7 @@ private function escapeLabel pLabel
    replace "@" with "\@" in pLabel
    replace "?" with "\?" in pLabel
    replace "<" with "&lt;" in pLabel
+   replace ">" with "&gt;" in pLabel
    replace "'" with "\'" in pLabel
    replace quote with "\" & quote in pLabel
    return pLabel
