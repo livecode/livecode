@@ -374,12 +374,12 @@ void MCButton::macopenmenu(void)
 	{
 		case WM_COMBO:
 		case WM_OPTION:
-			trect = MCU_recttoroot(MCmousestackptr, rect);
+			trect = MCU_recttoroot(getstack(), rect);
 			tmenux = trect.x;
 			tmenuy = trect.y;
 			break;
 		case WM_PULLDOWN:
-			trect = MCU_recttoroot(MCmousestackptr, rect);
+			trect = MCU_recttoroot(getstack(), rect);
 			tmenux = trect.x;
 			tmenuy = trect.y+trect.height + 1;
 			break;
