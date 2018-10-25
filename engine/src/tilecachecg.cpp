@@ -194,7 +194,45 @@ bool MCTileCacheCoreGraphicsCompositor_BeginLayer(void *p_context, const MCRecta
 			case GXblendExclusion: 
 				t_blend_mode = kCGBlendModeExclusion;
 				break;
-			default:
+            case GXblendClear:
+            case GXclear:
+                t_blend_mode = kCGBlendModeClear;
+                break;
+            case GXblendSrc:
+            case GXblendSrcOver:
+            case GXcopy:
+                t_blend_mode = kCGBlendModeCopy;
+                break;
+            case GXblendDst:
+            case GXblendDstOver:
+                t_blend_mode = kCGBlendModeDestinationOver;
+                break;
+            case GXblendSrcIn:
+                t_blend_mode = kCGBlendModeSourceIn;
+                break;
+            case GXblendDstIn:
+                t_blend_mode = kCGBlendModeDestinationIn;
+                break;
+            case GXblendSrcOut:
+                t_blend_mode = kCGBlendModeSourceOut;
+                break;
+            case GXblendDstOut:
+                t_blend_mode = kCGBlendModeDestinationOut;
+                break;
+            case GXblendSrcAtop:
+                t_blend_mode = kCGBlendModeSourceAtop;
+                break;
+            case GXblendDstAtop:
+                t_blend_mode = kCGBlendModeDestinationAtop;
+                break;
+            case GXblendXor:
+            case GXxor:
+                t_blend_mode = kCGBlendModeXOR;
+                break;
+            case GXblendPlus:
+                t_blend_mode = kCGBlendModePlusLighter;
+                break;
+            default:
 				t_blend_mode = kCGBlendModeNormal;
 				break;
 		}
