@@ -384,7 +384,7 @@ void MCButton::macopenmenu(void)
 			tmenuy = trect.y+trect.height + 1;
 			break;
 		case WM_CASCADE:
-			trect = MCU_recttoroot(MCmousestackptr, rect);
+			trect = MCU_recttoroot(getstack(), rect);
 			tmenux = trect.x + trect.width + 1;
 			tmenuy = trect.y;
 			break;
