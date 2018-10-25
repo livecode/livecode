@@ -26,9 +26,9 @@ Returns:
 The <exp1> function <return|returns> a positive number.
 
 Description:
-Use the exp1 function to obtain the power (number-1) of e, that is 
-e^(number-1). This is the inverse function of ln1, that is 
-exp1(ln1(x)) = x and ln1(exp1(x)) = x for any number x.
+Use the <exp1> function to obtain a power of e minus 1, e^ <number> - 1.
+This is the inverse function of ln1, that is exp1(ln1(x)) = x and 
+ln1(exp1(x)) = x for any number x.
 
 The transcendental number e appears in many mathematical formulas.
 
