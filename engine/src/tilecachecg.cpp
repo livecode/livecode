@@ -199,8 +199,6 @@ bool MCTileCacheCoreGraphicsCompositor_BeginLayer(void *p_context, const MCRecta
                 t_blend_mode = kCGBlendModeClear;
                 break;
             case GXblendSrc:
-            case GXblendSrcOver:
-            case GXcopy:
                 t_blend_mode = kCGBlendModeCopy;
                 break;
             case GXblendDst:
@@ -232,6 +230,8 @@ bool MCTileCacheCoreGraphicsCompositor_BeginLayer(void *p_context, const MCRecta
             case GXblendPlus:
                 t_blend_mode = kCGBlendModePlusLighter;
                 break;
+            case GXblendSrcOver:
+            case GXcopy:
             default:
 				t_blend_mode = kCGBlendModeNormal;
 				break;
