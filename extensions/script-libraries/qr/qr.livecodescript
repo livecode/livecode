@@ -1500,7 +1500,7 @@ An integer value between 1 and 40. It must be lower or equal to pMaxVersion.
 If pMinVersion is not specified then the default value of 1 is used.
 
 pMaxVersion:
-An integer value between 1 and 40. It must be higher or equal to pMaxVersion.
+An integer value between 1 and 40. It must be higher or equal to pMinVersion.
 If pMaxVersion is not specified then the default value of 40 is used.
 
 The result:
