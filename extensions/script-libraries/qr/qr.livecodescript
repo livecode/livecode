@@ -1560,10 +1560,21 @@ command qrCreate pImg, pData, pECC, pSize, pMask, pMinVersion, pMaxVersion
       local tMinVersion
       put 0 into tMinVersion
       
-      if pMinVersion is empty then put 1 into pMinVersion
-      if pMaxVersion is empty then put 40 into pMaxVersion
-      if pMaxVersion  > 40  or pMaxVersion < 1 or pMinVersion < 1 or pMinVersion >40 then throw "allowed values for pMinVersion to pMaxVersion are 1 to 40"
-      if pMinVersion >pMaxVersion then throw "pMinversion must be lower or equal to pMaxVersion"
+      if pMinVersion is empty then 
+         put 1 into pMinVersion
+      end if
+      
+      if pMaxVersion is empty then 
+         put 40 into pMaxVersion
+      end if
+      
+      if pMaxVersion > 40 or pMaxVersion < 1 or pMinVersion < 1 or pMinVersion > 40 then
+         throw "allowed values for pMinVersion to pMaxVersion are 1 to 40"
+      end if
+      
+      if pMinVersion > pMaxVersion then 
+         throw "pMinversion must be lower or equal to pMaxVersion"
+      end if
      
       repeat with tVersion = pMinVersion to pMaxVersion
          local tCCIBits, tBitStreamLength, tErrorWords, tTotalWords, tBitStreamMax, tRemBits
