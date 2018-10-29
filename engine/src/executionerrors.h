@@ -2776,6 +2776,9 @@ enum Exec_errors
     
     // {EE-0909} android permission: bad permission name
     EE_BAD_PERMISSION_NAME,
+
+	// {EE-0910} clipboard: unsupported source object type
+	EE_CLIPBOARD_UNSUPPORTED_OBJ,
     
 };
 

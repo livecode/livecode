@@ -19,6 +19,7 @@
 #include "osspec.h"
 
 #include "globdefs.h"
+#include "globals.h"
 #include "filedefs.h"
 #include "mcio.h"
 #include "imagebitmap.h"
@@ -1246,6 +1247,14 @@ MCDataRef MCWin32RawClipboardItemRep::CopyData() const
     }
     
 	// Update the data cache and return it
+	if (t_data == nullptr)
+	{
+		MCExecContext ctxt(MCdefaultstackptr, nullptr, nullptr);
+
+		ctxt . LegacyThrow(EE_CLIPBOARD_UNSUPPORTED_OBJ);
+	
+		return nullptr;
+	}
 	m_bytes = t_data;
 	return t_data;
 }
