@@ -575,6 +575,9 @@ bool MCTileCacheOpenGLCompositor_EndLayer(void *p_context)
 
 bool MCTileCacheOpenGLCompositor_CompositeTile(void *p_context, int32_t p_x, int32_t p_y, void *p_tile)
 {
+    if (p_tile == nil)
+        return false;
+    
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 
