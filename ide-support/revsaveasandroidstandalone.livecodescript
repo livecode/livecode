@@ -357,7 +357,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       if the result is not empty then
          throw "Cannot find the template Manifest"
       end if
-      replace "${LABEL}" with textEncode(pSettings["android,label"], "utf-8") in tManifest
+      local tEscapedLabel
+      put escapeLabel(pSettings["android,label"]) into tEscapedLabel
+      replace "${LABEL}" with textEncode(tEscapedLabel, "utf-8") in tManifest
       replace "${NAME}" with ".mblandroid" in tManifest
       replace "${IDENTIFIER}" with pSettings["android,identifier"] in tManifest
       replace "${VERSION_NAME}" with pSettings["android,version name"] in tManifest
@@ -382,7 +384,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       replace "${ORIENTATION}" with tInitialOrientation in tManifest
       
       replace "${MIN_SDK_VERSION}" with pSettings["android,minimum version"] in tManifest
-     
+      
       local tUsesFeature, tUsesPermission, tFeatures, tPermissions, tAd
       repeat for each key tFeature in pSettings["android,device capabilities"]
          put "  <uses-feature android:name="&quote&"android."&tFeature&quote&" android:required="&quote&"${REQUIRED}"&quote&" />" into tUsesFeature
@@ -753,7 +755,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       
       local tResourceClasses
       generateResourceClasses tBuildFolder, tResBuildFolder, \
-         tManifestFile, pSettings, tResourceClasses
+            tManifestFile, pSettings, tResourceClasses
       if the result is not empty then
          throw "could not build R.java" & return & the result
       end if
@@ -1017,6 +1019,17 @@ end revSaveAsMobileStandaloneMain
 
 ################################################################################
 
+private function escapeLabel pLabel
+   replace "&" with "&amp;" in pLabel
+   replace "@" with "\@" in pLabel
+   replace "?" with "\?" in pLabel
+   replace "<" with "&lt;" in pLabel
+   replace ">" with "&gt;" in pLabel
+   replace "'" with "\'" in pLabel
+   replace quote with "\" & quote in pLabel
+   return pLabel
+end escapeLabel
+   
 private command processAaptResult @xResult   
    -- MW-2012-07-04: On Linux, 'aapt' can complain about libz version info
    --   so we delete that line from the result before checking for an error.
