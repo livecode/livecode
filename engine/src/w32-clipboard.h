@@ -61,6 +61,11 @@ private:
 	MCWin32RawClipboardItemRep(MCWin32RawClipboardItem* p_parent, const FORMATETC& p_format);
 	MCWin32RawClipboardItemRep(MCWin32RawClipboardItem* p_parent, MCStringRef p_type, MCDataRef p_bytes);
 	~MCWin32RawClipboardItemRep();
+
+
+	virtual MCDataRef CopyGlobalData(STGMEDIUM *p_medium) const;
+	virtual MCDataRef CopyIStreamData(STGMEDIUM *p_medium) const;
+	virtual MCDataRef CopyBitmapData(STGMEDIUM *p_medium) const;
 };
 
 
