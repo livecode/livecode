@@ -1216,6 +1216,11 @@ MCDataRef MCWin32RawClipboardItemRep::CopyBitmapData(STGMEDIUM *p_medium) const
 			MCMemoryDelete(t_pointer);
 		}
 	}
+
+	// Cleanup
+	DeleteDC(t_deviceContext);
+
+
 	return t_data;
 }
 
