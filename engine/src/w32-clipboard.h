@@ -63,9 +63,9 @@ private:
 	~MCWin32RawClipboardItemRep();
 
 
-	virtual MCDataRef CopyGlobalData(STGMEDIUM *p_medium) const;
-	virtual MCDataRef CopyIStreamData(STGMEDIUM *p_medium) const;
-	virtual MCDataRef CopyBitmapData(STGMEDIUM *p_medium) const;
+	MCDataRef CopyGlobalData(STGMEDIUM *p_medium) const;
+	MCDataRef CopyIStreamData(STGMEDIUM *p_medium) const;
+	MCDataRef CopyBitmapData(STGMEDIUM *p_medium) const;
 };
 
 

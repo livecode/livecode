@@ -1173,13 +1173,13 @@ MCDataRef MCWin32RawClipboardItemRep::CopyIStreamData(STGMEDIUM *p_medium) const
 
 MCDataRef MCWin32RawClipboardItemRep::CopyBitmapData(STGMEDIUM *p_medium) const
 {
-	HDC t_deviceContext = CreateCompatibleDC(nullptr);
+	HDC t_device_context = CreateCompatibleDC(nullptr);
 	HBITMAP t_bitmap = p_medium->hBitmap;
 
 	BITMAPINFO t_bitmapInfo = { 0 };
 	t_bitmapInfo.bmiHeader.biSize = sizeof(t_bitmapInfo.bmiHeader);
 
-	if (0 == GetDIBits(t_deviceContext, t_bitmap, 0, 0, nullptr, &t_bitmapInfo, DIB_RGB_COLORS))
+	if (0 == GetDIBits(t_device_context, t_bitmap, 0, 0, nullptr, &t_bitmapInfo, DIB_RGB_COLORS))
 	{
 		// The handle is corrupted
 		return nullptr;
@@ -1195,7 +1195,7 @@ MCDataRef MCWin32RawClipboardItemRep::CopyBitmapData(STGMEDIUM *p_medium) const
 		
 		// We can fit the size of the image into memory
 		// so let us read the data
-		if (0 == GetDIBits(t_deviceContext, 
+		if (0 == GetDIBits(t_device_context, 
 							t_bitmap, 
 							0, 
 							t_bitmapInfo.bmiHeader.biHeight, 
@@ -1211,14 +1211,14 @@ MCDataRef MCWin32RawClipboardItemRep::CopyBitmapData(STGMEDIUM *p_medium) const
 		uindex_t t_length;
 		
 		t_bytes.Take(t_pointer, t_length);
-		if (!MCDataCreateWithBytes(t_pointer, t_length, t_data))
+		if (!MCDataCreateWithBytesAndRelease(t_pointer, t_length, t_data))
 		{
 			MCMemoryDelete(t_pointer);
 		}
 	}
 
 	// Cleanup
-	DeleteDC(t_deviceContext);
+	DeleteDC(t_device_context);
 
 
 	return t_data;
@@ -1246,19 +1246,19 @@ MCDataRef MCWin32RawClipboardItemRep::CopyData() const
 	{
 		case TYMED_HGLOBAL:
 		{
-			t_data = this->CopyGlobalData(&p_medium);
+			t_data = CopyGlobalData(&p_medium);
 			break;
 		}
 
 		case TYMED_ISTREAM:
 		{
-			t_data = this->CopyIStreamData(&p_medium);
+			t_data = CopyIStreamData(&p_medium);
 			break;
 		}
 
 		case TYMED_GDI:
 		{
-			t_data = this->CopyBitmapData(&p_medium);
+			t_data = CopyBitmapData(&p_medium);
 			break;
 		}
 		case TYMED_FILE:
