@@ -105,6 +105,21 @@ property arrayData 					get getArrayData 				set setArrayData
 metadata arrayData.label is "Array data"
 
 /**
+Syntax: set the foldState of <widget> to <pFoldState>
+Syntax: get the foldState of <widget>
+Summary: The fold state of the array being displayed by the widget
+
+Parameters:
+pFoldState (array): The fold state data.
+
+Description:
+The foldState is the fold state currently being displayed by the tree view widget.
+**/
+
+property foldState 					get getFoldState 				set setFoldState
+metadata foldState.user_visible is "false"
+
+/**
 Syntax: set the hilitedElement of <widget> to <pPath>
 Syntax: get the hilitedElement of <widget>
 
@@ -1361,6 +1376,10 @@ private handler getArrayData() returns Array
 	return mData
 end handler
 
+private handler getFoldState() returns Array
+	return mFoldState
+end handler
+
 -- Sorts numerically, converting strings to numbers where possible
 private handler CompareKeysNumeric(in pLeft as any, in pRight as any) returns Integer
 	variable tLeft as optional any
@@ -1842,6 +1861,12 @@ private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pF
 			next repeat
 		end if
 	
+		// If user supplied fold state is invalid
+		if "folded" is not among the keys of pFoldState[tKey] or \
+				not(pFoldState[tKey]["folded"] is a boolean) then
+			next repeat
+		end if
+
 		applyFoldStateKey(tKey, pLevel, pStart, pFoldState[tKey], pArray[tKey], xList)
 	end repeat
 
@@ -1861,6 +1886,12 @@ end handler
 // Replace the existing data wholesale with a new array pData
 private handler setArrayData(in pData as Array) returns nothing
 	put pData into mData
+	put true into mUpdateDataList
+	redraw all
+end handler
+
+private handler setFoldState(in pData as Array) returns nothing
+	put pData into mFoldState
 	put true into mUpdateDataList
 	redraw all
 end handler
