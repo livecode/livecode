@@ -724,7 +724,7 @@ MCDispatch::startup()
 		return IO_ERROR;
 	}
 	
-	if (!MCCapsuleFillFromFile(t_capsule, MCSTR(kMCEmscriptenStartupCapsuleFilename), 4, false))
+	if (!MCCapsuleFillFromFile(t_capsule, MCSTR(kMCEmscriptenStartupCapsuleFilename), 4, true))
 	{
 		MCresult->sets("failed to read startup data file");
 		MCCapsuleClose(t_capsule);
