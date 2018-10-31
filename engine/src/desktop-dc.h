@@ -137,8 +137,8 @@ public:
 	//   desktop changes and will clear the cache when changes occur.
 	virtual bool platform_displayinfocacheable(void);
 	
-	virtual void controlgainedfocus(MCStack *s, uint32_t id);
-	virtual void controllostfocus(MCStack *s, uint32_t id);
+	virtual void controlgainedfocus(MCStack *s, uint32_t id, void *p_native_view);
+	virtual void controllostfocus(MCStack *s, uint32_t id, void *p_native_view);
     
     // MW-2014-04-26: [[ Bug 5545 ]] Override this method to defer to the MCPlatform method.
     virtual void hidecursoruntilmousemoves(void);

@@ -895,6 +895,52 @@ extern "C" MC_DLLEXPORT_DEF void MCWidgetGetMyStackNativeDisplay(void *&r_displa
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecFocusIn(void)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCWidget * t_widget = MCWidgetGetHost(MCcurrentwidget);
+    
+    t_widget->getcard()->kfocusset(t_widget);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecFocusOut(void)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCWidget * t_widget = MCWidgetGetHost(MCcurrentwidget);
+    
+    t_widget->getcard()->kunfocus();
+#ifdef _MOBILE
+    // Make sure the IME is forced closed if explicitly asked to be.
+    MCscreen -> closeIME();
+#endif
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecFocusNext(void)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCWidget * t_widget = MCWidgetGetHost(MCcurrentwidget);
+    
+    t_widget->getcard()->kfocusnext(False);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCWidgetExecFocusPrevious(void)
+{
+    if (!MCWidgetEnsureCurrentWidget())
+        return;
+    
+    MCWidget * t_widget = MCWidgetGetHost(MCcurrentwidget);
+    
+    t_widget->getcard()->kfocusprev(False);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void __MCWidgetDestroy(MCValueRef p_value)
 {
     MCWidgetBase *t_widget;

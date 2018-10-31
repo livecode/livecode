@@ -702,6 +702,22 @@ Window MCScreenDC::get_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCScreenDC::controlgainedfocus(MCStack *s, uint32_t id, void *p_native_view)
+{
+    if (nullptr != p_native_view)
+    {
+        bool t_success = false;
+        MCAndroidObjectRemoteCall(jobject(p_native_view), "requestFocus", "b", &t_success);
+    }
+}
+
+void MCScreenDC::controllostfocus(MCStack *s, uint32_t id, void *p_native_view)
+{
+    
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static MCRectangle android_view_get_bounds(void)
 {
 	return MCRectangleMake(s_android_bitmap_loc_x, s_android_bitmap_loc_y, s_android_bitmap_width, s_android_bitmap_height);
@@ -2003,6 +2019,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaDone(JNI
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaCanceled(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardShown(JNIEnv *env, jobject object, int height) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardHidden(JNIEnv *env, jobject object) __attribute__((visibility("default")));
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doFocusOnView(JNIEnv *env, jobject object, jobject p_view) __attribute__((visibility("default")));
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view)
 {
@@ -2384,6 +2401,45 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardShown(JNIEnv *en
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardHidden(JNIEnv *env, jobject object)
 {
 	MCEventQueuePostCustom(new MCKeyboardDeactivatedEvent);
+}
+
+//////////
+
+struct MCFocusOnViewEvent: public MCCustomEvent
+{
+    MCFocusOnViewEvent(jobject p_view)
+    {
+        m_view = p_view;
+    }
+    
+    void Destroy(void)
+    {
+        s_java_env -> DeleteGlobalRef(m_view);
+        delete this;
+    }
+    
+    void Dispatch(void)
+    {
+        Window t_window = static_cast<MCScreenDC *>(MCscreen)->get_current_window();
+        MCStack *t_stack = nullptr;
+        if (nullptr != t_window)
+        {
+            t_stack = MCdispatcher->findstackd(t_window);
+        }
+        
+        if (nullptr != t_stack)
+        {
+            MCscreen->focusonview(t_stack, (void *)m_view);
+        }
+    }
+private:
+    jobject m_view;
+};
+
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doFocusOnView(JNIEnv *env, jobject object, jobject p_view)
+{
+    jobject t_view = env->NewGlobalRef(p_view);
+    MCEventQueuePostCustom(new MCFocusOnViewEvent(t_view));
 }
 
 //////////

@@ -71,7 +71,7 @@ void MCPlatformHandleDragDrop(MCPlatformWindowRef window, bool& r_accepted);
 void MCPlatformHandleMenuUpdate(MCPlatformMenuRef menu);
 void MCPlatformHandleMenuSelect(MCPlatformMenuRef menu, uindex_t index);
 
-void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef window, uint32_t id);
+void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef window, uint32_t id, void* p_native_view);
 
 void MCPlatformHandlePlayerFrameChanged(MCPlatformPlayerRef player);
 void MCPlatformHandlePlayerMarkerChanged(MCPlatformPlayerRef player, MCPlatformPlayerDuration time);
@@ -377,10 +377,10 @@ void MCPlatformCallbackSendMenuSelect(MCPlatformMenuRef p_menu, uindex_t p_index
 
 //////////
 
-void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_view_id)
+void MCPlatformCallbackSendViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_view_id, void* p_native_view)
 {
     //MCLog("Window(%p) -> ViewFocusSwitched(%d)", p_window, p_view_id);
-	MCPlatformHandleViewFocusSwitched(p_window, p_view_id);
+	MCPlatformHandleViewFocusSwitched(p_window, p_view_id, p_native_view);
 }
 
 #endif // FEATURE_PLATFORM_WINDOW

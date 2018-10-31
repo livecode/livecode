@@ -12,6 +12,7 @@ X11 libX11.so.6
 	XWarpPointer: (pointer, integer, integer, integer, integer, integer, integer, integer, integer) -> ()
 	XQueryKeymap: (pointer, pointer) -> ()
 	XGetInputFocus: (pointer, pointer, pointer) -> ()
+	XSetInputFocus: (pointer, pointer, integer, integer) -> ()
 	XSetClassHint: (pointer, integer, pointer) -> ()
 	XGetGeometry: (pointer, integer, pointer, pointer, pointer, pointer, pointer, pointer, pointer) -> (integer)
 	XTranslateCoordinates: (pointer, integer, integer, integer, integer, pointer, pointer, pointer) -> (integer)

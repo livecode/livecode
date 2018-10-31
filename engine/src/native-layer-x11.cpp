@@ -263,6 +263,12 @@ bool MCNativeLayerX11::GetNativeView(void *&r_view)
     return true;
 }
 
+bool MCNativeLayerX11::ContainsView(void *p_native_view)
+{
+    void *t_view;
+    return GetNativeView(t_view) && t_view == p_native_view;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 x11::Window MCNativeLayerX11::getStackX11Window()

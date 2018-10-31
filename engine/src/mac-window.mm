@@ -113,15 +113,20 @@ static bool s_lock_responder_change = false;
 		{
 			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
 			{
-				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uintptr_t)[t_view com_runrev_livecode_nativeViewId]];
+				[(MCWindowDelegate *)[self delegate] viewFocusSwitched:t_view withID:(uintptr_t)[t_view com_runrev_livecode_nativeViewId]];
 				return YES;
 			}
 			
 			t_view = [t_view superview];
 		}
+        
+        t_view = (NSView *)p_responder;
+        [(MCWindowDelegate *)[self delegate] viewFocusSwitched:t_view withID:0];
+        
+        return YES;
 	}
 	
-	[(MCWindowDelegate *)[self delegate] viewFocusSwitched: 0];
+    [(MCWindowDelegate *)[self delegate] viewFocusSwitched:nil withID:0];
 	
 	return YES;
 }
@@ -218,23 +223,28 @@ static bool s_lock_responder_change = false;
 	if (s_lock_responder_change)
 		return YES;
 	
-	if ([p_responder isKindOfClass: [NSView class]])
-	{
-		NSView *t_view;
-		t_view = (NSView *)p_responder;
-		while(t_view != nil)
-		{
-			if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
-			{
-				[(MCWindowDelegate *)[self delegate] viewFocusSwitched: (uintptr_t)[t_view com_runrev_livecode_nativeViewId]];
-				return YES;
-			}
-			
-			t_view = [t_view superview];
-		}
-	}
-	
-	[(MCWindowDelegate *)[self delegate] viewFocusSwitched: 0];
+    if ([p_responder isKindOfClass: [NSView class]])
+    {
+        NSView *t_view;
+        t_view = (NSView *)p_responder;
+        while(t_view != nil)
+        {
+            if ([t_view respondsToSelector:@selector(com_runrev_livecode_nativeViewId)])
+            {
+                [(MCWindowDelegate *)[self delegate] viewFocusSwitched:t_view withID:(uintptr_t)[t_view com_runrev_livecode_nativeViewId]];
+                return YES;
+            }
+            
+            t_view = [t_view superview];
+        }
+        
+        t_view = (NSView *)p_responder;
+        [(MCWindowDelegate *)[self delegate] viewFocusSwitched:t_view withID:0];
+        
+        return YES;
+    }
+    
+    [(MCWindowDelegate *)[self delegate] viewFocusSwitched:nil withID:0];
 	
 	return YES;
 }
@@ -515,9 +525,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 //////////
 
-- (void)viewFocusSwitched:(uint32_t)p_id
+- (void)viewFocusSwitched:(void *)p_view withID: (uint32_t)p_id
 {
-	MCPlatformCallbackSendViewFocusSwitched(m_window, p_id);
+	MCPlatformCallbackSendViewFocusSwitched(m_window, p_id, p_view);
 }
 
 @end
@@ -2378,10 +2388,17 @@ static NSView *MCMacPlatformFindView(MCPlatformWindowRef p_window, uint32_t p_id
 	return t_parent_view;
 }
 
-void MCPlatformSwitchFocusToView(MCPlatformWindowRef p_window, uint32_t p_id)
+void MCPlatformSwitchFocusToView(MCPlatformWindowRef p_window, uint32_t p_id, void *p_native_view)
 {
 	NSView *t_view;
-	t_view = MCMacPlatformFindView(p_window, p_id);
+    if (p_native_view != nullptr)
+    {
+        t_view = (NSView *)p_native_view;
+    }
+    else
+    {
+        t_view = MCMacPlatformFindView(p_window, p_id);
+    }
 	
 	MCMacPlatformWindow *t_window;
 	t_window = (MCMacPlatformWindow *)p_window;

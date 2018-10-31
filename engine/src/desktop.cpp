@@ -44,6 +44,7 @@
 
 #include "desktop-dc.h"
 #include "param.h"
+#include "native-layer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -253,7 +254,7 @@ void MCPlatformHandleWindowUnfocus(MCPlatformWindowRef p_window)
 	MCdispatcher -> wkunfocus(p_window);
 }
 
-void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_view_id)
+void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_view_id, void* p_native_view)
 {
 	MCStack *t_stack;
 	t_stack = MCdispatcher -> findstackd(p_window);
@@ -261,7 +262,16 @@ void MCPlatformHandleViewFocusSwitched(MCPlatformWindowRef p_window, uint32_t p_
 		return;
 	
 	if (p_view_id == 0)
-		t_stack -> getcard() -> kfocus();
+    {
+        if (nullptr != p_native_view)
+        {
+            MCscreen->focusonview(t_stack, p_native_view);
+        }
+        else
+        {
+            t_stack -> getcard() -> kfocus();
+        }
+    }
 	else
 	{
 		MCControl *t_control;

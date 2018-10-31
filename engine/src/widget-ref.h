@@ -75,6 +75,9 @@ public:
     
     bool OnClick(bool& r_bubble);
     
+    bool OnFocusEnter(bool& r_bubble);
+    bool OnFocusLeave(bool& r_bubble);
+    
     bool HandlesTouchEvents(void);
     bool OnTouchStart(bool& r_bubble);
     bool OnTouchMove(bool& r_bubble);

@@ -1991,12 +1991,26 @@ bool MCUIDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_
 
 //
 
-void MCUIDC::controlgainedfocus(MCStack *s, uint32_t id)
+void MCUIDC::controlgainedfocus(MCStack *s, uint32_t id, void *p_native_view)
 {
 }
 
-void MCUIDC::controllostfocus(MCStack *s, uint32_t id)
+void MCUIDC::controllostfocus(MCStack *s, uint32_t id, void *p_native_view)
 {
+}
+
+void MCUIDC::focusonview(MCStack * p_stack, void *p_native_view)
+{
+    if (MCnoui)
+    {
+        return;
+    }
+    
+    MCObject *t_control = nullptr;
+    if (MCNativeLayer::FindObjectWithNativeLayer(p_stack, (void *)p_native_view, t_control))
+    {
+        p_stack->kfocusset(static_cast<MCControl*>(t_control));
+    }
 }
 
 //

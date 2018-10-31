@@ -26,7 +26,9 @@ class MCNativeLayerWin32 : public MCNativeLayer
 public:
     
 	virtual bool GetNativeView(void *&r_view);
-	
+    
+    virtual bool ContainsView(void *p_native_view);
+    
     MCNativeLayerWin32(MCObject *p_object, HWND p_view);
     ~MCNativeLayerWin32();
     

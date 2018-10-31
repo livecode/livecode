@@ -225,7 +225,7 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void);
 
 //////////
 
-- (void)viewFocusSwitched: (uint32_t)id;
+- (void)viewFocusSwitched:(void *)p_view withID: (uint32_t)p_id;
 
 @end
 

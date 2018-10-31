@@ -28,6 +28,8 @@ public:
     
 	virtual bool GetCanRenderToContext();
 
+    virtual bool ContainsView(void *p_native_view);
+    
     MCNativeLayerIOS(MCObject *p_object, UIView *p_native_view);
     ~MCNativeLayerIOS();
     

@@ -699,18 +699,28 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		}
 		break;
 	case WM_KILLFOCUS: //FocusOut:
-		if (curinfo->dispatch)
+	{
+		// Only wkunfocus if it wasn't a child native view taking focus
+		MCObject *t_control = nullptr;
+		MCStack *t_stack = MCdispatcher->findstackd(dw);
+		if (nullptr == (void *)wParam ||
+			nullptr == t_stack ||
+			!MCNativeLayer::FindObjectWithNativeLayer(t_stack, (void *)wParam, t_control))
 		{
-			if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
-				MCdispatcher->wkunfocus(dw);
-			curinfo->handled = True;
+			if (curinfo->dispatch)
+			{
+				if (MCtracewindow == DNULL || hwnd != (HWND)MCtracewindow->handle.window)
+					MCdispatcher->wkunfocus(dw);
+				curinfo->handled = True;
+			}
+			else
+			{
+				MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
+					MCmodifierstate, MCeventtime);
+				pms->appendevent(tptr);
+			}
 		}
-		else
-		{
-			MCEventnode *tptr = new (nothrow) MCEventnode(hwnd, msg, wParam, lParam, 0,
-			                                    MCmodifierstate, MCeventtime);
-			pms->appendevent(tptr);
-		}
+	}
 		break;
 
 	// SN-2014-09-12: [[ Bug 13423 ]] The next character typed will follow a dead char. Sets the flag.

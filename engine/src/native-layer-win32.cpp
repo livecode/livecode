@@ -298,6 +298,27 @@ bool MCNativeLayerWin32::GetNativeView(void *&r_view)
 	return true;
 }
 
+bool MCNativeLayerWin32::ContainsView(void *p_native_view)
+{
+	if (m_hwnd == nullptr)
+	{
+		return false;
+	}
+	HWND t_view = HWND(p_native_view);
+
+	while (t_view != nullptr)
+	{
+		if (t_view == m_hwnd || t_view == m_viewport_hwnd)
+		{
+			return true;
+		}
+
+		t_view = GetParent(t_view);
+	}
+   
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNativeLayer* MCNativeLayer::CreateNativeLayer(MCObject *p_object, void *p_view)

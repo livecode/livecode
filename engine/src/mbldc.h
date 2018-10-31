@@ -244,6 +244,8 @@ public:
 	// MW-2012-11-14: [[ Bug 10514 ]] Returns the current window on display.
 	Window get_current_window(void);
 	
+    virtual void controlgainedfocus(MCStack *s, uint32_t id, void *p_native_view);
+    virtual void controllostfocus(MCStack *s, uint32_t id, void *p_native_view);
 private:
 	// The top-left of the mobile 'window' in screen co-ordinates.
 	int32_t m_window_left;

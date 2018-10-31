@@ -29,6 +29,8 @@ public:
     
 	virtual bool GetNativeView(void *&r_view);
 	
+    virtual bool ContainsView(void *p_native_view);
+    
     MCNativeLayerMac(MCObject *p_object, NSView *p_view);
     ~MCNativeLayerMac();
     

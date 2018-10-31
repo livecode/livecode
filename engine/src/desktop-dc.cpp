@@ -1103,12 +1103,12 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &p_rect, uint4 p_window, MCStrin
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::controlgainedfocus(MCStack *p_stack, uint32_t p_id)
+void MCScreenDC::controlgainedfocus(MCStack *p_stack, uint32_t p_id, void *p_native_view)
 {
-	MCPlatformSwitchFocusToView(p_stack -> getwindow(), p_id);
+	MCPlatformSwitchFocusToView(p_stack -> getwindow(), p_id, p_native_view);
 }
 
-void MCScreenDC::controllostfocus(MCStack *p_stack, uint32_t p_id)
+void MCScreenDC::controllostfocus(MCStack *p_stack, uint32_t p_id, void *p_native_view)
 {
 }
 
