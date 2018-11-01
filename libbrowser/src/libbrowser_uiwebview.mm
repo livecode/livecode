@@ -825,7 +825,7 @@ bool MCUIWebViewBrowser::Init(void)
 	
 	/* UNCHECKED */ MCCStringClone([request.URL.absoluteString cStringUsingEncoding: NSUTF8StringEncoding], t_url);
 	
-	if ([NSURLConnection canHandleRequest: request])
+    if ([NSURLConnection canHandleRequest: request] || MCCStringBeginsWith(t_url, "mailto:") )
 	{
 		if (!t_frame_request)
 			m_instance->OnNavigationBegin(false, t_url);
