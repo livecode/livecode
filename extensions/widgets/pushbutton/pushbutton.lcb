@@ -47,10 +47,10 @@ Summary: The theme of the widget
 
 Parameters:
 pWidgetTheme(enum): The theme of the widget
--"iOS"
--"Android(Floating Action)"
--"Android(Raised)"
--"Android(Flat)"
+- "iOS"
+- "Android(Floating Action)"
+- "Android(Raised)"
+- "Android(Flat)"
 
 Description:
 Use the <widgetTheme> property to set the theme of the widget.
@@ -69,8 +69,8 @@ Summary: The display style of the widget's label
 
 Parameters:
 pStyle(enum): The display style
--"text"
--"icon"
+- "text"
+- "icon"
 
 Description:
 Use the <labelStyle> property to set the display style of the widget's label, either text or an icon.
@@ -151,9 +151,9 @@ Summary: The background opacity of the button
 
 Parameters:
 pOpacity(enum): The background opacity of the button
--"Opaque"
--"Translucent"
--"Transparent"
+- "Opaque"
+- "Translucent"
+- "Transparent"
 
 Description:
 Use the <backgroundOpacity> property to set the opacity of the button's background.
@@ -175,26 +175,26 @@ Summary: The color scheme of the widget
 
 Parameters:
 pColorScheme(enum): The color scheme of the widget
--"Black"
--"Red"
--"Pink"
--"Purple"
--"Deep Purple"
--"Indigo"
--"Blue"
--"Light Blue"
--"Cyan"
--"Teal"
--"Green"
--"Light Green"
--"Lime"
--"Yellow"
--"Amber"
--"Orange"
--"Deep Orange"
--"Brown"
--"Grey"
--"Blue Grey"
+- "Black"
+- "Red"
+- "Pink"
+- "Purple"
+- "Deep Purple"
+- "Indigo"
+- "Blue"
+- "Light Blue"
+- "Cyan"
+- "Teal"
+- "Green"
+- "Light Green"
+- "Lime"
+- "Yellow"
+- "Amber"
+- "Orange"
+- "Deep Orange"
+- "Brown"
+- "Grey"
+- "Blue Grey"
 
 Description:
 Use the <colorScheme> property to set the color scheme of the widget, Android only.
@@ -213,8 +213,8 @@ Summary: The color theme of the widget
 
 Parameters:
 pColorTheme(enum): The color theme of the widget
--"Light"
--"Dark"
+- "Light"
+- "Dark"
 
 Description:
 Use the <colorTheme> property to set the color theme of the widget, Android only.
