@@ -137,7 +137,10 @@ void MCStack::applyscroll(void)
 	if (t_new_scroll == m_scroll)
 		return;
 	
-	// Otherwise, set the scroll back to the unmolested version.
+    // dirty the current view
+	dirtyall();
+    
+    // Otherwise, set the scroll back to the unmolested version.
 	rect . height += m_scroll;
 	
 	// Update the scroll value.

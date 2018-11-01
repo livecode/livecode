@@ -2120,10 +2120,13 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		setparentstack(parentptr);
 	
 	// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
-	view_setstackviewport(rect);
-	
-	if (window == NULL)
+	// If we have a window then set the viewport after opening to cover lockscreen
+    bool t_had_window = window != NULL;
+	if (!t_had_window)
+    {
+        view_setstackviewport(rect);
 		createwindow();
+    }
 
 	if (substacks != NULL)
 		opened++;
@@ -2131,7 +2134,12 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	{
 		MCObject::open();
 	}
-
+    
+    if (t_had_window)
+    {
+        view_setstackviewport(rect);
+    }
+    
 	MCRectangle trect;
 	switch (mode)
 	{
