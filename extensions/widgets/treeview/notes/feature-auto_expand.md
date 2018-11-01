@@ -8,3 +8,7 @@ top row.
 The tree view fold state can now be reset in two ways. To set the array
 data in a folded state then use the **foldedArrayData** property. To
 collapse the tree without changing the data, get the **foldedArrayData**.
+
+The tree view widget now has the ability to get and set the fold state
+of the selected element via the **hilitedElementFoldState** property.
+Values are `folded`, `unfolded`, and `leaf`.

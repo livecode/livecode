@@ -143,6 +143,27 @@ property hilitedElement			get getSelectedElement			set setSelectedElement
 metadata hilitedElement.label is "Hilited element"
 
 /**
+Syntax: set the hilitedElementFoldState of <widget> to <pFoldState>
+Syntax: get the hilitedElementFoldState of <widget>
+
+Summary: Get/set the fold state of the selected element
+
+Parameters:
+pFoldState (enum): The fold state of the selected element.
+- "folded": Sub-array for the selected element is hidden.
+- "unfolded": Sub-array for the selected element is visible.
+- "leaf": Selected element is a leaf node.  This value may not be set.
+
+Description:
+<pFoldState> is the fold state of the selected element.  When setting
+the fold state, attempts to set the value for a leaf node will have no
+effect.  Setting the fold state when no element is selected has no effect.
+**/
+
+property hilitedElementFoldState			get getSelectedElementFoldState			set setSelectedElementFoldState
+metadata hilitedElementFoldState.user_visible is "false"
+
+/**
 Syntax: set the hiliteNewElement of <widget> to {true|false}
 Syntax: get the hiliteNewElement of <widget>
 
@@ -262,8 +283,8 @@ Summary: Manipulates the order in which elements of the tree view are displayed,
 
 Parameters:
 pOrder (enum): The order in which to display elements of the tree view.
--"ascending": Display from first to last in the order. This is the default
--"descending": Display from last to first in the order.
+- "ascending": Display from first to last in the order. This is the default
+- "descending": Display from last to first in the order.
 
 Description:
 Use the <sortOrder> property to display the elements of the tree view in ascending or descending order of the
@@ -286,8 +307,8 @@ Summary: Manipulates the type of ordering in which elements of the tree view are
 
 Parameters:
 pType (enum): The type of ordering to use in displaying elements of the tree view.
--"text": Display in alphabetical order of the keys
--"numeric": Display in numeric order of the keys. This is the default
+- "text": Display in alphabetical order of the keys
+- "numeric": Display in numeric order of the keys. This is the default
 
 Description:
 Use the <sortType> property to use text or numeric comparison when ordering the keys of the <arrayData>
@@ -1389,6 +1410,18 @@ private handler getValueOnPath(in pPath as List, in pArray as Array) returns any
 	end if
 end handler
 
+private handler pathIsAnArray(in pPath as List, in pArray as any) returns Boolean
+	if pPath is the empty list then
+		return pArray is an array
+	else if (element 1 of pPath) is not among the keys of pArray then
+		return false
+	else if the number of elements in pPath is 1 then
+		return pArray[element 1 of pPath] is an array
+	else
+		return pathIsAnArray(element 2 to -1 of pPath, pArray[element 1 of pPath])
+	end if
+end handler
+
 -- Used to validate user input as a valid path
 -- An empty path is generally used to clear the selected row
 private handler pathIsValid(in pPath as List, in pArray as any) returns Boolean
@@ -1967,6 +2000,18 @@ private handler setFrameBorder(in pFrameBorder as Boolean) returns nothing
 	redraw all
 end handler
 
+private handler getSelectedElement() returns String
+	variable tElement as String
+	if mSelectedElement is not nothing then
+		combine mSelectedElement with mPathDelimiter into tElement
+		// Make sure empty path is recognised as a valid path
+		put mPathDelimiter after tElement
+	else
+		put the empty string into tElement
+	end if
+	return tElement
+end handler
+
 private handler setSelectedElement(in pElement as String)
 	variable tPath as List
 	split pElement by mPathDelimiter into tPath
@@ -1980,16 +2025,42 @@ private handler setSelectedElement(in pElement as String)
 	end if
 end handler
 
-private handler getSelectedElement() returns String
-	variable tElement as String
+private handler getSelectedElementFoldState() returns String
+	variable tFoldState as String
+	put the empty string into tFoldState
 	if mSelectedElement is not nothing then
-		combine mSelectedElement with mPathDelimiter into tElement
-		// Make sure empty path is recognised as a valid path
-		put mPathDelimiter after tElement
-	else
-		put the empty string into tElement
+		variable tCount as Integer
+		repeat with tCount from 2 up to the number of elements in mDataList
+			if mDataList[tCount]["selected"] then
+				if mDataList[tCount]["leaf"] then
+					put "leaf" into tFoldState
+				else if mDataList[tCount]["folded"] then
+					put "folded" into tFoldState
+				else
+					put "unfolded" into tFoldState
+				end if
+				exit repeat
+			end if
+		end repeat
 	end if
-	return tElement
+	return tFoldState
+end handler
+
+private handler setSelectedElementFoldState(in pFoldState as String) returns nothing
+	variable tSetTheFoldState as Boolean
+	put (mSelectedElement is not nothing) and \
+			pathIsAnArray(mSelectedElement, mData) into tSetTheFoldState
+	if pFoldState is "folded" then
+		if tSetTheFoldState then
+			foldPath(mSelectedElement)
+		end if
+	else if pFoldState is "unfolded" then
+		if tSetTheFoldState then
+			unFoldPath(mSelectedElement)
+		end if
+	else
+		throw "Invalid fold state"
+	end if
 end handler
 
 private handler setReadOnly(in pReadOnly as Boolean)
