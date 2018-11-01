@@ -49,20 +49,20 @@ pieces you want to reply with.
 
 The form
 
-    reply <string> &nbsp;
+    reply string
 
 is equivalent to
 
-    reply <string> with keyword "----"
+    reply string with keyword "----"
 
 
 The form
 
-    reply error <string> 
+    reply error string 
 
 is equivalent to
 
-    reply <string> with keyword "errs"
+    reply string with keyword "errs"
 
 
 For more information about Apple events, see Apple Computer's technical
