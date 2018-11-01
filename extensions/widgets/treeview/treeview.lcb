@@ -110,10 +110,23 @@ Syntax: get the foldState of <widget>
 Summary: The fold state of the array being displayed by the widget
 
 Parameters:
-pFoldState (array): The fold state data.
+pFoldState (array): The fold state data.  See description for details.
 
 Description:
 The foldState is the fold state currently being displayed by the tree view widget.
+
+The fold state array only contains elements of the data array where the
+value is a subarray.  The value for each `folded` key must be a boolean.
+
+```
+	[key1]
+		["folded"]
+		["array"]
+			[subkey1]
+				["folded"]
+	[key2]
+		["folded"]
+```
 **/
 
 property foldState 					get getFoldState 				set setFoldState
@@ -1861,15 +1874,38 @@ private handler applyFoldState(in pLevel as Integer, in pStart as Integer, in pF
 			next repeat
 		end if
 	
-		// If user supplied fold state is invalid
-		if "folded" is not among the keys of pFoldState[tKey] or \
-				not(pFoldState[tKey]["folded"] is a boolean) then
-			next repeat
-		end if
-
 		applyFoldStateKey(tKey, pLevel, pStart, pFoldState[tKey], pArray[tKey], xList)
 	end repeat
 
+end handler
+
+private handler checkFoldState(inout pFoldState as Array) returns Boolean
+	if pFoldState is empty then
+		return true
+	end if
+	
+	variable tKey as String
+	variable tValue as String
+	repeat for each key tKey in pFoldState
+		if not (pFoldState[tKey] is an array) or \
+				"folded" is not among the keys of pFoldState[tKey] then
+			return false
+		end if
+		if not(pFoldState[tKey]["folded"] is a boolean) then
+			put pFoldState[tKey]["folded"] into tValue
+			delete pFoldState[tKey]["folded"]
+			if tValue is "true" then
+				put true into pFoldState[tKey]["folded"]
+			else
+				put false into pFoldState[tKey]["folded"]
+			end if
+		end if
+		if "array" is among the keys of pFoldState[tKey] and \
+				not checkFoldState(pFoldState[tKey]["array"]) then
+			return false
+		end if
+	end repeat
+	return true
 end handler
 
 private handler setRowBackgrounds(in pShowAlternateBackgrounds as Boolean) returns nothing
@@ -1891,6 +1927,9 @@ private handler setArrayData(in pData as Array) returns nothing
 end handler
 
 private handler setFoldState(in pData as Array) returns nothing
+	if not checkFoldState(pData) then
+		throw "Invalid fold state"
+	end if
 	put pData into mFoldState
 	put true into mUpdateDataList
 	redraw all
