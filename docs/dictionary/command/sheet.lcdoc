@@ -66,7 +66,7 @@ Attempting to open a sheet from within another sheet displays the second
 > they slide into view from the title bar, is unique to that OS and
 > does not happen on <Windows> or <Unix|Linux>. However, on all three 
 > OSes, dialogs opened with the sheet <command> will be window-modal,
-> rather than application-modal. An application-modal dialog will
+> rather than application-modal. A window-modal dialog will
 > block further interaction in the window being covered by the dialog,
 > while allowing interaction in all others. In an application-modal 
 > window, interactions with all other windows are prevented until the
