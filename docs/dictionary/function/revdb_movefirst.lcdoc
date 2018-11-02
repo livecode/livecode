@@ -23,13 +23,12 @@ revdb_movefirst(savedResults)
 Parameters:
 recordSetID:
 The number returned by the revQueryDatabase or revQueryDatabaseBLOB
-function when the record set (database cursor) was created.
+function when the record set was created.
 
 Returns:
 The <revdb_movefirst> <function> returns true if it successfully moved
 to the first <record>, false if it could not move to the first <record>
-because there are no <record|records> in the <record set (database
-cursor)|record set>.
+because there are no <record|records> in the <record set>.
 
 Description:
 Use the <revdb_movefirst> <function> to move around within the selected
@@ -53,7 +52,7 @@ References: revMoveToLastRecord (command), revMoveToFirstRecord (command),
 revMoveToNextRecord (command), function (control structure),
 revCurrentRecord (function), revCurrentRecordIsFirst (function),
 revCurrentRecordIsLast (function), LiveCode custom library (glossary),
-execute (glossary), record set (database cursor) (glossary),
+execute (glossary), record set (glossary),
 record (glossary), Standalone Application Settings (glossary),
 standalone application (glossary), function call (glossary),
 command (glossary), Database library (library)

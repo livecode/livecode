@@ -7,8 +7,8 @@ Type: function
 Syntax: revDatabaseCursors(<databaseID>)
 
 Summary:
-<return|Returns> the <record set (database cursor)(glossary)> IDs
-associated with a connection to a <database>.
+<return|Returns> the <record set> IDs associated with a connection 
+to a <database>.
 
 Associations: database library
 
@@ -40,9 +40,8 @@ separated by commas.
 
 Description:
 Use the <revDatabaseCursors> <function> to perform an operation on each
-<record set (database cursor)|record set>, or to find out how many
-<record set (database cursor)|record sets> exist on a particular
-<database> connection.
+<record set>, or to find out how many <record set|record sets> exist 
+on a particular <database> connection.
 
 The record set IDs returned are those opened by the specified
 <databaseID>. 
@@ -61,9 +60,9 @@ The revDatabaseCursors synonym was added in version 2.0.
 
 References: revCloseCursor (command), function (control structure),
 Standalone Application Settings (glossary), database (glossary),
-standalone application (glossary),
-record set (database cursor) (glossary), return (glossary),
-LiveCode custom library (glossary), Database library (library)
+standalone application (glossary), record set (glossary), 
+return (glossary), LiveCode custom library (glossary), 
+Database library (library)
 
 Tags: database
 
