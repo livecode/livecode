@@ -105,23 +105,6 @@ property arrayData 					get getArrayData 				set setArrayData
 metadata arrayData.label is "Array data"
 
 /**
-Syntax: set the foldedArrayData of <widget> to <pArray>
-Syntax: get the foldedArrayData of <widget>
-Summary: The array being displayed by the widget
-
-Parameters:
-pArray (array): The array data.
-
-Description:
-The arrayData is the data currently being displayed by the tree view widget.
-Setting the arrayData using the foldedArrayData property will reset the fold 
-state to fold all elements.
-**/
-
-property foldedArrayData 					get getFoldedArrayData			set setFoldedArrayData
-metadata foldedArrayData.user_visible is "false"
-
-/**
 Syntax: set the hilitedElement of <widget> to <pPath>
 Syntax: get the hilitedElement of <widget>
 
@@ -2008,17 +1991,6 @@ private handler setArrayData(in pData as Array) returns nothing
 	put pData into mData
 	put true into mUpdateDataList
 	redraw all
-end handler
-
-private handler getFoldedArrayData() returns Array
-	put the empty array into mFoldState
-	setArrayData(mData)
-	return mData
-end handler
-
-private handler setFoldedArrayData(in pData as Array) returns nothing
-	put the empty array into mFoldState
-	setArrayData(pData)
 end handler
 
 private handler setFrameBorder(in pFrameBorder as Boolean) returns nothing
