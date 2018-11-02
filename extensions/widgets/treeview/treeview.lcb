@@ -197,6 +197,22 @@ property scrollHilitedElementIntoView		get mScrollHilitedElementIntoView		set mS
 metadata scrollHilitedElementIntoView.label is "Scroll hilited element into view"
 
 /**
+Syntax: set the autoFoldStateReset of <widget> to {true|false}
+Syntax: get the autoFoldStateReset of <widget>
+
+Summary: Automatically reset fold state when array data is set.
+
+Description:
+Use the <autoFoldStateReset> property to determine if the fold state is
+reset (tree is completely folded) when the <arrayData> property is set.
+
+References: arrayData (property)
+**/
+
+property autoFoldStateReset			get mAutoFoldStateReset				set mAutoFoldStateReset
+metadata autoFoldStateReset.label is "Automatically reset fold state when array data is set"
+
+/**
 Name: foreColor
 
 Type: property
@@ -479,6 +495,7 @@ private variable mFrameBorder as Boolean
 
 private variable mSelectedElement as optional List
 private variable mFoldState as Array
+private variable mAutoFoldStateReset as Boolean
 private variable mLastKeyAdded as optional String
 private variable mHiliteNewElement as Boolean
 private variable mScrollHilitedElementIntoView as Boolean
@@ -570,6 +587,7 @@ public handler OnCreate() returns nothing
 	
 	put the empty array into mFoldState
 	put the empty array into mData
+	put false into mAutoFoldStateReset
 	put false into mHiliteNewElement
 	put false into mScrollHilitedElementIntoView
 end handler
@@ -581,6 +599,7 @@ public handler OnSave(out rProperties as Array)
 	put mArrayStyle into rProperties["array style"]
 	put mSortAscending into rProperties["sort ascending"]
 	put mSortNumeric into rProperties["sort numeric"]
+	put mAutoFoldStateReset into rProperties["auto fold state reset"]
 	put mHiliteNewElement into rProperties["hilite new element"]
 	put mScrollHilitedElementIntoView into rProperties["scroll hilited element into view"]
 
@@ -602,6 +621,10 @@ public handler OnLoad(in pProperties as Array)
 
 	if "sort numeric" is among the keys of pProperties then
 	  put pProperties["sort numeric"] into mSortNumeric
+	end if
+
+	if "auto fold state reset" is among the keys of pProperties then
+		put pProperties["auto fold state reset"] into mAutoFoldStateReset
 	end if
 
 	if "hilite new element" is among the keys of pProperties then
@@ -1979,6 +2002,9 @@ end handler
 
 // Replace the existing data wholesale with a new array pData
 private handler setArrayData(in pData as Array) returns nothing
+	if mAutoFoldStateReset then
+		put the empty array into mFoldState
+	end if
 	put pData into mData
 	put true into mUpdateDataList
 	redraw all
