@@ -32,7 +32,8 @@ Parameters:
 pathName:
 The pathName specifies the name and location of the file you want to
 read from. It must be the same as the path you used with the open file
-command.>*Important:* The pathName is case-sensitive, even on platforms
+command.
+>*Important:* The pathName is case-sensitive, even on platforms
 where file names are not case-sensitive. It must be exactly the
 same--including the case of characters--as the name you used with the
 open file command. If you specify the name of a serial port on Mac OS or
@@ -118,11 +119,11 @@ The <time> is the time to wait for the read to be completed, in
 <milliseconds>, seconds, or <ticks>.
 
 If you don't specify a <start>, LiveCode begins at the position
-determined by the <seek> <command>, or wherever the last <read from
-file> or <write to file> <command> to that <file> left off, or at the
-first <character>, if the <file> has not been accessed since being
-opened, or at the last <character>, if the <file> was opened in append
-mode. 
+determined by the <seek> <command>, or wherever the last 
+<read from file> or <write to file> <command> to that <file> left off, 
+or at the first <character>, if the <file> has not been accessed since 
+being opened, or at the last <character>, if the <file> was opened in 
+append mode. 
 
 The until <string> form reads data until the specified string is
 encountered. The until end, until EOF, and until empty forms are

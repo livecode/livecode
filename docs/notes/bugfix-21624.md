@@ -1,0 +1,1 @@
+# Fix rendering issues in Motif appearance (default for iOS, Android and HTML5) when a button is disabled and has a non-zero blendlevel

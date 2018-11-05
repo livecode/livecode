@@ -14,7 +14,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-get tan((firstAngle * pi) + secondAngle)
+get tan((tAngleInDegrees * pi/180) + tSecondAngleInRadians)
 
 Description:
 Use the <pi> <constant> in trigonometric <expression|expressions> where

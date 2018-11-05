@@ -23,9 +23,9 @@ Example:
 move image "Butterfly" relative 10,-10 - 10 pixels right and up
 
 Description:
-Use the <relative> <keyword> with the <read from file> and <write to
-file> <command|commands> to move within a <file>, or with the <move>
-<command> to move a <control> relative to its current location.
+Use the <relative> <keyword> with the <read from file> and 
+<write to file> <command|commands> to move within a <file>, or with 
+the <move> <command> to move a <control> relative to its current location.
 
 When used with the <seek> <command>, the <relative> <keyword> indicates
 how far to move the current position. If the number is positive, the

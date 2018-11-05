@@ -1140,7 +1140,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 
 		// MW-2011-09-12: [[ MacScroll ]] Use 'getnextscroll()' to see if anything needs
 		//   changing on that score.
-		if (oldscroll != getnextscroll())
+		if (oldscroll != getnextscroll(false))
 		{
 			setgeom();
 			updatemenubar();

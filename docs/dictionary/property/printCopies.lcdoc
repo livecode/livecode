@@ -32,8 +32,8 @@ Use the <printCopies> property to specify a number of copies to print.
 This property will only have an affect if the <printerFeatures> contains
 "copies". 
 
-To have an effect, this property must be set before calling <open
-printing>. 
+To have an effect, this property must be set before calling 
+<open printing>. 
 
 References: open printing (command), answer printer (command),
 printPageNumber (property), printerFeatures (property),

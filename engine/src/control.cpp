@@ -1472,9 +1472,9 @@ Boolean MCControl::sbfocus(int2 x, int2 y, MCScrollbar *hsb, MCScrollbar *vsb)
 {
 	if (state & (CS_HSCROLL | CS_VSCROLL))
 	{
-		if (state & CS_HSCROLL)
+		if (state & CS_HSCROLL && hsb != nil)
 			hsb->mfocus(x, y);
-		else
+		else if (vsb != nil)
 			vsb->mfocus(x, y);
 		readscrollbars();
 		MCscreen->sync(getw());

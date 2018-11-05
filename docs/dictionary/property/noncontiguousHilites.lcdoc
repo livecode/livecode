@@ -5,8 +5,8 @@ Type: property
 Syntax: set the noncontiguousHilites of <field> to {true | false}
 
 Summary:
-Specifies whether the user can <select> non-adjacent <lines> of a <list
-field>. 
+Specifies whether the user can <select> non-adjacent <lines> of a 
+<list field>. 
 
 Associations: field
 
@@ -51,7 +51,7 @@ References: select (command), property (glossary), Unix (glossary),
 list field (glossary), Windows (glossary), behavior (glossary),
 Mac OS (glossary), field (keyword), lines (keyword), field (object),
 hilitedLine (property), listBehavior (property), toggleHilites (property),
-threeDHilite (property), multipleLines (property)
+threeDHilite (property), multipleHilites (property)
 
 Tags: ui
 

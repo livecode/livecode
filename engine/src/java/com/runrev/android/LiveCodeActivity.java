@@ -24,6 +24,7 @@ import android.content.res.*;
 import android.widget.*;
 import android.util.*;
 import android.content.pm.PackageManager;
+import android.graphics.*;
 
 // This is the main activity exported by the application. This is
 // split into two parts, a customizable sub-class that gets dynamically
@@ -76,6 +77,32 @@ public class LiveCodeActivity extends Activity
         
         // prevent soft keyboard from resizing our view when shown
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        
+        s_main_layout.getRootView().getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
+        {
+            @Override
+            public void onGlobalLayout()
+            {
+                // status bar height
+                int t_status_bar_height = 0;
+                int t_resource_id = getResources().getIdentifier("status_bar_height", "dimen", "android");
+                if (t_resource_id > 0)
+                {
+                    t_status_bar_height = getResources().getDimensionPixelSize(t_resource_id);
+                }
+                
+                // display window size for the app layout
+                Rect t_app_rect = new Rect();
+                getWindow().getDecorView().getWindowVisibleDisplayFrame(t_app_rect);
+                
+                int t_screen_height = s_main_layout.getRootView().getHeight();
+                
+                // keyboard height equals (screen height - (user app height + status))
+                int t_keyboard_height = t_screen_height - (t_app_rect.height() + t_status_bar_height);
+                
+                s_main_view.updateKeyboardVisible(t_keyboard_height > 0);
+            }
+        });
 	}
 
 	@Override

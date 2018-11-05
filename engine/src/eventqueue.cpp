@@ -555,7 +555,10 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 	{
 #ifdef _MOBILE
 		MCStackHandle t_stack(t_event->touch.stack);
-		handle_touch(t_stack, t_event->touch.phase, t_event->touch.id, t_event->touch.taps, t_event->touch.x, t_event->touch.y);
+        if (t_stack)
+        {
+            handle_touch(t_stack, t_event->touch.phase, t_event->touch.id, t_event->touch.taps, t_event->touch.x, t_event->touch.y);
+        }
 #else
         MCUnreachable();
 #endif

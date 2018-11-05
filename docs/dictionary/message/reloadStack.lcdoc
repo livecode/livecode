@@ -35,9 +35,9 @@ second main stack with the same name.
 
 Description:
 Handle the <reloadStack> <message> when you want to prevent a stack from
-being reopened, or moderate conflicts between the names of <main
-stack|main stacks>, or prevent two <main stack|main stacks> with the
-same <name> from being open at one time.
+being reopened, or moderate conflicts between the names of 
+<main stack|main stacks>, or prevent two <main stack|main stacks> with 
+the same <name> from being open at one time.
 
 The opening of the stack is triggered by the <reloadStack> <message>.
 This means that <trap|trapping> the <reloadStack> <message> and not

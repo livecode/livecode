@@ -29,7 +29,7 @@ The raw keycode of the released key.
 
 The result:
 If the <rawKeyUp> <message> is sent as the result of a keypress, the
-<message> is sent to the <active (focused) control(glossary)>, or to the
+<message> is sent to the <active control(glossary)>, or to the
 <current card> if no <control> is <focus|focused>. If the message is
 sent as the result of typing something in a field, the rawKeyDown
 <message> is sent before the text is changed, and the <rawKeyUp>

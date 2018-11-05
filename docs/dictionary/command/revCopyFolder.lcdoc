@@ -47,8 +47,8 @@ including all <file|files>, <subfolder|subfolders>, and their contents.
 The <folder> remains in its original location and the copy is placed in
 the new location.
 
->*Note:* When included in a <standalone application>, the <Common
-> library> is implemented as a hidden <group> and made available when
+>*Note:* When included in a <standalone application>, the <Common library>
+>  is implemented as a hidden <group> and made available when
 > the <group> receives its first <openBackground> message. During the
 > first part of the <application|application's> startup process, before
 > this <message> is sent, the <revCopyFolder> <command> is not yet
@@ -58,8 +58,8 @@ the new location.
 > <application> has finished starting up, the <library> is available and
 > the <revCopyFolder> <command> can be used in any <handler>.
 
->*Note:* To copy a bundle on Mac OS X systems, use the <revCopyFile
-> command> 
+>*Note:* To copy a bundle on Mac OS X systems, use the <revCopyFile>
+> command
 
 >*Note:* On Linux and OS X systems, folder paths can contain the tilde
 > (~) character, referring to the current user's home directory. Using
@@ -67,13 +67,14 @@ the new location.
 > replace the tilde with its literal value (eg /home/userName)
 
 References: create alias (command), revDeleteFolder (command),
-function (control structure), application (glossary), return (glossary),
+revCopyFile (command), function (control structure), result (function)
+application (glossary), return (glossary),
 standalone application (glossary), file (glossary), shell (glossary),
 handler (glossary), platform (glossary), command (glossary),
 Windows (glossary), main stack (glossary), OS X (glossary),
 AppleScript (glossary), group (glossary), result (glossary),
 Unix (glossary), message (glossary), folder (glossary),
 subfolder (glossary), Mac OS (glossary), Common library (library),
-revCopyFile command (library), library (library), startup (message),
+library (library), startup (message),
 openBackground (message), preOpenStack (message), openStack (message)
 

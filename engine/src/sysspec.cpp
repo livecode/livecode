@@ -686,7 +686,7 @@ Boolean MCS_createalias(MCStringRef p_target, MCStringRef p_alias)
     if (!MCS_pathtonative(*t_target_resolved, &t_target_native) || !MCS_pathtonative(*t_alias_resolved, &t_alias_native))
         return False;
     
-	return MCsystem -> CreateAlias(*t_target_resolved, *t_alias_resolved);
+	return MCsystem -> CreateAlias(*t_target_native, *t_alias_native);
 }
 
 Boolean MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved)
@@ -700,7 +700,7 @@ Boolean MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved)
     if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
         return False;
     
-	return MCsystem -> ResolveAlias(*t_resolved_path, r_resolved);
+	return MCsystem -> ResolveAlias(*t_native_path, r_resolved);
 }
 
 bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,

@@ -26,8 +26,8 @@ Use the <printTitle> property to specify the name of the next print job
 in the system printer queue. If the printTitle is empty at the start of
 a printing loop, the title of the defaultStack will be used.
 
-To have an effect, this property must be set before calling <open
-printing>. 
+To have an effect, this property must be set before calling 
+<open printing>. 
 
 References: print (command), open printing (command),
 printerName (property)

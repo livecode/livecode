@@ -44,9 +44,9 @@ The <revDatabaseColumnNames> <function> returns a list of <database
 field> names, separated by commas.
 
 Description:
-Use the <revDatabaseColumnNames> <function> to find out what <database
-field|database fields> are in the <record set (database cursor)|record
-set> returned by a <SQL query> or what database fields are contained
+Use the <revDatabaseColumnNames> <function> to find out what 
+<database field|database fields> are in the 
+<record set> returned by a <SQL query> or what database fields are contained
 within a certain table.
 
 There are two forms of the revDatabaseColumnNames function. It can
@@ -55,11 +55,11 @@ of version 2.9, the list of columns in a given table.
 
 To get the list of columns in a record set use a form like this:
 
-get revDatabaseColumnNames(tRecordSetId)
+    get revDatabaseColumnNames(tRecordSetId)
 
 To get the list of columns in a given table, use a form like this:
 
-get revDatabaseColumnNames(tConnectionId, "myTable")
+    get revDatabaseColumnNames(tConnectionId, "myTable")
 
 If the operation is not successful, the <revDatabaseColumnNames>
 <function> returns an error message that begins with the <string>
@@ -84,7 +84,7 @@ revDatabaseColumnTypes (function), revDatabaseColumnIsNull (function),
 LiveCode custom library (glossary), database field (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary),
-record set (database cursor) (glossary), return (glossary),
+record set (glossary), return (glossary),
 SQL query (glossary), string (keyword), Database library (library)
 
 Tags: database

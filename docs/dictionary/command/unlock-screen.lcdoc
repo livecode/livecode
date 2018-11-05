@@ -63,7 +63,7 @@ References: allowFieldRedraw (property), command (glossary),
 dontUseQT (property), dontUseQTEffects (property), execute (glossary), 
 handler (glossary), lock (glossary), lock screen (command), 
 lockScreen (property), property (glossary), 
-quicktime (glossary), unlock colorMap (command), 
+QuickTime (glossary), unlock colorMap (command), 
 unlock cursor (command), unlock error dialogs (command), 
 unlock moves (command), unlock recent (command),
 visual effect (command)

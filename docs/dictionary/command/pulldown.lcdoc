@@ -32,8 +32,7 @@ Use the <pulldown> <command> in a <mouseDown> <handler> to display the
 <menu> :
 
     on mouseDown
-
-    pulldown stack "Lookup Options"
+        pulldown stack "Lookup Options"
     end mouseDown
 
 

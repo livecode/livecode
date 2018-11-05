@@ -62,15 +62,20 @@ The <sheet> <command> pauses the running <handler> until the
 Attempting to open a sheet from within another sheet displays the second
 <stack> as a <modal dialog box> instead.
 
->*Cross-platform note:* <sheet(glossary)|Sheets> are only used on <OS
-> X|OS X systems>. If you use the <sheet> <command> on a <Mac OS>,
-> <Unix>, or <Windows|Windows system>, the <stack> is displayed as a
-> <modal dialog box> and the <parentStack> <parameter> is ignored.
+>*Cross-platform note:* The appearance of sheets on <OS X>, in which
+> they slide into view from the title bar, is unique to that OS and
+> does not happen on <Windows> or <Unix|Linux>. However, on all three 
+> OSes, dialogs opened with the sheet <command> will be window-modal,
+> rather than application-modal. A window-modal dialog will
+> block further interaction in the window being covered by the dialog,
+> while allowing interaction in all others. In an application-modal 
+> window, interactions with all other windows are prevented until the
+> dialog is dismissed.
 
 References: sheet (command), lock messages (command), ask (command),
 modeless (command), return (constant), sheet (glossary),
 variable (glossary), handler (glossary), property (glossary),
-location (glossary), modal dialog box (glossary), execute (glossary),
+modal dialog box (glossary), execute (glossary),
 dialog box (glossary), command (glossary), Windows (glossary),
 global (glossary), OS X (glossary), custom property (glossary),
 Unix (glossary), Mac OS (glossary), message (glossary),
@@ -79,7 +84,7 @@ button (keyword), openCard (message), closeStack (message),
 closeCard (message), closeBackground (message), openStack (message),
 openBackground (message), stack (object), button (object),
 defaultStack (property), script (property), properties (property),
-lockMessages (property)
+location (property), lockMessages (property)
 
 Tags: windowing
 
