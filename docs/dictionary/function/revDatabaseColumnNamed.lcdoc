@@ -45,8 +45,8 @@ if successful, an error string otherwise.
 
 Description:
 Use the <revDatabaseColumnNamed> <function> to obtain the contents of a
-given <database field>, in the current <record> of the specified <record
-set (database cursor)(glossary)>.
+given <database field>, in the current <record> of the specified 
+<record set (glossary)>.
 
 If you specify a <holderVariable>, the data is placed in that
 <variable>. Otherwise, the data is <return|returned> by the <function>.
@@ -75,7 +75,7 @@ References: function (control structure),
 revDatabaseColumnNames (function), revDatabaseColumnLengths (function),
 revDatabaseColumnNumbered (function), LiveCode custom library (glossary),
 return (glossary), variable (glossary), database (glossary),
-record set (database cursor) (glossary), record (glossary),
+record set (glossary), record (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), database field (glossary),
 string (keyword), Database library (library)

@@ -6,7 +6,7 @@ Syntax: revCurrentRecordIsFirst(<recordSetID>)
 
 Summary:
 <return|Returns> whether the current <record> is the first <record> in a
-<record set (database cursor)(glossary)>.
+<record set (glossary)>.
 
 Associations: database library
 
@@ -59,7 +59,7 @@ revdb_movelast (function), revQueryIsAtStart (function),
 revdb_movenext (function), LiveCode custom library (glossary),
 record (glossary), Standalone Application Settings (glossary),
 standalone application (glossary),
-record set (database cursor) (glossary), return (glossary),
+record set (glossary), return (glossary),
 string (keyword), Database library (library)
 
 Tags: database

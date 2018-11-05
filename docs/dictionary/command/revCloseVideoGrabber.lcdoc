@@ -37,8 +37,8 @@ memory it uses, when you're done.
 
 If your application uses video capture, you should execute the
 <revCloseVideoGrabber> <command> either when your application is
-finished using <video capture>, when the <stack> that uses <video
-capture> is closed (in a <closeStack> <handler>), or when your
+finished using <video capture>, when the <stack> that uses 
+<video capture> is closed (in a <closeStack> <handler>), or when your
 application quits (in a <shutdown> <handler>).
 
 If the video grabber was already recording video to a file, the

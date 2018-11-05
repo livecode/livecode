@@ -37,9 +37,8 @@ All open databases are closed automatically when the application quits.
 However, it is recommended practice to explicitly close database
 connections when your stack is finished with them.
 
-The <revCloseDatabase> <command> closes all open <record sets (database
-cursors)(glossary)> opened by the <database>, as well as closing the
-<database> itself.
+The <revCloseDatabase> <command> closes all open <record set|record sets> 
+opened by the <database>, as well as closing the <database> itself.
 
 >*Important:*  The <revCloseDatabase> <command> is part of the 
 > <Database library>. To ensure that the <command> works in a 
@@ -56,7 +55,7 @@ revdb_rollback (function), revDatabaseID (function),
 LiveCode custom library (glossary),
 Standalone Application Settings (glossary), database (glossary),
 standalone application (glossary),
-record set (database cursor) (glossary), command (glossary),
+record set (glossary), command (glossary),
 string (keyword), Database library (library)
 
 Tags: database

@@ -7,8 +7,7 @@ Type: function
 Syntax: revDatabaseColumnLengths(<recordSetID>)
 
 Summary:
-<return|Returns> the maximum field sizes in a <record set (database
-cursor)(glossary)>. 
+<return|Returns> the maximum field sizes in a <record set (glossary)>. 
 
 Associations: database library
 
@@ -61,7 +60,7 @@ revDatabaseColumnIsNull (function), revDatabaseColumnNumbered (function),
 LiveCode custom library (glossary),
 Standalone Application Settings (glossary), database field (glossary),
 standalone application (glossary),
-record set (database cursor) (glossary), return (glossary),
+record set (glossary), return (glossary),
 string (keyword), Database library (library)
 
 Tags: database
