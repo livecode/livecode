@@ -108,7 +108,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    dispatch "revIDEDeployAndroidInitialize" to stack "revDeployLibrary"
    
    -- If we're searching for inclusions, do it here 
-   local tConfirm
+   local tConfirm, tResult
    put true into tConfirm
    if pSettings["inclusions"] is "search" then 
       put false into tConfirm
@@ -122,8 +122,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    -- Make sure all dependencies are included
    revSBUpdateForDependencies "android", "armv6", , pSettings
    revSBEnsurePerExtensionSettings "android", pSettings
-   if the result is not empty then
-      return the result
+   put the result into tResult
+   if tResult is not empty then
+      throw tResult
    end if
    
    -- Manually remove built-in implementations from detected script library inclusions
