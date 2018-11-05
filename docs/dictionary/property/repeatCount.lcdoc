@@ -22,9 +22,9 @@ Value:
 The <repeatCount> of an <image> is an <integer>.
 
 Description:
-Use the <repeatCount> <property> to specify how many times an <animated
-GIF> <image> should repeat when it's displayed, or to stop it from
-repeating. 
+Use the <repeatCount> <property> to specify how many times an 
+<animated GIF> <image> should repeat when it's displayed, or to stop 
+it from repeating. 
 
 If the <repeatCount> is positive, the <image> repeats the specified
 number of times. If the <repeatCount> is <negative>, the <image>

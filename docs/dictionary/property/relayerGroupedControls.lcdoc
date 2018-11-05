@@ -25,8 +25,8 @@ By default, the <relayerGroupedControls> <property> is set to false.
 
 Description:
 Use the <relayerGroupedControls> <property> to change the <layer> of
-<grouped control|grouped controls> without being in <group-editing
-mode>, or to move <control(object)|controls> out of a <group> by
+<grouped control|grouped controls> without being in 
+<group-editing mode>, or to move <control(object)|controls> out of a <group> by
 changing their <layer>.
 
 The <layer> of a control is its order on the <card>. If two

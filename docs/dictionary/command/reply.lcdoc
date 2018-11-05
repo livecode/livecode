@@ -7,8 +7,8 @@ Syntax: reply <string> [with keyword <aeKeyword>]
 Syntax: reply error <string>
 
 Summary:
-<return|Returns> data to an application that sent LiveCode an <Apple
-event>. 
+<return|Returns> data to an application that sent LiveCode an 
+<Apple event>. 
 
 Introduced: 1.0
 
@@ -49,20 +49,20 @@ pieces you want to reply with.
 
 The form
 
-    reply <string> 
+    reply string
 
 is equivalent to
 
-    reply <string> with keyword "----"
+    reply string with keyword "----"
 
 
 The form
 
-    reply error <string> 
+    reply error string 
 
 is equivalent to
 
-    reply <string> with keyword "errs"
+    reply string with keyword "errs"
 
 
 For more information about Apple events, see Apple Computer's technical

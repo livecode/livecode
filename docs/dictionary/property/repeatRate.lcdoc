@@ -5,8 +5,8 @@ Type: property
 Syntax: set the repeatRate to <milliseconds>
 
 Summary:
-Specifies how long a <scrollbar> waits between repeats when the <mouse
-button> is held down.
+Specifies how long a <scrollbar> waits between repeats when the 
+<mouse button> is held down.
 
 Introduced: 1.0
 

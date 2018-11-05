@@ -41,16 +41,17 @@ different <soundSource> is specified, that input device is used instead.
 
 The possible soundSources vary, depending on the QuickTime version
 installed and on the system's hardware configuration. QuickTime 3.0 and
-later supports the following: imic - records from the internal
-microphone emic -records from the external sound input jack cd - records
-from an internal CD player irca - records from an RCA input jack
-
-    tvfm - records from an FM radio tuner
-    idav - records from a DAV analog input port
-    mbay - records from a media-bay device
-    modm - records from the modem
-    zvpc - records from zoom video input
-    none - does not record.
+later supports the following: 
+- imic - records from the internal microphone 
+- emic -records from the external sound input jack 
+- cd - records from an internal CD player 
+- irca - records from an RCA input jack
+- tvfm - records from an FM radio tuner
+- idav - records from a DAV analog input port
+- mbay - records from a media-bay device
+- modm - records from the modem
+- zvpc - records from zoom video input
+- none - does not record.
 
 
 Changes:
@@ -64,5 +65,6 @@ bit builds of LiveCode.
 
 References: open driver (command), record sound (command),
 command (glossary), property (glossary), string (keyword),
+dontUseQT (property), dontUseQTEffects (property), 
 playDestination (property)
 
