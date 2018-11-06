@@ -148,6 +148,29 @@ bool MCWin32GetDpiForMonitor(HRESULT &r_result, HMONITOR p_monitor,
 	return true;
 }
 
+//////////
+
+// IM-2014-01-28: [[ HiDPI ]] Weak-linked GetDpiForWindow function
+typedef UINT (WINAPI *GetDpiForWindowPTR)(HWND hwnd);
+bool MCWin32GetDpiForWindow(UINT &r_dpi, HWND p_hwnd)
+{
+	static GetDpiForWindowPTR s_GetDpiForWindow = NULL;
+	static bool s_init = true;
+
+	if (s_init)
+	{
+		s_GetDpiForWindow = (GetDpiForWindowPTR)GetProcAddress(GetModuleHandleA("shcore.dll"), "GetDpiForWindow");
+		s_init = false;
+	}
+
+	if (s_GetDpiForWindow == NULL)
+		return false;
+
+	r_dpi = s_GetDpiForWindow(p_hwnd);
+
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCWin32QueryActCtxSettings(const unichar_t *p_settings_name, unichar_t *&r_value)

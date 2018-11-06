@@ -65,6 +65,7 @@ bool MCWin32GetProcessDpiAwareness(HRESULT &r_result, HANDLE p_hprocess,
 bool MCWin32GetDpiForMonitor(HRESULT &r_result, HMONITOR p_monitor,
 							 MCWin32MonitorDpiType p_dpi_type,
 							 UINT *r_dpi_x, UINT *r_dpi_y);
+bool MCWin32GetDpiForWindow(UINT &r_dpi, HWND p_hwnd);
 
 ////////////////////////////////////////////////////////////////////////////////
 
