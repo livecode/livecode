@@ -2554,7 +2554,17 @@ command revRedirectMacOSResourcesRecurse pSourceFolder, pTargetFolder
       if revRedirectMacOSResourcesIsExecutable(pSourceFolder & slash & tFile) then
          next repeat
       end if
-      rename (pSourceFolder & slash & tFile) to (pTargetFolder & slash & tFile)
+      switch the platform
+         case "macos"
+         case "linux"
+            get shell("mv" && quote & pSourceFolder & slash & tFile & quote && \
+                  quote & pTargetFolder & slash & tFile & quote)
+            break
+         case "windows"
+            --following line does not work properly for symlink folders
+            rename (pSourceFolder & slash & tFile) to (pTargetFolder & slash & tFile)
+            break
+      end switch
    end repeat
    
    local tFolder
