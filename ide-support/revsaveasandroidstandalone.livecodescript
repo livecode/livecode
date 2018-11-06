@@ -1204,6 +1204,10 @@ private command addAssetsFromFolderToArchive pFolder, pBaseName, pArchive, @pFon
    if the last item of pFolder is ".svn" then
       exit addAssetsFromFolderToArchive
    end if
+
+   if char -1 of pFolder is slash then
+      delete char -1 of pFolder
+   end if
    
    local tOldFolder
    put the folder into tOldFolder
