@@ -145,6 +145,7 @@ static HICON create_status_icon(uint32_t p_icon_id)
 	t_icon = nil;
 
 	int t_width, t_height;
+	// TODO: USE GetSystemMetricsForDpi()
 	t_width = GetSystemMetrics(SM_CXICON);
 	t_height = GetSystemMetrics(SM_CYICON);
 

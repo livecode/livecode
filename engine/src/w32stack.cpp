@@ -234,6 +234,7 @@ static RECT getwrect(MCRectangle rect, DWORD wstyle, DWORD exstyle)
 	wrect.top = rect.y;
 	wrect.right = rect.x + rect.width;
 	wrect.bottom = rect.y + rect.height;
+	// TODO: Replace with AdjustWindowRectExForDpi
 	AdjustWindowRectEx(&wrect, wstyle, False, exstyle);
 	return wrect;
 }

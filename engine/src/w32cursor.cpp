@@ -180,6 +180,7 @@ void MCScreenDC::resetcursors(void)
 	}
 	else
 	{
+		// TODO: USE GetSystemMetricsForDpi()
 		MCcursormaxsize = GetSystemMetrics(SM_CXCURSOR);
 		MCcursorcanbealpha = False;
 	}

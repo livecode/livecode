@@ -268,6 +268,7 @@ Boolean MCScreenDC::open()
 	input_default_keyboard = GetKeyboardLayout(0);
 
 	// Make sure we initialize the dragDelta property
+	// TODO: USE GetSystemMetricsForDpi()
 	MCdragdelta = MCU_max(GetSystemMetrics(SM_CYDRAG), GetSystemMetrics(SM_CXDRAG));
 
 	// MW-2009-12-10: Colorspace support
