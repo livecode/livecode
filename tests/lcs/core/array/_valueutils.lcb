@@ -1,0 +1,16 @@
+library com.livecode.lcs_tests.core.valueutils
+
+use com.livecode.foreign
+
+__safe foreign handler MCValueIsUnique(in pValue as any) returns CBool binds to "<builtin>"
+__safe foreign handler MCValueIsEqualTo(in pLeft as any, in pRight as any) returns CBool binds to "<builtin>"
+
+public handler IsValueUnique(in pValue as any)
+	return MCValueIsUnique(pValue)
+end handler
+
+public handler IsUniquelyEqualTo(in pLeft as any, in pRight as any)
+	return MCValueIsUnique(pLeft) and MCValueIsUnique(pRight) and MCValueIsEqualTo(pLeft, pRight)
+end handler
+
+end library

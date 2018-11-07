@@ -1798,6 +1798,33 @@ enum Parse_errors
     
     // {PE-0584} out of memory
     PE_OUTOFMEMORY,
+    
+    // {PE-0585} literal: expression expected
+    PE_SEQLITERAL_EXPEXPECTED,
+    
+    // {PE-0586} literal: ',' or ']' expected
+    PE_SEQLITERAL_SEPEXPECTED,
+    
+    // {PE-0587} literal: key literal expected
+    PE_ARRLITERAL_KEYEXPECTED,
+    
+    // {PE-0588} literal: expression for value expected
+    PE_ARRLITERAL_VALEXPEXPECTED,
+    
+    // {PE-0589} literal: ':' expected
+    PE_ARRLITERAL_COLEXPECTED,
+    
+    // {PE-0590} literal: ',' or '}' expected
+    PE_ARRLITERAL_SEPEXPECTED,
+    
+    // {PE-0591} literal: array keys must be constant
+    PE_ARRLITERAL_KEYNOTCONSTANT,
+    
+    // {PE-0592} literal: array keys must be caselessly unique
+    PE_ARRLITERAL_NOTUNIQUE,
+    
+    // {PE-0593} literal: array keys must be string or integer literals
+    PE_ARRLITERAL_BADKEY,
 };
 
 extern const char *MCparsingerrors;

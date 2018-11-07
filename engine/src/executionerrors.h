@@ -2782,6 +2782,15 @@ enum Exec_errors
 
     // {EE-0911} params: bad finish index
     EE_PARAMS_BADFINISH,
+
+    // {EE-0912} literal: error in value expression
+    EE_SEQLITERAL_BADEXPR,
+
+    // {EE-0913} literal: error in key expression
+    EE_ARRLITERAL_BADKEYEXPR,
+
+    // {EE-0914} literal: error in value expression
+    EE_ARRLITERAL_BADVALEXPR,
 };
 
 extern const char *MCexecutionerrors;
