@@ -283,7 +283,7 @@ static bool __MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_
         char_count = length - offset;
     
     if (!MCStringIsNative(p_string))
-        return MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string) + offset, char_count, r_number);
+        return __MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string) + offset, char_count, p_integer_only, r_number);
     
     bool t_success;
     t_success = false;
