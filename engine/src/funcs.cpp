@@ -1081,7 +1081,40 @@ Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 
 Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
 {
-	return MCFunction::parse(sp, the);
+    if (!the)
+    {
+        if (get0or1or2params(sp, &(&start), &(&finish), the) != PS_NORMAL)
+        {
+            MCperror->add
+            (PE_MOUSE_BADPARAM, sp);
+            return PS_ERROR;
+        }
+    }
+    else
+        initpoint(sp);
+    
+    return PS_NORMAL;
+}
+
+void MCParams::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    if (*start == nullptr)
+    {
+        MCEngineEvalParams(ctxt, r_value.stringref_value);
+        r_value.type = kMCExecValueTypeStringRef;
+        return;
+    }
+    
+    integer_t t_start;
+    if (!ctxt.EvalExprAsInt(*start, EE_PARAMS_BADSTART, t_start))
+        return;
+    
+    integer_t t_finish;
+    if (!ctxt.EvalOptionalExprAsInt(*finish, -1, EE_PARAMS_BADFINISH, t_finish))
+        return;
+    
+    MCEngineEvalParamsRange(ctxt, t_start, t_finish, r_value.arrayref_value);
+    r_value.type = kMCExecValueTypeArrayRef;
 }
 
 MCReplaceText::~MCReplaceText()
