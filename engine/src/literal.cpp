@@ -23,6 +23,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "literal.h"
 #include "scriptpt.h"
 
+MCExpressionAttrs MCLiteral::getattrs(void) const
+{
+    return MCExpressionAttrs().SetIsConstant();
+}
+
 Parse_stat MCLiteral::parse(MCScriptPoint &sp, Boolean the)
 {
 	initpoint(sp);
