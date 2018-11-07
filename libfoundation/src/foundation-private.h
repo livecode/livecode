@@ -41,6 +41,14 @@ enum
 {
 	// If set, then this value is in the unique table.
 	kMCValueFlagIsInterred = 1 << 27,
+    
+    // The mask for the typecode bits.
+    kMCValueFlagsTypeCodeMask = 0xf0000000,
+    
+    // Names store the hash value in the flags word. We need to keep the IsInterred
+    // flag clear (due to an implementation detail in ValueDestroy) so we have
+    // 27 bits of hash.
+    kMCValueFlagsNameHashMask = 0x07ffffff,
 };
 
 struct __MCValue
@@ -251,12 +259,12 @@ struct __MCString: public __MCValue
         struct
         {
             uindex_t char_count;
+            uindex_t capacity;
             union
             {
                 unichar_t *chars;
                 char_t *native_chars;
             };
-            uindex_t capacity;
             double numeric_value;
         };
     };
@@ -281,8 +289,8 @@ struct __MCData: public __MCValue
         struct
         {
             uindex_t byte_count;
-            byte_t *bytes;
             uindex_t capacity;
+            byte_t *bytes;
         };
     };
 };
@@ -294,7 +302,6 @@ struct __MCName: public __MCValue
 	__MCName *next;
 	__MCName *key;
 	MCStringRef string;
-	hash_t hash;
 };
 
 //////////

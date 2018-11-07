@@ -35,6 +35,16 @@ static uindex_t s_name_table_capacity;
 static void __MCNameGrowTable(void);
 static void __MCNameShrinkTable(void);
 
+static inline hash_t __MCNameGetHash(__MCName* p_name)
+{
+    return p_name->flags & kMCValueFlagsNameHashMask;
+}
+
+static inline void __MCNameSetHash(__MCName* p_name, hash_t p_hash)
+{
+    p_name->flags = (p_name->flags & kMCValueFlagsTypeCodeMask) | (p_hash & kMCValueFlagsNameHashMask);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
@@ -45,13 +55,8 @@ MCNameRef MCNAME(const char *p_string)
 	
 	MCNameRef t_name;
 	/* UNCHECKED */ MCNameCreate(t_string, t_name);
-	
-	MCValueRef t_name_unique;
-	/* UNCHECKED */ MCValueInter(t_name, t_name_unique);
-	
-	MCValueRelease(t_name);
-	
-	return (MCNameRef)t_name_unique;
+
+	return t_name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,6 +76,9 @@ bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 	// Compute the has of the characters, up to case.
 	hash_t t_hash;
 	t_hash = MCStringHash(p_string, kMCStringOptionCompareCaseless);
+    
+    // Reduce the hash to the size we store
+    t_hash &= kMCValueFlagsNameHashMask;
 
 	// Calculate the index of the chain in the name table where this might be
 	// found. The capacity is always a power-of-two, so its just a mask op.
@@ -85,7 +93,7 @@ bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 	{
 		// If the string matches, then we are done - notice we compare the
 		// full hash first.
-		if (t_hash == t_key_name -> hash &&
+		if (t_hash == __MCNameGetHash(t_key_name) &&
 			MCStringIsEqualTo(p_string, t_key_name -> string, kMCStringOptionCompareCaseless))
 			break;
 
@@ -156,7 +164,7 @@ bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 		}
 
 		// Record the hash (speeds up searching and such).
-		t_name -> hash = t_hash;
+        __MCNameSetHash(t_name, t_hash);
 
 		// Return the new name.
 		r_name = t_name;
@@ -211,7 +219,10 @@ MCNameRef MCNameLookupCaseless(MCStringRef p_string)
 	// Compute the hash of the characters, up to case.
 	hash_t t_hash;
 	t_hash = MCStringHash(p_string, kMCStringOptionCompareCaseless);
-
+    
+    // Reduce the hash to the size we store
+    t_hash &= kMCValueFlagsNameHashMask;
+    
 	// Calculate the index of the chain in the name table where this name might
 	// be found. The capacity is always a power-of-two, so its just a mask op.
 	uindex_t t_index;
@@ -224,7 +235,7 @@ MCNameRef MCNameLookupCaseless(MCStringRef p_string)
 	{
 		// If the string matches, then we are done - notice we compare the full
 		// hash first.
-		if (t_hash == t_key_name -> hash &&
+		if (t_hash == __MCNameGetHash(t_key_name) &&
 			MCStringIsEqualTo(p_string, t_key_name -> string, kMCStringOptionCompareCaseless))
 			break;
 
@@ -293,7 +304,7 @@ void __MCNameDestroy(__MCName *self)
 {
 	// Compute the index in the table
 	uindex_t t_index;
-	t_index = self -> hash & (s_name_table_capacity - 1);
+	t_index = __MCNameGetHash(self) & (s_name_table_capacity - 1);
 
 	// Find the previous link in the chain
 	__MCName *t_previous;
@@ -333,7 +344,7 @@ bool __MCNameCopyDescription(__MCName *self, MCStringRef& r_string)
 
 hash_t __MCNameHash(__MCName *self)
 {
-	return self -> hash;
+	return __MCNameGetHash(self);
 }
 
 bool __MCNameIsEqualTo(__MCName *self, __MCName *p_other_self)
@@ -362,12 +373,12 @@ static void __MCNameRelocateTableEntries(uindex_t p_start, uindex_t p_finish, ui
 		{
 			// Compute the new index.
 			uindex_t t_new_index;
-			t_new_index = t_first -> hash & (p_new_capacity - 1);
+			t_new_index = __MCNameGetHash(t_first) & (p_new_capacity - 1);
 
 			// Search for the last name to relocate.
 			MCNameRef t_last;
 			for(t_last = t_first; t_last -> next != nil; t_last = t_last -> next)
-				if ((t_last -> next -> hash & (p_new_capacity - 1)) != t_new_index)
+				if ((__MCNameGetHash(t_last -> next) & (p_new_capacity - 1)) != t_new_index)
 					break;
 
 			// Record the next name to process after this chain.
