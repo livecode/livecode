@@ -1196,10 +1196,13 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 };
 
-class MCParams : public MCConstantFunctionCtxt<MCStringRef, MCEngineEvalParams>
+class MCParams : public MCFunction
 {
+    MCAutoPointer<MCExpression> start;
+    MCAutoPointer<MCExpression> finish;
 public:
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    virtual void eval_ctxt(MCExecContext &, MCExecValue &);
 };
 
 class MCPeerAddress : public MCUnaryFunctionCtxt<MCNameRef, MCStringRef, MCNetworkEvalPeerAddress, EE_HOSTADDRESS_BADSOCKET, PE_PEERADDRESS_BADSOCKET>
