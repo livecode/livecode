@@ -2284,6 +2284,9 @@ MC_DLLEXPORT bool MCStringIsMutable(const MCStringRef string);
 
 // Returns true if the string is the empty string.
 MC_DLLEXPORT bool MCStringIsEmpty(MCStringRef string);
+    
+// Returns true if the string is a (strict) integer string <-?(0|[1-9][0-9]*)>*/
+MC_DLLEXPORT bool MCStringIsInteger(MCStringRef string);
 
 // Returns true if the the string only requires native characters to represent.
 MC_DLLEXPORT bool MCStringCanBeNative(MCStringRef string);

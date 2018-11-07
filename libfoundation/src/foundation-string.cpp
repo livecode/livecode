@@ -2947,6 +2947,47 @@ bool MCStringIsEmpty(MCStringRef string)
 	return string == nil || MCStringGetLength(string) == 0;
 }
 
+template<typename T>
+static inline bool __MCStringIsInteger(const T *p_chars, uindex_t p_length)
+{ 
+    uindex_t i = 0;
+    
+    if (p_chars[i] == '-')
+        i++;
+    
+    if (i == p_length)
+        return false;
+    
+    if (p_chars[i] == '0')
+    {
+        return i + 1 == p_length;
+    }
+    
+    for(; i < p_length; i++)
+    {
+        if (!isdigit(p_chars[i]))
+        {
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+MC_DLLEXPORT_DEF
+bool MCStringIsInteger(MCStringRef self)
+{
+    __MCAssertIsString(self);
+    
+    if (__MCStringIsIndirect(self))
+        self = self -> string;
+    
+    if (__MCStringIsNative(self))
+        return __MCStringIsInteger(self->native_chars, self->char_count);
+    
+    return __MCStringIsInteger(self->chars, self->char_count);
+}
+
 MC_DLLEXPORT_DEF
 bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_other, MCStringOptions p_options)
 {
