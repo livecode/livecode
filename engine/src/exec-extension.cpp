@@ -89,8 +89,8 @@ static void __rebuild_library_handler_list(void)
                 if (MCArrayFetchValue(MCextensionshandlermap, false, t_name, t_value))
                     continue;
                 
-                MCAutoValueRef t_ptr;
-                MCForeignValueCreate(kMCPointerTypeInfo, &t_ext, (MCForeignValueRef&)t_ptr);
+                MCAutoNumberRef t_ptr;
+                MCNumberCreateWithAlignedPointer(t_ext, &t_ptr);
                 MCArrayStoreValue(MCextensionshandlermap, false, t_name, *t_ptr);
             }
         }
@@ -428,12 +428,12 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
     if (MCextensionshandlermap == nil)
         return ES_NOT_HANDLED;
     
-    MCForeignValueRef t_ptr;
+    MCNumberRef t_ptr;
     if (!MCArrayFetchValue(MCextensionshandlermap, false, p_message, (MCValueRef&)t_ptr))
         return ES_NOT_HANDLED;
     
     MCLoadedExtension *t_ext;
-    t_ext = *(MCLoadedExtension **)MCForeignValueGetContentsPtr(t_ptr);
+    t_ext = (MCLoadedExtension *)MCNumberFetchAsAlignedPointer(t_ptr);
     
     MCTypeInfoRef t_signature;
     MCScriptQueryHandlerSignatureOfModule(t_ext -> module, p_message, t_signature);
