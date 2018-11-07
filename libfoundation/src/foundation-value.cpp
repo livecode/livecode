@@ -119,6 +119,11 @@ uindex_t MCValueGetRetainCount(MCValueRef p_value)
 	MCAssert(self != nil);
     __MCAssertIsValue(self);
     
+    if (__MCValueIsTaggedNumber(self))
+    {
+        return UINDEX_MAX;
+    }
+    
     return self -> references;
 }
 
@@ -129,6 +134,11 @@ MCValueRef MCValueRetain(MCValueRef p_value)
 
 	MCAssert(self != nil);
     __MCAssertIsValue(self);
+    
+    if (__MCValueIsTaggedNumber(self))
+    {
+        return self;
+    }
     
 	MCAssert(self -> references != UINT32_MAX);
 	self -> references += 1;
@@ -145,7 +155,12 @@ void MCValueRelease(MCValueRef p_value)
         return;
     
     __MCAssertIsValue(self);
-        
+    
+    if (__MCValueIsTaggedNumber(self))
+    {
+        return;
+    }
+    
     uint32_t t_new_references;
     t_new_references = self -> references - 1;
     if (t_new_references == 0)
@@ -469,6 +484,10 @@ bool MCValueIsUnique(MCValueRef p_value)
 	case kMCValueTypeCodeBoolean:
 	case kMCValueTypeCodeName:
 		return true;
+    case kMCValueTypeCodeNumber:
+        if (__MCValueIsTaggedNumber(self))
+            return true;
+        break;
 	case kMCValueTypeCodeCustom:
 		if (__MCCustomValueResolveTypeInfo(self) -> custom . callbacks . is_singleton)
 			return true;

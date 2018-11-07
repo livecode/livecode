@@ -2039,6 +2039,7 @@ MC_DLLEXPORT bool MCBooleanConvertToCFBooleanRef(MCBooleanRef p_number, CFBoolea
 MC_DLLEXPORT bool MCNumberCreateWithInteger(integer_t value, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberCreateWithUnsignedInteger(uinteger_t value, MCNumberRef& r_number);
 MC_DLLEXPORT bool MCNumberCreateWithReal(real64_t value, MCNumberRef& r_number);
+MC_DLLEXPORT bool MCNumberCreateWithAlignedPointer(void *pointer, MCNumberRef& r_number);
 
 MC_DLLEXPORT compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self);
 
@@ -2048,6 +2049,7 @@ MC_DLLEXPORT bool MCNumberIsReal(MCNumberRef number);
 MC_DLLEXPORT integer_t MCNumberFetchAsInteger(MCNumberRef number);
 MC_DLLEXPORT uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
 MC_DLLEXPORT real64_t MCNumberFetchAsReal(MCNumberRef number);
+MC_DLLEXPORT void *MCNumberFetchAsAlignedPointer(MCNumberRef number);
 
 MC_DLLEXPORT bool MCNumberStrictFetchAsIndex(MCNumberRef number,
                                              index_t& r_index);
