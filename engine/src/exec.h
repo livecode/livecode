@@ -1786,7 +1786,8 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpression **cases, uindex_t case_count, int2 default_case, uint2 *case_offsets, MCStatement *statements, uint2 line, uint2 pos);
+void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpression **cases, uindex_t case_count, MCStatement* defaultstmt, MCStatement **casestmts, uint2 line, uint2 pos);
+void MCKeywordsExecStaticSwitch(MCExecContext& ctxt, MCExpression *condition, MCArrayRef cases, MCStatement* defaultstmt, MCStatement **casestmts, uint2 line, uint2 pos);
 void MCKeywordsExecIf(MCExecContext& ctxt, MCExpression *condition, MCStatement *thenstatements, MCStatement *elsestatements, uint2 line, uint2 pos);
 void MCKeywordsExecRepeatCount(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, uint2 line, uint2 pos);
 void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExpression *endcond, MCVarref *loopvar, File_unit each, uint2 line, uint2 pos);
