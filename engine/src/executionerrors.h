@@ -2794,6 +2794,9 @@ enum Exec_errors
     
     // {EE-0915} try: error in error expression
     EE_TRYFUNC_ERRINERR,
+
+    // {EE-0916} variable: no first or last value
+    EE_VARIABLE_NOFIRSTORLAST,
 };
 
 extern const char *MCexecutionerrors;

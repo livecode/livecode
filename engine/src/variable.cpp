@@ -772,6 +772,24 @@ bool MCVariable::remove(MCExecContext& ctxt, MCSpan<MCNameRef> p_path)
     
 }
 
+uindex_t MCVariable::upperbound(MCExecContext& ctxt, MCSpan<MCNameRef> p_path)
+{
+    if (value.type != kMCExecValueTypeArrayRef)
+        return 0;
+    
+    MCValueRef t_value;
+    if (p_path.empty())
+    {
+        t_value = value.arrayref_value;
+    }
+    else
+    {
+        if (!MCArrayFetchValueOnPath(value.arrayref_value, ctxt.GetCaseSensitive(), p_path, t_value))
+            return 0;
+    }
+    
+    return MCArrayGetCount((MCArrayRef)t_value);
+}
 
 bool MCVariable::converttomutablearray(void)
 {
@@ -1087,6 +1105,11 @@ bool MCContainer::give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariabl
 	return m_variable -> give_value(ctxt, p_value, getpath(), p_setting);
 }
 
+uindex_t MCContainer::upperbound(MCExecContext& ctxt)
+{
+    return m_variable->upperbound(ctxt, getpath());
+}
+
 bool MCContainer::replace(MCExecContext &ctxt, MCValueRef p_replacement, MCRange p_range)
 {
     return m_variable -> replace(ctxt, p_replacement, p_range, getpath());
@@ -1146,11 +1169,11 @@ MCSpan<MCNameRef> MCContainer::getpath()
 MCVarref::~MCVarref()
 {
     if (dimensions <= 1)
-        delete exp;
+        exp.Delete();
     else
     {
         for(uint4 i = 0; i < dimensions; ++i)
-            delete exps[i];
+            exps[i].Delete();
         MCMemoryDeleteArray(exps); /* Allocated with MCMemoryNewArray() */
     }
 }
@@ -1242,6 +1265,22 @@ bool MCVarref::deleterange(MCExecContext &ctxt, MCRange p_range)
     return t_container.deleterange(ctxt, p_range);
 }
 
+Parse_stat MCVarrefExpression::Parse(MCScriptPoint& sp)
+{
+    if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_FIRST) == PS_NORMAL)
+        m_non_expression = kFirst;
+    else if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_LAST) == PS_NORMAL)
+        m_non_expression = kLast;
+    else if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_NEXT) == PS_NORMAL)
+        m_non_expression = kNext;
+    else
+    {
+        return sp.parseexp(False, True, &m_expression);
+    }
+    
+    return PS_NORMAL;
+}
+
 Parse_stat MCVarref::parsearray(MCScriptPoint &sp)
 {
 	Symbol_type type;
@@ -1257,8 +1296,14 @@ Parse_stat MCVarref::parsearray(MCScriptPoint &sp)
 			return PS_NORMAL;
 		}
 
-		MCExpression *t_new_dimension;
-		if (dimensions == 255 || sp.parseexp(False, True, &t_new_dimension) != PS_NORMAL)
+        if (dimensions == 255)
+        {
+            MCperror->add(PE_VARIABLE_BADINDEX, sp);
+            return PS_ERROR;
+        }
+        
+		MCVarrefExpression t_new_dimension;
+		if (dimensions == 255 || t_new_dimension.Parse(sp) != PS_NORMAL)
 		{
 			MCperror->add(PE_VARIABLE_BADINDEX, sp);
 			return PS_ERROR;
@@ -1277,7 +1322,7 @@ Parse_stat MCVarref::parsearray(MCScriptPoint &sp)
 		}
 		else if (dimensions == 1)
 		{
-			MCExpression *t_current_exp = exp;
+			MCVarrefExpression t_current_exp = exp;
 			uindex_t t_dimensions = dimensions;
 			if (!MCMemoryNewArray(2, exps, t_dimensions))
 				return PS_ERROR;
@@ -1456,7 +1501,7 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer& r_container)
         return true;
     }
 
-	MCExpression **t_dimensions;
+	MCVarrefExpression *t_dimensions;
 	if (dimensions == 1)
 		t_dimensions = &exp;
 	else
@@ -1466,26 +1511,65 @@ bool MCVarref::resolve(MCExecContext& ctxt, MCContainer& r_container)
     
     // AL-2014-08-20: [[ ArrayElementRefParams ]] If the Varref refers to a container then
     //  resolving the path requires appending the new dimensions to the old path
-    MCSpan<MCNameRef> t_old_path = getpath(ctxt);
-    if (t_old_path.length() > 0)
-        if (!t_builder.AppendNameSpan(t_old_path))
-            return false;
-            
+    if (isparam)
+    {
+        MCContainer *t_param_container = fetchcontainer(ctxt);
+        MCSpan<MCNameRef> t_old_path = t_param_container->getpath();
+        if (t_old_path.length() > 0)
+            if (!t_builder.AppendNameSpan(t_old_path))
+                return false;
+        r_container.m_variable = t_param_container->getvar();
+    }
+    else
+    {
+        r_container.m_variable = fetchvar(ctxt);
+    }
+    
     for(uindex_t i = 0; i < dimensions; i++)
 	{
         MCAutoValueRef t_value;
-        if (!ctxt . EvalExprAsValueRef(t_dimensions[i], EE_VARIABLE_BADINDEX, &t_value))
-            return false;
+        if (t_dimensions[i].TypeOf() == MCVarrefExpression::kExpression)
+        {
+            if (!ctxt . EvalExprAsValueRef(t_dimensions[i], EE_VARIABLE_BADINDEX, &t_value))
+                return false;
+        }
+        else
+        {
+            uindex_t t_upper_bound = r_container.upperbound(ctxt);
+            
+            if (t_upper_bound == 0 &&
+                t_dimensions[i].TypeOf() != MCVarrefExpression::kNext)
+            {
+                ctxt.LegacyThrow(EE_VARIABLE_NOFIRSTORLAST);
+                return false;
+            }
+            
+            uindex_t t_index;
+            switch(t_dimensions[i].TypeOf())
+            {
+            case MCVarrefExpression::kExpression:
+                /* Handled Above */
+                MCUnreachableReturn(false);
+                break;
+            case MCVarrefExpression::kFirst:
+                t_index = 1;
+                break;
+            case MCVarrefExpression::kLast:
+                t_index = t_upper_bound;
+                break;
+            case MCVarrefExpression::kNext:
+                t_index = t_upper_bound + 1;
+                break;
+            }
+            
+            if (!MCNumberCreateWithInteger(t_index, (MCNumberRef&)&t_value))
+                return false;
+        }
         
         if (!t_builder.AppendValueRef(ctxt, *t_value))
             return false;
     }
 
-    if (!isparam)
-        r_container.m_variable = fetchvar(ctxt);
-    else
-        r_container.m_variable = fetchcontainer(ctxt)->getvar();
-    
     return true;
 }
 

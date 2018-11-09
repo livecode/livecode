@@ -202,3 +202,25 @@ end TestFetchScriptLocal
 
 on TestFetchGlobal
 end TestFetchGlobal
+
+on TestMetaKeys
+   local tEmptyArray
+   put empty into tEmptyArray
+   TestAssert "empty[first] is empty", try(tEmptyArray[first], item 1 of error is 915)
+   TestAssert "empty[last] is empty", try(tEmptyArray[last], item 1 of error is 915)
+   TestAssert "empty[next] is empty", tEmptyArray[next] is empty
+
+   local tNonEmptyArray
+   put [ 1, 2, 3 ] into tNonEmptyArray
+   TestAssert "non-empty[first] is non-empty[1]", tNonEmptyArray[first] is 1
+   TestAssert "non-empty[last] is non-empty[the number of elements in non-empty]", tNonEmptyArray[last] is 3
+   TestAssert "non-empty[next] is empty", tNonEmptyArray[next] is empty
+
+   put 100 into tNonEmptyArray[first]
+   TestAssert "put into non-empty[first]", tNonEmptyArray[1] is 100
+   put 300 into tNonEmptyArray[last]
+   TestAssert "put into non-empty[last]", tNonEmptyArray[3] is 300
+   put 400 into tNonEmptyArray[next]
+   TestAssert "put into non-empty[next]", tNonEmptyArray[4] is 400
+end TestMetaKeys
+

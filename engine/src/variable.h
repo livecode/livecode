@@ -108,7 +108,15 @@ public:
     bool eval_ctxt(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCExecValue &r_value);
     // Give the exec value to the variable (nested key).
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting = kMCVariableSetInto);
-	
+    
+    /* Returns the 'upper bound' of the array at p_path in the variable. If the
+     * value on the given path is not an array, 0 is returned. Otherwise the
+     * number of elements in the array is returned.
+     * Note: This is equivalent to 'the number of elements in ...' currently,
+     * however in the future, it will distinguish between sequence and non-sequence
+     * arrays. */
+    uindex_t upperbound(MCExecContext& ctxt, MCSpan<MCNameRef> p_path);
+    
     bool setvalueref(MCValueRef value);
 	MCValueRef getvalueref(void);
 	bool copyasvalueref(MCValueRef& r_value);
@@ -293,10 +301,13 @@ public:
     bool remove(MCExecContext& ctxt);
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
+    
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    
+    uindex_t upperbound(MCExecContext& ctxt);
     
 	bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range);
 	bool deleterange(MCExecContext& ctxt, MCRange p_range);
@@ -335,6 +346,51 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/* This class wraps an MCExpression pointer, but uses the bottom 3 bits to
+ * encode the 'special' expressions 'first', 'last' and 'next'. */
+class MCVarrefExpression
+{
+public:
+    enum Type
+    {
+        kExpression = 0,
+        kFirst = 1,
+        kLast = 2,
+        kNext = 3
+    };
+    
+    MCVarrefExpression(void)
+        : m_expression(nullptr)
+    {
+    }
+    
+    Type TypeOf(void) const
+    {
+        return (Type)(m_non_expression & 3);
+    }
+    
+    Parse_stat Parse(MCScriptPoint& sp);
+    
+    void Delete(void)
+    {
+        if (TypeOf() == kExpression)
+            delete m_expression;
+    }
+    
+    operator MCExpression *(void) const
+    {
+        MCAssert(TypeOf() == kExpression);
+        return m_expression;
+    }
+    
+private:
+    union
+    {
+        MCExpression *m_expression = nullptr;
+        uintptr_t m_non_expression;
+    };
+};
+
 class MCVarref : public MCExpression
 {
 protected:
@@ -342,8 +398,8 @@ protected:
 	MCHandler *handler = nullptr;
 	union
 	{
-		MCExpression *exp = nullptr;
-		MCExpression **exps;
+		MCVarrefExpression exp;
+		MCVarrefExpression *exps = nullptr;
 	};
 	uint16_t index = 0;
 	uint8_t dimensions = 0;
