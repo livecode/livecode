@@ -173,7 +173,7 @@ bool MCWin32GetDpiForWindow(UINT &r_dpi, HWND p_hwnd)
 
 // [[ HiDPI ]] Weak-linked AdjustWindowRectExForDpi function
 typedef UINT(WINAPI *AdjustWindowRectExForDpiPTR)(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi);
-bool MCWin32AdjustWindowRectExForDpi(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle)
+bool MCWin32AdjustWindowRectExForDpi(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi)
 {
 	static AdjustWindowRectExForDpiPTR s_AdjustWindowRectExForDpi = NULL;
 	static bool s_init = true;
@@ -189,8 +189,29 @@ bool MCWin32AdjustWindowRectExForDpi(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, D
 			return AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle);
 	}
 	else {
-		UINT dpi = 144;
 		return s_AdjustWindowRectExForDpi(lpRect, dwStyle, bMenu, dwExStyle, dpi);
+	}
+}
+
+// [[ HiDPI ]] Weak-linked GetSystemMetricsForDpi function
+typedef UINT(WINAPI *GetSystemMetricsForDpiPTR)(int nIndex, UINT dpi);
+int MCWin32GetSystemMetricsForDpi(int nIndex, UINT dpi)
+{
+	static GetSystemMetricsForDpiPTR s_GetSystemMetricsForDpi = NULL;
+	static bool s_init = true;
+
+	if (s_init)
+	{
+		s_GetSystemMetricsForDpi = (GetSystemMetricsForDpiPTR)GetProcAddress(GetModuleHandleA("user32.dll"), "GetSystemMetricsForDpi");
+		s_init = false;
+	}
+
+	if (s_GetSystemMetricsForDpi == NULL)
+	{
+		return GetSystemMetrics(nIndex);
+	}
+	else {
+		return s_GetSystemMetricsForDpi(nIndex, dpi);
 	}
 }
 

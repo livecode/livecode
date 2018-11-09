@@ -235,10 +235,9 @@ static RECT getwrect(MCRectangle rect, DWORD wstyle, DWORD exstyle)
 	wrect.top = rect.y;
 	wrect.right = rect.x + rect.width;
 	wrect.bottom = rect.y + rect.height;
-	// TODO: Replace with AdjustWindowRectExForDpi
+	// TODO: Determine target monitor to so proper dpi can be applied
 	UINT dpi = 144;
-	MCWin32AdjustWindowRectExForDpi(&wrect, wstyle, False, exstyle);
-	//AdjustWindowRectEx(&wrect, wstyle, False, exstyle)
+	MCWin32AdjustWindowRectExForDpi(&wrect, wstyle, False, exstyle, dpi);
 	return wrect;
 }
 
