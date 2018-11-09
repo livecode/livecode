@@ -127,7 +127,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 		const LT *te;
 		MCExpression *newfact = NULL;
 		if (stat != PS_NORMAL || type != ST_ID
-		        || sp.lookup(SP_FACTOR, te) != PS_NO_MATCH
+		        || (sp.lookup(SP_FACTOR, te) != PS_NO_MATCH && te->type != TT_FUNCTION)
 		        || sp.lookupconstant(&newfact) == PS_NORMAL)
 		{
 			delete newfact;
@@ -1322,7 +1322,7 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 					curstatement = NULL;
 					stat = sp.next(type);
 					if (errorvar != NULL || stat != PS_NORMAL || type != ST_ID
-					        || sp.lookup(SP_FACTOR, te) != PS_NO_MATCH
+					        || (sp.lookup(SP_FACTOR, te) != PS_NO_MATCH && te->type != TT_FUNCTION)
 					        || sp.lookupconstant(&newfact) == PS_NORMAL
 					        || sp . findnewvar(sp.gettoken_nameref(), kMCEmptyName, &errorvar) != PS_NORMAL)
 					{
