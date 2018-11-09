@@ -2214,6 +2214,15 @@ public:
     virtual ~MCTrunc(){}
 };
 
+class MCTryFunc : public MCFunction
+{
+    MCAutoPointer<MCExpression> expression;
+    MCAutoPointer<MCExpression> on_error;
+public:
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    virtual void eval_ctxt(MCExecContext &, MCExecValue &);
+};
+
 // MDW-2014-08-23 : [[ feature_floor ]]
 class MCFloor : public MCUnaryFunctionCtxt<double, double, MCMathEvalFloor, EE_FLOOR_BADSOURCE, PE_FLOOR_BADPARAM>
 {

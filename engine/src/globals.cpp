@@ -374,6 +374,7 @@ MCRectangle MCcur_effects_rect;
 MCEffectList *MCcur_effects;
 MCError *MCperror;
 MCError *MCeerror;
+MCVariable *MClasterror;
 MCVariable *MCglobals;
 MCVariable *MCmb;
 MCVariable *MCeach;
@@ -1063,6 +1064,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
 {
 	MCperror = new (nothrow) MCError();
 	MCeerror = new (nothrow) MCError();
+    /* UNCHECKED */ MCVariable::create(MClasterror);
 	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCresult"), MCresult);
     MCresultmode = kMCExecResultModeReturn;
 
@@ -1414,6 +1416,7 @@ int X_close(void)
 
 	delete MCperror;
 	delete MCeerror;
+    delete MClasterror;
 
     MCclipboard->Release();
     MCselection->Release();

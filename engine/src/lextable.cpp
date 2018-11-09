@@ -1776,6 +1776,7 @@ const LT factor_table[] =
         {"truewordoffset", TT_FUNCTION, F_TRUEWORD_OFFSET},
         {"truewords", TT_CLASS, CT_TRUEWORD},
         {"trunc", TT_FUNCTION, F_TRUNC},
+        {"try", TT_FUNCTION, F_TRY},
         {"twelvehourtime", TT_PROPERTY, P_TWELVE_TIME},
         {"typingrate", TT_PROPERTY, P_TYPE_RATE},
         {"umask", TT_PROPERTY, P_UMASK},

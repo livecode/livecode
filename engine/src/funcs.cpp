@@ -1636,6 +1636,66 @@ void MCTopStack::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
     }
 }
 
+Parse_stat MCTryFunc::parse(MCScriptPoint& sp, Boolean the)
+{
+    initpoint(sp);
+    if (sp.skip_token(SP_FACTOR, TT_LPAREN) != PS_NORMAL)
+    {
+        MCperror->add(PE_FACTOR_NOLPAREN, sp);
+        return PS_ERROR;
+    }
+    if (sp.parseexp(False, False, &(&expression)) != PS_NORMAL)
+    {
+        delete *expression;
+        MCperror->add(PE_FACTOR_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    
+    Symbol_type type;
+    if (sp.next(type) == PS_NORMAL && type == ST_SEP)
+    {
+        bool t_old_alias_error = sp.alias_error(true);
+        if (sp.parseexp(False, False, &(&on_error)) != PS_NORMAL)
+        {
+            delete *on_error;
+            sp.alias_error(t_old_alias_error);
+            MCperror->add(PE_FACTOR_BADPARAM, sp);
+            return PS_ERROR;
+        }
+        sp.alias_error(t_old_alias_error);
+    }
+    
+    if (sp.skip_token(SP_FACTOR, TT_RPAREN) != PS_NORMAL)
+    {
+        MCperror->add(PE_FACTOR_NORPAREN, sp);
+        return PS_ERROR;
+    }
+    
+    return PS_NORMAL;
+}
+
+void MCTryFunc::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    expression->eval_ctxt(ctxt, r_value);
+    if (ctxt.HasError())
+    {
+        ctxt.IgnoreLastError();
+        
+        if (*on_error != nullptr)
+        {
+            MCAutoValueRef t_old_error = MClasterror->getvalueref();
+            MCeerror->givetovariable(MClasterror);
+            ctxt.EvaluateExpression(*on_error, EE_TRYFUNC_ERRINERR, r_value);
+            MClasterror->setvalueref(*t_old_error);
+        }
+        else
+        {
+            r_value.type = kMCExecValueTypeNone;
+            r_value.valueref_value = nullptr;
+        }
+    }
+}
+
 MCUniDecode::~MCUniDecode()
 {
 	delete source;

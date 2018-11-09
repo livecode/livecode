@@ -1887,6 +1887,12 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 
 Parse_stat MCScriptPoint::findvar(MCNameRef p_name, MCVarref** r_var)
 {
+    if (m_alias_error && p_name == MCN_error)
+    {
+        *r_var = new(nothrow) MCVarref(MClasterror);
+        return PS_NORMAL;
+    }
+    
 	if (curhandler != NULL)
 		return curhandler -> findvar(p_name, r_var);
 	

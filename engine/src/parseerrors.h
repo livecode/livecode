@@ -1825,6 +1825,9 @@ enum Parse_errors
     
     // {PE-0593} literal: array keys must be string or integer literals
     PE_ARRLITERAL_BADKEY,
+    
+    // {PE-0594} try: bad parameters
+    PE_TRYFUNC_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

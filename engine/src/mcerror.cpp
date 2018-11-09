@@ -24,6 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mcerror.h"
 #include "util.h"
+#include "variable.h"
 
 #include "globals.h"
 
@@ -117,6 +118,12 @@ void MCError::copystringref(MCStringRef s, Boolean t)
 bool MCError::copyasstringref(MCStringRef &r_string)
 {
 	return MCStringCopy(*buffer, r_string);
+}
+
+void MCError::givetovariable(MCVariable* p_var)
+{
+    p_var->setvalueref(*buffer);
+    clear();
 }
 
 void MCError::clear()

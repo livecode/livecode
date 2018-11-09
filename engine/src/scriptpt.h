@@ -64,6 +64,8 @@ class MCScriptPoint
 	Boolean in_tag;
 	// MW-2011-06-23: This is true if we backed up over a tag change point.
 	Boolean was_in_tag;
+    
+    bool m_alias_error : 1;
 
 public:
 	MCScriptPoint(MCScriptPoint &sp);
@@ -87,6 +89,13 @@ public:
 		tagged = which;
 	}
 
+    bool alias_error(bool p_alias)
+    {
+        bool t_old = m_alias_error;
+        m_alias_error = p_alias;
+        return t_old;
+    }
+        
 	uint2 getline()
 	{
 		return line;

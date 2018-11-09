@@ -2791,6 +2791,9 @@ enum Exec_errors
 
     // {EE-0914} literal: error in value expression
     EE_ARRLITERAL_BADVALEXPR,
+    
+    // {EE-0915} try: error in error expression
+    EE_TRYFUNC_ERRINERR,
 };
 
 extern const char *MCexecutionerrors;
