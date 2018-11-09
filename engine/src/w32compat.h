@@ -67,6 +67,9 @@ bool MCWin32GetDpiForMonitor(HRESULT &r_result, HMONITOR p_monitor,
 							 UINT *r_dpi_x, UINT *r_dpi_y);
 bool MCWin32GetDpiForWindow(UINT &r_dpi, HWND p_hwnd);
 
+// Windows 10, user32.dll
+bool MCWin32AdjustWindowRectExForDpi(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Convienience functions

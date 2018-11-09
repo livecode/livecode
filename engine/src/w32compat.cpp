@@ -150,7 +150,7 @@ bool MCWin32GetDpiForMonitor(HRESULT &r_result, HMONITOR p_monitor,
 
 //////////
 
-// IM-2014-01-28: [[ HiDPI ]] Weak-linked GetDpiForWindow function
+// [[ HiDPI ]] Weak-linked GetDpiForWindow function
 typedef UINT (WINAPI *GetDpiForWindowPTR)(HWND hwnd);
 bool MCWin32GetDpiForWindow(UINT &r_dpi, HWND p_hwnd)
 {
@@ -169,6 +169,29 @@ bool MCWin32GetDpiForWindow(UINT &r_dpi, HWND p_hwnd)
 	r_dpi = s_GetDpiForWindow(p_hwnd);
 
 	return true;
+}
+
+// [[ HiDPI ]] Weak-linked AdjustWindowRectExForDpi function
+typedef UINT(WINAPI *AdjustWindowRectExForDpiPTR)(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi);
+bool MCWin32AdjustWindowRectExForDpi(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle)
+{
+	static AdjustWindowRectExForDpiPTR s_AdjustWindowRectExForDpi = NULL;
+	static bool s_init = true;
+
+	if (s_init)
+	{
+		s_AdjustWindowRectExForDpi = (AdjustWindowRectExForDpiPTR)GetProcAddress(GetModuleHandleA("user32.dll"), "AdjustWindowRectExForDpi");
+		s_init = false;
+	}
+
+		if (s_AdjustWindowRectExForDpi == NULL)
+	{
+			return AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle);
+	}
+	else {
+		UINT dpi = 144;
+		return s_AdjustWindowRectExForDpi(lpRect, dwStyle, bMenu, dwExStyle, dpi);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
