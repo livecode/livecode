@@ -63,7 +63,7 @@ See description.
 
 regexPattern:
 An regular expression used to match certain lines, items, keys or elements.
-See [Microsofts RegEx Quick Reference](https://docs.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference)
+See [Microsoft's RegEx Quick Reference](https://docs.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference)
 guide for more info on regex usage.
 
 targetContainer:
