@@ -163,12 +163,14 @@ bool MCWin32GetDpiForWindow(UINT &r_dpi, HWND p_hwnd)
 		s_init = false;
 	}
 
-	if (s_GetDpiForWindow == NULL)
-		return false;
-
-	r_dpi = s_GetDpiForWindow(p_hwnd);
-
-	return true;
+	if (s_GetDpiForWindow == NULL) {
+		// UINT t_xdpi, t_ydpi;
+		// /* Unchecked */ MCWin32GetScreenDPI(t_xdpi, t_ydpi));
+		r_dpi = 96;
+	} else {
+		r_dpi = s_GetDpiForWindow(p_hwnd);
+		return true;
+	}
 }
 
 // [[ HiDPI ]] Weak-linked AdjustWindowRectExForDpi function
