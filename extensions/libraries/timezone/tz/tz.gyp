@@ -16,11 +16,6 @@
             'target_name': 'tz',
             'type': 'none',
             
-            'dependencies':
-            [
-                'libtz-build',
-            ],
-            
             'conditions':
             [
             	[
@@ -35,19 +30,18 @@
         		[
                     'OS == "ios" and "iphoneos" in target_sdk',
                     {
-                        'copies':
-                        [
-                            {
-                                'destination': '<(PRODUCT_DIR)/packaged_extensions/com.livecode.library.timezone/code/<(platform_id)/',
-                                'files':
-                                [
-                                    '<(PRODUCT_DIR)/tz<(STATIC_LIB_SUFFIX)',
-                                ],
-                            },
-                        ],
+                        'dependencies':
+						[
+							'libtz-lcext',
+						],
             		},
                     {
-                    
+
+						'dependencies':
+						[
+							'libtz-build',
+						],
+            
                         'copies':
                         [
                             {
@@ -238,6 +232,84 @@
             		},
                 ],
             ],     
+        },
+        {
+            'target_name': 'libtz-lcext',
+            'product_prefix': '',
+            'product_name': 'tz',
+            'dependencies':
+            [
+                '../../../../toolchain/lc-compile/lc-compile.gyp:lc-compile',
+                'libtz-build',
+            ],
+
+            'type': 'none',
+
+            'actions':
+            [
+                {
+                    'action_name': 'timezone_output_auxc',
+
+                    'sources':
+                    [
+                        '../timezone.lcb',
+                    ],
+
+                    'inputs':
+                    [
+                        '<(_sources)',
+                    ],
+
+                    'outputs':
+                    [
+                        '<(SHARED_INTERMEDIATE_DIR)/timezone.cpp',
+                    ],
+
+                    'message': 'Output module as auxc',
+
+                    'action':
+                    [
+                        '>(lc-compile_host)',
+                        '--forcebuiltins',
+                        '--modulepath',
+                        '<(PRODUCT_DIR)/modules/lci',
+                        '--outputauxc',
+                        '<(SHARED_INTERMEDIATE_DIR)/timezone.cpp',
+                        '<(_sources)',
+                    ],
+                },
+                {
+                    'action_name': 'link_timezone_lcext',
+
+                    'inputs':
+                    [
+                        '../../../../tools/build-module-lcext-ios.sh',
+                        '<(SHARED_INTERMEDIATE_DIR)/timezone.cpp',
+                        'tz.ios',
+                        '<(PRODUCT_DIR)/tz<(STATIC_LIB_SUFFIX)',
+                    ],
+
+                    'outputs':
+                    [
+                        '<(PRODUCT_DIR)/tz.lcext',
+                        '<(PRODUCT_DIR)/packaged_extensions/com.livecode.library.timezone/code/<(platform_id)/module.lcm'
+                    ],
+
+                    'message': 'Link lcext',
+
+                    'action':
+                    [
+                        '../../../../tools/build-module-lcext-ios.sh',
+                        '<(SHARED_INTERMEDIATE_DIR)/timezone.cpp',
+                        'tz.ios',
+                        '<(PRODUCT_DIR)/packaged_extensions/com.livecode.library.timezone/code/<(platform_id)/tz.lcext',
+                        '$(not_a_real_variable)com.livecode.library.timezone',
+                        '<(PRODUCT_DIR)/packaged_extensions/com.livecode.library.timezone/code/<(platform_id)/module.lcm',
+                        '<(PRODUCT_DIR)/tz<(STATIC_LIB_SUFFIX)',
+                    ],
+                },
+                
+            ],
         },
     ],
 
