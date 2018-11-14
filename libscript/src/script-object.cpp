@@ -56,7 +56,7 @@ static MCBuiltinModule *s_builtin_modules = nil;
 static MCScriptModuleRef s_builtin_module = nil;
 static MCScriptLoadLibraryCallback s_load_library_callback = nil;
 
-extern "C" void MCScriptRegisterBuiltinModule(MCBuiltinModule *p_module)
+extern "C" MC_DLLEXPORT_DEF void MCScriptRegisterBuiltinModule(MCBuiltinModule *p_module)
 {
     if (p_module -> next != nullptr)
     {
