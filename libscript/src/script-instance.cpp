@@ -617,16 +617,15 @@ __MCScriptSplitForeignBindingString(MCStringRef& x_string,
 		return false;
 	}
 	
-	if (!MCStringIsEmpty(t_tail))
+    MCValueRelease(x_string);
+    if (!MCStringIsEmpty(t_tail))
 	{
 		r_field = t_head;
-		MCValueRelease(x_string);
 		x_string = t_tail;
 	}
 	else
 	{
-		MCValueRelease(x_string);
-		MCValueRelease(t_tail);
+		r_field = t_tail;
 		x_string = t_head;
 	}
 	
@@ -726,92 +725,21 @@ static bool __MCScriptGetThreadAffinity(MCStringRef p_thread, MCScriptThreadAffi
 static bool
 __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
                                             MCScriptForeignHandlerDefinition *p_handler,
-                                            /* takes */ MCStringRef d_binding,
+                                            MCScriptForeignHandlerInfo* p_info,
                                             bool* r_bound)
 {
-	MCAutoStringRef t_library;
-	MCAutoStringRef t_function;
-	MCAutoStringRef t_calling;
-    MCAutoStringRef t_thread;
-	if (!__MCScriptSplitForeignBindingString(d_binding,
-											 '>',
-											 &t_library) ||
-        !__MCScriptSplitForeignBindingString(d_binding,
-                                             '!',
-                                             &t_function) ||
-		!MCStringDivideAtChar(d_binding,
-							  '?',
-							  kMCStringOptionCompareExact,
-							  &t_calling,
-							  &t_thread))
-	{
-		MCValueRelease(d_binding);
-		return false;
-	}
-    MCValueRelease(d_binding);
-    
-    /* If the function is empty, but calling is not, then there must have
-     * been no ! part. */
-    if (MCStringIsEmpty(*t_function) &&
-        !MCStringIsEmpty(*t_calling))
-    {
-        t_function.Reset(*t_calling);
-        t_calling.Reset(kMCEmptyString);
-    }
-    
-    int t_cc;
-	if (!MCStringIsEmpty(*t_calling))
-	{
-        MCLog("%@", *t_calling);
-		static const char *s_callconvs[] =
-		{
-			"default",
-			"sysv",
-			"stdcall",
-			"thiscall",
-			"fastcall",
-			"cdecl",
-			"pascal",
-			"register",
-			nil
-		};
-		for(t_cc = 0; s_callconvs[t_cc] != nil; t_cc++)
-		{
-			if (MCStringIsEqualToCString(*t_calling,
-										 s_callconvs[t_cc],
-										 kMCStringOptionCompareCaseless))
-				break;
-		}
-		
-		if (s_callconvs[t_cc] == nil)
-		{
-			return MCScriptThrowUnknownForeignCallingConventionError();
-		}
-	}
-	else
-		t_cc = 0;
-
-	if (MCStringIsEmpty(*t_function))
-	{
-		return MCScriptThrowMissingFunctionInForeignBindingError();
-	}
-    
-    MCScriptThreadAffinity t_thread_affinity;
-    if (!__MCScriptGetThreadAffinity(*t_thread, t_thread_affinity))
-    {
-        return false;
-    }
+	
     
     /* TODO: This leaks a module handle if library is not empty (builtin) */
     MCSLibraryRef t_module;
-    if (MCStringIsEmpty(*t_library))
+    if (MCStringIsEmpty(p_info->c.library))
     {
         t_module = MCScriptGetLibrary();
     }
     else
     {
         if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
-                                 *t_library,
+                                 p_info->c.library,
                                  t_module))
         {
             if (r_bound == nil)
@@ -828,7 +756,7 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
     /* Resolve the symbol from the module which we've loaded */
     void *t_pointer =
             MCSLibraryLookupSymbol(t_module,
-                                   *t_function);
+                                   p_info->c.function);
     
     /* A nullptr pointer means that the symbol doesn't exist, so we either
      * throw an error (if in 'must' bind mode - r_bound == nullptr) or
@@ -847,27 +775,17 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
         return true;
     }
     
-    /* The ABI for all platforms is always DEFAULT, except on Win32 where
-     * it is specified as part of the signature. */
-    ffi_abi t_abi = FFI_DEFAULT_ABI;
-#ifdef _WIN32
-    t_abi = t_cc == 0 ? FFI_DEFAULT_ABI : (ffi_abi)t_cc;
-#endif
-
     /* Now we must compute the libffi CIF for this C language handler. If
      * this fails, it is an error - not a failure to bind - as it indicates
      * OOM or something went wrong in libffi. */
     if (!MCHandlerTypeInfoGetLayoutType(p_instance->module->types[p_handler->type]->typeinfo,
-                                        t_abi,
+                                        p_info->c.call_type,
                                         p_handler->c.function_cif))
     {
         /* The above call already throws an appropriate error, so we can
          * just return false. */
         return false;
     }
-    
-    p_handler->language = kMCScriptForeignHandlerLanguageC;
-    p_handler->thread_affinity = t_thread_affinity;
     
     p_handler->c.function = t_pointer;
     
@@ -884,76 +802,19 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
 static bool
 __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
                                                MCScriptForeignHandlerDefinition *p_handler,
-                                               /* takes */ MCStringRef d_binding,
+                                               MCScriptForeignHandlerInfo* p_info,
                                                bool* r_bound)
-{	MCAutoStringRef t_library;
-	MCAutoStringRef t_class;
-	MCAutoStringRef t_method;
-    MCAutoStringRef t_thread;
-	if (!__MCScriptSplitForeignBindingString(d_binding,
-											 '>',
-											 &t_library) ||
-		!__MCScriptSplitForeignBindingString(d_binding,
-											 '.',
-											 &t_class) ||
-        !__MCScriptSplitForeignBindingString(d_binding,
-                                             '?',
-                                             &t_method) ||
-        !MCStringCopy(d_binding,
-                      &t_thread))
-	{
-		MCValueRelease(d_binding);
-		return false;
-	}
-    MCValueRelease(d_binding);
-
-    /* If method is empty, then there must have been no '?' part. */
-    if (MCStringIsEmpty(*t_method))
-    {
-        t_method.Reset(*t_thread);
-        t_thread.Reset(kMCEmptyString);
-    }
-
-    /* Make sure the method name is non-empty */
-    if (*t_method == nullptr ||
-        MCStringIsEmpty(*t_method))
-    {
-        return MCScriptThrowMissingFunctionInForeignBindingError();
-    }
-
-    uindex_t t_selector_start = 0;
-    bool t_is_class = false;
-    if (MCStringGetCharAtIndex(*t_method,
-                               0) == '+')
-    {
-        t_is_class = true;
-        t_selector_start = 1;
-    }
-    else if (MCStringGetCharAtIndex(*t_method,
-                                    0) == '-')
-    {
-        t_is_class = false;
-        t_selector_start = 1;
-    }
-    
-    MCAutoStringRef t_selector_name;
-    if (!MCStringCopySubstring(*t_method,
-                               MCRangeMake(t_selector_start, UINDEX_MAX),
-                               &t_selector_name))
-    {
-        return false;
-    }
-    
+{
     /* TODO: This leaks a module handle if library is not empty (builtin) */
     MCSLibraryRef t_module;
-    if (MCStringIsEmpty(*t_library))
+    if (MCStringIsEmpty(p_info->objc.library))
     {
         t_module = MCScriptGetLibrary();
     }
     else
     {
         if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
-                                 *t_library,
+                                 p_info->objc.library,
                                  t_module))
         {
             if (r_bound == nil)
@@ -967,20 +828,16 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
         }
     }
     
-    MCScriptThreadAffinity t_thread_affinity;
-    if (!__MCScriptGetThreadAffinity(*t_thread, t_thread_affinity))
-    {
-        return false;
-    }
-    
     MCAutoStringRefAsUTF8String t_selector_name_cstring;
-    if (!t_selector_name_cstring.Lock(*t_selector_name))
+    if (!t_selector_name_cstring.Lock(p_info->objc.method_name))
     {
         return false;
     }
 
     bool t_valid = true;
-    bool t_is_dynamic = MCStringIsEmpty(*t_class);
+    bool t_is_dynamic = MCStringIsEmpty(p_info->objc.class_name);
+    
+    bool t_is_class = p_info->objc.call_type == kMCScriptForeignHandlerObjcCallTypeClassMethod;
     
     /* Lookup the class, to make sure it exists. */
     Class t_objc_class = nullptr;
@@ -997,7 +854,7 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
         else
         {
             MCAutoStringRefAsUTF8String t_class_cstring;
-            if (!t_class_cstring.Lock(*t_class))
+            if (!t_class_cstring.Lock(p_info->objc.class_name))
             {
                 return false;
             }
@@ -1033,10 +890,10 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
              * which means that the methods aren't present until runtime, but
              * the prop definitions are. */
             if (!t_valid &&
-                MCStringBeginsWithCString(*t_selector_name, (const char_t *)"set", kMCStringOptionCompareExact) &&
-                MCStringEndsWithCString(*t_selector_name, (const char_t *)":", kMCStringOptionCompareExact))
+                MCStringBeginsWithCString(p_info->objc.method_name, (const char_t *)"set", kMCStringOptionCompareExact) &&
+                MCStringEndsWithCString(p_info->objc.method_name, (const char_t *)":", kMCStringOptionCompareExact))
             {
-                if (MCStringGetLength(*t_selector_name) < 255)
+                if (MCStringGetLength(p_info->objc.method_name) < 255)
                 {
                     char t_prop_name[256];
                     strncpy(t_prop_name, *t_selector_name_cstring + 3, strlen(*t_selector_name_cstring) - 4);
@@ -1050,7 +907,7 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
                 }
             }
             else if (!t_valid &&
-                     MCStringCountChar(*t_selector_name, MCRangeMake(0, MCStringGetLength(*t_selector_name)), ':', kMCStringOptionCompareExact) == 0)
+                     MCStringCountChar(p_info->objc.method_name, MCRangeMake(0, MCStringGetLength(p_info->objc.method_name)), ':', kMCStringOptionCompareExact) == 0)
             {
                 objc_property_t t_property = class_getProperty(t_objc_class, *t_selector_name_cstring);
                 if (t_property != nullptr)
@@ -1222,9 +1079,6 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
     p_handler->objc.objc_selector = t_objc_sel;
     p_handler->objc.function_cif = static_cast<ffi_cif*>(t_layout_cif.Release());
     
-    p_handler->language = kMCScriptForeignHandlerLanguageObjC;
-    p_handler->thread_affinity = t_thread_affinity;
-
     if (r_bound != nullptr)
     {
         *r_bound = true;
@@ -1237,83 +1091,26 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
 static bool
 __MCScriptResolveForeignFunctionBindingForJava(MCScriptInstanceRef p_instance,
                                                MCScriptForeignHandlerDefinition *p_handler,
-                                               /* takes */ MCStringRef d_binding,
+                                               MCScriptForeignHandlerInfo* p_info,
                                                bool* r_bound)
 {
-	MCAutoStringRef t_library;
-	MCAutoStringRef t_class;
-	MCAutoStringRef t_function_string;
-	MCAutoStringRef t_calling;
-    MCAutoStringRef t_thread;
-    
-    bool t_success =
-        __MCScriptSplitForeignBindingString(d_binding,
-                                            '>',
-                                            &t_library) &&
-		__MCScriptSplitForeignBindingString(d_binding,
-                                            '.',
-                                            &t_class) &&
-        __MCScriptSplitForeignBindingString(d_binding,
-                                            '!',
-                                            &t_function_string);
-    
-    MCAutoStringRef t_to_divide;
-    if (t_success && !MCStringIsEmpty(*t_function_string))
-    {
-        // Calling convention is not empty
-        t_success = MCStringDivideAtChar(d_binding,
-                                         '?',
-                                         kMCStringOptionCompareExact,
-                                         &t_calling,
-                                         &t_thread);
-    }
-    else if (t_success)
-    {
-        MCAutoStringRef t_real_function;
-        // Calling convention is empty
-        t_success = MCStringDivideAtChar(d_binding,
-                                         '?',
-                                         kMCStringOptionCompareExact,
-                                         &t_real_function,
-                                         &t_thread);
-        t_function_string.Reset(*t_real_function);
-        t_calling = kMCEmptyString;
-    }
-    
-    MCValueRelease(d_binding);
-    if (!t_success)
-        return false;
-    
-	MCAutoStringRef t_arguments, t_return, t_function;
-	if (!__split_function_signature(*t_function_string, &t_function, &t_arguments, &t_return))
-		return false;
-    
-    MCScriptThreadAffinity t_thread_affinity;
-    if (!__MCScriptGetThreadAffinity(*t_thread, t_thread_affinity))
-        return false;
-    
-    p_handler -> java . call_type = __MCScriptGetJavaCallType(*t_class,
-                                                              *t_function,
-                                                              *t_calling);
-    if (p_handler->java.call_type == MCJavaCallTypeUnknown)
-    {
-        return MCScriptThrowUnknownForeignCallingConventionError();
-    }
-    
+	
     MCNewAutoNameRef t_class_name;
-    if (!MCNameCreate(*t_library, &t_class_name))
+    if (!MCNameCreate(p_info->java.class_name, &t_class_name))
         return false;
     
-    p_handler -> java . class_name = MCValueRetain(*t_class_name);
+    p_handler->java.class_name = MCValueRetain(*t_class_name);
     
     MCTypeInfoRef t_signature = p_instance -> module -> types[p_handler -> type] -> typeinfo;
+    
+    p_handler->java.call_type = p_info->java.call_type;
     
     // Check that the java signature in the binding string is
     // compatible with the types of the foreign handler
     if (!MCJavaCheckSignature(t_signature,
-                              *t_arguments,
-                              *t_return,
-                              p_handler -> java . call_type) ||
+                              p_info->java.arguments,
+                              p_info->java.return_type,
+                              p_info->java.call_type) ||
         !MCJavaVMInitialize())
     {
         if (r_bound == nullptr)
@@ -1328,7 +1125,7 @@ __MCScriptResolveForeignFunctionBindingForJava(MCScriptInstanceRef p_instance,
         return true;
     }
     
-    void *t_method_id = MCJavaGetMethodId(*t_class_name, *t_function, *t_arguments, *t_return, p_handler -> java . call_type);
+    void *t_method_id = MCJavaGetMethodId(*t_class_name, p_info->java.method_name, p_info->java.arguments, p_info->java.return_type, p_handler -> java . call_type);
     
     if (t_method_id != nullptr)
     {
@@ -1349,15 +1146,322 @@ __MCScriptResolveForeignFunctionBindingForJava(MCScriptInstanceRef p_instance,
         return true;
     }
     
-    p_handler->language = kMCScriptForeignHandlerLanguageJava;
-    p_handler->thread_affinity = t_thread_affinity;
-    
     if (r_bound != nullptr)
     {
         *r_bound = true;
     }
     
     return true;
+}
+
+bool MCScriptForeignHandlerInfoParse(MCStringRef p_binding, MCScriptForeignHandlerInfo*& r_info)
+{
+    MCScriptForeignHandlerInfo* t_info = new MCScriptForeignHandlerInfo;
+    t_info->language = kMCScriptForeignHandlerLanguageUnknown;
+    t_info->thread_affinity = kMCScriptThreadAffinityDefault;
+    
+    if (MCStringIsEqualToCString(p_binding,
+                             "<builtin>",
+                             kMCStringOptionCompareExact))
+    {
+        t_info->language = kMCScriptForeignHandlerLanguageBuiltinC;
+        r_info = t_info;
+        return true;
+    }
+    
+    bool t_success = true;
+    
+    MCStringRef t_rest;
+    t_success = MCStringCopy(p_binding, t_rest);
+    
+    MCAutoStringRef t_language;
+    
+    if (t_success)
+    {
+        t_success = __MCScriptSplitForeignBindingString(t_rest,
+                                                 ':',
+                                                  &t_language);
+    }
+    
+    if (MCStringIsEmpty(*t_language) ||
+        MCStringIsEqualToCString(*t_language,
+                                 "c",
+                                 kMCStringOptionCompareExact))
+    {
+        MCAutoStringRef t_library;
+        MCAutoStringRef t_function;
+        MCAutoStringRef t_calling;
+        MCAutoStringRef t_thread;
+        t_success = __MCScriptSplitForeignBindingString(t_rest,
+                                                 '>',
+                                                 &t_library) &&
+                    __MCScriptSplitForeignBindingString(t_rest,
+                                                 '!',
+                                                 &t_function) &&
+                    MCStringDivideAtChar(t_rest,
+                                  '?',
+                                  kMCStringOptionCompareExact,
+                                  &t_calling,
+                                  &t_thread);
+        
+        /* If the function is empty, but calling is not, then there must have
+         * been no ! part. */
+        if (t_success && MCStringIsEmpty(*t_function) &&
+            !MCStringIsEmpty(*t_calling))
+        {
+            t_function.Reset(*t_calling);
+            t_calling.Reset(kMCEmptyString);
+        }
+        
+        int t_cc;
+        if (t_success && !MCStringIsEmpty(*t_calling))
+        {
+            MCLog("%@", *t_calling);
+            static const char *s_callconvs[] =
+            {
+                "default",
+                "sysv",
+                "stdcall",
+                "thiscall",
+                "fastcall",
+                "cdecl",
+                "pascal",
+                "register",
+                nil
+            };
+            for(t_cc = 0; s_callconvs[t_cc] != nil; t_cc++)
+            {
+                if (MCStringIsEqualToCString(*t_calling,
+                                             s_callconvs[t_cc],
+                                             kMCStringOptionCompareCaseless))
+                    break;
+            }
+            
+            if (s_callconvs[t_cc] == nil)
+            {
+                return MCScriptThrowUnknownForeignCallingConventionError();
+            }
+        }
+        else
+            t_cc = 0;
+        
+        if (t_success && MCStringIsEmpty(*t_function))
+        {
+            return MCScriptThrowMissingFunctionInForeignBindingError();
+        }
+        
+        MCScriptThreadAffinity t_thread_affinity;
+        t_success = t_success && __MCScriptGetThreadAffinity(*t_thread, t_thread_affinity);
+        
+        if (t_success)
+        {
+            t_info->thread_affinity = t_thread_affinity;
+        
+            /* The ABI for all platforms is always DEFAULT, except on Win32 where
+             * it is specified as part of the signature. */
+            t_info->c.call_type = (int)FFI_DEFAULT_ABI;
+#ifdef _WIN32
+            t_info->c.call_type = t_cc == 0 ? (int)FFI_DEFAULT_ABI : t_cc;
+#endif
+            t_info->c.function = MCValueRetain(*t_function);
+            t_info->c.library = MCValueRetain(*t_library);
+            
+            t_info->language = kMCScriptForeignHandlerLanguageC;
+        }
+        
+    }
+    else if (MCStringIsEqualToCString(*t_language,
+                                      "objc",
+                                      kMCStringOptionCompareExact))
+    {
+        MCAutoStringRef t_library;
+        MCAutoStringRef t_class;
+        MCAutoStringRef t_method;
+        MCAutoStringRef t_thread;
+        
+        if (t_success)
+        {
+            
+            t_success = __MCScriptSplitForeignBindingString(t_rest,
+                                                     '>',
+                                                     &t_library) &&
+                        __MCScriptSplitForeignBindingString(t_rest,
+                                                     '.',
+                                                     &t_class) &&
+                        __MCScriptSplitForeignBindingString(t_rest,
+                                                     '?',
+                                                     &t_method) &&
+                        MCStringCopy(t_rest,
+                                     &t_thread);
+        }
+        
+        /* If method is empty, then there must have been no '?' part. */
+        if (t_success && MCStringIsEmpty(*t_method))
+        {
+            t_method.Reset(*t_thread);
+            t_thread.Reset(kMCEmptyString);
+        }
+        
+        if (t_success && (*t_method == nullptr ||
+            MCStringIsEmpty(*t_method)))
+        {
+            return MCScriptThrowMissingFunctionInForeignBindingError();
+        }
+        
+        uindex_t t_selector_start = 0;
+        bool t_is_class = false;
+        if (t_success)
+        {
+            if (MCStringGetCharAtIndex(*t_method,
+                                       0) == '+')
+            {
+                t_is_class = true;
+                t_selector_start = 1;
+            }
+            else if (MCStringGetCharAtIndex(*t_method,
+                                            0) == '-')
+            {
+                t_is_class = false;
+                t_selector_start = 1;
+            }
+        }
+        
+        MCAutoStringRef t_selector_name;
+        t_success = t_success && MCStringCopySubstring(*t_method,
+                                   MCRangeMake(t_selector_start, UINDEX_MAX),
+                                                       &t_selector_name);
+        
+        MCScriptThreadAffinity t_thread_affinity;
+        t_success = t_success && __MCScriptGetThreadAffinity(*t_thread, t_thread_affinity);
+        
+        if (t_success)
+        {
+            t_info->thread_affinity = t_thread_affinity;
+            
+            if (t_is_class)
+            {
+                t_info->objc.call_type = kMCScriptForeignHandlerObjcCallTypeClassMethod;
+            }
+            else
+            {
+                t_info->objc.call_type = kMCScriptForeignHandlerObjcCallTypeInstanceMethod;
+            }
+            
+            t_info->objc.method_name = MCValueRetain(*t_selector_name);
+            t_info->objc.class_name = MCValueRetain(*t_class);
+            t_info->objc.library = MCValueRetain(*t_library);
+            
+            t_info->language = kMCScriptForeignHandlerLanguageObjC;
+        }
+    }
+    else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
+    {
+        MCAutoStringRef t_library;
+        MCAutoStringRef t_class;
+        MCAutoStringRef t_function_string;
+        MCAutoStringRef t_calling;
+        MCAutoStringRef t_thread;
+        
+        t_success =
+                __MCScriptSplitForeignBindingString(t_rest,
+                                                    '>',
+                                                    &t_library) &&
+                __MCScriptSplitForeignBindingString(t_rest,
+                                                    '.',
+                                                    &t_class) &&
+                __MCScriptSplitForeignBindingString(t_rest,
+                                                    '!',
+                                                    &t_function_string);
+        
+        MCAutoStringRef t_to_divide;
+        if (t_success && !MCStringIsEmpty(*t_function_string))
+        {
+            // Calling convention is not empty
+            t_success = MCStringDivideAtChar(t_rest,
+                                             '?',
+                                             kMCStringOptionCompareExact,
+                                             &t_calling,
+                                             &t_thread);
+        }
+        else if (t_success)
+        {
+            MCAutoStringRef t_real_function;
+            // Calling convention is empty
+            t_success = MCStringDivideAtChar(t_rest,
+                                             '?',
+                                             kMCStringOptionCompareExact,
+                                             &t_real_function,
+                                             &t_thread);
+            t_function_string.Reset(*t_real_function);
+            t_calling = kMCEmptyString;
+        }
+        
+        MCAutoStringRef t_arguments, t_return, t_function;
+        t_success = t_success &&
+                    __split_function_signature(*t_function_string, &t_function, &t_arguments, &t_return);
+        
+        MCScriptThreadAffinity t_thread_affinity;
+        t_success = t_success && __MCScriptGetThreadAffinity(*t_thread, t_thread_affinity);
+        
+        if (t_success)
+        {
+            t_info->java.call_type = __MCScriptGetJavaCallType(*t_class,
+                                                               *t_function,
+                                                               *t_calling);
+            
+            if (t_info->java.call_type == MCJavaCallTypeUnknown)
+            {
+                return MCScriptThrowUnknownForeignCallingConventionError();
+            }
+            
+            t_info->thread_affinity = t_thread_affinity;
+            
+            t_info->java.arguments = MCValueRetain(*t_arguments);
+            t_info->java.return_type = MCValueRetain(*t_return);
+            t_info->java.method_name = MCValueRetain(*t_function);
+            t_info->java.class_name = MCValueRetain(*t_library);
+            
+            t_info->language = kMCScriptForeignHandlerLanguageJava;
+        }
+    }
+    
+    MCValueRelease(t_rest);
+    
+    if (t_success)
+    {
+        r_info = t_info;
+    }
+    else
+    {
+        delete t_info;
+    }
+    
+    return t_success;
+}
+
+void MCScriptForeignHandlerInfoRelease(MCScriptForeignHandlerInfo* p_info)
+{
+    switch (p_info->language)
+    {
+        case kMCScriptForeignHandlerLanguageC:
+            MCValueRelease(p_info->c.function);
+            MCValueRelease(p_info->c.library);
+            break;
+        case kMCScriptForeignHandlerLanguageObjC:
+            MCValueRelease(p_info->objc.class_name);
+            MCValueRelease(p_info->objc.method_name);
+            MCValueRelease(p_info->objc.library);
+            break;
+        case kMCScriptForeignHandlerLanguageJava:
+            MCValueRelease(p_info->java.class_name);
+            MCValueRelease(p_info->java.method_name);
+            MCValueRelease(p_info->java.arguments);
+            MCValueRelease(p_info->java.return_type);
+            break;
+        case kMCScriptForeignHandlerLanguageBuiltinC:
+        case kMCScriptForeignHandlerLanguageUnknown:
+            break;
+    }
 }
 
 static bool
@@ -1380,62 +1484,65 @@ __MCScriptResolveForeignFunctionBinding(MCScriptInstanceRef p_instance,
         }
         return true;
     }
-
-	MCStringRef t_rest;
-	t_rest = MCValueRetain(p_handler -> binding);
-	
-	MCAutoStringRef t_language;
-    if (!__MCScriptSplitForeignBindingString(t_rest,
-                                             ':',
-                                             &t_language))
+    
+    MCAutoCustomPointer<struct MCScriptForeignHandlerInfo, MCScriptForeignHandlerInfoRelease> t_info;
+    if (!MCScriptForeignHandlerInfoParse(p_handler->binding, &t_info))
     {
-        MCValueRelease(t_rest);
         return false;
     }
-	
-	if (MCStringIsEmpty(*t_language) ||
-		MCStringIsEqualToCString(*t_language,
-								 "c",
-								 kMCStringOptionCompareExact))
-	{
-        return __MCScriptResolveForeignFunctionBindingForC(p_instance,
-                                                           p_handler,
-                                                           t_rest,
-                                                           r_bound);
-	}
-	else if (MCStringIsEqualToCString(*t_language,
-									  "objc",
-									  kMCStringOptionCompareExact))
-	{
-#if !defined(_MACOSX) && !defined(TARGET_SUBPLATFORM_IPHONE)
-        MCValueRelease(t_rest);
-		
-        if (r_bound == nil)
-		{
-			return MCScriptThrowObjCBindingNotSupported();
-		}
-		
-		*r_bound = false;
-		
-		return true;
-#else
-		return __MCScriptResolveForeignFunctionBindingForObjC(p_instance,
-                                                              p_handler,
-                                                              t_rest,
-                                                              r_bound);
-#endif
-	}
-	else if (MCStringIsEqualToCString(*t_language, "java", kMCStringOptionCompareExact))
-    {
-        return __MCScriptResolveForeignFunctionBindingForJava(p_instance,
-                                                              p_handler,
-                                                              t_rest,
-                                                              r_bound);
-	}
     
-    MCValueRelease(t_rest);
-
-	return MCScriptThrowUnknownForeignLanguageError();
+    bool t_status = false;
+    
+    switch ((*t_info)->language)
+    {
+        case kMCScriptForeignHandlerLanguageC:
+            t_status = __MCScriptResolveForeignFunctionBindingForC(p_instance,
+                                                               p_handler,
+                                                               *t_info,
+                                                               r_bound);
+            break;
+        case kMCScriptForeignHandlerLanguageObjC:
+#if !defined(_MACOSX) && !defined(TARGET_SUBPLATFORM_IPHONE)
+            
+            if (r_bound == nil)
+            {
+                t_status = MCScriptThrowObjCBindingNotSupported();
+            }
+            else
+            {
+                *r_bound = false;
+            
+                t_status = true;
+            }
+#else
+            t_status =  __MCScriptResolveForeignFunctionBindingForObjC(p_instance,
+                                                                  p_handler,
+                                                                  *t_info,
+                                                                  r_bound);
+#endif
+            break;
+        case kMCScriptForeignHandlerLanguageJava:
+            t_status = __MCScriptResolveForeignFunctionBindingForJava(p_instance,
+                                                                  p_handler,
+                                                                  *t_info,
+                                                                  r_bound);
+            break;
+        case kMCScriptForeignHandlerLanguageBuiltinC:
+            // should have been ordinal binding
+            t_status = false;
+            break;
+        case kMCScriptForeignHandlerLanguageUnknown:
+            t_status = MCScriptThrowUnknownForeignLanguageError();
+            break;
+    }
+    
+    if (t_status)
+    {
+        p_handler->language = (*t_info)->language;
+        p_handler->thread_affinity = (*t_info)->thread_affinity;
+    }
+    
+    return t_status;
 }
 
 // This method attempts to bind a foreign function so it can be used. If

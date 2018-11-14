@@ -18,6 +18,7 @@
 			[
 				'../../libfoundation/libfoundation.gyp:libFoundation',
 				'../../libscript/libscript.gyp:libScript',
+				'../../thirdparty/libffi/libffi.gyp:libffi',
 			],
 
 			'sources':
