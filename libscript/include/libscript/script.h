@@ -475,6 +475,9 @@ enum MCScriptForeignPrimitiveType
     kMCScriptForeignPrimitiveTypeCDouble,
     kMCScriptForeignPrimitiveTypeSInt,
     kMCScriptForeignPrimitiveTypeUInt,
+    kMCScriptForeignPrimitiveTypeNaturalUInt,
+    kMCScriptForeignPrimitiveTypeNaturalSInt,
+    kMCScriptForeignPrimitiveTypeNaturalFloat,
 };
 
 MCScriptForeignPrimitiveType MCScriptQueryForeignHandlerReturnTypeInModule(MCScriptModuleBuilderRef build, uindex_t type_index);
