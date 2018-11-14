@@ -29,17 +29,19 @@ Description:
 Use the <reset> <command> to change a <template> <object(glossary)> back
 to its <default|defaults> after you have changed it temporarily.
 
-Change the properties of template objects temporarily to easily create a
-number of objects of that type with the property settings you want.
+Change the <property|properties> of <template> <object|objects> temporarily 
+to easily create a number of <object|objects> of that type with the property 
+settings you want.
 
->*Note:* The LiveCode development environment makes changes to template
-> objects when it creates new objects. This means that objects you
-> create in the development environment may not have the same property
-> settings as objects you create in a <a/>standalone application.
+>*Note:* The LiveCode development environment makes changes to <template>
+> <object|objects> when it creates new <object|objects>. This means that 
+> <object|objects> you create in the development environment may not have the 
+> same property settings as <object|objects> you create in a 
+> <standalone application>.
 
 References: reset paint (command), object (glossary), template (glossary),
-default (glossary), command (glossary), return (glossary),
-templateScrollbar (keyword), default (keyword)
+default (glossary), command (glossary), property (glossary), return (glossary),
+standalone application (glossary), templateScrollbar (keyword), default (keyword)
 
 Tags: objects
 

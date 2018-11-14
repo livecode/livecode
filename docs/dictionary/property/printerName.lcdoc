@@ -43,8 +43,8 @@ be used by LiveCode.
 Setting the <printerName> to empty will reset the printer to the system
 default, and all printer settings to the default for that printer.
 
-To have an effect, this property must be set before calling <open
-printing>. 
+To have an effect, this property must be set before calling 
+<open printing>. 
 
 References: open printing (command), answer printer (command),
 result (function), printTitle (property)

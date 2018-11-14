@@ -1012,7 +1012,7 @@ void TAltBrowser::Print()
 	[info setOrientation:NSPaperOrientationPortrait];
 	
 	
-	NSPrintOperation * op = [NSPrintOperation printOperationWithView:(NSView *)pView printInfo:info];
+	NSPrintOperation * op = [NSPrintOperation printOperationWithView:(NSView *)nativeView printInfo:info];
 	[NSPrintOperation setCurrentOperation:op];
 	
 	[op setCanSpawnSeparateThread:YES];

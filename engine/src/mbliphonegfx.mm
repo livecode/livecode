@@ -484,7 +484,6 @@ bool MCMacDoUpdateRegionCallback(void *p_context, const MCRectangle &p_rect)
 	
 	MCGRegionAddRegion(s_redraw_region, (MCGRegionRef)p_region);
 	MCRegionForEachRect(p_region, MCMacDoUpdateRegionCallback, self);
-	[[self layer] displayIfNeeded];
 }
 
 @end

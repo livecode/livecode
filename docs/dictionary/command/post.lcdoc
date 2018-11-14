@@ -39,7 +39,7 @@ The value the web server returns is placed in the it <variable>.
 The result:
 If an error occurs, the <result> <function> is set to the error message.
 >*Important:* If a <blocking> operation involving a <URL> (using the
-> <put> <command> to <upload> a <URL>, the <post> c <ommand>, the
+> <put> <command> to <upload> a <URL>, the <post> <command>, the
 > <delete URL> <command>, or a <statement> that gets an <ftp> or <HTTP>
 > <URL>) is going on, no other <blocking> <URL> operation can start
 > until the previous one is finished. If you attempt to use a <URL> in
@@ -80,9 +80,8 @@ password "pass", use the following <statement> :
     put "name" into userName
     put "jdoe@example.com" into userPassword
     put "http://" & userName & ":" & URLEncode(userPassword) \
-
-    & "@www.example.net/index.html" into fileURLToGet
-	get URL fileURLToGet
+        & "@www.example.net/index.html" into fileURLToGet
+    get URL fileURLToGet
 
 
 >*Important:*  The <post> <command> is part of the 
@@ -120,10 +119,12 @@ open socket (command), libURLSetCustomHTTPHeaders (command),
 function (control structure), result (function), URLStatus (function),
 URLEncode (function), libURLFormData (function), URLDecode (function),
 libURLMultipartFormAddPart (function), libURLMultipartFormData (function),
-variable (glossary), ommand (glossary), property (glossary),
-blocking (glossary), web server (glossary), command (glossary),
-expression (glossary), syntax (glossary), server (glossary),
-upload (glossary), statement (glossary), handler (glossary),
-URL (keyword), ftp (keyword), http (keyword), urlProgress (message),
+variable (glossary), command (glossary), 
+Livecode custom library (glossary), property (glossary),
+standalone application (glossary), blocking (glossary), 
+web server (glossary), command (glossary), expression (glossary), 
+syntax (glossary), server (glossary), upload (glossary), 
+statement (glossary), handler (glossary), URL (keyword), ftp (keyword), 
+http (keyword), Internet library (library), urlProgress (message), 
 httpHeaders (property), HTTPProxy (property)
 

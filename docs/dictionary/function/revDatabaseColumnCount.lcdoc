@@ -8,7 +8,7 @@ Syntax: revDatabaseColumnCount(<recordSetID>)
 
 Summary:
 <return|Returns> the number of <database field|database fields> in a
-<record set (database cursor)(glossary)>.
+<record set (glossary)>.
 
 Associations: database library
 
@@ -37,8 +37,8 @@ The <revDatabaseColumnCount> <function> returns either positive
 
 Description:
 Use the <revDatabaseColumnCount> <function> to find out how many
-<database field|database fields> you must deal with in a <record set
-(database cursor)(glossary)>.
+<database field|database fields> you must deal with in a 
+<record set (glossary)>.
 
 If the operation is not successful, the <revDatabaseColumnCount>
 <function> returns an error message that begins with the <string>
@@ -67,7 +67,7 @@ revDatabaseColumnNames (function), revDatabaseColumnNumbered (function),
 LiveCode custom library (glossary), database field (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary),
-record set (database cursor) (glossary), return (glossary),
+record set (glossary), return (glossary),
 string (keyword), integer (keyword), Database library (library)
 
 Tags: database

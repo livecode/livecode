@@ -34,6 +34,11 @@ Example:
 get revOpenDatabase("odbc", "BizFile", , "jenkins" ,the dbPassword of me, "emulated static")
 
 Example:
+-- Using a fileDSN on Windows
+local tConID
+put revopendatabase("odbc","filedsn=C:\Users\JohnSmith\FileDsnSqlServer.dsn;Uid=<YOUR_USERNAME>;pwd=<YOUR_PASSWORD>",,,) into tConID
+
+Example:
 put revOpenDatabase("sqlite", "mydb.sqlite" )
 -- open with legacy binary mode and loadable extensions disabled
 put revOpenDatabase("sqlite", "mydb.sqlite", "binary" )

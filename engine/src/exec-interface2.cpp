@@ -3633,6 +3633,7 @@ void MCInterfaceGetScreenPixelScale(MCExecContext& ctxt, double& r_scale)
     uindex_t t_count;
     MCResListScreenPixelScales(false, t_count, t_scale);
     r_scale = *t_scale;
+	MCMemoryDeleteArray(t_scale);
 }
 
 void MCInterfaceGetScreenPixelScales(MCExecContext& ctxt, uindex_t& r_count, double*& r_scale)

@@ -1932,14 +1932,6 @@ private function _svgParsePreserveAspectRatio @xValue
 	return false
 end _svgParsePreserveAspectRatio
 
-private function _svgParseReferenceValue @xValue
-	if xValue begins with "#" then
-		put char 2 to -1 of xValue into xValue
-		return true
-	end if
-	return false
-end _svgParseReferenceValue
-
 /* The <color> type represents a color:
  *
  *   color

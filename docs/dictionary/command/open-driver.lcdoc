@@ -54,23 +54,23 @@ obtain a list of available <peripheral device|devices> by reading the
 file "/dev/tty".
 
 Description:
-Use the <open driver> <command> to communicate with USB <peripheral
-device|devices>, <peripheral device|devices> attached to a serial port
-other than the modem and printer port, and other <peripheral
-device|peripheral devices>.
+Use the <open driver> <command> to communicate with USB 
+<peripheral device|devices>, <peripheral device|devices> 
+attached to a serial port other than the modem and 
+printer port, and other <peripheral device|peripheral devices>.
 
 If you don't specifyormode, the driver is opened in text mode. (For most
 devices, you should use binary mode.)
 
-Use theform to open the driver for reading. If the driver is opened for
+Use the *read* form to open the driver for reading. If the driver is opened for
 reading, you can use the read from driver <command> to get data from the
 <peripheral device|device>, but you can't send data to it.
 
-Use theorm to open the driver for writing. If the driver is opened for
+Use the *write* form to open the driver for writing. If the driver is opened for
 writing, you can use the <write to driver> <command> to send data to the
 <peripheral device|device> but you can't read from it.
 
-Use theform to open the driver for both reading and writing. If the
+Use the *update* form to open the driver for both reading and writing. If the
 driver is opened for update, you can use both the read from driver and
 <write to driver> <command|commands> to send data to the <peripheral
 device|device> or get data from it.
@@ -84,7 +84,8 @@ device|device> or get data from it.
 > <OS X|OS X systems>.
 
 On Windows systems, the <open driver> <command> is equivalent to the
-<open file> <command> when the <driverName> is <COM1:>, <COM2:>, etc.
+<open file> <command> when the <driverName> is <COMn:|COM1:>, 
+<COMn:|COM2:>, etc.
 
 If the device is a serial port, you can set the serialControlString
 <property> to specify the speed, parity, and other settings. Set the
@@ -96,8 +97,8 @@ The <encoding> parameter was introduced in version 7.0
 References: write to driver (command), open file (command),
 function (control structure), property (glossary), Unix (glossary),
 statement (glossary), command (glossary), peripheral device (glossary),
-OS X (glossary), COM1: (keyword), COM2: (keyword),
-serialControlString (property), recordInput (property)
+OS X (glossary), COMn: (keyword), serialControlString (property), 
+recordInput (property)
 
 Tags: networking
 

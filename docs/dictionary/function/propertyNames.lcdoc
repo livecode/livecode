@@ -27,8 +27,8 @@ names, one per <line>.
 
 Description:
 Use the <propertyNames> <function> to check whether a particular
-<property> already exists in <LiveCode>, to avoid using a <reserved
-word> for your own <custom property|custom properties>.
+<property> already exists in <LiveCode>, to avoid using a 
+<reserved word> for your own <custom property|custom properties>.
 
 The <propertyNames> <function> <return|returns> all the
 <property|properties> that can be used in <LiveCode>, including

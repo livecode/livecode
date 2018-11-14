@@ -272,6 +272,12 @@ extern bool MCGImageToCGImage(MCGImageRef p_src, const MCGIntegerRectangle &p_sr
 // IM-2013-07-18: [[ ResIndependence ]] added scale parameter to support hi-res images
 static bool MCGImageToUIImage(MCGImageRef p_image, bool p_copy, MCGFloat p_scale, UIImage *&r_uiimage)
 {
+   if (p_image == nil)
+    {
+        r_uiimage = nil;
+        return false;
+    }
+    
 	bool t_success = true;
 	
 	CGImageRef t_cg_image = nil;

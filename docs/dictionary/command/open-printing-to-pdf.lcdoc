@@ -39,20 +39,19 @@ Description:
 Use the <open printing to pdf> <command> to print multiple cards
 directly to a pdf file.
 
-    The open printing to pdf command starts a print loop that outputs
-    directly to a PDF file rather that the currently configured printer.
+The open printing to pdf command starts a print loop that outputs
+directly to a PDF file rather that the currently configured printer.
 
 
 The following handler prints cards that have been collected in a global
 variable: 
 
     on printSomeCards
-    global cardsToPrint
-    open printing to pdf "test.pdf"
-    repeat with x = 1 to the number of lines of cardsToPrint
-
-    print card (line x of cardsToPrint)
-    end repeat
+        global cardsToPrint
+        open printing to pdf "test.pdf"
+        repeat with x = 1 to the number of lines of cardsToPrint
+           print card (line x of cardsToPrint)
+        end repeat
     close printing -- send group of cards to printer
 
     end printSomeCards

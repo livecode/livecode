@@ -31,8 +31,8 @@ Description:
 Use the <printPaperScale> property to apply a final scaling factor to a
 printed page after all other settings have been taken into account.
 
-To have an effect, this property must be set before calling <open
-printing>. 
+To have an effect, this property must be set before calling 
+<open printing>. 
 
 References: open printing (command), answer printer (command)
 

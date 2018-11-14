@@ -30,10 +30,10 @@ Handle the <optionKeyDown> <message> if you want to provide <Option key>
 shortcuts, or do something special when the user types an <Option key>
 combination. 
 
-The <optionKeyDown> <message> is sent only when the user types a <key
-combination> that produces a <character>. For example, typing Option-F11
-does not send an <optionKeyDown> <message>, because Option-F11 does not
-produce a <character>.
+The <optionKeyDown> <message> is sent only when the user types a 
+<key combination> that produces a <character>. For example, typing 
+Option-F11 does not send an <optionKeyDown> <message>, because Option-F11 
+does not produce a <character>.
 
 On MacOS 9, some key codes are not sent if the preceding character is
 one that produces an international diacritical. In those cases, the key

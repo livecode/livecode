@@ -31,15 +31,16 @@ get shell("say" && "hello world") -- Will say the phrase on MacOS
 Parameters:
 commandLine (string):
 
-
-Returns:
-The value returned by the <shell> <function> is the result of the
-<commandLine>, including any <error message|error messages> the
+It:
+The result of the <commandLine>, including any <error message|error messages> the
 <commandLine> generates. (On <Unix|Unix systems>, the <stdout> and
 <stderr> are combined to create the <return value>.) The current
-<handler> pauses until the <shell> returns its result. If the command
+<handler> pauses until the <shell> <function> returns its result. If the command
 was successful but did not return anything, the <shell> <function>
-returns empty. The result is set to the shell command's exit code.
+returns empty. 
+
+The result:
+The shell function's exit code. If the exit code is 0 then empty is returned.
 
 Description:
 Use the <shell> <function> to <execute> a <command line>.

@@ -21,9 +21,10 @@ read from file "image.gif" for 3 real4
 Description:
 Use the <real4> <keyword> to read data from a <binary file>.
 
-If you specify <real4> as the <chunk> type in a <read from file>, <read
-from process>, or <read from socket> <command>, the data is returned as
-a series of numbers separated by commas, one for each <chunk> read.
+If you specify <real4> as the <chunk> type in a <read from file>, 
+<read from process>, or <read from socket> <command>, the data is 
+returned as a series of numbers separated by commas, one for each 
+<chunk> read.
 
 References: read from socket (command), read from process (command),
 write to driver (command), read from file (command), keyword (glossary),

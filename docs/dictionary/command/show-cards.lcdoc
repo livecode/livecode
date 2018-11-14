@@ -24,17 +24,17 @@ show (the number of cards of this stack) cards
 
 Parameters:
 number:
-The number of cards to display.
+The number of cards to display or all cards.
 
 Description:
 Use the <show cards> <command> to do "flipbook"-style animation or to
 display a number of <card|cards> quickly to the user.
 
-Theform displays <number> <card|cards>, starting with the <current
-card>. 
+The 'show number cards' form displays the <number> of <card|cards>, 
+starting with the <current card>. 
 
-Theform displays all the cards in the current stack, starting and ending
-with the current card.
+The 'show all cards' form displays all the cards in the <current stack>, 
+starting and ending with the <current card>.
 
 References: show (command), go (command), command (glossary),
 current stack (glossary), current card (glossary), card (object),

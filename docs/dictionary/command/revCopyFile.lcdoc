@@ -50,8 +50,7 @@ another <folder>.
 You can also copy a file using the put <command>, in a <statement> like
 the following:
 
-    put URL "binfile:/Disk/myfile" into URL
-    "binfile:/Disk/Folder/myfile" 
+    put URL "binfile:/Disk/myfile" into URL "binfile:/Disk/Folder/myfile" 
 
 
 However, the <revCopyFile> <command> provides certain advantages. It
@@ -72,11 +71,11 @@ extremely large <file(function)|files> can be copied.
 > <handler>. 
 
 References: rename (command), answer file (command),
-create alias (command), function (control structure),
+create alias (command), function (control structure), result (function),
 application bundle (glossary), type signature (glossary), Unix (glossary),
 command (glossary), main stack (glossary), folder (glossary),
 file (glossary), return (glossary), group (glossary), message (glossary),
-statement (glossary), result (glossary), Mac OS (glossary),
+statement (glossary), Mac OS (glossary),
 shell (glossary), OS X (glossary), AppleScript (glossary),
 platform (glossary), application (glossary), resource fork (glossary),
 handler (glossary), Windows (glossary), resfile (keyword), file (keyword),
@@ -85,4 +84,3 @@ startup (message), openBackground (message), preOpenStack (message),
 openStack (message), preOpenCard (message)
 
 Tags: file system
-

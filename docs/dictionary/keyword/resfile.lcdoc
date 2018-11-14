@@ -22,8 +22,8 @@ put tResForkData into URL "resfile:MyFile"
 
 
 Description:
-Use the <resfile> <keyword> to work with <Mac OS> <resource
-fork|resource forks>.
+Use the <resfile> <keyword> to work with <Mac OS> 
+<resource fork|resource forks>.
 
 On Mac OS systems, files consist of either or both of a <data fork> and
 a <resource fork>. The resource fork contains defined resources such as

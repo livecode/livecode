@@ -16,13 +16,13 @@ You will need to install [git for Windows](https://git-scm.com/download/win) in 
 
 You need a set of Visual Studio build tools and SDKS.  You can use either:
 
-- [Microsoft Visual Studio 2015 Build Tools](http://landinghub.visualstudio.com/visual-cpp-build-tools),
+- [Microsoft Visual Studio 2015 Build Tools](https://www.microsoft.com/en-us/download/details.aspx?id=48159),
   which contains _only_ the compilers and libraries, without any user
   interface; select everything in the installer
 
 
 - An appropriate edition of the
-  [Microsoft Visual Studio 2015](https://visualstudio.com/downloads/) IDE
+  [Microsoft Visual Studio 2015](https://visualstudio.microsoft.com/vs/older-downloads/) IDE
 
 In addition, you should install
 [Microsoft Speech SDK 5.1](https://www.microsoft.com/en-gb/download/details.aspx?id=10121)

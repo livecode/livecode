@@ -30,9 +30,9 @@ The result:
 >*Important:*  If the <recordFormat> is set to "movie", the resulting
 > <file> is in the <QuickTime> file format. <QuickTime> files cannot be
 > played as <audio clip|audio clips>. To play such a sound, either
-> create a <player> and set its <filename> <property> to the <file
-> path|path> of the <file> you recorded, or use the play videoclip form
-> of the play <command>.
+> create a <player> and set its <filename> <property> to the 
+> <file path|path> of the <file> you recorded, or use the play videoclip 
+> form of the <play> <command>.
 
 Description:
 Use the <record sound> <command> to record the user's speech, import
@@ -70,10 +70,11 @@ longer supports any <QuickTime> features and setting the <dontUseQT> and
 not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
-References: stop recording (command), recordLoudness (function),
+References: play (command), stop recording (command), recordLoudness (function),
 format (function), recordCompressionTypes (function), property (glossary),
 audio clip (glossary), file path (glossary), command (glossary),
 QuickTime (glossary), file (keyword), player (keyword),
+dontUseQT (property), dontUseQTEffects (property),
 filename (property), properties (property), recording (property),
 recordCompression (property), recordSampleSize (property),
 recordChannels (property), recordFormat (property),

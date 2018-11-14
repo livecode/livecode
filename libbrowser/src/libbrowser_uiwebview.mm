@@ -416,9 +416,6 @@ bool MCUIWebViewBrowser::SyncJavaScriptHandlers(NSArray *p_handlers)
 				OnJavaScriptCall([p_handler cStringUsingEncoding: NSUTF8StringEncoding], t_args);
 
 				MCBrowserListRelease(t_args);
-				
-				// IM-2016-09-30: [[ Bug 18406 ]] Wake main thread to process handler call
-				MCBrowserRunloopBreakWait();
 			}
 		};
 	}

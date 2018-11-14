@@ -11,7 +11,7 @@ currently explained? Please consider submitting your proposed changes
 directly to the LiveCode repo on GitHub.
 
 Please consult the [documentation style guide](development/docs_style_guide.md)
-and the [documentation format specification](guides/LiveCode Documentation Format Reference.md)
+and the [documentation format specification](guides/LiveCode%20Documentation%20Format%20Reference.md)
 for information on the standards and structure we aim to maintain in our
 documentation.
 
@@ -29,7 +29,7 @@ documentation of all LiveCode syntax. The most basic form of
 incompleteness is a completely missing dictionary entry. If you intend 
 to write a missing dictionary entry, please bear these documentation 
 objectives in mind and consult the 
-[documentation format specification](guides/LiveCode Documentation Format Reference.md),
+[documentation format specification](guides/LiveCode%20Documentation%20Format%20Reference.md).
 
 The dictionary ought to contain *all* the relevant information about a
 particular piece of LiveCode syntax. Every syntax variant should be 
@@ -50,7 +50,7 @@ prior to major developments in both our software and the hardware it
 runs on.
 
 Secondly, dictionary Syntax elements must be correct. The
-[documentation format specification](guides/LiveCode Documentation Format Reference.md)
+[documentation format specification](guides/LiveCode%20Documentation%20Format%20Reference.md)
 contains a description of the Syntax element.
 
 Thirdly, the dictionary files must be formatted correctly. This means 
@@ -155,19 +155,19 @@ website, without having to download any software or use the command line.
 
 ### Making your dictionary change
 
-**Navigate to the file you want to modify in the [dictionary folder of the develop-8.2 branch](https://github.com/livecode/livecode/blob/develop-8.2/docs/dictionary).**
+**Navigate to the file you want to modify in the [dictionary folder of the develop-9.0 branch](https://github.com/livecode/livecode/blob/develop-9.0/docs/dictionary).**
 
 For example, the accept command is at:
-https://github.com/livecode/livecode/blob/develop-8.2/docs/dictionary/command/accept.lcdoc
+https://github.com/livecode/livecode/blob/develop-9.0/docs/dictionary/command/accept.lcdoc
 
 Either go directly to the community docs branch URL
-(https://github.com/livecode/livecode/tree/develop-8.2) or if you are 
-on the main LiveCode repository page, select 'develop-8.2' from the 
+(https://github.com/livecode/livecode/tree/develop-9.0) or if you are 
+on the main LiveCode repository page, select 'develop-9.0' from the 
 branch dropdown menu:
 
 ![](images/branch-dropdown.png)
 
-You should see that the develop-8.2 branch is selected both in the 
+You should see that the develop-9.0 branch is selected both in the 
 label of the dropdown and the url of your browser.
 
 ![](images/develop-branch.png)
@@ -240,7 +240,7 @@ and description
 
 >*Note:* Please ensure the pull request has the correct base branch and 
 comparison branch. The base fork should be `livecode/livecode`, with
-base branch `develop-8.2`, and the head fork should be 
+base branch `develop-9.0`, and the head fork should be 
 `<your user name>/livecode` with compare branch something like `patch-1`
 (unless you have renamed it).
 
@@ -408,7 +408,7 @@ Click commit to <branch>
 
 Then click "Submit pull request"
 
-Make sure the target branch is livecode/develop-8.2
+Make sure the target branch is livecode/develop-9.0
 
 Check the pull request has appeared in
 https://github.com/livecode/livecode/pulls
@@ -437,13 +437,13 @@ make sure your name and email address are set up
 
 `git config --global user.email "<your email address>"`
 
-checkout the `develop-8.2` branch
+checkout the `develop-9.0` branch
 
-`git checkout develop-8.2`
+`git checkout develop-9.0`
 
 ensure it is up to date
 
-`git pull upstream develop-8.2`
+`git pull upstream develop-9.0`
 
 create a new branch for your docs changes, for example
 
@@ -481,7 +481,7 @@ Navigate to your fork on the Git website, `https://github.com/<your user name>/l
 You should see a link to the recently pushed branch, and an invitation to submit a pull request.
 Click this. 
 
-Ensure the base fork is livecode/livecode, and the base is develop-8.2.
+Ensure the base fork is livecode/livecode, and the base is develop-9.0.
 
 Click create pull request.
 

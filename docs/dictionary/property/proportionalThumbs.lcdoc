@@ -20,8 +20,8 @@ set the proportionalThumbs to true
 
 Value (bool):
 The <proportionalThumbs> is true or false.
-By default, the <proportionalThumbs> <property> is set to false on <Mac
-OS|Mac OS systems>, true on <Unix> and <Windows|Windows systems>.
+By default, the <proportionalThumbs> <property> is set to false on 
+<Mac OS|Mac OS systems>, true on <Unix> and <Windows|Windows systems>.
 
 Description:
 Use the <proportionalThumbs> <property> to control the <appearance> of
@@ -29,10 +29,10 @@ Use the <proportionalThumbs> <property> to control the <appearance> of
 
 If the <proportionalThumbs> is set to true, the <scrollbar thumb> is
 sized proportionately to the visible content of its <field>, group, or
-<stack>. If almost all the content is currently visible, the <scrollbar
-thumb|thumb> is large and fills most of the <scrollbar(keyword)>; if
-only a small percentage of content is visible, the <scrollbar
-thumb|thumb> is small.
+<stack>. If almost all the content is currently visible, the 
+<scrollbar thumb|thumb> is large and fills most of the 
+<scrollbar(keyword)>; if only a small percentage of content is visible, 
+the <scrollbar thumb|thumb> is small.
 
 References: property (glossary), Unix (glossary), appearance (glossary),
 Windows (glossary), Mac OS (glossary), scrollbar thumb (glossary),
