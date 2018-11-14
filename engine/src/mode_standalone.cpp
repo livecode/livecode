@@ -389,28 +389,56 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             return false;
         }
         
-        MCAutoValueRefBase<MCStreamRef> t_stream;
-        if (!MCMemoryInputStreamCreate(t_module_data.Bytes(),
-                                       p_length, &t_stream))
+        // This section is raw file data either a module or a name to resolve which should
+        // have been added as a builtin
+        bool t_is_module = true;
+        if (p_length >= 4 &&
+            !(t_module_data.Bytes()[0] == 'L' &&
+            t_module_data.Bytes()[1] == 'C' &&
+            t_module_data.Bytes()[2] == ((kMCScriptCurrentModuleVersion >> 0) & 0xFF) &&
+            t_module_data.Bytes()[3] == ((kMCScriptCurrentModuleVersion >> 8) & 0xFF)))
         {
-            MCresult -> sets("out of memory");
-            return false;
+            t_is_module = false;
         }
         
         MCAutoScriptModuleRefArray t_modules;
-        if (!MCScriptCreateModulesFromStream(*t_stream, t_modules))
+        MCScriptModuleRef t_main;
+        
+        if (t_is_module)
         {
-            MCAutoErrorRef t_error;
-            if (MCErrorCatch(&t_error))
-                MCresult->setvalueref(MCErrorGetMessage(*t_error));
-            else
-                MCresult->sets("out of memory");
+            MCAutoValueRefBase<MCStreamRef> t_stream;
+            if (!MCMemoryInputStreamCreate(t_module_data.Bytes(),
+                                           p_length, &t_stream))
+            {
+                MCresult -> sets("out of memory");
+                return false;
+            }
             
-            return false;
+            if (!MCScriptCreateModulesFromStream(*t_stream, t_modules))
+            {
+                MCAutoErrorRef t_error;
+                if (MCErrorCatch(&t_error))
+                    MCresult->setvalueref(MCErrorGetMessage(*t_error));
+                else
+                    MCresult->sets("out of memory");
+                
+                return false;
+            }
+            
+            t_main = t_modules[0];
+        }
+        else
+        {
+            MCNewAutoNameRef t_name;
+            if (!MCNameCreateWithNativeChars(t_module_data.Bytes(), p_length, &t_name) ||
+                !MCScriptLookupModule(*t_name, t_main) ||
+                !t_modules.Push(t_main))
+            {
+                MCresult->sets("out of memory");
+                return false;
+            }
         }
         
-        MCScriptModuleRef t_main = t_modules[0];
-
         MCAutoStringRef t_module_resources;
         if (!MCStringFormat(&t_module_resources, "%@/resources",
                             MCScriptGetNameOfModule(t_main)))
