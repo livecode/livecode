@@ -34,6 +34,13 @@ extern int OutputFileAsC;
 extern int OutputFileAsAuxC;
 extern int OutputFileAsBytecode;
 
+static int s_force_c_builtins = 0;
+
+int ForceCBindingsAsBuiltins(void)
+{
+    return s_force_c_builtins;
+}
+
 int IsBootstrapCompile(void)
 {
     return s_is_bootstrap;
@@ -123,6 +130,7 @@ usage(int status)
 "                             compiled in, but only if they need recompiling.\n"
 "      --manifest MANIFEST    Filename for generated manifest.\n"
 "      --interface INTERFACE  Filename for generated interface.\n"
+"      --forcebuiltins        Generate c bindings as builtin shims for auxc output.\n"
 "      -Werror                Turn all warnings into errors.\n"
 "  -v, --verbose              Output extra debugging information.\n"
 "  -h, --help                 Print this message.\n"
@@ -238,6 +246,11 @@ static void full_main(int argc, char *argv[])
             if (0 == strcmp(opt, "-h") || 0 == strcmp(opt, "--help"))
             {
                 usage(0);
+                continue;
+            }
+            if (0 == strcmp(opt, "--forcebuiltins"))
+            {
+                s_force_c_builtins = 1;
                 continue;
             }
             if (0 == strcmp(opt, "--"))
