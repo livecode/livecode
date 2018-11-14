@@ -130,11 +130,9 @@ bool MCScriptInitialize(void)
 			return false;
     }
 
-    // Now make sure all builtin modules are usable.
     for(MCBuiltinModule *t_module = s_builtin_modules; t_module != nullptr; t_module = t_module->next)
     {
-        if (!MCScriptEnsureModuleIsUsable(t_module->handle))
-            return false;
+        /* UNCHECKED */ MCScriptEnsureModuleIsUsable(t_module->handle);
     }
     
     s_load_library_callback = nullptr;
