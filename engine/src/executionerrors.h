@@ -2777,6 +2777,9 @@ enum Exec_errors
     // {EE-0909} android permission: bad permission name
     EE_BAD_PERMISSION_NAME,
     
+    // {EE-0910} Property: value is not a data
+    EE_PROPERTY_NOTADATA
+    
 };
 
 extern const char *MCexecutionerrors;

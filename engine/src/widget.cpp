@@ -668,6 +668,28 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
         !MCExtensionConvertFromScriptType(ctxt, t_set_type, InOut(t_value)))
     {
         CatchError(ctxt);
+        
+        Exec_errors t_error;
+        
+        MCResolvedTypeInfo t_resolved_type;
+        if (!MCTypeInfoResolve(t_set_type, t_resolved_type))
+            return false;
+        
+        if ( t_resolved_type . named_type == kMCBooleanTypeInfo)
+            t_error = EE_PROPERTY_NAB;
+        
+        else if (t_resolved_type . named_type == kMCNumberTypeInfo)
+            t_error = EE_PROPERTY_NAN;
+        else if (t_resolved_type . named_type == kMCStringTypeInfo)
+            t_error = EE_PROPERTY_NAS;
+        else if (t_resolved_type . named_type == kMCArrayTypeInfo || t_resolved_type . named_type == kMCProperListTypeInfo)
+            t_error = EE_PROPERTY_NOTANARRAY;
+        else if (t_resolved_type . named_type == kMCDataTypeInfo)
+            t_error = EE_PROPERTY_NOTADATA;
+        else
+            t_error = EE_PROPERTY_CANTSET;
+            
+        ctxt . LegacyThrow(t_error);
         return false;
     }
     
