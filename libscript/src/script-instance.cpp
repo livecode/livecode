@@ -422,7 +422,7 @@ MCScriptSetPropertyInInstance(MCScriptInstanceRef self,
 	
     // If there is no setter for the property then this is an error.
     if (t_setter == nil)
-        return MCScriptThrowAttemptToSetReadOnlyPropertyError(self, p_property);
+        return MCScriptThrowCannotSetReadOnlyPropertyError(self, p_property);
     
 	/* LOAD CHECK */
 	__MCScriptAssert__(t_setter != nil,

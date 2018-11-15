@@ -398,7 +398,7 @@ MCScriptCreateErrorExpectedError(MCErrorRef& r_error)
 						  nil);
 }
 
-bool MCScriptThrowAttemptToSetReadOnlyPropertyError(MCScriptInstanceRef p_instance, MCNameRef p_property)
+bool MCScriptThrowCannotSetReadOnlyPropertyError(MCScriptInstanceRef p_instance, MCNameRef p_property)
 {
     return MCErrorCreateAndThrow(kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo,
                                  "module",

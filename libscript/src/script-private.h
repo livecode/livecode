@@ -608,7 +608,7 @@ MCScriptThrowPropertyNotFoundError(MCScriptInstanceRef instance,
 								   MCNameRef property);
 
 bool
-MCScriptThrowAttemptToSetReadOnlyPropertyError(MCScriptInstanceRef instance,
+MCScriptThrowCannotSetReadOnlyPropertyError(MCScriptInstanceRef instance,
                                    MCNameRef property);
 
 bool

@@ -670,26 +670,40 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
         CatchError(ctxt);
         
         Exec_errors t_error;
+        bool t_throw = false;
         
         MCResolvedTypeInfo t_resolved_type;
         if (!MCTypeInfoResolve(t_set_type, t_resolved_type))
             return false;
         
         if ( t_resolved_type . named_type == kMCBooleanTypeInfo)
+        {
             t_error = EE_PROPERTY_NAB;
-        
+            t_throw = true;
+        }
         else if (t_resolved_type . named_type == kMCNumberTypeInfo)
+        {
             t_error = EE_PROPERTY_NAN;
+            t_throw = true;
+        }
         else if (t_resolved_type . named_type == kMCStringTypeInfo)
+        {
             t_error = EE_PROPERTY_NAS;
+            t_throw = true;
+        }
         else if (t_resolved_type . named_type == kMCArrayTypeInfo || t_resolved_type . named_type == kMCProperListTypeInfo)
+        {
             t_error = EE_PROPERTY_NOTANARRAY;
+            t_throw = true;
+        }
         else if (t_resolved_type . named_type == kMCDataTypeInfo)
+        {
             t_error = EE_PROPERTY_NOTADATA;
-        else
-            t_error = EE_PROPERTY_CANTSET;
-            
-        ctxt . LegacyThrow(t_error);
+            t_throw = true;
+        }
+        
+        if (t_throw)
+            ctxt . LegacyThrow(t_error);
         return false;
     }
     
