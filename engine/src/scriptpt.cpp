@@ -1572,6 +1572,22 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 				return PS_NORMAL;
 			}
 			break;
+        case ST_LC:
+            newfact = insertfactor(new MCArrayLiteral, curfact, top);
+            if (newfact->parse(*this, doingthe) == PS_ERROR)
+            {
+                return PS_ERROR;
+            }
+            needfact = False;
+            break;
+        case ST_LB:
+            newfact = insertfactor(new MCSequenceLiteral, curfact, top);
+            if (newfact->parse(*this, doingthe) == PS_ERROR)
+            {
+                return PS_ERROR;
+            }
+            needfact = False;
+            break;
 		default:
 			if (lookup(SP_FACTOR, te) == PS_NORMAL)
 			{
@@ -1703,33 +1719,38 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
                         MCperror->add(PE_EXPRESSION_BADFUNCTION, *this);
                         return PS_ERROR;
                     }
-					thesp = *this;
-					thesp.backup();
-					if (newfact->parse(*this, doingthe) != PS_NORMAL)
-					{
-						delete newfact;
-						if (doingthe || !MCperror->isempty())
-						{
-							MCperror->add(PE_EXPRESSION_BADFUNCTION, *this);
-							return PS_ERROR;
-						}
-						*this = thesp;
-						MCVarref *newvar;
+                    thesp = *this;
+                    if (newfact->parse(*this, doingthe) != PS_NORMAL)
+                    {
+                        MCNewAutoNameRef t_name = thesp.gettoken_nameref();
+                        
+                        if (doingthe ||
+                            (thesp.next(type) == PS_NORMAL && type == ST_LP))
+                        {
+                            MCperror->add(PE_EXPRESSION_BADFUNCTION, *this);
+                            return PS_ERROR;
+                        }
+                        
+                        MCperror->clear();
+                        
+                        *this = thesp;
+                        
+                        MCVarref *newvar;
 						// MW-2011-06-22: [[ SERVER ]] Update to use SP findvar method to take into account
 						//   execution outwith a handler.
-						if (gethandler() != NULL && findvar(gettoken_nameref(), &newvar) == PS_NORMAL)
+						if (gethandler() != NULL && findvar(*t_name, &newvar) == PS_NORMAL)
 						{
 							newvar->parsearray(*this);
 							newfact = newvar;
 						}
-						else
-							if (MCexplicitvariables)
-							{
-								MCperror->add(PE_EXPRESSION_NOTLITERAL, *this);
-								return PS_ERROR;
-							}
-							else
-								newfact = new (nothrow) MCLiteral(gettoken_nameref());
+						else if (MCexplicitvariables)
+                        {
+                            MCperror->add(PE_EXPRESSION_NOTLITERAL, *this);
+                            return PS_ERROR;
+                        }
+                        else
+                            newfact = new (nothrow) MCLiteral(*t_name);
+
 						newfact->parse(*this, doingthe);
 					}
 					insertfactor(newfact, curfact, top);
@@ -1871,6 +1892,12 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 
 Parse_stat MCScriptPoint::findvar(MCNameRef p_name, MCVarref** r_var)
 {
+    if (m_alias_error && p_name == MCN_error)
+    {
+        *r_var = new(nothrow) MCVarref(MClasterror);
+        return PS_NORMAL;
+    }
+    
 	if (curhandler != NULL)
 		return curhandler -> findvar(p_name, r_var);
 	

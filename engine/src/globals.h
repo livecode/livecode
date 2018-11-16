@@ -295,6 +295,7 @@ extern MCRectangle MCcur_effects_rect;
 extern MCEffectList *MCcur_effects;
 extern MCError *MCperror;
 extern MCError *MCeerror;
+extern MCVariable *MClasterror;
 extern MCVariable *MCmb;
 extern MCVariable *MCeach;
 extern MCVariable *MCresult;

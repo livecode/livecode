@@ -146,21 +146,33 @@ public:
 
 class MCSwitch : public MCStatement
 {
-	MCExpression *cond;
-	MCExpression **cases;
-	MCStatement *statements;
-	uint2 *caseoffsets;
-	int2 defaultcase;
-	uint2 ncases;
+    /* The switch condition expression */
+    MCExpression *cond;
+    /* If dynamic_ncases is 0 then static_cases is used, otherwise dynamic_cases
+     * is used. */
+    union
+    {
+        MCExpression **dynamic_cases;
+        MCArrayRef static_cases;
+    };
+    /* The complete list of statements in the switch. */
+    MCStatement *statements;
+    /* The pointers, one for each case, to start executing from if non-default
+     * case. */
+	MCStatement **casestatements;
+    /* The pointer to the statement to start executing from if default case. */
+    MCStatement *defaultstatement;
+    /* If dynamic_ncases is 0 then it is a static switch */
+    uindex_t dynamic_ncases;
 public:
 	MCSwitch()
 	{
 		cond = NULL;
-		cases = NULL;
-		statements = NULL;
-		defaultcase = -1;
-		caseoffsets = NULL;
-		ncases = 0;
+		dynamic_cases = NULL;
+        statements = NULL;
+		casestatements = NULL;
+		defaultstatement = NULL;
+        dynamic_ncases = 0;
 	}
 	~MCSwitch();
 	virtual Parse_stat parse(MCScriptPoint &sp);

@@ -2777,6 +2777,26 @@ enum Exec_errors
     // {EE-0909} android permission: bad permission name
     EE_BAD_PERMISSION_NAME,
     
+    // {EE-0910} params: bad start index
+    EE_PARAMS_BADSTART,
+
+    // {EE-0911} params: bad finish index
+    EE_PARAMS_BADFINISH,
+
+    // {EE-0912} literal: error in value expression
+    EE_SEQLITERAL_BADEXPR,
+
+    // {EE-0913} literal: error in key expression
+    EE_ARRLITERAL_BADKEYEXPR,
+
+    // {EE-0914} literal: error in value expression
+    EE_ARRLITERAL_BADVALEXPR,
+    
+    // {EE-0915} try: error in error expression
+    EE_TRYFUNC_ERRINERR,
+
+    // {EE-0916} variable: no first or last value
+    EE_VARIABLE_NOFIRSTORLAST,
 };
 
 extern const char *MCexecutionerrors;

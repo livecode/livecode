@@ -108,7 +108,15 @@ public:
     bool eval_ctxt(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCExecValue &r_value);
     // Give the exec value to the variable (nested key).
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCSpan<MCNameRef> p_path, MCVariableSettingStyle p_setting = kMCVariableSetInto);
-	
+    
+    /* Returns the 'upper bound' of the array at p_path in the variable. If the
+     * value on the given path is not an array, 0 is returned. Otherwise the
+     * number of elements in the array is returned.
+     * Note: This is equivalent to 'the number of elements in ...' currently,
+     * however in the future, it will distinguish between sequence and non-sequence
+     * arrays. */
+    uindex_t upperbound(MCExecContext& ctxt, MCSpan<MCNameRef> p_path);
+    
     bool setvalueref(MCValueRef value);
 	MCValueRef getvalueref(void);
 	bool copyasvalueref(MCValueRef& r_value);
@@ -272,9 +280,19 @@ public:
 class MCContainer
 {
 public:
+    enum
+    {
+        /* A short path length of 6 has been chosen as it means an MCContainer
+         * occupies 64 bytes on 64-bit and 48 bytes on 32-bit. */
+        kShortPathLength = 6,
+        
+        /* The extension size to use for a long path, should be a power-of-two. */
+        kLongPathSegmentLength = 8,
+    };
+    
     MCContainer() = default;
     
-    MCContainer(MCVariable *var) : m_variable(var) {}
+    MCContainer(MCVariable *var) : m_path_length(0), m_variable(var) {}
 
     ~MCContainer(void);
 
@@ -283,13 +301,13 @@ public:
     bool remove(MCExecContext& ctxt);
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
-    bool eval_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCValueRef& r_value);
-    
-    bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
-    bool set_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> path, MCValueRef p_value);
     
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
+    
+    bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
+    
+    uindex_t upperbound(MCExecContext& ctxt);
     
 	bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range);
 	bool deleterange(MCExecContext& ctxt, MCRange p_range);
@@ -302,22 +320,76 @@ public:
 
     MCSpan<MCNameRef> getpath();
 
-	static bool createwithvariable(MCVariable *var, MCContainer& r_container);
-	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer& r_container);
-    static bool copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer& r_container);
-    
     MCVariable *getvar()
     {
         return m_variable;
     }
     
 private:
+    /* If m_path_length <= 6 then m_short_path contains the path, otherwise
+     * m_long_path (a dynamically allocated vector) will contain it. */
+    uindex_t m_path_length = 0;
+    union
+    {
+        MCNameRef m_short_path[kShortPathLength];
+        struct
+        {
+            uindex_t m_long_path_capacity;
+            MCNameRef *m_long_path;
+        };
+    };
 	MCVariable *m_variable = nullptr;
-    MCAutoNameRefArray m_path;
-	bool m_case_sensitive = false;
+    
+    friend class MCVarref;
+    friend class MCContainerBuilder;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/* This class wraps an MCExpression pointer, but uses the bottom 3 bits to
+ * encode the 'special' expressions 'first', 'last' and 'next'. */
+class MCVarrefExpression
+{
+public:
+    enum Type
+    {
+        kExpression = 0,
+        kFirst = 1,
+        kLast = 2,
+        kNext = 3
+    };
+    
+    MCVarrefExpression(void)
+        : m_expression(nullptr)
+    {
+    }
+    
+    Type TypeOf(void) const
+    {
+        return (Type)(m_non_expression & 3);
+    }
+    
+    Parse_stat Parse(MCScriptPoint& sp);
+    
+    void Delete(void)
+    {
+        if (TypeOf() == kExpression)
+            delete m_expression;
+    }
+    
+    operator MCExpression *(void) const
+    {
+        MCAssert(TypeOf() == kExpression);
+        return m_expression;
+    }
+    
+private:
+    union
+    {
+        MCExpression *m_expression = nullptr;
+        uintptr_t m_non_expression;
+    };
+};
 
 class MCVarref : public MCExpression
 {
@@ -326,8 +398,8 @@ protected:
 	MCHandler *handler = nullptr;
 	union
 	{
-		MCExpression *exp = nullptr;
-		MCExpression **exps;
+		MCVarrefExpression exp;
+		MCVarrefExpression *exps = nullptr;
 	};
 	uint16_t index = 0;
 	uint8_t dimensions = 0;

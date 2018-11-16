@@ -127,7 +127,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 		const LT *te;
 		MCExpression *newfact = NULL;
 		if (stat != PS_NORMAL || type != ST_ID
-		        || sp.lookup(SP_FACTOR, te) != PS_NO_MATCH
+		        || (sp.lookup(SP_FACTOR, te) != PS_NO_MATCH && te->type != TT_FUNCTION)
 		        || sp.lookupconstant(&newfact) == PS_NORMAL)
 		{
 			delete newfact;
@@ -979,11 +979,18 @@ uint4 MCBreak::linecount()
 MCSwitch::~MCSwitch()
 {
 	delete cond;
-	while (ncases--)
-		delete cases[ncases];
-	delete[] cases; /* Allocated with new[] */
+    if (dynamic_ncases != 0)
+    {
+        while(dynamic_ncases > 0)
+            delete dynamic_cases[--dynamic_ncases];
+        delete[] dynamic_cases; /* Allocated with new[] */
+    }
+    else if (static_cases != nullptr)
+    {
+        MCValueRelease(static_cases);
+    }
 	deletestatements(statements);
-	delete[] caseoffsets; /* Allocated with new[] */
+	delete[] casestatements; /* Allocated with new[] */
 }
 
 Parse_stat MCSwitch::parse(MCScriptPoint &sp)
@@ -997,22 +1004,29 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 		sp.backup();
 		if (sp.parseexp(False, True, &cond) != PS_NORMAL)
 		{
-			MCperror->add
-			(PE_SWITCH_BADCONDITION, sp);
+			MCperror->add(PE_SWITCH_BADCONDITION, sp);
 			return PS_ERROR;
 		}
 	}
 	else
 		if (sp.skip_eol() != PS_NORMAL)
 		{
-			MCperror->add
-			(PE_SWITCH_WANTEDENDSWITCH, sp);
+			MCperror->add(PE_SWITCH_WANTEDENDSWITCH, sp);
 			return PS_ERROR;
 		}
-	uint2 snum = 0;
+
+    /* If there is no condition, then this is a dynamic switch. Otherwise it
+     * might be static (i.e. all cases constants) - so be optimistic. */
+    bool t_is_static = cond != nullptr;
+    
 	MCStatement *curstatement = NULL;
 	MCStatement *newstatement = NULL;
-	while (True)
+    
+    bool t_fillin_default = false;
+    index_t t_fillin_case = -1;
+    
+    bool t_done = false;
+	while(!t_done)
 	{
 		switch (sp.next(type))
 		{
@@ -1025,8 +1039,7 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 					newstatement = new (nothrow) MCComref(sp.gettoken_nameref());
 				else
 				{
-					MCperror->add
-					(PE_SWITCH_NOTCOMMAND, sp);
+					MCperror->add(PE_SWITCH_NOTCOMMAND, sp);
 					return PS_ERROR;
 				}
 			}
@@ -1038,37 +1051,50 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 					newstatement = MCN_new_statement(te->which);
 					break;
 				case TT_CASE:
-					MCU_realloc((char **)&cases, ncases, ncases + 1,
+					MCU_realloc((char **)&dynamic_cases, dynamic_ncases, dynamic_ncases + 1,
 					            sizeof(MCExpression *));
                     // SN-2015-06-16: [[ Bug 15509 ]] We should reach the end
                     //  of the line after having parsed the <case> expression.
                     //  That mimics the behaviour of MCIf::parse, where a <then>
                     //  is compulsary after the expression parsed (here, an EOL)
-                    if (sp.parseexp(False, True, &cases[ncases]) != PS_NORMAL
+                    if (sp.parseexp(False, True, &dynamic_cases[dynamic_ncases]) != PS_NORMAL
                             || sp.next(type) != PS_EOL)
 					{
-						MCperror->add
-						(PE_SWITCH_BADCASECONDITION, sp);
+						MCperror->add(PE_SWITCH_BADCASECONDITION, sp);
 						return PS_ERROR;
 					}
-					MCU_realloc((char **)&caseoffsets, ncases, ncases + 1,
-					            sizeof(uint2));
-					caseoffsets[ncases++] = snum;
+                        
+                    /* If the case expression is not constant, then this is a
+                     * dynamic switch. */
+                    if (!dynamic_cases[dynamic_ncases]->getattrs().IsConstant())
+                    {
+                        t_is_static = false;
+                    }
+                        
+					MCU_realloc((char **)&casestatements, dynamic_ncases, dynamic_ncases + 1,
+					            sizeof(MCStatement*));
+                    
+                    casestatements[dynamic_ncases] = nullptr;
+                    if (t_fillin_case == -1)
+                    {
+                        t_fillin_case = dynamic_ncases;
+                    }
+                    dynamic_ncases++;
 					continue;
-				case TT_DEFAULT:
-					defaultcase = snum;
+                case TT_DEFAULT:
+                    defaultstatement = nullptr;
+                    t_fillin_default = true;
 					continue;
 				case TT_END:
 					if (sp.skip_token(SP_COMMAND, TT_STATEMENT, S_SWITCH) != PS_NORMAL)
 					{
-						MCperror->add
-						(PE_SWITCH_WANTEDENDSWITCH, sp);
+						MCperror->add(PE_SWITCH_WANTEDENDSWITCH, sp);
 						return PS_ERROR;
 					}
-					return PS_NORMAL;
+                    t_done = true;
+                    break;
 				default: /* token type */
-					MCperror->add
-					(PE_SWITCH_BADCASECONDITION, sp);
+					MCperror->add(PE_SWITCH_BADCASECONDITION, sp);
 					return PS_ERROR;
 				}
 			}
@@ -1076,25 +1102,46 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 		case PS_EOL:
 			if (sp.skip_eol() != PS_NORMAL)
 			{
-				MCperror->add
-				(PE_SWITCH_WANTEDENDSWITCH, sp);
+				MCperror->add(PE_SWITCH_WANTEDENDSWITCH, sp);
 				return PS_ERROR;
 			}
 			continue;
 		case PS_EOF:
-			return PS_NORMAL;
+            t_done = true;
+            break;
 		default:
-			MCperror->add
-			(PE_SWITCH_BADTYPE, sp);
+			MCperror->add(PE_SWITCH_BADTYPE, sp);
 			return PS_ERROR;
 		}
+        
+        if (t_done)
+        {
+            break;
+        }
+        
 		if (newstatement->parse(sp) != PS_NORMAL)
 		{
-			MCperror->add
-			(PE_SWITCH_BADSTATEMENT, sp);
+			MCperror->add(PE_SWITCH_BADSTATEMENT, sp);
 			delete newstatement;
 			return PS_ERROR;
 		}
+        
+        if (t_fillin_default)
+        {
+            defaultstatement = newstatement;
+            t_fillin_default = false;
+        }
+        
+        if (t_fillin_case != -1)
+        {
+            while(t_fillin_case < (index_t)dynamic_ncases)
+            {
+                casestatements[t_fillin_case] = newstatement;
+                t_fillin_case += 1;
+            }
+            t_fillin_case = -1;
+        }
+    
 		if (statements == NULL)
 			statements = curstatement = newstatement;
 		else
@@ -1102,14 +1149,87 @@ Parse_stat MCSwitch::parse(MCScriptPoint &sp)
 			curstatement->setnext(newstatement);
 			curstatement = newstatement;
 		}
-		snum++;
 	}
+    
+    /* If this is a static switch, then try and turn the dynamic cases into
+     * an array. */
+    if (t_is_static)
+    {
+        MCAutoArrayRef t_static_cases;
+        if (!MCArrayCreateMutable(&t_static_cases))
+        {
+            MCperror->add(PE_OUTOFMEMORY, sp);
+            return PS_ERROR;
+        }
+        
+        for(uindex_t i = 0; i < dynamic_ncases; i++)
+        {
+            MCNewAutoNameRef t_case;
+            if (!dynamic_cases[i]->constant_eval(&t_case))
+            {
+                t_is_static = false;
+                break;
+            }
+            
+            /* If the case is already there (case sensitive match) then skip. */
+            MCValueRef t_unused_value;
+            if (MCArrayFetchValue(*t_static_cases, true, *t_case, t_unused_value))
+            {
+                continue;
+            }
+            
+            /* Store the statement index of the case with the give case key. */
+            MCAutoNumberRef t_index;
+            if (!MCNumberCreateWithInteger(i, &t_index) ||
+                !MCArrayStoreValue(*t_static_cases, 
+                                   true,
+                                   *t_case,
+                                   *t_index))
+            {
+                MCperror->add(PE_OUTOFMEMORY, sp);
+                return PS_ERROR;
+            }
+        }
+        
+        /* If all the cases where successfully evaluated then delete the
+         * dynamic cases, and take the static cases. */
+        if (t_is_static)
+        {
+            while(dynamic_ncases > 0)
+                delete dynamic_cases[--dynamic_ncases];
+            
+            /* If there are cases, then unique the case array to reduce
+             * memory footprint for sets of equal case mappings. */
+            if (MCArrayGetCount(*t_static_cases) != 0)
+            {
+                if (!t_static_cases.MakeImmutable() ||
+                    !t_static_cases.MakeUnique())
+                {
+                    MCperror->add(PE_OUTOFMEMORY, sp);
+                    return PS_ERROR;
+                }
+                static_cases = t_static_cases.Take();
+            }
+            else
+            {
+                static_cases = nullptr;
+            }
+        }
+    }
+    
 	return PS_NORMAL;
 }
 
 void MCSwitch::exec_ctxt(MCExecContext& ctxt)
 {
-    MCKeywordsExecSwitch(ctxt, cond, cases, ncases, defaultcase, caseoffsets, statements, getline(), getpos());
+    if (dynamic_ncases == 0)
+    {
+        MCKeywordsExecStaticSwitch(ctxt, cond, static_cases, defaultstatement, casestatements, getline(), getpos());
+    }
+    else
+    {
+        MCKeywordsExecSwitch(ctxt, cond, dynamic_cases, dynamic_ncases, defaultstatement, casestatements, getline(), getpos());
+    }
 }
 
 uint4 MCSwitch::linecount()
@@ -1202,7 +1322,7 @@ Parse_stat MCTry::parse(MCScriptPoint &sp)
 					curstatement = NULL;
 					stat = sp.next(type);
 					if (errorvar != NULL || stat != PS_NORMAL || type != ST_ID
-					        || sp.lookup(SP_FACTOR, te) != PS_NO_MATCH
+					        || (sp.lookup(SP_FACTOR, te) != PS_NO_MATCH && te->type != TT_FUNCTION)
 					        || sp.lookupconstant(&newfact) == PS_NORMAL
 					        || sp . findnewvar(sp.gettoken_nameref(), kMCEmptyName, &errorvar) != PS_NORMAL)
 					{

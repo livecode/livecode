@@ -276,7 +276,7 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpression **cases, uindex_t case_count, int2 default_case, uint2 *case_offsets, MCStatement *statements, uint2 line, uint2 pos)
+void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpression **cases, uindex_t ncases, MCStatement* defaultstatement, MCStatement **casestatements, uint2 line, uint2 pos)
 {
     MCAutoValueRef t_value;
     MCAutoStringRef t_cond;
@@ -294,9 +294,8 @@ void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpres
     else
         t_cond = MCValueRetain(kMCTrueString);
     
-	int2 match = default_case;
-	uint2 i;
-	for (i = 0 ; i < case_count ; i++)
+    MCStatement *match = defaultstatement;
+	for (uindex_t i = 0 ; i < ncases ; i++)
 	{
         MCAutoValueRef t_case;
         MCAutoStringRef t_case_string;
@@ -312,20 +311,51 @@ void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpres
         
 		if (MCStringIsEqualTo(*t_cond, *t_case_string, ctxt . GetStringComparisonType()))
         {
-            match = case_offsets[i];
+            match = casestatements[i];
             break;
         }
 	}
     
-	if (match >= 0)
+	if (match != nullptr)
 	{
-		MCStatement *tspr = statements;
-		while (match--)
-			tspr = tspr->getnext();
-        
         // SN-2014-08-06: [[ Bug 13122 ]] If we get an EXIT_SWITCH, it's all right
         Exec_stat t_stat;
-        t_stat = MCKeywordsExecuteStatements(ctxt, tspr, EE_SWITCH_BADSTATEMENT);
+        t_stat = MCKeywordsExecuteStatements(ctxt, match, EE_SWITCH_BADSTATEMENT);
+        if (t_stat == ES_EXIT_SWITCH)
+            t_stat = ES_NORMAL;
+        
+        ctxt . SetExecStat(t_stat);
+    }
+}
+
+void MCKeywordsExecStaticSwitch(MCExecContext& ctxt, MCExpression *condition, MCArrayRef cases, MCStatement* defaultstatement, MCStatement **casestatements, uint2 line, uint2 pos)
+{
+    MCAutoValueRef t_value;
+    MCNewAutoNameRef t_cond;
+    if (!ctxt . TryToEvaluateExpression(condition, line, pos, EE_SWITCH_BADCOND, &t_value))
+        return;
+    
+    if (!ctxt . ConvertToName(*t_value, &t_cond))
+    {
+        ctxt . LegacyThrow(EE_SWITCH_BADCOND);
+        return;
+    }
+    
+    MCStatement *t_match = defaultstatement;
+    if (cases != nullptr)
+    {
+        MCValueRef t_index;
+        if (MCArrayFetchValue(cases, ctxt.GetCaseSensitive(), *t_cond, t_index))
+        {
+            t_match = casestatements[MCNumberFetchAsInteger((MCNumberRef)t_index)];
+        }
+    }
+    
+    if (t_match != nullptr)
+    {
+        // SN-2014-08-06: [[ Bug 13122 ]] If we get an EXIT_SWITCH, it's all right
+        Exec_stat t_stat;
+        t_stat = MCKeywordsExecuteStatements(ctxt, t_match, EE_SWITCH_BADSTATEMENT);
         if (t_stat == ES_EXIT_SWITCH)
             t_stat = ES_NORMAL;
         

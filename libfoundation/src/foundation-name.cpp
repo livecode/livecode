@@ -18,6 +18,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "foundation-private.h"
 
+#include "foundation-string-hash.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF MCNameRef kMCEmptyName;
@@ -35,6 +37,112 @@ static uindex_t s_name_table_capacity;
 static void __MCNameGrowTable(void);
 static void __MCNameShrinkTable(void);
 
+static inline hash_t __MCNameGetHash(__MCName* p_name)
+{
+    return p_name->flags & kMCValueFlagsNameHashMask;
+}
+
+static inline void __MCNameSetHash(__MCName* p_name, hash_t p_hash)
+{
+    p_name->flags = (p_name->flags & kMCValueFlagsTypeCodeMask) | (p_hash & kMCValueFlagsNameHashMask);
+}
+
+static void __MCNameIndexToNativeChars(index_t p_value, char_t r_chars[16], uindex_t& r_char_count)
+{
+    static const char kDigits[201] =
+        "0001020304050607080910111213141516171819"
+        "2021222324252627282930313233343536373839"
+        "4041424344454647484950515253545556575859"
+        "6061626364656667686970717273747576777879"
+        "8081828384858687888990919293949596979899";
+    
+    r_char_count = 0;
+    
+    uindex_t t_value;
+    if (p_value < 0)
+    {
+        r_chars[r_char_count++] = '-';
+        p_value = -p_value;
+    }
+    
+    t_value = p_value;
+    
+    uint32_t t_length = 1;
+    for (;;) {
+        if (t_value < 10) break;
+        if (t_value < 100) { t_length += 1; break; }
+        if (t_value < 1000) { t_length += 2; break; }
+        if (t_value < 10000) { t_length += 3; break; }
+        t_value /= 10000U;
+        t_length += 4;
+    }
+    
+    t_value = p_value;
+    
+    r_char_count += t_length;
+    
+    uindex_t t_next =
+        r_char_count - 1;
+    
+    while(t_value >= 100)
+    {
+        index_t t_offset =
+                    (t_value % 100) * 2;
+        
+        t_value /= 100;
+        
+        r_chars[t_next] = kDigits[t_offset + 1];
+        r_chars[t_next - 1] = kDigits[t_offset];
+        
+        t_next -= 2;
+    }
+    
+    if (t_value < 10)
+    {
+        r_chars[t_next] = '0' + t_value;
+    }
+    else
+    {
+        index_t t_offset =
+                    t_value * 2;
+        
+        r_chars[t_next] = kDigits[t_offset + 1];
+        r_chars[t_next - 1] = kDigits[t_offset];
+    }
+}
+
+static hash_t __MCNameIndexHash(const char_t *p_chars, uindex_t p_char_count)
+{
+    MCHashCharsContext t_hash;
+    switch(p_char_count)
+    {
+    case 11:
+        t_hash.consume(*p_chars++);
+    case 10:
+        t_hash.consume(*p_chars++);
+    case 9:
+        t_hash.consume(*p_chars++);
+    case 8:
+        t_hash.consume(*p_chars++);
+    case 7:
+        t_hash.consume(*p_chars++);
+    case 6:
+        t_hash.consume(*p_chars++);
+    case 5:
+        t_hash.consume(*p_chars++);
+    case 4:
+        t_hash.consume(*p_chars++);
+    case 3:
+        t_hash.consume(*p_chars++);
+    case 2:
+        t_hash.consume(*p_chars++);
+    case 1:
+        t_hash.consume(*p_chars++);
+        break;
+    }
+    return t_hash;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_DLLEXPORT_DEF
@@ -45,13 +153,8 @@ MCNameRef MCNAME(const char *p_string)
 	
 	MCNameRef t_name;
 	/* UNCHECKED */ MCNameCreate(t_string, t_name);
-	
-	MCValueRef t_name_unique;
-	/* UNCHECKED */ MCValueInter(t_name, t_name_unique);
-	
-	MCValueRelease(t_name);
-	
-	return (MCNameRef)t_name_unique;
+
+	return t_name;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,6 +174,9 @@ bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 	// Compute the has of the characters, up to case.
 	hash_t t_hash;
 	t_hash = MCStringHash(p_string, kMCStringOptionCompareCaseless);
+    
+    // Reduce the hash to the size we store
+    t_hash &= kMCValueFlagsNameHashMask;
 
 	// Calculate the index of the chain in the name table where this might be
 	// found. The capacity is always a power-of-two, so its just a mask op.
@@ -85,7 +191,7 @@ bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 	{
 		// If the string matches, then we are done - notice we compare the
 		// full hash first.
-		if (t_hash == t_key_name -> hash &&
+		if (t_hash == __MCNameGetHash(t_key_name) &&
 			MCStringIsEqualTo(p_string, t_key_name -> string, kMCStringOptionCompareCaseless))
 			break;
 
@@ -156,7 +262,7 @@ bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 		}
 
 		// Record the hash (speeds up searching and such).
-		t_name -> hash = t_hash;
+        __MCNameSetHash(t_name, t_hash);
 
 		// Return the new name.
 		r_name = t_name;
@@ -168,6 +274,92 @@ bool MCNameCreate(MCStringRef p_string, MCNameRef& r_name)
 	}
 
 	return t_success;
+}
+
+MC_DLLEXPORT_DEF
+bool MCNameCreateWithIndex(index_t p_index, MCNameRef& r_name)
+{
+    char_t t_chars[11];
+    uindex_t t_char_count;
+    __MCNameIndexToNativeChars(p_index, t_chars, t_char_count);
+    
+    // Compute the hash of the characters, up to case.
+    hash_t t_hash;
+    t_hash = __MCNameIndexHash(t_chars, t_char_count);
+    
+    // Reduce the hash to the size we store
+    t_hash &= kMCValueFlagsNameHashMask;
+    
+    // Calculate the index of the chain in the name table where this might be
+    // found. The capacity is always a power-of-two, so its just a mask op.
+    uindex_t t_index;
+    t_index = t_hash & (s_name_table_capacity - 1);
+    
+    // Search for the first representation of the would-be name's equivalence
+    // class.
+    __MCName *t_key_name;
+    t_key_name = s_name_table[t_index];
+    while(t_key_name != nil)
+    {
+        // If the string matches, then we are done - notice we compare the
+        // full hash first.
+        if (t_hash == __MCNameGetHash(t_key_name) &&
+            t_key_name -> key == t_key_name &&
+            MCStringIsEqualToNativeChars(t_key_name -> string, t_chars, t_char_count, kMCStringOptionCompareExact))
+        {
+            t_key_name -> references += 1;
+            r_name = t_key_name;
+            return true;
+        }
+        
+        // Next name must be the next one.
+        t_key_name = t_key_name -> next;
+    }
+    
+    // We haven't found an exact match, so we create a new name...
+    bool t_success;
+    t_success = true;
+    
+    // Allocate a name record.
+    __MCName *t_name;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeName, t_name);
+    
+    // Copy the string (as immutable).
+    if (t_success)
+        t_success = MCStringCreateWithNativeChars(t_chars, t_char_count, t_name -> string);
+    
+    // Now add the name to the table and fill in the rest of the fields.
+    if (t_success)
+    {
+        // To keep hashin efficient, we (try to) double the size of the
+        // table each time occupancy reaches capacity.
+        if (s_name_table_occupancy == s_name_table_capacity)
+        {
+            __MCNameGrowTable();
+            t_index = t_hash & (s_name_table_capacity - 1);
+        }
+        
+        // Increase occupancy.
+        s_name_table_occupancy += 1;
+        
+        t_name -> next = s_name_table[t_index];
+        t_name -> key = t_name;
+        s_name_table[t_index] = t_name;
+
+        // Record the hash (speeds up searching and such).
+        __MCNameSetHash(t_name, t_hash);
+        
+        // Return the new name.
+        r_name = t_name;
+    }
+    else
+    {
+        MCValueRelease(t_name -> string);
+        MCMemoryDelete(t_name);
+    }
+    
+    return t_success;
 }
 
 MC_DLLEXPORT_DEF
@@ -211,7 +403,10 @@ MCNameRef MCNameLookupCaseless(MCStringRef p_string)
 	// Compute the hash of the characters, up to case.
 	hash_t t_hash;
 	t_hash = MCStringHash(p_string, kMCStringOptionCompareCaseless);
-
+    
+    // Reduce the hash to the size we store
+    t_hash &= kMCValueFlagsNameHashMask;
+    
 	// Calculate the index of the chain in the name table where this name might
 	// be found. The capacity is always a power-of-two, so its just a mask op.
 	uindex_t t_index;
@@ -224,7 +419,7 @@ MCNameRef MCNameLookupCaseless(MCStringRef p_string)
 	{
 		// If the string matches, then we are done - notice we compare the full
 		// hash first.
-		if (t_hash == t_key_name -> hash &&
+		if (t_hash == __MCNameGetHash(t_key_name) &&
 			MCStringIsEqualTo(p_string, t_key_name -> string, kMCStringOptionCompareCaseless))
 			break;
 
@@ -237,6 +432,45 @@ MCNameRef MCNameLookupCaseless(MCStringRef p_string)
 	}
 
 	return t_key_name;
+}
+
+MC_DLLEXPORT_DEF
+MCNameRef MCNameLookupIndex(index_t p_index)
+{
+    char_t t_chars[11];
+    uindex_t t_char_count;
+    __MCNameIndexToNativeChars(p_index, t_chars, t_char_count);
+    
+    // Compute the hash of the characters, up to case.
+    hash_t t_hash;
+    t_hash = __MCNameIndexHash(t_chars, t_char_count);
+    
+    // Reduce the hash to the size we store
+    t_hash &= kMCValueFlagsNameHashMask;
+    
+    // Calculate the index of the chain in the name table where this name might
+    // be found. The capacity is always a power-of-two, so its just a mask op.
+    uindex_t t_index;
+    t_index = t_hash & (s_name_table_capacity - 1);
+    
+    // Search for the first representative of the would-be name's equivalence class.
+    __MCName *t_key_name;
+    t_key_name = s_name_table[t_index];
+    while(t_key_name != nil)
+    {
+        // If the string matches, then we are done - notice we compare the full
+        // hash first. As an index as a string consists of folded chars, we can
+        // use exact comparison.
+        if (t_hash == __MCNameGetHash(t_key_name) &&
+            t_key_name->key == t_key_name &&
+            MCStringIsEqualToNativeChars(t_key_name -> string, t_chars, t_char_count, kMCStringOptionCompareExact))
+            break;
+        
+        // Next name must be the next one
+        t_key_name = t_key_name -> next;
+    }
+    
+    return t_key_name;
 }
 
 MC_DLLEXPORT_DEF
@@ -293,7 +527,7 @@ void __MCNameDestroy(__MCName *self)
 {
 	// Compute the index in the table
 	uindex_t t_index;
-	t_index = self -> hash & (s_name_table_capacity - 1);
+	t_index = __MCNameGetHash(self) & (s_name_table_capacity - 1);
 
 	// Find the previous link in the chain
 	__MCName *t_previous;
@@ -333,7 +567,7 @@ bool __MCNameCopyDescription(__MCName *self, MCStringRef& r_string)
 
 hash_t __MCNameHash(__MCName *self)
 {
-	return self -> hash;
+	return __MCNameGetHash(self);
 }
 
 bool __MCNameIsEqualTo(__MCName *self, __MCName *p_other_self)
@@ -362,12 +596,12 @@ static void __MCNameRelocateTableEntries(uindex_t p_start, uindex_t p_finish, ui
 		{
 			// Compute the new index.
 			uindex_t t_new_index;
-			t_new_index = t_first -> hash & (p_new_capacity - 1);
+			t_new_index = __MCNameGetHash(t_first) & (p_new_capacity - 1);
 
 			// Search for the last name to relocate.
 			MCNameRef t_last;
 			for(t_last = t_first; t_last -> next != nil; t_last = t_last -> next)
-				if ((t_last -> next -> hash & (p_new_capacity - 1)) != t_new_index)
+				if ((__MCNameGetHash(t_last -> next) & (p_new_capacity - 1)) != t_new_index)
 					break;
 
 			// Record the next name to process after this chain.

@@ -813,6 +813,8 @@ MCExpression *MCN_new_function(int2 which)
         return new MCTrueWordOffset;
 	case F_TRUNC:
 		return new MCTrunc;
+    case F_TRY:
+        return new MCTryFunc;
     case F_UNICODE_CHAR_TO_NUM:
         return new MCUnicodeCharToNum;
 	// MDW-2014-08-23 : [[ feature_floor ]]

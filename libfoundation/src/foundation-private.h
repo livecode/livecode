@@ -41,6 +41,14 @@ enum
 {
 	// If set, then this value is in the unique table.
 	kMCValueFlagIsInterred = 1 << 27,
+    
+    // The mask for the typecode bits.
+    kMCValueFlagsTypeCodeMask = 0xf0000000,
+    
+    // Names store the hash value in the flags word. We need to keep the IsInterred
+    // flag clear (due to an implementation detail in ValueDestroy) so we have
+    // 27 bits of hash.
+    kMCValueFlagsNameHashMask = 0x07ffffff,
 };
 
 struct __MCValue
@@ -251,12 +259,12 @@ struct __MCString: public __MCValue
         struct
         {
             uindex_t char_count;
+            uindex_t capacity;
             union
             {
                 unichar_t *chars;
                 char_t *native_chars;
             };
-            uindex_t capacity;
             double numeric_value;
         };
     };
@@ -281,8 +289,8 @@ struct __MCData: public __MCValue
         struct
         {
             uindex_t byte_count;
-            byte_t *bytes;
             uindex_t capacity;
+            byte_t *bytes;
         };
     };
 };
@@ -294,7 +302,6 @@ struct __MCName: public __MCValue
 	__MCName *next;
 	__MCName *key;
 	MCStringRef string;
-	hash_t hash;
 };
 
 //////////
@@ -451,9 +458,16 @@ void __MCValueDestroy(__MCValue *value);
 
 bool __MCValueImmutableCopy(__MCValue *value, bool release, __MCValue*& r_new_value);
 
+inline bool __MCValueIsTaggedNumber(__MCValue *self)
+{
+    return (reinterpret_cast<uintptr_t>(self) & 1) == 1;
+}
+
 inline MCValueTypeCode __MCValueGetTypeCode(__MCValue *self)
 {
-	return (self -> flags >> 28);
+    if (__MCValueIsTaggedNumber(self))
+        return kMCValueTypeCodeNumber;
+    return self -> flags >> 28;
 }
 
 template<class T> inline bool __MCValueCreate(MCValueTypeCode p_type_code, T*& r_value)
@@ -648,7 +662,7 @@ __MCAssertResolvedTypeInfo(MCTypeInfoRef x, bool (*p)(MCTypeInfoRef))
 #define __MCAssertValueType(x,T) MCAssert(MCValueGetTypeCode(x) == kMCValueTypeCode##T)
 
 // A valid ValueRef must have references > 0 and flags != -1
-#define __MCAssertIsValue(x)    MCAssert(((__MCValue *)x) -> flags != UINT32_MAX && ((__MCValue *)x) -> references > 0);
+#define __MCAssertIsValue(x)    MCAssert(__MCValueIsTaggedNumber((__MCValue *)x) || (((__MCValue *)x) -> flags != UINT32_MAX && ((__MCValue *)x) -> references > 0));
 
 #define __MCAssertIsNumber(x)   __MCAssertValueType(x,Number)
 #define __MCAssertIsName(x)     __MCAssertValueType(x,Name)

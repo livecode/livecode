@@ -607,6 +607,8 @@ enum Functions {
     F_EVENT_CONTROL_KEY,
     F_EVENT_OPTION_KEY,
     F_EVENT_SHIFT_KEY,
+    
+    F_TRY,
 };
 
 /* The HT_MIN and HT_MAX elements of the enum delimit the range of the handler
@@ -2164,6 +2166,7 @@ enum {
     ST_LIT,
 	ST_LC,
     ST_RC,
+    ST_COL,
     
 	// MW-2009-03-03: The ST_DATA symbol type is a string that shoudl be treated
 	//   as an echoed literal - it represents the data between <?rev ?> blocks in

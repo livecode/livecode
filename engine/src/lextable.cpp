@@ -64,7 +64,7 @@ const uint8_t type_table[256] =
     ST_SEP,  ST_MIN,  ST_NUM,  ST_OP,   //      ,       -       .       /
     ST_NUM,  ST_NUM,  ST_NUM,  ST_NUM,  //      0       1       2       3
     ST_NUM,  ST_NUM,  ST_NUM,  ST_NUM,  //      4       5       6       7
-    ST_NUM,  ST_NUM,  ST_OP,   ST_SEMI, //      8       9       :       ;
+    ST_NUM,  ST_NUM,  ST_COL,   ST_SEMI, //      8       9       :       ;
     ST_OP,   ST_OP,   ST_OP,   ST_TAG,   //      <       =       >       ?
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //      @       A       B       C
     ST_ID,   ST_ID,   ST_ID,   ST_ID,   //      D       E       F       G
@@ -132,7 +132,7 @@ const uint8_t unicode_type_table[256] =
     ST_SEP,         ST_MIN,         ST_NUM,         ST_OP,          //      ,       -       .       /
     ST_NUM,         ST_NUM,         ST_NUM,         ST_NUM,         //      0       1       2       3
     ST_NUM,         ST_NUM,         ST_NUM,         ST_NUM,         //      4       5       6       7
-    ST_NUM,         ST_NUM,         ST_OP,          ST_SEMI,        //      8       9       :       ;
+    ST_NUM,         ST_NUM,         ST_COL,         ST_SEMI,        //      8       9       :       ;
     ST_OP,          ST_OP,          ST_OP,          ST_TAG,         //      <       =       >       ?
     ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      @       A       B       C
     ST_ID,          ST_ID,          ST_ID,          ST_ID,          //      D       E       F       G
@@ -1776,6 +1776,7 @@ const LT factor_table[] =
         {"truewordoffset", TT_FUNCTION, F_TRUEWORD_OFFSET},
         {"truewords", TT_CLASS, CT_TRUEWORD},
         {"trunc", TT_FUNCTION, F_TRUNC},
+        {"try", TT_FUNCTION, F_TRY},
         {"twelvehourtime", TT_PROPERTY, P_TWELVE_TIME},
         {"typingrate", TT_PROPERTY, P_TYPE_RATE},
         {"umask", TT_PROPERTY, P_UMASK},
