@@ -24,3 +24,4 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * ================================================================ */
 
 MC_DLLEXPORT bool MCSInfoGetArchitecture(MCStringRef & r_string);
+
