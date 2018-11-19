@@ -2102,20 +2102,20 @@ void MCStringsEvalIsNotAscii(MCExecContext& ctxt, MCValueRef p_value, bool& r_re
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCStringsDoSort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, bool reverse, MCStringOptions p_options)
+void MCStringsDoSort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, bool reverse, MCStringOptions p_options, MCUnicodeCollatorRef p_collator)
 {
     if (n <= 1)
 		return;
     
-	uint4 n1 = n / 2;
+    uint4 n1 = n / 2;
 	uint4 n2 = n - n1;
 	MCSortnode *b1 = b;
 	MCSortnode *b2 = b + n1;
     
-	MCStringsDoSort(b1, n1, t, form, reverse, p_options);
-	MCStringsDoSort(b2, n2, t, form, reverse, p_options);
+	MCStringsDoSort(b1, n1, t, form, reverse, p_options, p_collator);
+	MCStringsDoSort(b2, n2, t, form, reverse, p_options, p_collator);
     
-	MCSortnode *tmp = t;
+    MCSortnode *tmp = t;
 	while (n1 > 0 && n2 > 0)
 	{
 		// NOTE:
@@ -2131,7 +2131,7 @@ void MCStringsDoSort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, bool
                 t1 = MCStringGetCharPtr(b1->svalue);
                 t2 = MCStringGetCharPtr(b2->svalue);
                 
-                compare_t result = MCUnicodeCollate(kMCSystemLocale, MCUnicodeCollateOptionFromCompareOption((MCUnicodeCompareOption)p_options), t1, MCStringGetLength(b1->svalue), t2, MCStringGetLength(b2->svalue));
+                compare_t result = MCUnicodeCollateWithCollator(p_collator, t1, MCStringGetLength(b1->svalue), t2, MCStringGetLength(b2->svalue));
 				first = reverse ? result >= 0 : result <= 0;
 				break;
 			}
@@ -2179,13 +2179,24 @@ void MCStringsDoSort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, bool
 		b[i] = t[i];
 }
 
-void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options)
+void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options, MCUnicodeCollateOption p_collateoptions, MCLocaleRef p_locale)
 {
     if (nitems > 1)
     {
+        MCUnicodeCollatorRef t_collator = nullptr;
+        if (p_form == ST_INTERNATIONAL && !MCUnicodeCreateCollator(p_locale, p_collateoptions, t_collator))
+        {
+            return;
+        }
+        
         MCSortnode *tmp = new (nothrow) MCSortnode[nitems];
-        MCStringsDoSort(p_items, nitems, tmp, p_form, p_dir == ST_DESCENDING, p_options);
+        MCStringsDoSort(p_items, nitems, tmp, p_form, p_dir == ST_DESCENDING, p_options, t_collator);
         delete[] tmp;
+        
+        if (t_collator != nullptr)
+        {
+            MCUnicodeDestroyCollator(t_collator);
+        }
     }
 }
 
@@ -2453,7 +2464,7 @@ static bool MCStringCopyFoldedAndRelease(MCStringRef p_string, MCStringOptions p
     return true;
 }
 
-void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_items, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
+void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_items, uindex_t p_count, MCExpression *p_by, MCArrayRef p_collateoptions, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
 {
     // If there are no items to sort, do nothing.
     if (p_count == 0)
@@ -2621,11 +2632,18 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
             
         case ST_INTERNATIONAL:
         {
+            MCLocaleRef t_locale_ref;
             MCUnicodeCollateOption t_options;
-            t_options = MCUnicodeCollateOptionFromCompareOption((MCUnicodeCompareOption)ctxt . GetStringComparisonType());
+            MCStringsParseCollateOptions(ctxt, p_collateoptions, t_options, t_locale_ref);
+            
+            if (ctxt . HasError())
+            {
+                ctxt . Throw();
+                return;
+            }
             
             MCUnicodeCollatorRef t_collator;
-            /* UNCHECKED */ MCUnicodeCreateCollator(kMCSystemLocale, t_options, t_collator);
+            /* UNCHECKED */ MCUnicodeCreateCollator(t_locale_ref, t_options, t_collator);
             
             MCDataRef *t_datas;
             t_datas = new (nothrow) MCDataRef[p_count];

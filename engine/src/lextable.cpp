@@ -2092,7 +2092,9 @@ const static LT sort_table[] =
         {"marked", TT_UNDEFINED, ST_MARKED},
         {"numeric", TT_UNDEFINED, ST_NUMERIC},
         {"of", TT_UNDEFINED, ST_OF},
-        {"text", TT_UNDEFINED, ST_TEXT}
+        {"options", TT_UNDEFINED, ST_OPTIONS},
+        {"text", TT_UNDEFINED, ST_TEXT},
+        {"with", TT_UNDEFINED, ST_WITH},
     };
 
 

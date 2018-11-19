@@ -1898,7 +1898,9 @@ enum Sort_type {
     ST_INTERNATIONAL,
     ST_DATETIME,
     ST_ASCENDING,
-    ST_DESCENDING
+    ST_DESCENDING,
+    ST_WITH,
+    ST_OPTIONS
 };
 
 

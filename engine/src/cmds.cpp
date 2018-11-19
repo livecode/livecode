@@ -1251,6 +1251,18 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 			case ST_DESCENDING:
 				direction = (Sort_type)te->which;
 				break;
+            case ST_WITH:
+                if (sp.next(type) != PS_NORMAL ||
+                    sp.lookup(SP_SORT, te) != PS_NORMAL ||
+                    te->which != ST_OPTIONS ||
+                    sp.parseexp(False, True, &(&m_collateoptions)) != PS_NORMAL)
+                {
+                    MCperror->add
+                    (PE_SORT_BADEXPRESSION, sp);
+                    return PS_ERROR;
+                }
+                format = (Sort_type)ST_INTERNATIONAL;
+                break;
 			}
 		}
 		else
@@ -1306,6 +1318,13 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
     else
         t_object . object = MCdefaultstackptr;
     
+    MCAutoArrayRef t_collateoptions;
+    if (m_collateoptions)
+    {
+        if (!ctxt . EvalExprAsArrayRef(*m_collateoptions, EE_SORT_BADOPTIONS, &t_collateoptions))
+            return;
+    }
+    
 	if (chunktype == CT_CARD || chunktype == CT_MARKED)
     {
         if (t_object . object == nil ||
@@ -1315,7 +1334,7 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
 			return;
 		}
         
-        MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED);
+        MCInterfaceExecSortCardsOfStack(ctxt, (MCStack *)t_object . object, direction == ST_ASCENDING, format, by, chunktype == CT_MARKED, *t_collateoptions);
     }
 	else if (t_object . object == nil || t_object . object->gettype() == CT_BUTTON)
 	{
@@ -1326,7 +1345,7 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
         else
             t_sorted_target = MCValueRetain(*t_target);
 
-        MCInterfaceExecSortContainer(ctxt, t_sorted_target, chunktype, direction == ST_ASCENDING, format, by);
+        MCInterfaceExecSortContainer(ctxt, t_sorted_target, chunktype, direction == ST_ASCENDING, format, by, *t_collateoptions);
         if (!ctxt . HasError())
             of -> set(ctxt, PT_INTO, t_sorted_target);
 
@@ -1339,7 +1358,7 @@ void MCSort::exec_ctxt(MCExecContext& ctxt)
             ctxt . LegacyThrow(EE_SORT_CANTSORT);
 			return;
 		}
-		MCInterfaceExecSortField(ctxt, t_object, chunktype, direction == ST_ASCENDING, format, by);
+		MCInterfaceExecSortField(ctxt, t_object, chunktype, direction == ST_ASCENDING, format, by, *t_collateoptions);
 	}
 }
 

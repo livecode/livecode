@@ -26,3 +26,18 @@ on TestInterface95
    
    TestAssert "test", tContainer is "a,b,c,d,e,f,g,h" 
 end TestInterface95
+
+on TestSortWithOptions
+	local tContainer
+	put "foo1,foo10,foo9a,foo9,bar2" into tContainer
+
+	local tOptions
+	put true into tOptions["numeric"]
+
+	sort items of tContainer international with options tOptions
+	TestAssert "sort international with numeric option", tContainer is "bar2,foo1,foo9,foo9a,foo10" 
+
+	put "foo1,foo10,foo9a,foo9,bar2" into tContainer
+	sort items of tContainer international
+	TestAssert "sort international without numeric option", tContainer is "bar2,foo1,foo10,foo9,foo9a" 
+end TestSortWithOptions

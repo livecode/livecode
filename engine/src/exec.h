@@ -2063,7 +2063,7 @@ void MCStringsExecFilterRegexIntoIt(MCExecContext& ctxt, MCStringRef p_source, M
 void MCStringsEvalIsAscii(MCExecContext& ctxt, MCValueRef p_string, bool& r_result);
 void MCStringsEvalIsNotAscii(MCExecContext& ctxt, MCValueRef p_string, bool& r_result);
 
-void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count);
+void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCArrayRef p_collateoptions, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count);
 
 void MCStringsEvalBidiDirection(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_result);
 
@@ -2445,9 +2445,9 @@ void MCInterfaceExecExportImage(MCExecContext& ctxt, MCImage *p_target, int p_fo
 void MCInterfaceExecExportImageToFile(MCExecContext& ctxt, MCImage *p_target, int p_format, MCInterfaceImagePaletteSettings *p_palette, MCImageMetadata* p_metadata, MCStringRef p_filename, MCStringRef p_mask_filename);
 void MCInterfaceExecExportObjectToArray(MCExecContext& ctxt, MCObject *p_container, MCArrayRef& r_array);
 
-void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, bool p_ascending, int p_format, MCExpression *p_by, bool p_only_marked);
-void MCInterfaceExecSortField(MCExecContext &ctxt, MCObjectPtr p_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by);
-void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by);
+void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, bool p_ascending, int p_format, MCExpression *p_by, bool p_only_marked, MCArrayRef p_collateoptions);
+void MCInterfaceExecSortField(MCExecContext &ctxt, MCObjectPtr p_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by, MCArrayRef p_collateoptions);
+void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by, MCArrayRef p_collateoptions);
 void MCInterfaceExecReplaceInField(MCExecContext& ctxt, MCStringRef p_pattern, MCStringRef p_replacement, MCObjectChunkPtr& p_container, bool p_preserve_styles);
 
 void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_tool);

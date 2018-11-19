@@ -2791,6 +2791,9 @@ enum Exec_errors
     
     // {EE-0914} collate: bad options
     EE_COLLATE_BADOPTIONS,
+    
+    // {EE-0915} sort: bad options
+    EE_SORT_BADOPTIONS,
 };
 
 extern const char *MCexecutionerrors;

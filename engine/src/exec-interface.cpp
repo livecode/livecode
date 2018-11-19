@@ -4129,7 +4129,7 @@ void MCInterfaceExecExportObjectToArray(MCExecContext& ctxt, MCObject *p_object,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p_type, Sort_type p_direction, int p_form, MCExpression *p_by, MCStringRef &r_output)
+bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p_type, Sort_type p_direction, int p_form, MCExpression *p_by, MCArrayRef p_collateoptions, MCStringRef &r_output)
 {
 	if (MCStringIsEmpty(p_data))
 	{
@@ -4175,7 +4175,7 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
  	// of an MCAutoStringRefArray.
 	MCAutoArray<MCStringRef> t_sorted;
 	MCStringsExecSort(ctxt, p_direction, (Sort_type)p_form,
-	                  *t_chunks, t_item_count, p_by,
+	                  *t_chunks, t_item_count, p_by, p_collateoptions,
 	                  t_sorted . PtrRef(), t_sorted . SizeRef());
 	
 	// Build the output string
@@ -4204,27 +4204,27 @@ bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p
 }
 
 
-void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, bool p_ascending, int p_format, MCExpression *p_by, bool p_only_marked)
+void MCInterfaceExecSortCardsOfStack(MCExecContext &ctxt, MCStack *p_target, bool p_ascending, int p_format, MCExpression *p_by, bool p_only_marked, MCArrayRef p_collateoptions)
 {
 	if (p_target == nil)
 		p_target = MCdefaultstackptr;
 
-	if (!p_target->sort(ctxt, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by, p_only_marked))
+	if (!p_target->sort(ctxt, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by, p_only_marked, p_collateoptions))
 		ctxt . LegacyThrow(EE_SORT_CANTSORT);
 }
 
-void MCInterfaceExecSortField(MCExecContext &ctxt, MCObjectPtr p_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by)
+void MCInterfaceExecSortField(MCExecContext &ctxt, MCObjectPtr p_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by, MCArrayRef p_collateoptions)
 {
 	MCField *t_field =(MCField *)p_target . object;
-	if (t_field->sort(ctxt, p_target . part_id, (Chunk_term)p_chunk_type, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by) != ES_NORMAL)
+	if (t_field->sort(ctxt, p_target . part_id, (Chunk_term)p_chunk_type, p_ascending ? ST_ASCENDING : ST_DESCENDING, (Sort_type)p_format, p_by, p_collateoptions) != ES_NORMAL)
 		ctxt . LegacyThrow(EE_SORT_CANTSORT);
 }
 
-void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by)
+void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, int p_chunk_type, bool p_ascending, int p_format, MCExpression *p_by, MCArrayRef p_collateoptions)
 {
 	MCAutoStringRef t_sorted_string;
 
-	if (MCInterfaceExecSortContainer(ctxt, x_target, p_chunk_type, p_ascending ? ST_ASCENDING : ST_DESCENDING, p_format, p_by, &t_sorted_string))
+	if (MCInterfaceExecSortContainer(ctxt, x_target, p_chunk_type, p_ascending ? ST_ASCENDING : ST_DESCENDING, p_format, p_by, p_collateoptions, &t_sorted_string))
 	{
         MCValueAssign(x_target, *t_sorted_string);
 		return;

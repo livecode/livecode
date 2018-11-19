@@ -1893,7 +1893,7 @@ void MCStack::flip(uint2 count)
 }
 
 bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
-                        MCExpression *by, Boolean marked)
+                        MCExpression *by, Boolean marked, MCArrayRef p_collateoptions)
 {
 	if (by == NULL)
 		return false;
@@ -1908,7 +1908,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	MCerrorlock++;
     
     extern void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems, int form, MCValueRef p_input, MCExpression *by);
-    extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options);
+    extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options, MCUnicodeCollateOption p_collateoptions, MCLocaleRef p_locale);
     
 	do
 	{
@@ -1933,7 +1933,15 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	while (curcard != cptr);
 	MCerrorlock--;
 	if (nitems > 1)
-		MCStringsSort(items . Ptr(), nitems, dir, form, ctxt . GetStringComparisonType());
+    {
+        MCLocaleRef t_locale_ref = nullptr;
+        MCUnicodeCollateOption t_options = kMCUnicodeCollateOptionDefault;
+        if (form == ST_INTERNATIONAL)
+        {
+            MCStringsParseCollateOptions(ctxt, p_collateoptions, t_options, t_locale_ref);
+        }
+        MCStringsSort(items . Ptr(), nitems, dir, form, ctxt . GetStringComparisonType(), t_options, t_locale_ref);
+    }
 	MCCard *newcards = NULL;
 	uint4 i;
 	for (i = 0 ; i < nitems ; i++)

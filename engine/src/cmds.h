@@ -388,6 +388,7 @@ class MCSort : public MCStatement
 	Sort_type direction;
 	Sort_type format;
 	MCExpression *by;
+    MCAutoPointer<MCExpression> m_collateoptions;
 public:
 	MCSort()
 	{
