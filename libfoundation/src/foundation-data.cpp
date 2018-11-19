@@ -798,11 +798,18 @@ bool MCDataFirstIndexOf(MCDataRef p_data, MCDataRef p_chunk, MCRange p_range, ui
 	if (p_range.length == 0)
 		return false;
     
-    uindex_t t_limit, t_chunk_byte_count;
+    uindex_t t_limit, t_chunk_byte_count, t_data_byte_count;
     t_chunk_byte_count = MCDataGetLength(p_chunk);
+	t_data_byte_count = MCDataGetLength(p_data);
+	
 	if (t_chunk_byte_count == 0)
 		return false;
-    t_limit = p_range . offset + p_range . length - t_chunk_byte_count + 1;
+	else if (t_data_byte_count < t_chunk_byte_count)
+		return false;
+	else if (p_range.length < t_chunk_byte_count)
+		return false;
+
+	t_limit = p_range . offset + t_data_byte_count- t_chunk_byte_count + 1;
     
     const byte_t *t_bytes = MCDataGetBytePtr(p_data);
     const byte_t *t_chunk_bytes = MCDataGetBytePtr(p_chunk);
