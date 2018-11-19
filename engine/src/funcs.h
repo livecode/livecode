@@ -28,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "param.h"
 #include "scriptpt.h"
+#include "globals.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -181,6 +182,84 @@ public:
             r_value . type = kMCExecValueTypeDouble;
         }
     }
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+template<void (*EvalFunction)(MCExecContext&, typename MCExecValueTraits<MCStringRef>::in_type, typename MCExecValueTraits<MCStringRef>::in_type, typename MCExecValueTraits<MCStringRef>::out_type),
+Exec_errors SourceError,
+Exec_errors LocaleError,
+Parse_errors ParseError>
+class MCCaseFunctionCtxt: public MCFunction
+{
+public:
+    MCCaseFunctionCtxt()
+    {
+        m_string = nullptr;
+        m_locale = nullptr;
+    }
+    
+    virtual ~MCCaseFunctionCtxt()
+    {
+        delete m_string;
+        delete m_locale;
+    }
+    
+    virtual Parse_stat parse(MCScriptPoint &sp, Boolean the)
+    {
+        if (sp.is_eol())
+        {
+            MCperror -> add(PE_FACTOR_NOOF, sp);
+            return PS_ERROR;
+        }
+        
+        if (get1or2params(sp, &m_string, &m_locale, the) != PS_NORMAL)
+        {
+            MCperror->add(ParseError, sp);
+            return PS_ERROR;
+        }
+        
+        return PS_NORMAL;
+    }
+    
+    virtual void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+    {
+        MCAutoStringRef t_string;
+        m_string->eval(ctxt, &t_string);
+        if (ctxt.HasError())
+        {
+            ctxt.LegacyThrow(SourceError);
+            return;
+        }
+        
+        MCStringRef t_locale = nullptr;
+        if (m_locale != nullptr)
+        {
+            m_locale->eval(ctxt, t_locale);
+            if (ctxt.HasError())
+            {
+                ctxt.LegacyThrow(LocaleError);
+                return;
+            }
+        }
+        
+        MCAutoStringRef t_result;
+        EvalFunction(ctxt, *t_string, t_locale, &t_result);
+        
+        if (t_locale != nullptr)
+        {
+            MCValueRelease(t_locale);
+        }
+        
+        if (!ctxt . HasError())
+        {
+            MCExecValueTraits<MCStringRef>::set(r_value, t_result.Take());
+        }
+    }
+    
+protected:
+    MCExpression *m_string;
+    MCExpression *m_locale;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1543,14 +1622,14 @@ class MCTheTime : public MCConstantFunctionCtxt<MCStringRef, MCDateTimeEvalTime>
 public:
 };
 
-class MCToLower : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCStringsEvalToLower, EE_TOLOWER_BADSOURCE, PE_TOLOWER_BADPARAM>
+class MCToLower : public MCCaseFunctionCtxt<MCStringsEvalToLower, EE_TOLOWER_BADSOURCE, EE_TOLOWER_BADLOCALE, PE_TOLOWER_BADPARAM>
 {
 public:
     MCToLower(){}
     virtual ~MCToLower(){}
 };
 
-class MCToUpper : public MCUnaryFunctionCtxt<MCStringRef, MCStringRef, MCStringsEvalToUpper, EE_TOUPPER_BADSOURCE, PE_TOUPPER_BADPARAM>
+class MCToUpper : public MCCaseFunctionCtxt<MCStringsEvalToUpper, EE_TOUPPER_BADSOURCE, EE_TOUPPER_BADLOCALE, PE_TOUPPER_BADPARAM>
 {
 public:
     MCToUpper(){}

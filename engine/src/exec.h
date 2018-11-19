@@ -1978,8 +1978,8 @@ void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_
 
 ///////////
 
-void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
-void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower);
+void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_locale, MCStringRef& r_lower);
+void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_locale, MCStringRef& r_lower);
 
 void MCStringsEvalNumToChar(MCExecContext& ctxt, uinteger_t codepoint, MCValueRef& r_character);
 void MCStringsEvalNumToNativeChar(MCExecContext& ctxt, uinteger_t codepoint, MCStringRef& r_character);

@@ -63,6 +63,14 @@ on TestToUpper
   TestAssert "upper of lowercase", toUpper("xy") is "XY"
   TestAssert "upper of uppercase", toUpper("XY") is "XY"
   TestAssert "upper of mixedcase", toUpper("xY") is "XY"
+
+  TestAssert "upper of unicode simple case mapping", toUpper("ßǆ") is "ßǄ"
+  TestAssert "upper of unicode locale case mapping", toUpper("ßǆ","de") is "SSǄ"
+
+  -- workaround case sensitive not being locale aware
+  TestAssert "upper of unicode locale case mapping", \
+      textEncode(toUpper("iǆ","en"),"UTF-8") is textEncode("IǄ","UTF-8") and \
+      textEncode(toUpper("iǆ","tr"),"UTF-8") is textEncode("İǄ","UTF-8")
 end TestToUpper
 
 on TestToLower
@@ -70,6 +78,9 @@ on TestToLower
   TestAssert "lower of lowercase", toLower("xy") is "xy"
   TestAssert "lower of uppercase", toLower("XY") is "xy"
   TestAssert "lower of mixedcase", toLower("xY") is "xy"
+
+  TestAssert "lower of unicode simple case mapping", toLower("İ") is "i"
+  TestAssert "lower of unicode locale case mapping", toLower("IǄ","en") is "iǆ" and toLower("IǄ","tr") is "ıǆ"
 end TestToLower
 
 on TestBeginsWith

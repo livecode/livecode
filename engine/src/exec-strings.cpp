@@ -100,11 +100,23 @@ bool MCStringsSplit(MCStringRef p_string, MCStringRef p_separator, MCStringRef*&
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_lower)
+void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_locale, MCStringRef& r_lower)
 {
+    
+    MCLocaleRef t_locale = nullptr;
+    if (p_locale != nullptr)
+    {
+        if (MCStringIsEmpty(p_locale) ||
+             !MCLocaleCreateWithName(p_locale, t_locale))
+        {
+            ctxt.LegacyThrow(EE_TOLOWER_BADLOCALE);
+            return;
+        }
+    }
+    
 	MCStringRef t_string = nil;
 	if (!MCStringMutableCopy(p_string, t_string) ||
-		!MCStringLowercase(t_string, kMCSystemLocale) ||
+		!MCStringLowercase(t_string, t_locale) ||
 		!MCStringCopyAndRelease(t_string, r_lower))
 	{
 		MCValueRelease(t_string);
@@ -112,11 +124,23 @@ void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef
 	}
 }
 
-void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_upper)
+void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef p_locale, MCStringRef& r_upper)
 {
+    
+    MCLocaleRef t_locale = nullptr;
+    if (p_locale != nullptr)
+    {
+        if (MCStringIsEmpty(p_locale) ||
+            !MCLocaleCreateWithName(p_locale, t_locale))
+        {
+            ctxt.LegacyThrow(EE_TOUPPER_BADLOCALE);
+            return;
+        }
+    }
+    
 	MCStringRef t_string = nil;
 	if (!MCStringMutableCopy(p_string, t_string) ||
-		!MCStringUppercase(t_string, kMCSystemLocale) ||
+		!MCStringUppercase(t_string, t_locale) ||
 		!MCStringCopyAndRelease(t_string, r_upper))
 	{
 		MCValueRelease(t_string);
