@@ -2702,3 +2702,106 @@ void MCStringsEvalBidiDirection(MCExecContext& ctxt, MCStringRef p_string, MCStr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static const struct { MCUnicodeCollateOption option; const char *name; } s_collate_strength_options[] =
+{
+    { kMCUnicodeCollateOptionStrengthPrimary, "primary" },
+    { kMCUnicodeCollateOptionStrengthSecondary, "secondary" },
+    { kMCUnicodeCollateOptionStrengthTertiary, "tertiary" },
+    { kMCUnicodeCollateOptionStrengthQuaternary, "quarternary" },
+    { kMCUnicodeCollateOptionStrengthIdentical, "identical" },
+};
+
+static const struct { MCUnicodeCollateOption option; const char *name; } s_collate_bool_options[] =
+{
+    { kMCUnicodeCollateOptionAutoNormalise, "autonormalize" },
+    { kMCUnicodeCollateOptionNumeric, "numeric" },
+    { kMCUnicodeCollateOptionIgnorePunctuation, "ignorepunctuation" },
+};
+
+void MCStringsParseCollateOptions(MCExecContext& ctxt, MCArrayRef p_options, MCUnicodeCollateOption& r_options, MCLocaleRef& r_locale)
+{
+    MCLocaleRef t_locale_ref = nullptr;
+    
+    // init with options based on context and override from array
+    intenum_t t_options = MCUnicodeCollateOptionFromCompareOption((MCUnicodeCompareOption)ctxt . GetStringComparisonType());
+    
+    if (p_options != nullptr)
+    {
+        MCValueRef t_value;
+        
+        MCAutoStringRef t_strength;
+        if (MCArrayFetchValue(p_options, false, MCNAME("strength"), t_value) &&
+            ctxt . ConvertToString(t_value, &t_strength))
+        {
+            t_options &= ~ kMCUnicodeCollateOptionStrengthMask;
+            
+            for(uindex_t t_index = 0; t_index < sizeof(s_collate_strength_options) / sizeof(s_collate_strength_options[0]); ++t_index)
+            {
+                if (MCStringIsEqualToCString(*t_strength, s_collate_strength_options[t_index].name, kMCCompareCaseless))
+                {
+                    t_options |= s_collate_strength_options[t_index].option;
+                    break;
+                }
+            }
+        }
+        
+        MCAutoStringRef t_locale;
+        if (MCArrayFetchValue(p_options, false, MCNAME("locale"), t_value) &&
+            ctxt . ConvertToString(t_value, &t_locale))
+        {
+            MCLocaleCreateWithName(*t_locale, t_locale_ref);
+        }
+        
+        for(uindex_t t_index = 0; t_index < sizeof(s_collate_bool_options) / sizeof(s_collate_bool_options[0]); ++t_index)
+        {
+            bool t_bool_value;
+            if (MCArrayFetchValue(p_options, false, MCNAME(s_collate_bool_options[t_index].name), t_value) &&
+                ctxt . ConvertToBool(t_value, t_bool_value))
+            {
+                if (t_bool_value)
+                {
+                    t_options |= s_collate_bool_options[t_index].option;
+                }
+                else
+                {
+                    t_options &= ~s_collate_bool_options[t_index].option;
+                }
+            }
+        }
+    }
+    
+    if (t_locale_ref == nullptr)
+    {
+        t_locale_ref = kMCSystemLocale;
+    }
+    
+    r_options = static_cast<MCUnicodeCollateOption>(t_options);
+    r_locale = t_locale_ref;
+}
+
+void MCStringsEvalCollate(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCArrayRef p_options, integer_t& r_result)
+{
+    
+    MCLocaleRef t_locale_ref;
+    MCUnicodeCollateOption t_options;
+    MCStringsParseCollateOptions(ctxt, p_options, t_options, t_locale_ref);
+    
+    if (ctxt . HasError())
+    {
+        ctxt . Throw();
+        return;
+    }
+    
+    const unichar_t *t_left = MCStringGetCharPtr(p_left);
+    uindex_t t_left_len = MCStringGetLength(p_left);;
+    
+    const unichar_t *t_right = MCStringGetCharPtr(p_right);
+    uindex_t t_right_len = MCStringGetLength(p_right);;
+    
+    r_result = MCUnicodeCollate(t_locale_ref, t_options, t_left, t_left_len, t_right, t_right_len);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

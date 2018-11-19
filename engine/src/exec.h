@@ -2067,6 +2067,9 @@ void MCStringsExecSort(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, M
 
 void MCStringsEvalBidiDirection(MCExecContext& ctxt, MCStringRef p_string, MCStringRef& r_result);
 
+void MCStringsParseCollateOptions(MCExecContext& ctxt, MCArrayRef p_options, MCUnicodeCollateOption& r_options, MCLocaleRef& r_locale);
+void MCStringsEvalCollate(MCExecContext& ctxt, MCStringRef p_left, MCStringRef p_right, MCArrayRef p_options, integer_t& r_result);
+
 void MCStringsEvalTextChunkByRange(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, integer_t p_last, bool p_eval_mutable, MCStringRef& x_string);
 void MCStringsEvalTextChunkByExpression(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, integer_t p_first, bool p_eval_mutable, MCStringRef &x_string);
 void MCStringsEvalTextChunkByOrdinal(MCExecContext& ctxt, MCStringRef p_source, Chunk_term p_chunk_type, Chunk_term p_ordinal_type, bool p_eval_mutable, MCStringRef& x_string);

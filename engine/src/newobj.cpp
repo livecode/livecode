@@ -865,6 +865,8 @@ MCExpression *MCN_new_function(int2 which)
         return new MCNormalizeText;
     case F_CODEPOINT_PROPERTY:
         return new MCCodepointProperty;
+    case F_COLLATE:
+        return new MCCollate;
     default:
 		break;
 	}

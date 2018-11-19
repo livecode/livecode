@@ -2393,6 +2393,18 @@ public:
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
+class MCCollate: public MCFunction
+{
+    MCAutoPointer<MCExpression> m_left;
+    MCAutoPointer<MCExpression> m_right;
+    MCAutoPointer<MCExpression> m_options;
+    
+public:
+    virtual ~MCCollate(void) {};
+    virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+};
+
 #endif
 
 

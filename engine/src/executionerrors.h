@@ -2782,6 +2782,15 @@ enum Exec_errors
     
     // {EE-0911} toUpper: bad locale
     EE_TOUPPER_BADLOCALE,
+    
+    // {EE-0912} collate: error in first parameter
+    EE_COLLATE_BADLEFT,
+    
+    // {EE-0913} collate: error in second parameter
+    EE_COLLATE_BADRIGHT,
+    
+    // {EE-0914} collate: bad options
+    EE_COLLATE_BADOPTIONS,
 };
 
 extern const char *MCexecutionerrors;

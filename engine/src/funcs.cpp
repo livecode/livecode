@@ -2528,6 +2528,68 @@ MCMessageDigestFunc::eval_ctxt(MCExecContext &ctxt,
 
 ///////////////////////////////////////////////////////////////////////////////
 
+Parse_stat
+MCCollate::parse(MCScriptPoint &sp,
+                           Boolean the)
+{
+    MCExpression *t_params[MAX_EXP];
+    uint2 t_param_count = 0;
+    
+    if (getexps(sp, t_params, t_param_count) != PS_NORMAL ||
+        (t_param_count < 2))
+    {
+        /* Wrong number of parameters or some other probleem */
+        freeexps(t_params, t_param_count);
+        
+        MCperror->add(PE_COLLATE_BADPARAM, sp);
+        return PS_ERROR;
+    }
+    
+    m_left.Reset(t_params[0]);
+    m_right.Reset(t_params[1]);
+    
+    if (t_param_count > 2)
+    {
+        m_options.Reset(t_params[2]);
+    }
+    
+    return PS_NORMAL;
+}
+
+void
+MCCollate::eval_ctxt(MCExecContext &ctxt,
+                               MCExecValue &r_value)
+{
+    MCAutoStringRef t_left;
+    if (!ctxt.EvalExprAsStringRef(m_left.Get(), EE_COLLATE_BADLEFT, &t_left))
+    {
+        return;
+    }
+    
+    MCAutoStringRef t_right;
+    if (!ctxt.EvalExprAsStringRef(m_right.Get(), EE_COLLATE_BADRIGHT, &t_right))
+    {
+        return;
+    }
+    
+    MCAutoArrayRef t_options;
+    if (m_options && !ctxt.EvalExprAsArrayRef(m_options.Get(), EE_COLLATE_BADOPTIONS, &t_options))
+    {
+        return;
+    }
+    
+    integer_t t_value;
+    MCStringsEvalCollate(ctxt, *t_left, *t_right, *t_options, t_value);
+    
+    if (!ctxt.HasError())
+    {
+        r_value.int_value = t_value;
+        r_value.type = kMCExecValueTypeInt;
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 #ifdef _TEST
 #include "test.h"
 
