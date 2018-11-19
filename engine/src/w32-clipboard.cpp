@@ -1309,11 +1309,7 @@ MCDataRef MCWin32RawClipboardItemRep::CopyData() const
     }
     
 	// Update the data cache and return it
-	if (t_data == nullptr)
-	{
-		return nullptr;
-	}
-	m_bytes = t_data;
+	m_bytes.Reset(t_data);
 	return t_data;
 }
 
