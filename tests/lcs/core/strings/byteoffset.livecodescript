@@ -1,4 +1,4 @@
-script "CoreStringsByteoffset"
+﻿script "CoreStringsByteoffset"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
