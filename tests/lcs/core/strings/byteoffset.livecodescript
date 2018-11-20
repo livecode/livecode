@@ -172,7 +172,7 @@ on TestOffsetMultipleUnicodeCharsInSensitive3
    put textEncode("𐀁𐀁𐀁𐀁𐀁𐀁", "UTF-32") into tHaystack
 
    local tExpectedOffsets
-   put "1,2,3,4,5,6" into tExpectedOffsets
+   put "1,3,5,7,9,11,13,15,17,19,21" into tExpectedOffsets
 
    put allOffsets(tNeedle, tHaystack, false, false)
 
