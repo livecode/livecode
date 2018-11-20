@@ -1,4 +1,4 @@
-script "CoreStringOffset"
+﻿script "CoreStringOffset"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
