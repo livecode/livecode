@@ -237,9 +237,11 @@ private command runSingleCommand pInfo, pScriptFile, pCommand
    -- Check the exit status and process for logging.
    if tBenchmarkExitStatus is not empty then
       write tab & "failed" & return to stdout
-      write tBenchmarkTimes & return to stderr
+      write tBenchmarkTimes & return to stdout
       return tBenchmarkName & tab & "failed" & return
    end if
+
+   filter tBenchmarkTimes without "*TIS/TSM*"
    
    local tLog
    set the itemDelimiter to tab
