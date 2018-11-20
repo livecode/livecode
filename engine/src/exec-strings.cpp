@@ -2300,41 +2300,6 @@ void MCStringsSortAddItem(MCExecContext &ctxt, MCSortnode *items, uint4 &nitems,
 	nitems++;
 }
 
-void MCStringsExecSortOld(MCExecContext& ctxt, Sort_type p_dir, Sort_type p_form, MCStringRef *p_strings_array, uindex_t p_count, MCExpression *p_by, MCStringRef*& r_sorted_array, uindex_t& r_sorted_count)
-{
-	// OK-2008-12-11: [[Bug 7503]] - If there are 0 items in the string, don't carry out the search,
-	// this keeps the behavior consistent with previous versions of Revolution.
-	if (p_count < 1)
-	{
-        r_sorted_count = 0;
-        return;
-	}
-    
-	// Now we know the item count, we can allocate an array of MCSortnodes to store them.
-	MCAutoArray<MCSortnode> t_items;
-	t_items.Extend(p_count + 1);
-    uindex_t t_added = 0;
-    
-	// Next, populate the MCSortnodes with all the items to be sorted
-    for (uindex_t i = 0; i < p_count; i++)
-    {
-        MCStringsSortAddItem(ctxt, t_items . Ptr(), t_added, p_form, p_strings_array[i], p_by);
-        t_items[t_added - 1] . data = (void *)p_strings_array[i];
-    }
-
-    MCStringsSort(t_items . Ptr(), t_added, p_dir, p_form, ctxt . GetStringComparisonType());
-
-    MCAutoArray<MCStringRef> t_sorted;
-    
- 	for (uindex_t i = 0; i < t_added; i++)
-    {
-        t_sorted . Push((MCStringRef)t_items[i] . data);
-        MCValueRelease(t_items[i] . svalue);
-    }
-    
-    t_sorted . Take(r_sorted_array, r_sorted_count);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 typedef bool (*comparator_t)(void *context, uindex_t left, uindex_t right);
