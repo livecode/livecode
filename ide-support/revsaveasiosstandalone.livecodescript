@@ -338,7 +338,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
    --
    local tDeployExternals, tLibraryMappings
-   put pSettings["ios,library"] & return after tLibraryMappings 
+   if pSettings["ios,library"] is not empty then
+      put pSettings["ios,library"] & return after tLibraryMappings 
+   end if
    repeat for each key tExternalName in tCopiedExternals
       local tExternalRec
       put tCopiedExternals[tExternalName] into tExternalRec
