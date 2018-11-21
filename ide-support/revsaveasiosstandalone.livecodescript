@@ -338,6 +338,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
    --
    local tDeployExternals, tLibraryMappings
+   put pSettings["ios,library"] & return after tLibraryMappings 
    repeat for each key tExternalName in tCopiedExternals
       local tExternalRec
       put tCopiedExternals[tExternalName] into tExternalRec
@@ -665,7 +666,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    
    -- delete the last LF
    delete last char of tDeploy["fontmappings"]
-
+   
    -- Make sure the standalone is generated with a unique uuid
    put uuid() into tDeploy["uuid"]
    
