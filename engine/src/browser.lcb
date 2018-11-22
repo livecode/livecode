@@ -110,9 +110,11 @@ public foreign handler MCBrowserDictionaryGetDictionary(in pDictionary as MCBrow
 
 public foreign handler type MCBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
 public foreign handler type MCBrowserJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as ZStringUTF8, in pParams as MCBrowserListRef) returns nothing
+public foreign handler type MCBrowserProgressCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pProgress as UInt32) returns nothing
 
 public foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as MCBrowserRequestCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as MCBrowserJavaScriptCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetProgressHandler(in pBrowser as MCBrowserRef, in pCallback as MCBrowserProgressCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 
 --------------------------------------------------------------------------------
 
@@ -130,12 +132,14 @@ public constant kMCBrowserPropertyVerticalScrollbarEnabled is 0
 public constant kMCBrowserPropertyHorizontalScrollbarEnabled is 1
 public constant kMCBrowserPropertyAllowNewWindows is 2
 public constant kMCBrowserPropertyEnableContextMenu is 3
-public constant kMCBrowserPropertyUrl is 4
-public constant kMCBrowserPropertyHtmlText is 5
-public constant kMCBrowserPropertyUserAgent is 6
-public constant kMCBrowserPropertyJavaScriptHandlers is 7
+public constant kMCBrowserPropertyAllowUserInteraction is 4
+public constant kMCBrowserPropertyIsSecure is 5
+public constant kMCBrowserPropertyUrl is 6
+public constant kMCBrowserPropertyHtmlText is 7
+public constant kMCBrowserPropertyUserAgent is 8
+public constant kMCBrowserPropertyJavaScriptHandlers is 9
 
-public constant kMCBrowserPropertyMap is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "url", "htmlText", "userAgent", "javaScriptHandlers"]
+public constant kMCBrowserPropertyMap is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "allowUserInteraction", "isSecure", "url", "htmlText", "userAgent", "javaScriptHandlers"]
 
 --
 
@@ -157,11 +161,11 @@ public constant kMCBrowserRequestStateMap is ["begin", "complete", "failed", "un
 
 -- constant kStringProps is ["url", "htmlText", "userAgent", "javaScriptHandlers"]
 -- TODO - replace literal values with constants when possible
-constant kStringProps is [4, 5, 6, 7]
+constant kStringProps is [6, 7, 8, 9]
 
--- constant kBoolProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu"]
+-- constant kBoolProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "allowUserInteraction", "isSecure"]
 -- TODO - replace literal values with constants when possible
-constant kBoolProps is [0, 1, 2, 3]
+constant kBoolProps is [0, 1, 2, 3, 4, 5]
 
 --------------------------------------------------------------------------------
 
