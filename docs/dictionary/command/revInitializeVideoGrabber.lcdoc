@@ -88,7 +88,8 @@ video capture (glossary), Windows (glossary), VFW (glossary),
 Standalone Application Settings (glossary), video grabber (glossary),
 standalone application (glossary), function (glossary),
 command (glossary), LiveCode custom library (glossary), file (keyword),
-Video library (library), properties (property)
+Video library (library), properties (property), dontUseQT (property),
+dontUseQTEffects (property)
 
 Tags: multimedia
 
