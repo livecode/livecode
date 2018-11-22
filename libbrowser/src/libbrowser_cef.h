@@ -124,7 +124,12 @@ public:
 	
 	virtual char *GetURL(void);
 	virtual bool GetImage(void*& r_data, int& r_length);
-	
+
+	virtual bool GetIsSecure();
+
+	virtual bool GetAllowUserInteraction(void);
+	virtual void SetAllowUserInteraction(bool p_allow);
+
 	// Browser Actions
 	
 	virtual bool SetJavaScriptHandlers(const char *p_handlers);
@@ -140,7 +145,10 @@ public:
 	virtual bool PlatformGetNativeLayer(void *&r_layer) = 0;
 	
 	virtual bool PlatformGetAuthCredentials(bool p_is_proxy, const CefString &p_url, const CefString &p_realm, MCCefAuthScheme p_auth_scheme, CefString &r_user, CefString &r_password) = 0;
-	
+
+	virtual bool PlatformGetAllowUserInteraction(bool &r_allow_interaction) = 0;
+	virtual bool PlatformSetAllowUserInteraction(bool p_allow_interaction) = 0;
+
 	// Access methods
 	
 	CefRefPtr<CefBrowser> GetCefBrowser(void);

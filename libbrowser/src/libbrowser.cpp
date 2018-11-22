@@ -63,6 +63,9 @@ MCBrowserBase::~MCBrowserBase(void)
     
     if (m_javascript_handler)
         m_javascript_handler->Release();
+
+	if (m_progress_handler)
+		m_progress_handler->Release();
 }
 
 void MCBrowserBase::SetEventHandler(MCBrowserEventHandler *p_handler)
@@ -143,6 +146,30 @@ void MCBrowserBase::OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_p
 {
 	if (m_javascript_handler)
 		m_javascript_handler->OnJavaScriptCall(this, p_handler, p_params);
+}
+
+//////////
+
+void MCBrowserBase::SetProgressHandler(MCBrowserProgressHandler *p_handler)
+{
+	if (p_handler != nil)
+		p_handler->Retain();
+
+	if (m_progress_handler != nil)
+		m_progress_handler->Release();
+
+	m_progress_handler = p_handler;
+}
+
+MCBrowserProgressHandler *MCBrowserBase::GetProgressHandler(void)
+{
+	return m_progress_handler;
+}
+
+void MCBrowserBase::OnProgressChanged(const char *p_url, uint32_t p_progress)
+{
+	if (m_progress_handler != nil)
+		m_progress_handler->OnProgressChanged(this, p_url, p_progress);
 }
 
 //////////
@@ -536,6 +563,53 @@ bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCa
     
     t_wrapper->Release();
     
+	return true;
+}
+
+//////////
+
+class MCBrowserProgressHandlerWrapper : public MCBrowserProgressHandler
+{
+public:
+	MCBrowserProgressHandlerWrapper(MCBrowserProgressCallback p_callback, void *p_context)
+	{
+		m_callback = p_callback;
+		m_context = p_context;
+	}
+
+	virtual void OnProgressChanged(MCBrowser *p_browser, const char *p_url, uint32_t p_progress)
+	{
+		if (m_callback)
+			m_callback(m_context, p_browser, p_url, p_progress);
+	}
+
+private:
+	MCBrowserProgressCallback m_callback;
+	void *m_context;
+};
+
+MC_BROWSER_DLLEXPORT_DEF
+bool MCBrowserSetProgressHandler(MCBrowserRef p_browser, MCBrowserProgressCallback p_callback, void *p_context)
+{
+	if (p_browser == nil)
+		return false;
+
+	if (p_callback == nil)
+	{
+		p_browser->SetProgressHandler(nil);
+		return true;
+	}
+
+	MCBrowserProgressHandlerWrapper *t_wrapper;
+	t_wrapper = new (nothrow) MCBrowserProgressHandlerWrapper(p_callback, p_context);
+
+	if (t_wrapper == nil)
+		return false;
+
+	p_browser->SetProgressHandler(t_wrapper);
+
+	t_wrapper->Release();
+
 	return true;
 }
 

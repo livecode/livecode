@@ -618,6 +618,12 @@ public:
 			case kMCBrowserHorizontalScrollbarEnabled:
 				return GetHorizontalScrollbarEnabled(r_value);
 			
+			case kMCBrowserIsSecure:
+				return GetIsSecure(r_value);
+
+			case kMCBrowserAllowUserInteraction:
+				return GetAllowUserInteraction(r_value);
+
 			default:
 				break;
 		}
@@ -634,7 +640,10 @@ public:
 			
 			case kMCBrowserHorizontalScrollbarEnabled:
 				return SetHorizontalScrollbarEnabled(p_value);
-				
+
+			case kMCBrowserAllowUserInteraction:
+				return SetAllowUserInteraction(p_value);
+
 			default:
 				break;
 		}
@@ -834,6 +843,24 @@ private:
 		MCAndroidObjectRemoteCall(m_view, "setJavaScriptHandlers", "vs", nil, p_js_handlers);
 		return true;
 	}
+
+	bool GetIsSecure(bool &r_value)
+	{
+		MCAndroidObjectRemoteCall(m_view, "getIsSecure", "b", &r_value);
+		return true;
+	}
+
+	bool GetAllowUserInteraction(bool &r_value)
+	{
+		MCAndroidObjectRemoteCall(m_view, "getAllowUserInteraction", "b", &r_value);
+		return true;
+	}
+
+	bool SetAllowUserInteraction(bool p_value)
+	{
+		MCAndroidObjectRemoteCall(m_view, "setAllowUserInteraction", "vb", nil, p_value);
+		return true;
+	}
 };
 
 //////////
@@ -1031,6 +1058,26 @@ JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doUns
 		}
 	}
 	
+	if (t_url != nil)
+		MCCStringFree(t_url);
+}
+
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doProgressChanged(JNIEnv *env, jobject object, jstring url, jint progress) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_libraries_LibBrowserWebView_doProgressChanged(JNIEnv *env, jobject object, jstring url, jint progress)
+{
+	bool t_success = true;
+
+	char *t_url = nil;
+	if (t_success)
+		t_success = MCBrowserJavaStringToUtf8String(env, url, t_url);
+
+	if (t_success && !MCCStringBeginsWith(t_url, LIBBROWSER_DUMMY_URL))
+	{
+		MCBrowser *t_browser;
+		if (MCBrowserFindWithJavaView(env, object, t_browser))
+			((MCAndroidWebViewBrowser*)t_browser)->OnProgressChanged(t_url, progress);
+	}
+
 	if (t_url != nil)
 		MCCStringFree(t_url);
 }

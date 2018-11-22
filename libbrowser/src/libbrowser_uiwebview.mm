@@ -438,6 +438,38 @@ bool MCUIWebViewBrowser::SyncJavaScriptHandlers(NSArray *p_handlers)
 	return t_success;
 }
 
+bool MCUIWebViewBrowser::GetIsSecure(bool &r_value)
+{
+	r_value = false;
+	return true;
+}
+
+bool MCUIWebViewBrowser::GetAllowUserInteraction(bool &r_value)
+{
+	UIWebView *t_view;
+	if (!GetView(t_view))
+		return false;
+
+	MCBrowserRunBlockOnMainFiber(^{
+		r_value = [t_view isUserInteractionEnabled] == YES;
+	});
+
+	return true;
+}
+
+bool MCUIWebViewBrowser::SetAllowUserInteraction(bool p_value)
+{
+	UIWebView *t_view;
+	if (!GetView(t_view))
+		return false;
+
+	MCBrowserRunBlockOnMainFiber(^{
+		[t_view setUserInteractionEnabled: (p_value) ? YES : NO];
+	});
+
+	return true;
+}
+
 //////////
 
 bool MCUIWebViewBrowser::SetBoolProperty(MCBrowserProperty p_property, bool p_value)
@@ -449,7 +481,10 @@ bool MCUIWebViewBrowser::SetBoolProperty(MCBrowserProperty p_property, bool p_va
 			
 		case kMCBrowserHorizontalScrollbarEnabled:
 			return SetHorizontalScrollbarEnabled(p_value);
-			
+
+		case kMCBrowserAllowUserInteraction:
+			return SetAllowUserInteraction(p_value);
+
 		default:
 			break;
 	}
@@ -467,6 +502,12 @@ bool MCUIWebViewBrowser::GetBoolProperty(MCBrowserProperty p_property, bool &r_v
 		case kMCBrowserHorizontalScrollbarEnabled:
 			return GetHorizontalScrollbarEnabled(r_value);
 			
+		case kMCBrowserIsSecure:
+			return GetIsSecure(r_value);
+
+		case kMCBrowserAllowUserInteraction:
+			return GetAllowUserInteraction(r_value);
+
 		default:
 			break;
 	}
