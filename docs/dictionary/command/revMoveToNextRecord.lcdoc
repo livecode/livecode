@@ -5,8 +5,7 @@ Type: command
 Syntax: revMoveToNextRecord <recordSetID>
 
 Summary:
-Moves to the next <record> in a <record set (database
-cursor)(glossary)>. 
+Moves to the next <record> in a <record set (glossary)>. 
 
 Associations: database library
 
@@ -60,8 +59,7 @@ revQueryIsAtEnd (function), revdb_moveprev (function),
 revCurrentRecord (function), revCurrentRecordIsLast (function),
 revNumberOfRecords (function), revDatabaseColumnNumbered (function),
 revdb_movenext (function), Standalone Application Settings (glossary),
-record (glossary), command (glossary),
-record set (database cursor) (glossary),
+record (glossary), command (glossary), record set (glossary),
 standalone application (glossary), database (glossary),
 LiveCode custom library (glossary), Database library (library)
 

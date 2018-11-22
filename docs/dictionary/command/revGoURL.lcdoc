@@ -54,7 +54,9 @@ browser, and so on.
 > folder inside the Extensions folder. (This <file> is installed by the
 > Internet Access installer on the 8.0 installation CD.) The <revGoURL>
 > <command> is not supported for <Mac OS> versions before 8.0.
-Important:If the <URL> contains quotes, it is necessary either to
+
+
+>*Important:* If the <URL> contains quotes, it is necessary either to
 <URLEncode> it or to replace the quotes with "%22", or unexpected
 behavior may be experienced.
 
@@ -80,9 +82,8 @@ handler (glossary), message (glossary), group (glossary),
 Mac OS (glossary), standalone application (glossary),
 Apple Event (glossary), command (glossary), browser (glossary),
 URL (keyword), file (keyword), Common library (library),
-launch url command (library), library (library), startup (message),
-openBackground (message), preOpenStack (message), openStack (message),
-stack (object)
+library (library), startup (message), openBackground (message), 
+preOpenStack (message), openStack (message), stack (object)
 
 Tags: networking
 

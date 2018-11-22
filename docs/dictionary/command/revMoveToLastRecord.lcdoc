@@ -5,8 +5,7 @@ Type: command
 Syntax: revMoveToLastRecord <recordSetID>
 
 Summary:
-Moves to the last <record> of a <record set (database
-cursor)(glossary)>. 
+Moves to the last <record> of a <record set (glossary)>. 
 
 Associations: database library
 
@@ -53,7 +52,7 @@ revdb_movefirst (function), revdb_moveprev (function),
 revdb_movelast (function), revDatabaseColumnNumbered (function),
 revdb_movenext (function), LiveCode custom library (glossary),
 Standalone Application Settings (glossary), record (glossary),
-command (glossary), record set (database cursor) (glossary),
+command (glossary), record set (glossary), 
 standalone application (glossary), database (glossary), string (keyword),
 Database library (library)
 
