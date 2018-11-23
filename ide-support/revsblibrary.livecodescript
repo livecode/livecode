@@ -2133,6 +2133,12 @@ command revSBUpdateSettingsForExtensions pTarget, @xSettingsA
          repeat for each line tLine in tContents
             local tFileData
             put tResourcesFolder & slash & tLine into tFileData["resolved"]
+
+            -- __EnumerateFolder list folders and we only want to add files
+            if there is a folder tFileData["resolved"] then
+               next repeat
+            end if
+
             put tTargetResourceFolder & slash & tLine into tFileData["name"]
             addToList tFileData, xSettingsA["files_computed"]
          end repeat
