@@ -49,15 +49,16 @@ that evaluate to variable names), separated by commas. As of version
 example "tInputData[myKey]".
 
 arrayName (array):
-The name of a single array variable whose keys are sequential
-numbers.>*Note:* The variable names or arrayName must be enclosed in
+The name of a single array variable whose keys are 
+sequential numbers.
+>*Note:* The variable names or arrayName must be enclosed in
 quotes; otherwise, the variable's value rather than its name is passed
 to the revQueryDatabase function.
 
 
 Returns:
 The <revQueryDatabase> <function> returns a record set ID which
-designates the <record set (database cursor)(glossary)> selected by the
+designates the <record set (glossary)> selected by the
 <SQLQuery>. The record set ID is an <integer>.
 
 Description:
@@ -129,7 +130,7 @@ function (control structure), revQueryIsAtStart (function),
 LiveCode custom library (glossary), variable (glossary), element (glossary),
 standalone application (glossary), binary file (glossary),
 array (glossary), prepend (glossary), SQL query (glossary),
-record set (database cursor) (glossary), return value (glossary),
+record set (glossary), return value (glossary),
 record (glossary), Standalone Application Settings (glossary),
 database (glossary), integer (keyword), element (keyword),
 Database library (library)
