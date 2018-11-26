@@ -2777,6 +2777,23 @@ enum Exec_errors
     // {EE-0909} android permission: bad permission name
     EE_BAD_PERMISSION_NAME,
     
+    // {EE-0910} toLower: bad locale
+    EE_TOLOWER_BADLOCALE,
+    
+    // {EE-0911} toUpper: bad locale
+    EE_TOUPPER_BADLOCALE,
+    
+    // {EE-0912} collate: error in first parameter
+    EE_COLLATE_BADLEFT,
+    
+    // {EE-0913} collate: error in second parameter
+    EE_COLLATE_BADRIGHT,
+    
+    // {EE-0914} collate: bad options
+    EE_COLLATE_BADOPTIONS,
+    
+    // {EE-0915} sort: bad options
+    EE_SORT_BADOPTIONS,
 };
 
 extern const char *MCexecutionerrors;

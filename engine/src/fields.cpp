@@ -58,7 +58,7 @@ const char * const MCliststylestrings[] =
 };
 
 Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
-                        Sort_type dir, Sort_type form, MCExpression *by)
+                        Sort_type dir, Sort_type form, MCExpression *by, MCArrayRef p_collateoptions)
 {
 	if (flags & F_SHARED_TEXT)
         parid = 0;
@@ -74,11 +74,11 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
 	if (type != CT_PARAGRAPH && type != CT_LINE)
 	{
         
-        extern bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p_type, Sort_type p_direction, int p_form, MCExpression *p_by, MCStringRef &r_output);
+        extern bool MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef p_data, int p_type, Sort_type p_direction, int p_form, MCExpression *p_by, MCArrayRef p_collateoptions, MCStringRef &r_output);
 		// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
         MCAutoStringRef t_text_string, t_sorted;
 		exportastext(parid, 0, INT32_MAX, &t_text_string);
-        if (!MCInterfaceExecSortContainer(ctxt, *t_text_string, type, dir, form, by, &t_sorted))
+        if (!MCInterfaceExecSortContainer(ctxt, *t_text_string, type, dir, form, by, p_collateoptions, &t_sorted))
             return ES_ERROR;
         
         settext(parid, *t_sorted, False);
@@ -125,9 +125,20 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
         while (tpgptr != pgptr);
     }
     
-    extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options);
+    extern void MCStringsSort(MCSortnode *p_items, uint4 nitems, Sort_type p_dir, Sort_type p_form, MCStringOptions p_options, MCUnicodeCollateOption p_collateoptions, MCLocaleRef p_locale);
 
-    MCStringsSort(items.Ptr(), nitems, dir, form, ctxt . GetStringComparisonType());
+    MCLocaleRef t_locale_ref = nullptr;
+    MCUnicodeCollateOption t_options = kMCUnicodeCollateOptionDefault;
+    if (form == ST_INTERNATIONAL)
+    {
+        MCStringsParseCollateOptions(ctxt, p_collateoptions, t_options, t_locale_ref);
+        if (ctxt . HasError())
+        {
+            return ES_ERROR;
+        }
+    }
+    
+    MCStringsSort(items.Ptr(), nitems, dir, form, ctxt . GetStringComparisonType(), t_options, t_locale_ref);
     
     if (nitems > 0)
 	{

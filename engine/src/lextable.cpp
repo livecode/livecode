@@ -540,7 +540,8 @@ const LT factor_table[] =
         {"=", TT_BINOP, O_EQ},
         {">", TT_BINOP, O_GT},
         {">=", TT_BINOP, O_GE},
-        {"^", TT_BINOP, O_POW},	
+        {"^", TT_BINOP, O_POW},
+        {"_collate_", TT_FUNCTION, F_COLLATE},
 #ifdef MODE_DEVELOPMENT
 		{"_hscrollbarid", TT_PROPERTY, P_HSCROLLBARID},
 		{"_ideoverride", TT_PROPERTY, P_IDE_OVERRIDE},
@@ -2091,7 +2092,9 @@ const static LT sort_table[] =
         {"marked", TT_UNDEFINED, ST_MARKED},
         {"numeric", TT_UNDEFINED, ST_NUMERIC},
         {"of", TT_UNDEFINED, ST_OF},
-        {"text", TT_UNDEFINED, ST_TEXT}
+        {"options", TT_UNDEFINED, ST_OPTIONS},
+        {"text", TT_UNDEFINED, ST_TEXT},
+        {"with", TT_UNDEFINED, ST_WITH},
     };
 
 

@@ -607,6 +607,8 @@ enum Functions {
     F_EVENT_CONTROL_KEY,
     F_EVENT_OPTION_KEY,
     F_EVENT_SHIFT_KEY,
+    
+    F_COLLATE,
 };
 
 /* The HT_MIN and HT_MAX elements of the enum delimit the range of the handler
@@ -1896,7 +1898,9 @@ enum Sort_type {
     ST_INTERNATIONAL,
     ST_DATETIME,
     ST_ASCENDING,
-    ST_DESCENDING
+    ST_DESCENDING,
+    ST_WITH,
+    ST_OPTIONS
 };
 
 

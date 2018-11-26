@@ -1796,6 +1796,9 @@ enum Parse_errors
     // {PE-0583} fontLanguage: bad type expression
     PE_FONTLANGUAGE_BADPARAM,
     
+    // {PE-0584} collate: bad parameters
+    PE_COLLATE_BADPARAM,
+    
 };
 
 extern const char *MCparsingerrors;

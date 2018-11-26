@@ -330,6 +330,9 @@ bool    MCUnicodeIsNormalisedNFKD(const unichar_t *p_string, uindex_t p_length);
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCUnicodeMapString(MCUnicodeProperty p_property, MCLocaleRef p_locale,
+                        const unichar_t *p_in, uindex_t p_in_length,
+                        unichar_t *&r_out, uindex_t &r_out_length);
 
 // Casing options are locale-dependent
 bool    MCUnicodeLowercase(MCLocaleRef,

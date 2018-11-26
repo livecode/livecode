@@ -430,7 +430,7 @@ public:
 	Boolean find(MCExecContext &ctxt, uint4 cardid,
 	             Find_mode mode, MCStringRef, Boolean first);
 	Exec_stat sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
-	               Sort_type dir, Sort_type form, MCExpression *by);
+	               Sort_type dir, Sort_type form, MCExpression *by, MCArrayRef p_collateoptions);
 	// MW-2012-02-08: [[ Field Indices ]] The 'index' parameter, if non-nil, will contain
 	//   the 1-based index of the returned paragraph (i.e. the one si resides in).
 	MCParagraph *indextoparagraph(MCParagraph *top, findex_t &si, findex_t &ei, findex_t* index = nil);

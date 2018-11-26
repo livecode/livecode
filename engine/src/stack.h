@@ -823,7 +823,7 @@ public:
 	void enter();
 	void flip(uint2 count);
 	bool sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
-	               MCExpression *by, Boolean marked);
+	               MCExpression *by, Boolean marked, MCArrayRef p_collateoptions);
 	void breakstring(MCStringRef, MCStringRef*& dest, uindex_t &nstrings,
 	                 Find_mode fmode);
 	Boolean findone(MCExecContext &ctxt, Find_mode mode, MCStringRef *strings,

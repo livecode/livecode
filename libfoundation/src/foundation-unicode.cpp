@@ -771,121 +771,147 @@ bool MCUnicodeIsNormalisedNKD(const unichar_t *p_string, uindex_t p_length)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCUnicodeLowercase(MCLocaleRef p_locale,
-                        const unichar_t *p_in, uindex_t p_in_length,
-                        unichar_t *&r_out, uindex_t &r_out_length)
+bool MCUnicodeMapString(MCUnicodeProperty p_property, MCLocaleRef p_locale,
+                                const unichar_t *p_in, uindex_t p_in_length,
+                                unichar_t *&r_out, uindex_t &r_out_length)
 {
+    MCAutoArray<unichar_t> t_buffer;
+    uindex_t t_out_length;
+    
     // Do the casing using icu::UnicodeString. Note that a locale is required.
     UErrorCode t_error = U_ZERO_ERROR;
     icu::UnicodeString t_input(p_in, p_in_length);
-    t_input.toLower(MCLocaleGetICULocale(p_locale));
+    
+    switch (p_property)
+    {
+        case kMCUnicodePropertyLowercaseMapping:
+        case kMCUnicodePropertyUppercaseMapping:
+        case kMCUnicodePropertyTitlecaseMapping:
+        case kMCUnicodePropertyCaseFolding:
+        {
+            icu::Locale t_locale = nullptr;
+            if (p_locale != nullptr)
+            {
+                t_locale = MCLocaleGetICULocale(p_locale);
+            }
+            
+            switch (p_property)
+            {
+                case kMCUnicodePropertyLowercaseMapping:
+                    t_input.toLower(t_locale);
+                    break;
+                case kMCUnicodePropertyUppercaseMapping:
+                    t_input.toUpper(t_locale);
+                    break;
+                case kMCUnicodePropertyTitlecaseMapping:
+                    t_input.toTitle(nullptr, t_locale);
+                    break;
+                case kMCUnicodePropertyCaseFolding:
+                    t_input.foldCase();
+                    break;
+                default:
+                    MCUnreachableReturn(false);
+            }
+        }
+            break;
+        case kMCUnicodePropertySimpleLowercaseMapping:
+        case kMCUnicodePropertySimpleUppercaseMapping:
+        case kMCUnicodePropertySimpleTitlecaseMapping:
+        case kMCUnicodePropertySimpleCaseFolding:
+        {
+            icu::UnicodeString t_temp;
+            int32_t i = 0;
+            
+            while(i < t_input.length())
+            {
+                t_temp.append(static_cast<UChar32>(MCUnicodeGetCharacterProperty(t_input.char32At(i), p_property)));
+                i = t_input.moveIndex32(i, 1);
+            }
+            
+            t_input.setTo(t_temp);
+            
+        }
+            break;
+        default:
+            MCUnreachableReturn(false);
+    }
+    
+    t_out_length = t_input.length();
     
     // Allocate the output buffer
-    MCAutoArray<unichar_t> t_buffer;
-    if (!t_buffer.New(t_input.length() + 1))
+    if (!t_buffer.New(t_out_length + 1))
         return false;
     
     // Extract the converted characters
-    t_input.extract(t_buffer.Ptr(), t_input.length(), t_error);
+    t_input.extract(t_buffer.Ptr(), t_buffer.Size(), t_error);
     if (U_FAILURE(t_error))
         return false;
     
     // Done
-    t_buffer.Take(r_out, r_out_length);
-    r_out_length--;
+    uindex_t t_size;
+    t_buffer.Take(r_out, t_size);
+    r_out_length = t_out_length;
     r_out[r_out_length] = 0;
     return true;
+}
+
+bool MCUnicodeLowercase(MCLocaleRef p_locale,
+                        const unichar_t *p_in, uindex_t p_in_length,
+                        unichar_t *&r_out, uindex_t &r_out_length)
+{
+    MCUnicodeProperty t_property;
+    if (p_locale != nullptr)
+    {
+        t_property = kMCUnicodePropertyLowercaseMapping;
+    }
+    else
+    {
+        t_property = kMCUnicodePropertySimpleLowercaseMapping;
+    }
+        
+    return MCUnicodeMapString(t_property, p_locale, p_in, p_in_length, r_out, r_out_length);
 }
 
 bool MCUnicodeUppercase(MCLocaleRef p_locale,
                         const unichar_t *p_in, uindex_t p_in_length,
                         unichar_t *&r_out, uindex_t &r_out_length)
 {
-    // Do the casing using icu::UnicodeString. Note that a locale is required.
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_input(p_in, p_in_length);
-    t_input.toUpper(MCLocaleGetICULocale(p_locale));
+    MCUnicodeProperty t_property;
+    if (p_locale != nullptr)
+    {
+        t_property = kMCUnicodePropertyUppercaseMapping;
+    }
+    else
+    {
+        t_property = kMCUnicodePropertySimpleUppercaseMapping;
+    }
     
-    // Allocate the output buffer
-    MCAutoArray<unichar_t> t_buffer;
-    if (!t_buffer.New(t_input.length()))
-        return false;
-    
-    // Extract the converted characters
-    t_input.extract(t_buffer.Ptr(), t_buffer.Size(), t_error);
-    if (U_FAILURE(t_error))
-        return false;
-    
-    // Done
-    t_buffer.Take(r_out, r_out_length);
-    return true;
+    return MCUnicodeMapString(t_property, p_locale, p_in, p_in_length, r_out, r_out_length);
 }
 
 bool MCUnicodeTitlecase(MCLocaleRef p_locale,
                         const unichar_t *p_in, uindex_t p_in_length,
                         unichar_t *&r_out, uindex_t &r_out_length)
 {
-    // The ICU UnicodeString class is convenient for case transformations
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_input(p_in, p_in_length);
-    
-    // By supplying no specific break iterator, the default is used
-    t_input.toTitle(NULL, MCLocaleGetICULocale(p_locale));
-    
-    // Allocate the output buffer
-    MCAutoArray<unichar_t> t_buffer;
-    if (!t_buffer.New(t_input.length()))
-        return false;
-    
-    // Extract the converted characters
-    t_input.extract(t_buffer.Ptr(), t_buffer.Size(), t_error);
-    if (U_FAILURE(t_error))
-        return false;
-    
-    // Done
-    t_buffer.Take(r_out, r_out_length);
-    return true;
-}
-
-static void __MCUnicodeSimpleCaseFold(icu::UnicodeString& p_string)
-{
-    icu::UnicodeString t_temp;
-    int32_t i = 0;
-    
-    while(i < p_string.length())
+    MCUnicodeProperty t_property;
+    if (p_locale != nullptr)
     {
-        t_temp.append(u_toupper(p_string.char32At(i)/*, U_FOLD_CASE_DEFAULT*/));
-        i = p_string.moveIndex32(i, 1);
+        t_property = kMCUnicodePropertyTitlecaseMapping;
+    }
+    else
+    {
+        // requires implementation of word break detection in the simple mapping loop
+        MCUnreachableReturn(false);
     }
     
-    p_string.setTo(t_temp);
+    return MCUnicodeMapString(t_property, p_locale, p_in, p_in_length, r_out, r_out_length);
 }
 
 bool MCUnicodeCaseFold(const unichar_t *p_in, uindex_t p_in_length,
                        unichar_t *&r_out, uindex_t &r_out_length)
 {
-    // The ICU UnicodeString class is convenient for case transformations
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_input(p_in, p_in_length);
-    
-    // Unlike the other case transformations, case folding does not depend on
-    // locale. Its only option is whether to use the special Turkish rules for
-    // casefolding dotless i and dotted l but we don't support this.
-    __MCUnicodeSimpleCaseFold(t_input);
-    
-    // Allocate the output buffer
-    MCAutoArray<unichar_t> t_buffer;
-    if (!t_buffer.New(t_input.length()))
-        return false;
-    
-    // Extract the converted characters
-    t_input.extract(t_buffer.Ptr(), t_buffer.Size(), t_error);
-    if (U_FAILURE(t_error))
-        return false;
-    
-    // Done
-    t_buffer.Take(r_out, r_out_length);
-    return true;
+    // for some reason we don't use kMCUnicodePropertySimpleCaseFolding or kMCUnicodePropertyCaseFolding
+    return MCUnicodeMapString(kMCUnicodePropertySimpleUppercaseMapping, nullptr, p_in, p_in_length, r_out, r_out_length);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
