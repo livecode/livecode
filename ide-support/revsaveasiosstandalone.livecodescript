@@ -1449,7 +1449,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    -- AB-2017-05-31: Add more background modes
    local tBackgroundModes
    
-    if tEnableBackgroundExecution is empty then
+   if tEnableBackgroundExecution is empty then
       put "false" into tEnableBackgroundExecution
    end if
    
@@ -1693,7 +1693,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    replace "${STATUS_BAR_SOLID}" with "<" & tStatusBarSolid & "/>" in pPlist
    
-  -- the icons-related part of the plist is stored in sCFBundleIcons
+   -- the icons-related part of the plist is stored in sCFBundleIcons
    replace "${BUNDLE_ICONS}" with sCFBundleIcons in pPlist
    
    -- MM-2014-09-30: [[ iOS8 Support ]] Added new iOS 7 style entries for the splash screens
@@ -1783,7 +1783,10 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       // On iOS 11+ we need a new key NSLocationAlwaysAndWhenInUseUsageDescription AND the old NSLocationWhenInUseUsageDescription key, in case 
       // we want the app to access Location Services when it is used. If we want to access Location Services always, we need the old NSLocationAlwaysUsageDescription 
       // key too (i.e. 3 keys in total). Moreover, NSLocationAlwaysUsageDescription is required for backwards compatibility
-      if revIDEDeployIOSGetSDKVersions() contains "11" then
+      local tSdkVersion
+      put revIDEDeployIOSGetSDKVersions() into tSdkVersion
+      set the itemDel to "."
+      if item 1 of tSdkVersion >= 11 then
          get "<key>NSLocationAlwaysAndWhenInUseUsageDescription</key><string>This application requires access to Location Services</string>" & CR \
                & "<key>NSLocationWhenInUseUsageDescription</key><string>This application requires access to Location Services when in use</string>" 
          
