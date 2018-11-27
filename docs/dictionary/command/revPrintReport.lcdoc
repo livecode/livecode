@@ -5,8 +5,8 @@ Type: command
 Syntax: revPrintReport
 
 Summary:
-Prints a report from the <report viewer|report viewers> on the <current
-card>. 
+Prints a report from the <report viewer|report viewers> on the 
+<current card>. 
 
 Introduced: 2.0
 
@@ -29,10 +29,11 @@ up in the <Report Builder>.
 
 When you use the <Report Builder> to create a set of report settings,
 the settings are stored with the card. The <revPrintReport> <command>
-uses the settings specified in the <Report Builder> for the <current
-card> to print the report. If you have never used the <Report Builder>
-with the <current card> (and therefore there are no report settings to
-use), the <revPrintReport> <command> causes a <error|script error>.
+uses the settings specified in the <Report Builder> for the 
+<current card> to print the report. If you have never used the 
+<Report Builder> with the <current card> (and therefore there are no 
+report settings to use), the <revPrintReport> <command> causes a 
+<error|script error>.
 
 The <revPrintReport> <command> is equivalent to clicking "Print Report"
 in the <Report Builder>.
