@@ -2296,7 +2296,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    put sStandaloneSettingsA["scriptLibraries"] into tScriptLibraries
    
    local tAppBundle, tCEFFramework, tCEFResources, tCEFDest
-
+   
    revStandaloneProgress "Copying externals..."
    
    lock screen
@@ -2328,6 +2328,9 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          revStandaloneAddWarning tPlatform && tArch & ", Support, revpdfprinter" & tExtension && the result & ": required for PDF printing."
       else
          --revAddExternal "revpdfprinter"
+         local tRevPdfPrinterExecutable
+         put tCurrentLocation & "/revpdfprinter.bundle/Contents/MacOS/revpdfprinter" into tRevPdfPrinterExecutable
+         removeUnneededSlicesFromMacExternals tRevPdfPrinterExecutable, sStandaloneSettingsA
       end if
    end if
    
@@ -2338,6 +2341,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          revStandaloneAddWarning tPlatform && tArch & ", Support, revsecurity" & tSharedExtension && the result & ": required for SSL."
       else
          --revAddExternal "revsecurity"
+         removeUnneededSlicesFromMacExternals tCurrentLocation & "/revsecurity.dylib", sStandaloneSettingsA
       end if
    end if
    
