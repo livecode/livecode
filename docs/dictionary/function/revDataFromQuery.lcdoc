@@ -8,8 +8,8 @@ Syntax: revDataFromQuery([<columnDelim>],[<rowDelim>], <databaseID>, <SQLQuery> 
 
 Summary:
 Gets <record|records> from a <database> according to a <SQL query> and
-places the resulting data in a <variable>, without creating a <record
-set (database cursor)(glossary)>.
+places the resulting data in a <variable>, without creating a 
+<record set>.
 
 Associations: database library
 
@@ -67,18 +67,18 @@ It is convenient to use the <revDataFromQuery> <function>, instead of
 revQueryDatabase, when you want to obtain the data for use but don't
 need to retain a reference to the <record|records> that the data came
 from. The <revDataFromQuery> <function> executes the <SQLQuery>, gets
-the <record|records> found by the <SQL query|query>, closes the <record
-set (database cursor)|record set> created by the <SQL query|query>, and
-returns the data. Important:The <revDataFromQuery> function should not
-be used if any of the data being retrieved is binary, doing so will
-probably produce unexpected results. If you wish to use this function to
-return things like image data, the data should be encoded before being
-stored in the database, this could for example be done with the
-<base64Encode> <function>. Also remember to specify a columDelim and
-<rowDelim> that will not appear in the data. Alternatively, both these
-problems can be avoided by using the <revQueryDatabase> <function> to
-generate a record set, then using <revDatabaseColumnNamed> to retrieve
-each field individually.
+the <record|records> found by the <SQL query|query>, closes the 
+<record set> created by the <SQL query|query>, and returns the data. 
+>*Important*: The <revDataFromQuery> function should not
+> be used if any of the data being retrieved is binary, doing so will
+> probably produce unexpected results. If you wish to use this function to
+> return things like image data, the data should be encoded before being
+> stored in the database, this could for example be done with the
+> <base64Encode> <function>. Also remember to specify a columDelim and
+> <rowDelim> that will not appear in the data. Alternatively, both these
+> problems can be avoided by using the <revQueryDatabase> <function> to
+> generate a record set, then using <revDatabaseColumnNamed> to retrieve
+> each field individually.
 
 The <SQLQuery> may contain one or more placeholders, which are
 sequential numbers <prepend|prepended> by a colon. The
@@ -144,7 +144,7 @@ function (control structure), base64Encode (function), function (glossary),
 revQueryDatabase (function), revDatabaseColumnNamed (function),
 LiveCode custom library (glossary), return (glossary),
 variable (glossary), database (glossary),
-record set (database cursor) (glossary), record (glossary),
+record set (glossary), record (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), SQL query (glossary),
 delimit (glossary), prepend (glossary), string (keyword),

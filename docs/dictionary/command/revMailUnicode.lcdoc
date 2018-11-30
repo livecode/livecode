@@ -52,9 +52,9 @@ For some older email programs, it may not be possible to specify a
 <revMailUnicode> command will still work with such programs, but only
 the To: header will be set.
 
->*Note:* When included in a <standalone application>, the <Common
-> library> is implemented as a hidden <group> and made available when
-> the <group> receives its first <openBackground> message. During the
+>*Note:* When included in a <standalone application>, the 
+> <Common library> is implemented as a hidden <group> and made available 
+> when the <group> receives its first <openBackground> message. During the
 > first part of the <application|application's> startup process, before
 > this <message> is sent, the <revMailUnicode> <command> is not yet
 > available. This may affect attempts to use this <command> in

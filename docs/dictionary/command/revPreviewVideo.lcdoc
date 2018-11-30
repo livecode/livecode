@@ -27,8 +27,8 @@ Description:
 Use the <revPreviewVideo> <command> to see the image from a video camera
 on the screen.
 
-You must use the revInitializeVideoGrabber <command> to open the <video
-grabber> before you can use the <revPreviewVideo> <command>.
+You must use the revInitializeVideoGrabber <command> to open the 
+<video grabber> before you can use the <revPreviewVideo> <command>.
 
 The <revPreviewVideo> <command> shows the input from the video source in
 the <video grabber|video grabber window>, but does not record it. To
@@ -66,7 +66,8 @@ execute (glossary), Standalone Application Settings (glossary),
 command (glossary), video grabber (glossary),
 standalone application (glossary), QuickTime (glossary),
 LiveCode custom library (glossary), file (keyword),
-Video library (library)
+Video library (library), dontUseQT (property), 
+dontUseQTEffects (property)
 
 Tags: multimedia
 

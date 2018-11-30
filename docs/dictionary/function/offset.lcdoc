@@ -56,12 +56,21 @@ specified number of <characters> in the <stringToSearch>. The <value>
 <return|returned> is relative to this starting <point> instead of the
 beginning of the <stringToSearch>.
 
+>*Note:* The <offset> is affected by the <caseSensitive> <property>.
+>By default, this property is set to false, meaning uppercase letters
+>and their lowercase equivalents are treated as the same. For example,
+    offset("A","abcABC") 
+>returns 1 by default, however after setting the <caseSensitive> to 
+>true, it returns 4 instead.
+
+
 References: find (command), sort container (command),
 function (control structure), wordOffset (function),
 itemOffset (function), length (function), lineOffset (function),
 value (function), return (glossary), non-negative (glossary),
-character (keyword), characters (keyword), integer (keyword),
-string (keyword), point (keyword), begins with (operator)
+property (glossary), character (keyword), characters (keyword), 
+integer (keyword), string (keyword), point (keyword), 
+begins with (operator), caseSensitive (property)
 
 Tags: text processing
 

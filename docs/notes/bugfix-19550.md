@@ -1,0 +1,1 @@
+# Add support for symbolic links in Mac/Linux standalone applications

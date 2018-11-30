@@ -25,16 +25,10 @@ revRotatePoly the name of graphic 3 of stack "Draw", field "Rotate by"
 Parameters:
 graphicReference:
 Any expression that evaluates to a reference to a graphic whose style
-property is set to "line", "curve", or "polygon" .>*Important:* The
-revRotatePoly command does not accept direct graphic references. For
-example, the following statement causes an error message: revRotatePoly
-graphic "My Graphic" ,45 -- CAN'T USE THIS FORM Instead, use a form that
-evaluates to a graphic reference, like this:
+property is set to "line", "curve", or "polygon" .
 
 angleInDegrees:
 A number, or an expression that evaluates to a number.
-: revRotatePoly the name of graphic "My Graphic",90 -- use this form
-revRotatePoly ("field" && quote & "My Field" & quote),22 -- or this
 
 Description:
 Use the <revRotatePoly> <command> to rotate a line, curve, or irregular

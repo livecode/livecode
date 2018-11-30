@@ -825,7 +825,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       
       put tExternals into pSettings["externals"]
       
-      put "revsecurity:./librevsecurity" into pSettings["android,library"]
+      if pSettings["android,library"] is empty then
+         put "revsecurity:./librevsecurity" into pSettings["android,library"]
+      else
+         put return & "revsecurity:./librevsecurity" after pSettings["android,library"]
+      end if
       repeat for each line tEntry in tExternals
          put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
       end repeat
