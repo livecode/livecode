@@ -2330,7 +2330,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          --revAddExternal "revpdfprinter"
          local tRevPdfPrinterExecutable
          put tCurrentLocation & "/revpdfprinter.bundle/Contents/MacOS/revpdfprinter" into tRevPdfPrinterExecutable
-         removeUnneededSlicesFromMacExternals tRevPdfPrinterExecutable, sStandaloneSettingsA
+         revSBRemoveUnneededSlicesFromMacCode tRevPdfPrinterExecutable, sStandaloneSettingsA
       end if
    end if
    
@@ -2341,7 +2341,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          revStandaloneAddWarning tPlatform && tArch & ", Support, revsecurity" & tSharedExtension && the result & ": required for SSL."
       else
          --revAddExternal "revsecurity"
-         removeUnneededSlicesFromMacExternals tCurrentLocation & "/revsecurity.dylib", sStandaloneSettingsA
+         revSBRemoveUnneededSlicesFromMacCode tCurrentLocation & "/revsecurity.dylib", sStandaloneSettingsA
       end if
    end if
    

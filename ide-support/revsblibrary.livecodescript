@@ -427,7 +427,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    -- Remove unneeded slices from the MacOS externals
    set the itemDel to slash
    if pSettings["externals"] contains item -1 of pTargetFile then
-      removeUnneededSlicesFromMacExternals pTargetFile, pSettings
+      revSBRemoveUnneededSlicesFromMacCode pTargetFile, pSettings
    end if
    
    if tOldFolder is not empty then
@@ -450,7 +450,7 @@ on revSBEnsureFolder pFolder
    return the result
 end revSBEnsureFolder
 
-on removeUnneededSlicesFromMacExternals pTargetFile, pSettings
+command revSBRemoveUnneededSlicesFromMacCode pTargetFile, pSettings
    if the platform is "macos" and pSettings is not empty then
       local tRemove
       if pSettings["MacOSX x86-64"] is true and pSettings["MacOSX x86-32"] is not true then
@@ -467,8 +467,8 @@ on removeUnneededSlicesFromMacExternals pTargetFile, pSettings
       end if
    end if
    
-end removeUnneededSlicesFromMacExternals
-   
+end revSBRemoveUnneededSlicesFromMacCode
+
 private command __revSBEnsureFolder pFolder
    set the itemDel to "/"
    if there is no folder pFolder and pFolder is not empty then
