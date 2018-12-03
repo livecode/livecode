@@ -590,7 +590,7 @@ void MCMathEvalMultiply(MCExecContext& ctxt, real64_t p_left, real64_t p_right, 
 	if (r_result == MCinfinity || MCS_geterrno() != 0)
 	{
 		MCS_seterrno(0);
-		ctxt.LegacyThrow(EE_PLUS_RANGE);
+		ctxt.LegacyThrow(EE_MULTIPLY_RANGE);
 		return;
 	}
 }
