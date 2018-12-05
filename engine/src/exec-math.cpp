@@ -482,7 +482,7 @@ void MCMathEvalDiv(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real6
 
 	r_result = p_left / p_right;
 
-	if (r_result == MCinfinity || MCS_geterrno() != 0)
+	if (MCS_geterrno() != 0)
 	{
 		MCS_seterrno(0);
 		ctxt.LegacyThrow(EE_DIV_RANGE);
@@ -587,7 +587,7 @@ void MCMathEvalMultiply(MCExecContext& ctxt, real64_t p_left, real64_t p_right, 
 	MCS_seterrno(0);
 	r_result = p_left * p_right;
 
-	if (r_result == MCinfinity || MCS_geterrno() != 0)
+	if (MCS_geterrno() != 0)
 	{
 		MCS_seterrno(0);
 		ctxt.LegacyThrow(EE_MULTIPLY_RANGE);
@@ -600,7 +600,7 @@ void MCMathEvalPower(MCExecContext& ctxt, real64_t p_left, real64_t p_right, rea
 	MCS_seterrno(0);
 	r_result = pow(p_left, p_right);
 
-	if (r_result == MCinfinity || MCS_geterrno() != 0)
+	if (MCS_geterrno() != 0)
 	{
 		MCS_seterrno(0);
 		ctxt.LegacyThrow(EE_POW_RANGE);
