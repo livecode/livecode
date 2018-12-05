@@ -225,9 +225,18 @@ void MCStack::realize(void)
 
 MCRectangle MCStack::view_platform_getwindowrect() const
 {
-	MCRectangle t_rect;
-	MCPlatformGetWindowFrameRect(window, t_rect);
-	return t_rect;
+    MCRectangle t_frame_rect;
+	MCPlatformGetWindowFrameRect(window, t_frame_rect);
+    if (MClockscreen != 0)
+    {
+        MCRectangle t_content_rect, t_diff_rect;
+        MCscreen->platform_getwindowgeometry(window, t_content_rect);
+        t_diff_rect = MCU_subtract_rect(t_content_rect, t_frame_rect);
+        return t_diff_rect;
+    }
+    
+    return t_frame_rect;
+	
 }
 
 bool MCStack::view_platform_dirtyviewonresize() const
