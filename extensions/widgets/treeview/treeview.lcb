@@ -1019,8 +1019,6 @@ private handler SetHoverTooltip(in pIconString as String) returns nothing
             put property "tooltip" of my script object into mOldTooltip
     end if
 
-
-
     variable tTooltip as String
     if pIconString is "delete" then
         put "Delete array key" into tTooltip
