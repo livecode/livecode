@@ -1013,9 +1013,13 @@ public handler OnGeometryChanged()
 end handler
 
 private handler SetHoverTooltip(in pIconString as String) returns nothing
-    if mOldTooltip is nothing then
-        put property "tooltip" of my script object into mOldTooltip
+    if mOldTooltip is nothing or \
+        (property "tooltip" of my script object is not "Add new array key" and \
+        property "tooltip" of my script object is not "Delete array key") then
+            put property "tooltip" of my script object into mOldTooltip
     end if
+
+
 
     variable tTooltip as String
     if pIconString is "delete" then
