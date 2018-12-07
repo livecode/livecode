@@ -56,7 +56,12 @@ Use the <mobileCurrentLocation> function to find the current location of
 the device. If location tracking has not been enabled this function
 returns empty. Otherwise it returns an array.
 
+>*Note*: Before using the <mobileCurrentLocation> function, the 
+<mobileSensorAvailable> function should first be called. Doing this 
+will request the necessary permissions for using location sensors.
+
 References: mobileStopTrackingSensor (command),
-mobileStartTrackingSensor (command), mobileSensorReading (function),
+mobileStartTrackingSensor (command), mobileSensorAvailable (function),
+mobileSensorReading (function),
 trackingError (message), locationChanged (message)
 
