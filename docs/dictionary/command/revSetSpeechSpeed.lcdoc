@@ -31,8 +31,8 @@ If text to speech is not available on the current system, the
 message. 
 
 Description:
-Use the <revSetSpeechSpeed> <command> to speed up or slow down <text to
-speech|speech>. 
+Use the <revSetSpeechSpeed> <command> to speed up or slow down 
+<text to speech|speech>. 
 
 The greater the <wordsPerMinute>, the faster the speech. (A normal
 speech rate for English is approximately 150 words per minute.)

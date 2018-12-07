@@ -35,8 +35,6 @@ resized. Use it only if both the following conditions are true:
 1. Your stack uses the Geometry pane of the property inspector to
    automate object positioning and sizing when the stack window is
    resized, and
-
-
 2. Either a handler in your stack locks messages and then moves or
    resizes the stack window, or a resizeStack <handler> in your <stack>
    does not pass the <resizeStack> <message> at the end of the
