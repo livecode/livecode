@@ -1,1 +1,1 @@
-# Removed unwanted HTML entries from the menu dictionary entry
+# Removed unwanted HTML entities from the menu dictionary entry
