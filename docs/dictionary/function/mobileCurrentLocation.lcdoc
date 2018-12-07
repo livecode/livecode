@@ -57,8 +57,11 @@ the device. If location tracking has not been enabled this function
 returns empty. Otherwise it returns an array.
 
 >*Note*: Before using the <mobileCurrentLocation> function, the 
-<mobileSensorAvailable> function should first be called. Doing this 
-will request the necessary permissions for using location sensors.
+<mobileSensorAvailable> function should first be called with the line:
+
+    mobileSensorAvailable("location")
+    
+> Doing this will request the necessary permissions for using location sensors.
 
 References: mobileStopTrackingSensor (command),
 mobileStartTrackingSensor (command), mobileSensorAvailable (function),
