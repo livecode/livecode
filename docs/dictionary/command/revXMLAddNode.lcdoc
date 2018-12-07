@@ -25,8 +25,8 @@ revXMLAddNode myTree,theNode,the short name of me,field "Contents"
 
 Parameters:
 treeID:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
+The number returned by the <revXMLCreateTree> or 
+<revXMLCreateTreeFromFile> function when you created the XML tree.
 
 parentNode:
 The node whose child the node being created will be.
@@ -58,7 +58,8 @@ Use the <revXMLAddNode> <command> to add a <node> to an <XML tree>.
 > checkbox is checked.
 
 References: revXMLMoveNode (command), revXMLDeleteNode (command),
-revXMLAppend (command), result (function), node (glossary),
+revXMLAppend (command), result (function), revXMLCreateTree (function),
+revXMLCreateTreeFromFile (function), node (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), XML tree (glossary),
 command (glossary), child node (glossary),
