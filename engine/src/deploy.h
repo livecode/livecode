@@ -427,6 +427,7 @@ enum MCDeployError
 	kMCDeployErrorWindowsBadDocIcon,
 	kMCDeployErrorWindowsBadManifest,
 	kMCDeployErrorWindowsBadSecuritySection,
+	kMCDeployErrorWindowsUnkownPlatform,
 
 	kMCDeployErrorLinuxNoHeader,
 	kMCDeployErrorLinuxBadHeaderMagic,
