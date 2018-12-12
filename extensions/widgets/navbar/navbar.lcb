@@ -1504,9 +1504,14 @@ private handler navDataDifferent(in pLeft as List, in pRight as List) returns Bo
             return true
         end if
 
-        if pLeft[tIndex]["icon_name"] is not pRIght[tIndex]["icon_name"] then
+        if pLeft[tIndex]["icon_name"] is not pRight[tIndex]["icon_name"] then
             return true
         end if
+
+        if pLeft[tIndex]["name"] is not pRight[tIndex]["name"] then
+            return true
+        end if
+
 
         if pLeft[tIndex]["hilited_icon_name"] is not pRight[tIndex]["hilited_icon_name"] then
             if not (pLeft[tIndex]["hilited_icon_name"] is "" and pRight[tIndex]["hilited_icon_name"] is pRight[tIndex]["icon_name"]) and not (pLeft[tIndex]["hilited_icon_name"] is pLeft[tIndex]["icon_name"] and pRight[tIndex]["hilited_icon_name"] is "") then
