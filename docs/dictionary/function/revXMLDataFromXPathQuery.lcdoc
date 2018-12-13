@@ -63,8 +63,8 @@ instance, given xml data of
     
 then
 
-put "/bookstore/book/[price&lt;30]/title" into pXPathExpression
-put revXMLDataFromXPathQuery(pDocID, pXPathExpression)
+    put "/bookstore/book/[price&lt;30]/title" into pXPathExpression
+    put revXMLDataFromXPathQuery(pDocID, pXPathExpression)
 
 gives you "Harry Potter"
 
