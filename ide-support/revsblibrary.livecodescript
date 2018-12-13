@@ -425,23 +425,9 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    end if
    
    -- Remove unneeded slices from the MacOS externals
-   if the platform is "macos" and pSettings is not empty then
-      local tRemove
-      if pSettings["MacOSX x86-64"] is true and pSettings["MacOSX x86-32"] is not true then
-         put "i386" into tRemove
-      else if pSettings["MacOSX x86-32"] is true and pSettings["MacOSX x86-64"] is not true then
-         put "x86_64" into tRemove
-      end if
-   
-      if tRemove is not empty then
-         set the itemDel to slash
-         if pSettings["externals"] contains item -1 of pTargetFile then
-            replace " " with "\ " in pTargetFile
-            local tShell
-            put "lipo " & pTargetFile & " -remove " & tRemove & " -output " & pTargetFile into tShell
-            get shell(tShell)
-         end if
-      end if
+   set the itemDel to slash
+   if pSettings["externals"] contains item -1 of pTargetFile then
+      revSBRemoveUnneededSlicesFromMacCode pTargetFile, pSettings
    end if
    
    if tOldFolder is not empty then
@@ -454,6 +440,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    return tResult
 end __revSBCopyFile
 
+
 #?semantics
 # Creates a folder and all parents as required.
 #?author
@@ -462,6 +449,25 @@ on revSBEnsureFolder pFolder
    __revSBEnsureFolder pFolder
    return the result
 end revSBEnsureFolder
+
+command revSBRemoveUnneededSlicesFromMacCode pTargetFile, pSettings
+   if the platform is "macos" and pSettings is not empty then
+      local tRemove
+      if pSettings["MacOSX x86-64"] is true and pSettings["MacOSX x86-32"] is not true then
+         put "i386" into tRemove
+      else if pSettings["MacOSX x86-32"] is true and pSettings["MacOSX x86-64"] is not true then
+         put "x86_64" into tRemove
+      end if
+      
+      if tRemove is not empty then
+         replace " " with "\ " in pTargetFile
+         local tShell
+         put "lipo " & pTargetFile & " -remove " & tRemove & " -output " & pTargetFile into tShell
+         get shell(tShell)
+      end if
+   end if
+   
+end revSBRemoveUnneededSlicesFromMacCode
 
 private command __revSBEnsureFolder pFolder
    set the itemDel to "/"

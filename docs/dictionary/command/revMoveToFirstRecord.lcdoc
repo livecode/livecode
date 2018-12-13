@@ -5,8 +5,7 @@ Type: command
 Syntax: revMoveToFirstRecord <recordSetID>
 
 Summary:
-Moves to the first <record> of a <record set (database
-cursor)(glossary)>. 
+Moves to the first <record> of a <record set (glossary)>. 
 
 Associations: database library
 
@@ -53,8 +52,7 @@ References: revMoveToNextRecord (command), function (control structure),
 revdb_movefirst (function), revdb_moveprev (function),
 revdb_movelast (function), revDatabaseColumnNumbered (function),
 revdb_movenext (function), Standalone Application Settings (glossary),
-record (glossary), command (glossary),
-record set (database cursor) (glossary),
+record (glossary), command (glossary), record set (glossary), 
 standalone application (glossary), database (glossary),
 LiveCode custom library (glossary), Database library (library)
 

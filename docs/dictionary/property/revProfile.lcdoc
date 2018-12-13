@@ -41,7 +41,7 @@ When you change the value of a property for an object, the value is
 stored in the object's current profile. If you later switch back to that
 profile, the stored values are restored. For example, if you create a
 profile named "Fluffy" for a button, then set the button's
-backgroundColor <property> to "pink", that setting of the
+<backgroundColor> <property> to "pink", that setting of the
 <backgroundColor> <property> is stored with the Fluffy
 <property profile|profile>. If you later set the <button|button's>
 <property profile|profile> to "Fluffy", the pink color is restored.
@@ -64,7 +64,7 @@ cRevGeneral["profile"].)
 
 References: revSetStackFileProfile (command), object (glossary),
 property (glossary), custom property (glossary),
-backgroundColor (glossary), property profile (glossary), button (object),
+property profile (glossary), button (object), backgroundColor (property),
 customPropertySets (property), gRevAutoCreateProfiles (keyword),
 gRevProfileReadOnly (keyword), Profile library (library)
 

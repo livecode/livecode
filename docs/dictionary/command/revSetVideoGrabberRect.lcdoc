@@ -47,8 +47,8 @@ You must use the <revInitializeVideoGrabber> <command> to open the
 
 The rectangle specified by the <left>, <top>, <right>, and <bottom> is
 the rectangle of the <video grabber|video grabber window>: the top,
-left, bottom, and right edges of the <video grabber>, in <absolute
-(screen) coordinates(glossary)>.
+left, bottom, and right edges of the <video grabber>, in 
+<absolute coordinates(glossary)|absolute (screen) coordinates>.
 
 >*Important:*  The <revSetVideoGrabberRect> <command> is part of the 
 > <Video library>. To ensure that the <command> works in a 

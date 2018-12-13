@@ -5,8 +5,8 @@ Type: command
 Syntax: revSetSpeechPitch <pitchLevel>
 
 Summary:
-Sets the pitch (whether the voice is high or low) to be used with <text
-to speech>.
+Sets the pitch (whether the voice is high or low) to be used with 
+<text to speech>.
 
 Associations: speech library
 
@@ -42,13 +42,12 @@ for a treble voice and a lower <pitchLevel> for a bass voice.
 The <pitchLevel> is logarithmically related to the voice frequency: the
 range 30 to 127 corresponds approximately to the range from 50Hz to
 12,000Hz. If you need to convert from Hertz (cycles per second) to the
-<pitchLevel> numbers used with this <command>, use the following <custom
-function>: 
+<pitchLevel> numbers used with this <command>, use the following 
+<custom function>: 
 
     function pitchFromHertz theHertzFrequency
-    get (ln(theHertzFrequency) - ln(261.625))/ln(1.05946309434)
-    return round(60 + it)
-
+        get (ln(theHertzFrequency) - ln(261.625))/ln(1.05946309434)
+        return round(60 + it)
     end pitchFromHertz
 
 

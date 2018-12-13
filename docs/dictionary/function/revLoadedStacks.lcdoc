@@ -5,8 +5,8 @@ Type: function
 Syntax: revLoadedStacks([<whichStacks>])
 
 Summary:
-<return|Returns> a list of the names of all <stacks> that are <loaded
-into memory>.
+<return|Returns> a list of the names of all <stacks> that are 
+<loaded into memory>.
 
 Introduced: 1.0
 
@@ -25,8 +25,10 @@ revLoadedStacks()
 
 Parameters:
 whichStacks:
-One of the following
-: One of the following
+* all
+* application
+* preference
+
 
 Returns:
 The <revLoadedStacks> <function> returns a list of the short names of

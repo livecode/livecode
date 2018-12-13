@@ -5,8 +5,8 @@ Type: function
 Syntax: revUnixFromMacPath(<macPathname> [, <convertOSX>])
 
 Summary:
-Converts a <Mac OS>-style <file path|pathname> to a <Unix> -style <file
-path|pathname>. 
+Converts a <Mac OS>-style <file path|pathname> to a <Unix>-style 
+<file path|pathname>. 
 
 Introduced: 1.0
 
@@ -32,17 +32,17 @@ convertOSX:
 
 
 Returns:
-The <revUnixFromMacPath> <function> returns a <string> with the <file
-path> in the format expected by the <Mac OS>. The <convertOSX> is true
-or false. If you don't specify the <convertOSX>, if <OS X> is running,
-LiveCode assumes the <macPathname> is an <OS X>-style path to a <Mac
-OS>-style path; otherwise, it assumes the <macPathname> is a <Mac
-OS>-style path.
+The <revUnixFromMacPath> <function> returns a <string> with the 
+<file path> in the format expected by the <Mac OS>. The <convertOSX> 
+is true or false. If you don't specify the <convertOSX>, if <OS X> is 
+running, LiveCode assumes the <macPathname> is an <OS X>-style path to 
+a <Mac OS>-style path; otherwise, it assumes the <macPathname> is a 
+<Mac OS>-style path.
 
 Description:
 Use the <revUnixFromMacPath> <function> to convert a <Mac OS>-style file
-path to the LiveCode <file path> format (for example, to convert a <file
-path|pathname> returned by an XFCN).
+path to the LiveCode <file path> format (for example, to convert a 
+<file path|pathname> returned by an XFCN).
 
 The <revUnixFromMacPath> <function> converts colons (:) to slashes (/),
 the folder-level <delimiter> for <Unix> <file path|pathnames>. It also
@@ -61,8 +61,8 @@ The OS X path convention is used by LiveCode, but the old Mac OS-style
 path convention is used by certain applications (such as AppleScript),
 even on OS X systems. If the <convertOSX> is true (or if you don't
 specify the <convertOSX> and the application is running under <OS X>),
-the <revUnixFromMacPath> <function> assumes that <absolute file
-path|absolute paths> are using the <OS X> convention. If the
+the <revUnixFromMacPath> <function> assumes that 
+<absolute file path|absolute paths> are using the <OS X> convention. If the
 <convertOSX> is false, the <revUnixFromMacPath> <function> assumes that
 absolute paths use the <Mac OS> convention.
 
@@ -72,12 +72,12 @@ it to another program or external. If you are using only LiveCode
 commands and functions, you do not need to convert the pathname, since
 LiveCode does it for you.
 
->*Note:* When included in a <standalone application>, the <Common
-> library> is implemented as a hidden <group> and made available when
-> the <group> receives its first <openBackground> message. During the
-> first part of the <application|application's> startup process, before
-> this <message> is sent, the <revUnixFromMacPath> <function> is not yet
-> available. This may affect attempts to use this <function> in
+>*Note:* When included in a <standalone application>, the 
+> <Common library> is implemented as a hidden <group> and made available 
+> when the <group> receives its first <openBackground> message. During 
+> the first part of the <application|application's> startup process, 
+> before this <message> is sent, the <revUnixFromMacPath> <function> is 
+> not yet available. This may affect attempts to use this <function> in
 > <startup>, <preOpenStack>, <openStack>, or <preOpenCard>
 > <handler|handlers> in the <main stack>. Once the <application> has
 > finished starting up, the <library> is available and the

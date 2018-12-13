@@ -47,9 +47,9 @@ The <revMoveFolder> <command> moves the entire <folder>, including all
 is removed from its original location and apppears only in the new
 location. 
 
->*Note:* When included in a <standalone application>, the <Common
-> library> is implemented as a hidden <group> and made available when
-> the <group> receives its first <openBackground> message. During the
+>*Note:* When included in a <standalone application>, the 
+> <Common library> is implemented as a hidden <group> and made available 
+> when the <group> receives its first <openBackground> message. During the
 > first part of the <application|application's> startup process, before
 > this <message> is sent, the <revMoveFolder> <command> is not yet
 > available. This may affect attempts to use this <command> in
@@ -60,11 +60,11 @@ location.
 
 References: create alias (command), delete folder (command),
 revDeleteFolder (command), function (control structure),
-application (glossary), return (glossary),
-standalone application (glossary), file (glossary), shell (glossary),
-subfolder (glossary), platform (glossary), command (glossary),
-Windows (glossary), main stack (glossary), OS X (glossary),
-AppleScript (glossary), group (glossary), result (glossary),
+result (function), application (glossary), 
+standalone application (glossary),  file (glossary), 
+shell (glossary), subfolder (glossary), platform (glossary), 
+command (glossary), Windows (glossary), main stack (glossary), 
+OS X (glossary), AppleScript (glossary),  group (glossary), 
 Unix (glossary), message (glossary), folder (glossary), Mac OS (glossary),
 handler (glossary), Common library (library), library (library),
 startup (message), openBackground (message), preOpenStack (message),
