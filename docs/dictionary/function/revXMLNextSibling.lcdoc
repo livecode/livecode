@@ -5,8 +5,8 @@ Type: function
 Syntax: revXMLNextSibling(<treeID>, <siblingNode>, [incText] )
 
 Summary:
-<return|Returns> the path to a <child node|child node's> next <sibling
-node>. 
+<return|Returns> the path to a <child node|child node's> next 
+<sibling node>. 
 
 Associations: xml library
 
