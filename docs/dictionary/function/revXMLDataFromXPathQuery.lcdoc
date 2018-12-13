@@ -10,9 +10,13 @@ functions. The charDelimiter and lineDelimiter both default to cr. If
 neither is specified then the items will be returned one per line.
 For example: 
 
-J. K. Rowling Harry Potter
+J. K. Rowling
 
-Cory Doctorow Little Brother
+Harry Potter
+
+Cory Doctorow
+
+Little Brother
 
 Introduced: 6.5
 
