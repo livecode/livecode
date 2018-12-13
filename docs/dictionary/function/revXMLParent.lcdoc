@@ -54,7 +54,7 @@ If the <revXMLParent> <function> encounters an error, it
 
 References: function (control structure), revXMLRootNode (function),
 revXMLFirstChild (function), revXMLCreateTree (function),
-revXMLCreateFromTree (function), LiveCode custom library (glossary),
+revXMLCreateTreeFromFile (function), LiveCode custom library (glossary),
 node (glossary), Standalone Application Settings (glossary),
 standalone application (glossary), return (glossary), XML tree (glossary),
 parent node (glossary), XML library (library)
