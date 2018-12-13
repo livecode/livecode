@@ -26,7 +26,7 @@ get revXMLAttributeValues(thisTree,thisNode,field "Type",comma,2)
 
 Parameters:
 treeID:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
+The number returned by the <revXMLCreateTree> or <revXMLCreateTreeFromFile>
 function when you created the XML tree.
 
 startNode:
@@ -69,6 +69,7 @@ If the <revXMLAttributeValues> <function> encounters an error, it
 > checkbox is checked.
 
 References: function (control structure), revXMLAttributes (function),
+revXMLCreateTree (function), revXMLCreateTreeFromFile (function),
 revXMLMatchingNode (function), value (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), XML tree (glossary), return (glossary),
