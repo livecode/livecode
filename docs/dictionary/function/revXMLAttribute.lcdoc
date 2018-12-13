@@ -40,7 +40,7 @@ Returns:
 The <revXMLAttribute> <function> returns a <string>.
 
 Description:
-Use the <revXMLAttribute> <function> to get an attribute's value.un
+Use the <revXMLAttribute> <function> to get an attribute's value.
 
 If the <revXMLAttribute> <function> encounters an error, it
 <return|returns> an error message starting with "xmlerr".
