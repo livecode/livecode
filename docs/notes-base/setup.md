@@ -67,7 +67,7 @@ It is possible to invoke the installer from the command-line on Linux and Window
 
 Run the installer using a command in the form:
 
-	<installer> install noui [OPTION ...]
+	<installer> install -ui [OPTION ...]
 
 where `<installer>` should be replaced with the path of the installer executable or app (inside the DMG) that has been downloaded.  The result of the installation operation will be written to the console.
 
@@ -87,7 +87,7 @@ As the installer is actually a GUI application, it needs to be run slightly diff
 
 On Windows, the command is:
 
-	start /wait <installer> install noui [OPTION ...]
+	start /wait <installer> install -ui [OPTION ...]
 
 ## Command-line uninstallation
 
@@ -95,7 +95,7 @@ It is possible to uninstall LiveCode from the command-line on Windows and Linux.
 
 Run the uninstaller using a command of the form:
 
-	<uninstaller> uninstall noui
+	<uninstaller> uninstall -ui
 
 Where <exe> is *.setup.exe* on Windows, and *.setup.x86* on Linux. This executable, for both of the platforms, is located in the folder where LiveCode is installed.
 
