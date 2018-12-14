@@ -55,8 +55,7 @@ If the attribute already exists, its value is set to the <newValue>.
 > <uniDecode> function to encode the text as UTF-8:
 
     revXMLSetAttribute myTree,the nodeName of me, \
-
-    uniDecode(the unicodeText of it,"UTF8")
+          uniDecode(the unicodeText of it,"UTF8")
 
 
 >*Important:*  The <revXMLSetAttribute> <command> is part of the 
