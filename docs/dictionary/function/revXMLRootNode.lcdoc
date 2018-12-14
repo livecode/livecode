@@ -25,8 +25,8 @@ put revXMLRootNode(thisTree) into myStartNode
 
 Parameters:
 treeID:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
+The number returned by the <revXMLCreateTree> or <revXMLCreateTreeFromFile>
+function when you created the <XML tree>.
 
 Returns:
 The <revXMLRootNode> <function> returns a node path.
@@ -51,6 +51,7 @@ If the <revXMLRootNode> <function> encounters an error, it
 > checkbox is checked.
 
 References: revXMLDeleteNode (command), function (control structure),
+revXMLCreateFile (function), revXMLCreateFileFromTree (function),
 revXMLNextSibling (function), revXMLPreviousSibling (function),
 revXMLParent (function), revXMLFirstChild (function),
 Standalone Application Settings (glossary), root node (glossary),
