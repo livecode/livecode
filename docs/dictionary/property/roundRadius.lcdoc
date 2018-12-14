@@ -35,13 +35,13 @@ If the graphic's style <property> is not "roundRect", the setting of
 this <property> has no effect.
 
 The global setting of the <roundRadius> <property> <control|controls>
-the appearance of round rectangles drawn with the <roundRect> <paint
-tool>. Once a paint rounded rectangle is drawn, its appearance cannot be
-changed by changing the <global> <roundRadius> <property>.
+the appearance of round rectangles drawn with the <roundRect> 
+<paint tool>. Once a paint rounded rectangle is drawn, its appearance 
+cannot be changed by changing the <global> <roundRadius> <property>.
 
-References: global (command), property (glossary),
+References: global (command), control (glossary), property (glossary),
 non-negative (glossary), paint tool (glossary), roundRect (keyword),
-integer (keyword), graphic (keyword), control (object),
+integer (keyword), graphic (keyword),
 roundEnds (property), pixels (property)
 
 Tags: ui
