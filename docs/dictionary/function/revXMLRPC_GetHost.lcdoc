@@ -28,8 +28,8 @@ The number returned by the <revXMLRPC_CreateRequest> when you created the
 executed an <XML-RPC> request.
 
 Returns (string):
-The <revXMLRPC_GetHost> <function> returns the <IP address> or <domain
-name> of the <host> that is the target of the <XML-RPC document>.
+The <revXMLRPC_GetHost> <function> returns the <IP address> or 
+<domain name> of the <host> that is the target of the <XML-RPC document>.
 
 Description:
 Use the <revXMLRPC_GetHost> <function> to retrieve the host that is the
