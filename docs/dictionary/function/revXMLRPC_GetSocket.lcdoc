@@ -28,9 +28,9 @@ executed an <XML-RPC> request.
 
 Returns (string):
 The <revXMLRPC_GetSocket> <function> returns the socket connection that
-is established with the <host>. By default, <XML-RPC> uses the <post
-command> to execute an <XML-RPC> request, but this has the overhead of
-opening and closing a new socket every time. You can avoid this by
+is established with the <host>. By default, <XML-RPC> uses the 
+<post command> to execute an <XML-RPC> request, but this has the overhead 
+of opening and closing a new socket every time. You can avoid this by
 re-using an already opened <socket>.
 
 Description:
