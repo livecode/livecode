@@ -52,12 +52,13 @@ Paragraphs with a non-empty listStyle are appropriately marked in
 and also with the new listtable tags.
 
 By using both sets of tags a reasonable degree of interoperability is
-> achieved with both TextEdit (and other Cocoa applications) on Mac, and
-> Word and WordPad on Windows.
+achieved with both TextEdit (and other Cocoa applications) on Mac, and
+Word and WordPad on Windows.
 >*Note:* Unfortunately, OpenOffice does not have particularly good rtf
 > import / export capabilities (it doesn't even round-trip correctly
 > through itself!) and thus copying / pasting of lists between LiveCode
 > and OpenOffice will not work reliably or correctly.
+
 >*Important:* Because the RTF standard does not include the box,
 > threeDbox, and link styles supported by LiveCode, the <RTFText>
 > property does not necessarily include all information necessary to
@@ -66,7 +67,7 @@ By using both sets of tags a reasonable degree of interoperability is
 > htmlTextproperty instead.
 
 For technical information about the RTF format, see the article at
-&lt;http://msdn.microsoft.com/library/en-us/dnrtfspec/html/rtfspec.asp&gt;. 
+[http://msdn.microsoft.com/library/en-us/dnrtfspec/html/rtfspec.asp]. 
 
 References: charToNum (function), format (glossary), RTF (glossary),
 field (keyword), HTMLText (property), foregroundColor (property),
