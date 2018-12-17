@@ -33,8 +33,8 @@ The <revdb_closecursor> <function> returns an error message if the
 closure is not successful. Otherwise, it returns empty.
 
 Description:
-Use the <revdb_closecursor> <function> to clean up after using a <record
-set (database cursor)(glossary)>.
+Use the <revdb_closecursor> <function> to clean up after using a 
+<record set>.
 
 Evaluating the <revdb_closecursor> <function> has the same effect as
 <execute|executing> the <revCloseCursor> <command>. The only difference
@@ -52,8 +52,8 @@ is that one is a <function call> and the other is a <command>.
 References: revCloseCursor (command), function (control structure),
 function call (glossary), Standalone Application Settings (glossary),
 command (glossary), standalone application (glossary), execute (glossary),
-record set (database cursor) (glossary),
-LiveCode custom library (glossary), Database library (library)
+record set (glossary), LiveCode custom library (glossary), 
+Database library (library)
 
 Tags: database
 

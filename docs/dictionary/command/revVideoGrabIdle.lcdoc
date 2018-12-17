@@ -54,7 +54,8 @@ video capture (glossary), VFW (glossary),
 Standalone Application Settings (glossary), QuickTime (glossary),
 video grabber (glossary), standalone application (glossary),
 command (glossary), LiveCode custom library (glossary),
-Video library (library), idle (message)
+Video library (library), idle (message), dontUseQT (property),
+dontUseQTEffects (property)
 
 Tags: multimedia
 

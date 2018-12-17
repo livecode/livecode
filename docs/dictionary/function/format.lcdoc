@@ -24,9 +24,6 @@ Example:
 format("%1.3e",865.3)
 
 Example:
-format("Hello world")
-
-Example:
 format("%45d",5)
 
 Parameters:

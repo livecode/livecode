@@ -59,7 +59,8 @@ variable (glossary), video capture (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), video grabber (glossary),
 command (glossary), LiveCode custom library (glossary),
-Video library (library)
+Video library (library), dontUseQT (property), 
+dontUseQTEffects (property)
 
 Tags: multimedia
 

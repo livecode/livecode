@@ -24,7 +24,7 @@ Example:
 lock the clipboard
 set the rawClipboardData["text/plain;charset=utf-8"] \
       to textEncode("Hello, World!", "UTF-8" ) -- Linux
-set the rawClipboardData["CF_UNICODE"] \
+set the rawClipboardData["CF_UNICODETEXT"] \
       to textEncode("Hello, World!", "UTF-16" ) -- Windows
 set the rawClipboardData["public.utf8-plain-text"] \
       to textEncode("Hello, World!", "UTF-8" ) -- OSX
@@ -76,7 +76,7 @@ encoding.
 
 References: lock clipboard (command), unlock clipboard (command),
 clipboard (function), textEncode (function), textDecode (function),
-clipboard (glossary), clipboardData (property),
+clipboard (glossary), property (glossary), clipboardData (property),
 fullClipboardData (property), rawDragData (property)
 
 Tags: ui, clipboard

@@ -970,8 +970,10 @@ bool MCArraysSplitIndexes(MCNameRef p_key, integer_t*& r_indexes, uindex_t& r_co
 			return false;
 		
         MCAutoNumberRef t_number;
-        
+#ifdef FIX_ANOMALY_21476_STRICT_EXTENTS
         if (!MCNumberParseInteger(*t_substring, &t_number))
+#endif
+        if (!MCNumberParse(*t_substring, &t_number))
         {
             if (!t_indexes . Push(0))
 				return false;

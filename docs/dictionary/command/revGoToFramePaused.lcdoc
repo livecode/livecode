@@ -52,9 +52,8 @@ revGoToFramePause <command> repeatedly for each frame, using the <send>
 <command> :
 
     on goNextFrame theFrame -- 1 frame every 20th of a second
-    revGoToFramePaused "My Animation",theFrame  
-    send ("goNextFrame" && (theFrame + 1)) to me in 3 ticks
-
+        revGoToFramePaused "My Animation",theFrame  
+        send ("goNextFrame" && (theFrame + 1)) to me in 3 ticks
     end goNextFrame
 
 
@@ -67,14 +66,14 @@ revGoToFramePause <command> repeatedly for each frame, using the <send>
 > library checkbox is checked.
 
 References: revStopAnimation (command), group (command),
-current card (glossary), main stack (glossary), handler (glossary),
-frame (glossary), message (glossary),
+send (command), current card (glossary), main stack (glossary), 
+handler (glossary), frame (glossary), message (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), command (glossary),
 application (glossary), LiveCode custom library (glossary),
-Animation library (library), send (library), library (library),
-startup (message), openBackground (message), preOpenStack (message),
-openStack (message), preOpenCard (message), defaultStack (property)
+Animation library (library), library (library), startup (message), 
+openBackground (message), preOpenStack (message), openStack (message), 
+preOpenCard (message), defaultStack (property)
 
 Tags: multimedia
 

@@ -2296,7 +2296,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    put sStandaloneSettingsA["scriptLibraries"] into tScriptLibraries
    
    local tAppBundle, tCEFFramework, tCEFResources, tCEFDest
-
+   
    revStandaloneProgress "Copying externals..."
    
    lock screen
@@ -2328,6 +2328,9 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          revStandaloneAddWarning tPlatform && tArch & ", Support, revpdfprinter" & tExtension && the result & ": required for PDF printing."
       else
          --revAddExternal "revpdfprinter"
+         local tRevPdfPrinterExecutable
+         put tCurrentLocation & "/revpdfprinter.bundle/Contents/MacOS/revpdfprinter" into tRevPdfPrinterExecutable
+         revSBRemoveUnneededSlicesFromMacCode tRevPdfPrinterExecutable, sStandaloneSettingsA
       end if
    end if
    
@@ -2338,6 +2341,7 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
          revStandaloneAddWarning tPlatform && tArch & ", Support, revsecurity" & tSharedExtension && the result & ": required for SSL."
       else
          --revAddExternal "revsecurity"
+         revSBRemoveUnneededSlicesFromMacCode tCurrentLocation & "/revsecurity.dylib", sStandaloneSettingsA
       end if
    end if
    
@@ -2554,7 +2558,17 @@ command revRedirectMacOSResourcesRecurse pSourceFolder, pTargetFolder
       if revRedirectMacOSResourcesIsExecutable(pSourceFolder & slash & tFile) then
          next repeat
       end if
-      rename (pSourceFolder & slash & tFile) to (pTargetFolder & slash & tFile)
+      switch the platform
+         case "macos"
+         case "linux"
+            get shell("mv" && quote & pSourceFolder & slash & tFile & quote && \
+                  quote & pTargetFolder & slash & tFile & quote)
+            break
+         case "windows"
+            --following line does not work properly for symlink folders
+            rename (pSourceFolder & slash & tFile) to (pTargetFolder & slash & tFile)
+            break
+      end switch
    end repeat
    
    local tFolder

@@ -825,7 +825,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       
       put tExternals into pSettings["externals"]
       
-      put "revsecurity:./librevsecurity" into pSettings["android,library"]
+      if pSettings["android,library"] is empty then
+         put "revsecurity:./librevsecurity" into pSettings["android,library"]
+      else
+         put return & "revsecurity:./librevsecurity" after pSettings["android,library"]
+      end if
       repeat for each line tEntry in tExternals
          put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
       end repeat
@@ -1261,6 +1265,10 @@ private command addAssetsFromFolderToArchive pFolder, pBaseName, pArchive, @pFon
    -- Ignore any .svn folders
    if the last item of pFolder is ".svn" then
       exit addAssetsFromFolderToArchive
+   end if
+
+   if char -1 of pFolder is slash then
+      delete char -1 of pFolder
    end if
    
    local tOldFolder

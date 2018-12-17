@@ -1,0 +1,1 @@
+# Redraw screen correctly when hiding the keyboard on Android

@@ -7,8 +7,8 @@ Type: function
 Syntax: revQueryResult(<recordSetID>)
 
 Summary:
-<return|Returns> the most recent error message associated with a <record
-set (database cursor)(glossary)>.
+<return|Returns> the most recent error message associated with a 
+<record set (glossary)>.
 
 Associations: database library
 
@@ -56,7 +56,7 @@ References: revCommitDatabase (command), function (control structure),
 revdb_commit (function), revDatabaseConnectResult (function),
 Standalone Application Settings (glossary),
 standalone application (glossary),
-record set (database cursor) (glossary), return (glossary),
+record set (glossary), return (glossary),
 SQL (glossary), LiveCode custom library (glossary), string (keyword),
 Database library (library)
 

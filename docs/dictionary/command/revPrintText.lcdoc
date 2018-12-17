@@ -46,13 +46,7 @@ footerText (string):
 If the footerText is empty, no page footer is printed.
 
 fieldTemplate:
-Any expression that evaluates to a field reference.>*Important:* The
-revPrintText command does not accept direct field references for the
-fieldTemplate parameter. For example, the following statement causes an
-error message: revPrintText myText,,,field "Text" -- CAN'T USE THIS FORM
-Instead, use a form that evaluates to a field reference, like this: :
-revPrintText myText,,,the name of field "Text" -- use this form
-revPrintText myText,,,("field" && quote & "Text" & quote) -- or this
+Any expression that evaluates to a field reference.
 
 Description:
 Use the <revPrintText> <command> to print any text from within a
@@ -120,8 +114,8 @@ To show the standard print dialog box, use the revShowPrintDialog
 >*Tip:*  If the <textToPrint> contains tags, the tags are interpreted as
 > text style information. To print tags literally, set the <text> of a
 > <field(keyword)> to the text you want to print, then use the
-> <htmlText> of that <field(keyword)> as the <textToPrint>. Converting
-> to the <htmlText> escapes the tags and allows them to be printed.
+> <HTMLText> of that <field(keyword)> as the <textToPrint>. Converting
+> to the <HTMLText> escapes the tags and allows them to be printed.
 
 >*Important:*  The <revPrintText> <command> is part of the 
 > <Printing library>. To ensure that the <command> works in a 
@@ -135,19 +129,19 @@ Changes:
 The fieldTemplate parameter was added in version 2.0.
 
 References: revPrintReport (command), answer printer (command),
-platform (function), LiveCode custom library (glossary),
-application (glossary), standalone application (glossary),
-evaluate (glossary), property (glossary), text (glossary),
-execute (glossary), HTML (glossary), command (glossary),
-object reference (glossary), expression (glossary), main stack (glossary),
-group (glossary), Standalone Application Settings (glossary),
-message (glossary), parameter (glossary), statement (glossary),
-handler (glossary), field (keyword), revPrintField (library),
-Printing library (library), library (library), startup (message),
-openBackground (message), preOpenStack (message), openStack (message),
-preOpenCard (message), field (object), textStyle (property),
-properties (property), HTMLText (property), textFont (property),
-textSize (property)
+revPrintField (command), platform (function), 
+LiveCode custom library (glossary), application (glossary), 
+standalone application (glossary), evaluate (glossary), 
+property (glossary), text (glossary), execute (glossary), HTML (glossary), 
+command (glossary), object reference (glossary), expression (glossary), 
+main stack (glossary), group (glossary), 
+Standalone Application Settings (glossary), message (glossary), 
+parameter (glossary), statement (glossary), handler (glossary), 
+field (keyword), Printing library (library), library (library), 
+startup (message), openBackground (message), preOpenStack (message), 
+openStack (message), preOpenCard (message), field (object), 
+textStyle (property), properties (property), HTMLText (property), 
+textFont (property), textSize (property)
 
 Tags: printing
 

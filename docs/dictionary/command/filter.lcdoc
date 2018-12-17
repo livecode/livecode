@@ -2,12 +2,13 @@ Name: filter
 
 Type: command
 
-Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with | without | [not] matching} [{wildcard pattern | regex pattern}] <filterPattern> [into <targetContainer>]
+Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} [wildcard pattern] <wildcardPattern> [into <targetContainer>]
+
+Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} regex pattern <regexPattern> [into <targetContainer>]
 
 Summary:
-Filters each line, item, key or element in a source container or
-expression, removing the lines, items, keys or elements that do or don't
-match a pattern.
+Filters each line, item, key or element in a source container or expression,
+removing the lines, items, keys or elements that do or don't match a pattern.
 
 Introduced: 1.0
 
@@ -56,49 +57,60 @@ Parameters:
 filterSource:
 An expression that evaluates to a string, array, or a container.
 
-filterPattern:
+wildcardPattern:
 An expression used to match certain lines, items, keys or elements.
+See description.
+
+regexPattern:
+An regular expression used to match certain lines, items, keys or elements.
+See [Microsoft's RegEx Quick Reference](https://docs.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference)
+guide for more info on regex usage.
 
 targetContainer:
-An expression that evaluates to a container
+An expression that evaluates to a container.
 
 It:
-If the filter command is used on a <filterSource> which is not a
-container, and no <targetContainer> is specified, the filtered string
+If the filter command is used on a <filterSource> which is not
+a <container>, and no <targetContainer> is specified, the filtered string
 or array will be placed in the <it> variable.
 
 Description:
 Use the <filter> command to pick specific lines, items, keys or elements
-in a container or expression.
+in a <container> or <expression>.
 
-The <filter>...with form and the <filter>...matching form retain the
+The `filter...with` form and the `filter...matching` form retain the
 lines, items, keys or elements that contain a match for the specified
-<filterPattern>.
+<wildcardPattern> or <regexPattern>.
 
-The <filter>...without form and the <filter>...not matching form discard
+The `filter...without` form and the `filter...not matching` form discard
 the lines, items, keys or elements that do not contain a match for the
-specified <filterPattern>. 
+specified <wildcardPattern> or <regexPattern>.
 
 If you don't specify lines, items, keys or elements then lines are
 filtered by default.
 
-If a regex pattern is specified, the <filterPattern> evaluates to a
-regular expression.
+>**Note:** If neither `wildcard pattern` or `regex pattern` forms are explicitly
+specified then the wildcard pattern form is assumed.
 
-If a wildcard <filterPattern> is specified, the <filterPattern> consists
-of a string of characters to match, which may be combined with any
+If the `regex pattern` form is specified, the <regexPattern> should
+be formatted as a <regular expression>. There are [many websites](https://www.google.com/search?regex)
+that provide examples and tutorials of RegEx expressions.
+
+If the 'wildcard pattern' form is to be used, the <wildcardPattern> should
+consists of a string of characters to match, which may be combined with any
 number of the following special characters:
 
-- * : Matches zero or more of any character. The <filterPattern> A*C
+- `*` : Matches zero or more of any character. The filterPattern `A*C`
     matches "AC", "ABC", or "ADZXC".
-- ? : Matches exactly one character. The <filterPattern> A?C matches
+- `?` : Matches exactly one character. The filterPattern `A?C` matches
   "ABC", but not "AC" or "ADZXC".
-- [chars] : Matches any one of the characters inside the brackets. The
-  <filterPattern> A[BC]D matches "ABD" or "ACD", but not "AD" or "ABCD".
-- [char-char] : Matches any character whose unicode codepoint is between
-  the first character and the second character.
-- [!chars] : Matches any character which is not one of the characters
+- `[chars]` : Matches any one of the characters inside the brackets. The
+  filterPattern `A[BC]D` matches "ABD" or "ACD", but not "AD" or "ABCD".
+- `[!chars]` : Matches any character which is not one of the characters
   inside the brackets.
+- `[char-char]` : Matches any character whose unicode codepoint is between
+  the first character and the second character, such as `[a-y]` any character
+  between "a" and "y" but not "z"
 
 
 You can match instances of special chars as follows:
@@ -110,18 +122,17 @@ You can match instances of special chars as follows:
 - `!` with `!`
 
 
-For example, the wildcard <filterPattern> `[[]A]*` will match any
-string beginning with `[A]`.
+For example, the <wildcardPattern> `[[]A]*` will match any
+string beginning with `[A]`. Broken down, there is `[[]` which equates
+to an open square bracket `[` followed by `A]*` as the closing square
+bracket is not a special character.
 
 The three bracketed forms can be combined to create more complex
 character classes, for example the pattern [!abcA-C] matches any
 character which is not a, b or c (upper or lower case)
 
-If no <filterPattern> type is specified, the <filterPattern> is handled
-as a wildcard.
-
-If no <targetContainer> is specified, and you filter a container, the
-container contents will be replaced by the filtered result.
+If no <targetContainer> is specified, and you filter a <container>, 
+the <container> contents will be replaced by the filtered result.
 
 Changes:
 The <filter>...without form was added in version 2.1.1. In previous
@@ -140,6 +151,7 @@ Filtering of array keys and elements was added in version 8.1.
 
 References: replace (command), sort (command), matchChunk (function),
 matchText (function), replaceText (function), it (keyword),
-caseSensitive (property)
+caseSensitive (property), container (glossary), expression (glossary),
+regular expression (glossary)
 
 Tags: text processing

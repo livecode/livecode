@@ -446,6 +446,16 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
             }
             else
                 t_resolved_path = *t_resources_path;
+            
+#ifdef _MACOSX
+            // As we are in a standalone we need to redirect the path on macOS to Resources/_MacOS
+            extern bool MCS_apply_redirect(MCStringRef p_path, bool p_is_file, MCStringRef& r_redirected);
+            MCAutoStringRef t_redirected_path;
+            if (MCS_apply_redirect(*t_resolved_path, false, &t_redirected_path))
+            {
+                t_resolved_path.Reset(*t_redirected_path);
+            }
+#endif
         }
         
         extern void MCEngineAddExtensionsFromModulesArray(MCAutoScriptModuleRefArray&, MCStringRef, MCStringRef&);

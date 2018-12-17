@@ -7,8 +7,8 @@ Type: function
 Syntax: revDatabaseID(<recordSetID>)
 
 Summary:
-<return|Returns> the database ID of the <database> that opened a <record
-set (database cursor)(glossary)>.
+<return|Returns> the database ID of the <database> that opened a 
+<record set>.
 
 Associations: database library
 
@@ -38,7 +38,7 @@ The <revDatabaseID> <function> returns a positive <integer>.
 
 Description:
 Use the <revDatabaseID> <function> to find out which <database> a
-<record set (database cursor)|record set> belongs to.
+<record set> belongs to.
 
 The returned value is the same as the value returned by the
 <revOpenDatabase> <function> when the <database> was first opened.
@@ -61,7 +61,7 @@ The revDatabaseID synonym was added in version 2.0.
 References: revCloseDatabase (command), function (control structure),
 revOpenDatabase (function), Standalone Application Settings (glossary),
 database (glossary), standalone application (glossary),
-record set (database cursor) (glossary), return (glossary),
+record set (glossary), return (glossary),
 LiveCode custom library (glossary), integer (keyword),
 Database library (library)
 
