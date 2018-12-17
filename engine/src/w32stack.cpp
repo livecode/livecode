@@ -496,7 +496,7 @@ MCRectangle MCStack::view_platform_getwindowrect() const
     if (MClockscreen != 0)
     {
         MCRectangle t_content_rect, t_diff_rect;
-        MCscreen->platform_getwindowgeometry((HWND)window->handle.window, t_content_rect);
+        MCscreen->platform_getwindowgeometry(window, t_content_rect);
         // the content rect of a window should always be contained (or equal) to the frame rect
         // so compute these 4 margins and then apply them to the rect of the stack
         t_diff_rect.x = rect.x - (t_content_rect.x - t_frame_rect.x);
