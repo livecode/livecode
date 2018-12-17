@@ -25,8 +25,8 @@ put revXMLPreviousSibling(myDoc,thisNode) into thisNode
 
 Parameters:
 treeID:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
+The number returned by the <revXMLCreateTree> or <revXMLCreateTreeFromFile>
+function when you created the <XML tree>.
 
 siblingNode:
 The path to the node where you want to start.
@@ -61,7 +61,8 @@ If the <revXMLPreviousSibling> <function> encounters an error, it
 > checkbox is checked.
 
 References: function (control structure), revXMLRootNode (function),
-revXMLFirstChild (function), LiveCode custom library (glossary),
+revXMLFirstChild (function), revXMLCreateTree (function),
+revXMLCreateTreeFromFile (function), LiveCode custom library (glossary),
 Standalone Application Settings (glossary), return (glossary),
 standalone application (glossary), XML library (library),
 nodes (property)

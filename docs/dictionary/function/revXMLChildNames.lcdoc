@@ -26,8 +26,8 @@ get revXMLChildNames(currTree,line 2 of theNodes,return,"Grass",true)
 
 Parameters:
 treeID:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
+The number returned by the <revXMLCreateTree> or <revXMLCreateTreeFromFile>
+function when you created the <XML tree>.
 
 startNode:
 The path to the node whose child nodes you want to list.
