@@ -21,16 +21,16 @@ set the screenMouseLoc to the topLeft of this stack
 
 Value:
 The <screenMouseLoc> consists of two <integer|integers>, separated by a
-comma. It reports the position of the <mouse pointer> in <absolute
-coordinates>--that is, relative to the top left of the main screen. (The
-<mouseLoc> <function> is similar, but its coordinates are relative to
-the <defaultStack> window rather than the screen.) If you set this
-property, the mouse pointer is moved to the specified location on the
-screen. 
+comma. It reports the position of the <mouse pointer> in 
+<absolute coordinates>--that is, relative to the top left of the main 
+screen. (The <mouseLoc> <function> is similar, but its coordinates are 
+relative to the <defaultStack> window rather than the screen.) If you set 
+this property, the mouse pointer is moved to the specified location on 
+the screen. 
 
 Description:
-Use the <screenMouseLoc> <property> to find out where the <mouse
-pointer> is, or to change the location of the <mouse pointer>.
+Use the <screenMouseLoc> <property> to find out where the 
+<mouse pointer> is, or to change the location of the <mouse pointer>.
 
 >*Important:*  Taking over the position of the <mouse pointer> can
 > disorient and confuse users, and <user interface|user-interface>

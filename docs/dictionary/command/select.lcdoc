@@ -9,9 +9,9 @@ Syntax: select empty
 Syntax: select <objectList>
 
 Summary:
-<select|Selects> part of the text of a <field>, or places the <insertion
-point> in a <field>, or removes the <insertion point>, or
-<select|Selects> one or more <object|objects>.
+<select|Selects> part of the text of a <field>, or places the 
+<insertion point> in a <field>, or removes the <insertion point>, 
+or <select|Selects> one or more <object|objects>.
 
 Introduced: 1.0
 

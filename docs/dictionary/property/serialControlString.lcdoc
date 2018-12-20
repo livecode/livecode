@@ -51,9 +51,9 @@ the desired settings. Then open the serial <port> using the <open file>
 
 On Mac OS systems, the <serialControlString> <property> can be used to
 set the printer or modem <port|ports>. On <Windows|Windows systems>, the
-<serialControlString> can be used to set the COM <port|ports>. On <OS
-X|OS X systems>, the <serialControlString> can be used to set a serial
-<peripheral device|device> returned by the <driverNames> function.
+<serialControlString> can be used to set the COM <port|ports>. On 
+<OS X|OS X systems>, the <serialControlString> can be used to set a 
+serial <peripheral device|device> returned by the <driverNames> function.
 
 The format of the <serialControlString> is compatible with the extended
 MS-DOS "mode" command.
@@ -61,8 +61,8 @@ MS-DOS "mode" command.
 References: close file (command), open driver (command),
 open file (command), driverNames (function), property (glossary),
 OS X (glossary), sign (glossary), Windows (glossary), port (glossary),
-command (glossary), peripheral device (glossary), modem: (keyword),
-COMn: (keyword)
+command (glossary), 
+peripheral device (glossary), modem: (keyword), COMn: (keyword)
 
 Tags: networking
 
