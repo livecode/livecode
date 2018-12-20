@@ -22,9 +22,8 @@ Example:
 if the screenDepth &gt; 8 then show image "Photograph"
 
 Returns:
-The <screenDepth> <function> <return|returns> 0, 1, 2, 4, 8, 16, 24, or
-
-32. 
+The <screenDepth> <function> <return|returns> 0, 1, 2, 4, 8, 16, 24, 
+or 32. 
 
 
 Description:

@@ -61,8 +61,8 @@ is used.
 
 For more information about Apple events, see Apple Computer's technical
 documentation, Inside Macintosh: Interapplication Communication, located
-at <a
-href="http://developer.apple.com/techpubs/mac/IAC/IAC-2.html">http://developer.apple.com/techpubs/mac/IAC/IAC-2.html</a>. 
+at [Apple's developer site]
+(https://developer.apple.com/library/archive/documentation/mac/IAC/IAC-2.html). 
 
 References: request (command), reply (command),
 request appleEvent (command), function (control structure),

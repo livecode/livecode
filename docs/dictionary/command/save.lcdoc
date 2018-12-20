@@ -57,14 +57,14 @@ of that stack are also saved in the same <file>, and if you save a
 If the stack has not yet been saved and doesn't have a filename, you
 must use the `as` form.
 
-You cannot save to a standalone application's file; <standalone
-application|standalones> are read-only.
+You cannot save to a standalone application's file; 
+<standalone application|standalones> are read-only.
 
 The <save> command can save the <stack> in several different versions of
 the LiveCode stack file format.
 
 * If you use the `with newest format` form of the <save> command, the
-  <stack> is saved using the newest <stack version>
+  <stack> is saved using the newest <stack version>.
 * If you use the `with format` form of the <save> command, the
   <stackFormat> should be the particular <stack version> you want the
   stack to be saved as.

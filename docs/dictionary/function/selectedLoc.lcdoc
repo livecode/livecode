@@ -27,8 +27,8 @@ The <selectedLoc> <function> <return|returns> two positive
 <integer|integers> separated by a comma.
 
 Description:
-Use the <selectedLoc> <function> to determine the location in the <stack
-window> where the text <selection> appears.
+Use the <selectedLoc> <function> to determine the location in the 
+<stack window> where the text <selection> appears.
 
 When text is selected, a box around it is filled with the hiliteColor or
 <hilitePattern>. The first <item> of the <return value> is the
