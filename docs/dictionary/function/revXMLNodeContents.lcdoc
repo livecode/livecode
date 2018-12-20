@@ -5,8 +5,8 @@ Type: function
 Syntax: revXMLNodeContents(<treeID>, <node>)
 
 Summary:
-<return|Returns> the text contained in the specified <node> in an <XML
-tree>. 
+<return|Returns> the text contained in the specified <node> in an 
+<XML tree>. 
 
 Associations: xml library
 
@@ -26,8 +26,8 @@ put revXMLNodeContents(thisDoc,mySection) into field "Current Section"
 
 Parameters:
 treeID:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
+The number returned by the <revXMLCreateTree> or <revXMLCreateTreeFromFile>
+function when you created the <XML tree>.
 
 node:
 The path to the node whose contents you want to get.
@@ -60,8 +60,9 @@ string "Text" when called with "root" as the <node>.
 > checkbox is checked.
 
 References: revXMLDeleteNode (command), revXMLAppend (command),
-function (control structure), revXMLAttribute (function), node (glossary),
-Standalone Application Settings (glossary),
+function (control structure), revXMLAttribute (function), 
+revXMLCreateTree (function), revXMLCreateTreeFromFile (function), 
+node (glossary), Standalone Application Settings (glossary),
 standalone application (glossary), XML tree (glossary), return (glossary),
 LiveCode custom library (glossary), string (keyword),
 XML library (library)

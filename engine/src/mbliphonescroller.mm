@@ -752,7 +752,14 @@ UIView *MCiOSScrollerControl::CreateView(void)
 	t_view = [[UIScrollView alloc] initWithFrame: CGRectMake(0, 0, 0, 0)];
 	if (t_view == nil)
 		return nil;
-	
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED > 110000
+    if (@available(iOS 11.0, *)) {
+        [t_view setContentInsetAdjustmentBehavior: UIScrollViewContentInsetAdjustmentNever];
+    }
+#endif
+    [t_view setContentInset: UIEdgeInsetsMake(0, 0, 0, 0)];
+
 	[t_view setHidden: YES];
 	
 	m_delegate = [[com_runrev_livecode_MCiOSScrollViewDelegate alloc] initWithInstance: this];

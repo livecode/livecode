@@ -34,20 +34,20 @@ separated by commas: the left, top, right, and bottom edges of the video
 grabber, in absolute (screen) coordinates.
 
 Description:
-Use the <revInitializeVideoGrabber> <command> to start up <video
-capture> capability.
+Use the <revInitializeVideoGrabber> <command> to start up 
+<video capture> capability.
 
 You must use the <revInitializeVideoGrabber> <command> before using any
-of the other <command|commands> and <function|functions> in the <Video
-library>. The <command> does two things:
+of the other <command|commands> and <function|functions> in the 
+<Video library>. The <command> does two things:
 
 * Loads the code necessary for video capture into memory.
 * Opens the video grabber window.
 
 
 >*Note:* The <video grabber> is not a <stack window>, so you can't set
-> its <properties>. To change the size and location of the <video
-> grabber>, use the <revSetVideoGrabberRect> <command>.
+> its <properties>. To change the size and location of the 
+> <video grabber>, use the <revSetVideoGrabberRect> <command>.
 
 Once the video grabber is open, you can use the revVideoGrabDialog
 <command> to specify where the video camera (or other video source) is
@@ -68,8 +68,7 @@ capture>.
 > <LiveCode custom library|custom library> when you create your 
 > <standalone application|standalone>. In the Inclusions pane of the 
 > <Standalone Application Settings> window, make sure the
-> "Video Grabber" 
-> library checkbox is checked.
+> "Video Grabber" library checkbox is checked.
 
 Changes:
 The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
@@ -89,7 +88,8 @@ video capture (glossary), Windows (glossary), VFW (glossary),
 Standalone Application Settings (glossary), video grabber (glossary),
 standalone application (glossary), function (glossary),
 command (glossary), LiveCode custom library (glossary), file (keyword),
-Video library (library), properties (property)
+Video library (library), properties (property), dontUseQT (property),
+dontUseQTEffects (property)
 
 Tags: multimedia
 

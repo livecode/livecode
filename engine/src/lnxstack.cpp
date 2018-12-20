@@ -489,7 +489,23 @@ MCRectangle MCStack::view_device_getwindowrect(void) const
 {
     GdkRectangle t_frame;
     gdk_window_get_frame_extents(window, &t_frame);
-    return MCRectangleMake(t_frame . x, t_frame . y, t_frame . width, t_frame . height);
+    MCRectangle t_frame_rect;
+    t_frame_rect = MCRectangleMake(t_frame . x, t_frame . y, t_frame . width, t_frame . height);
+    
+    if (MClockscreen != 0)
+    {
+        MCRectangle t_content_rect, t_diff_rect;
+        MCscreen->platform_getwindowgeometry(window, t_content_rect);
+        // the content rect of a window should always be contained (or equal) to the frame rect
+        // so compute these 4 margins and then apply them to the rect of the stack
+        t_diff_rect.x = rect.x - (t_content_rect.x - t_frame_rect.x);
+        t_diff_rect.y = rect.y - (t_content_rect.y - t_frame_rect.y);
+        t_diff_rect.width = rect.width + (t_frame_rect.width - t_content_rect.width);
+        t_diff_rect.height = rect.height + (t_frame_rect.height - t_content_rect.height);
+        return t_diff_rect;
+    }
+    
+    return t_frame_rect;
 }
 
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support

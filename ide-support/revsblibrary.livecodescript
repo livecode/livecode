@@ -258,7 +258,7 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget, 
                   exit repeat
                end if
             end if
-            if the platform is "macos" then -- stat it and set some flags
+            if the platform is "macos" or the platform is "Linux" then -- stat it and set some flags
                local tUser, tGroup
                set the itemDelimiter to "/"
                set the defaultFolder to pSource & "/" & item 1 to -2 of tResource
@@ -297,6 +297,10 @@ private command __revSBCopyFolder pSource, pTarget, pCallback, pCallbackTarget, 
    
    set the defaultFolder to tOldFolder
    
+   if tResult is not empty then
+      revStandaloneAddWarning tResult & ":" && quote & pSource & quote
+   end if
+   
    return tResult
 end __revSBCopyFolder
 
@@ -310,8 +314,11 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    local tOldFolder, tSize, tPermissions, tUser, tGroup, tFileType
    local tResult
    
+   local tSourceFileIsLink
    if tResult is empty then
-      if there is no file pSourceFile then
+      if __readlink(pSourceFile) is not empty then
+         put true into tSourceFileIsLink
+      else if there is no file pSourceFile then
          put "cannot find source file" into tResult
       end if
    end if
@@ -348,51 +355,63 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
       end if
    end if
    
-   if tResult is empty then
-      open file pTargetFile for binary write
-      if the result is not empty then
-         put "cannot create target file" into tResult
-      end if
-   end if
-   
-   if tResult is empty then
-      open file pSourceFile for binary read
-      if the result is not empty then
-         put "cannot read from source file", the result into tResult
-      end if
-   end if
-   
-   local tAmountCopied
-   if tResult is empty then
-      if pCallbackTarget is not empty and there is a pCallbackTarget then
-         send pCallback && 0, tSize to pCallbackTarget
-      end if
-      repeat forever
-         read from file pSourceFile for 1048576
-         if the result is not empty and the result is not "eof" then
-            put "cannot read from source file", the result into tResult
-            exit repeat
+   if tSourceFileIsLink then
+      if tResult is empty then
+         # __readlink only works for MacOS and Linux so no need for a switch here
+         get shell("cp -a" && quote & pSourceFile & quote && \
+               quote & pTargetfile & quote)
+         if it is not empty then
+            put "cannot copy symbolic link" into tResult
          end if
-         if it is empty then
-            exit repeat
-         end if
-         write it to file pTargetFile
+         # Copying a symbolic link takes no time, so do not send a callback.
+      end if
+   else # regular file
+      if tResult is empty then
+         open file pTargetFile for binary write
          if the result is not empty then
-            put "cannot write to target file" into tResult
-            exit repeat
+            put "cannot create target file" into tResult
          end if
-         add the number of chars of it to tAmountCopied
+      end if
+      
+      if tResult is empty then
+         open file pSourceFile for binary read
+         if the result is not empty then
+            put "cannot read from source file", the result into tResult
+         end if
+      end if
+      
+      local tAmountCopied
+      if tResult is empty then
          if pCallbackTarget is not empty and there is a pCallbackTarget then
-            send pCallback && tAmountCopied, tSize to pCallbackTarget
+            send pCallback && 0, tSize to pCallbackTarget
          end if
-      end repeat
-   end if
-   
-   if pTargetFile is among the lines of the openFiles then
-      close file pTargetFile
-   end if
-   if pSourceFile is among the lines of the openFiles then
-      close file pSourceFile
+         repeat forever
+            read from file pSourceFile for 1048576
+            if the result is not empty and the result is not "eof" then
+               put "cannot read from source file", the result into tResult
+               exit repeat
+            end if
+            if it is empty then
+               exit repeat
+            end if
+            write it to file pTargetFile
+            if the result is not empty then
+               put "cannot write to target file" into tResult
+               exit repeat
+            end if
+            add the number of chars of it to tAmountCopied
+            if pCallbackTarget is not empty and there is a pCallbackTarget then
+               send pCallback && tAmountCopied, tSize to pCallbackTarget
+            end if
+         end repeat
+      end if
+      
+      if pTargetFile is among the lines of the openFiles then
+         close file pTargetFile
+      end if
+      if pSourceFile is among the lines of the openFiles then
+         close file pSourceFile
+      end if
    end if
    
    # OK-2007-11-30 : Modified to work for Linux too
@@ -406,23 +425,9 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    end if
    
    -- Remove unneeded slices from the MacOS externals
-   if the platform is "macos" and pSettings is not empty then
-      local tRemove
-      if pSettings["MacOSX x86-64"] is true and pSettings["MacOSX x86-32"] is not true then
-         put "i386" into tRemove
-      else if pSettings["MacOSX x86-32"] is true and pSettings["MacOSX x86-64"] is not true then
-         put "x86_64" into tRemove
-      end if
-   
-      if tRemove is not empty then
-         set the itemDel to slash
-         if pSettings["externals"] contains item -1 of pTargetFile then
-            replace " " with "\ " in pTargetFile
-            local tShell
-            put "lipo " & pTargetFile & " -remove " & tRemove & " -output " & pTargetFile into tShell
-            get shell(tShell)
-         end if
-      end if
+   set the itemDel to slash
+   if pSettings["externals"] contains item -1 of pTargetFile then
+      revSBRemoveUnneededSlicesFromMacCode pTargetFile, pSettings
    end if
    
    if tOldFolder is not empty then
@@ -435,6 +440,7 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
    return tResult
 end __revSBCopyFile
 
+
 #?semantics
 # Creates a folder and all parents as required.
 #?author
@@ -443,6 +449,25 @@ on revSBEnsureFolder pFolder
    __revSBEnsureFolder pFolder
    return the result
 end revSBEnsureFolder
+
+command revSBRemoveUnneededSlicesFromMacCode pTargetFile, pSettings
+   if the platform is "macos" and pSettings is not empty then
+      local tRemove
+      if pSettings["MacOSX x86-64"] is true and pSettings["MacOSX x86-32"] is not true then
+         put "i386" into tRemove
+      else if pSettings["MacOSX x86-32"] is true and pSettings["MacOSX x86-64"] is not true then
+         put "x86_64" into tRemove
+      end if
+      
+      if tRemove is not empty then
+         replace " " with "\ " in pTargetFile
+         local tShell
+         put "lipo " & pTargetFile & " -remove " & tRemove & " -output " & pTargetFile into tShell
+         get shell(tShell)
+      end if
+   end if
+   
+end revSBRemoveUnneededSlicesFromMacCode
 
 private command __revSBEnsureFolder pFolder
    set the itemDel to "/"

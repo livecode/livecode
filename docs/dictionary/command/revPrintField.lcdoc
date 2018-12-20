@@ -28,13 +28,7 @@ revPrintField ("field" && 5) -- prints field 5
 
 Parameters:
 fieldDescriptor:
-Any expression that evaluates to a field reference.>*Important:* The
-revPrintField command does not accept direct field references. For
-example, the following statement causes an error message: revPrintField
-field "My Field" -- CAN'T USE THIS FORM Instead, use a form that
-evaluates to a field reference, like this: : revPrintField the name of
-field "My Field" -- use this form instead revPrintField ("field" &&
-quote & "My Field" & quote) -- or this
+Any expression that evaluates to a field reference.
 
 Description:
 Use the <revPrintField> <command> to print the formatted contents of a

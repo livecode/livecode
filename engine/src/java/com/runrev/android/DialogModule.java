@@ -171,14 +171,14 @@ class DialogModule
                 if (p_with_min)
                 {
                     Method t_setMinDate;
-                    t_setMinDate = t_dialog.getClass().getMethod("setMinDate", new Class[] {Long.TYPE});
+                    t_setMinDate = t_date_picker.getClass().getMethod("setMinDate", new Class[] {Long.TYPE});
                     t_setMinDate.invoke(t_date_picker, new Object[] {p_min * 1000});
                 }
 
                 if (p_with_max)
                 {
                     Method t_setMaxDate;
-                    t_setMaxDate = t_dialog.getClass().getMethod("setMaxDate", new Class[] {Long.TYPE});
+                    t_setMaxDate = t_date_picker.getClass().getMethod("setMaxDate", new Class[] {Long.TYPE});
                     t_setMaxDate.invoke(t_date_picker, new Object[] {p_max * 1000});
                 }
             }

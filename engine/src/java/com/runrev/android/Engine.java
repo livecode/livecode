@@ -1254,7 +1254,7 @@ public class Engine extends View implements EngineApi
 		getLocationOnScreen(t_origin);
 		
 		// We have new values and the keyboard isn't showing so update any sizes we don't already know
-		if (p_update && !m_keyboard_visible)
+		if (p_update && !keyboardIsVisible())
 		{
 			t_working_rect = new Rect(t_origin[0], t_origin[1], t_origin[0] + p_new_width, t_origin[1] + p_new_height);
 			
@@ -1392,18 +1392,42 @@ public class Engine extends View implements EngineApi
 	private boolean m_orientation_sizechange = false;
 	
 	private boolean m_keyboard_visible = false;
+    
+    boolean keyboardIsVisible()
+    {
+        // status bar height
+        int t_status_bar_height = 0;
+        int t_resource_id = getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (t_resource_id > 0)
+        {
+            t_status_bar_height = getResources().getDimensionPixelSize(t_resource_id);
+        }
+        
+        // display window size for the app layout
+        Rect t_app_rect = new Rect();
+        getActivity().getWindow().getDecorView().getWindowVisibleDisplayFrame(t_app_rect);
+        
+        int t_screen_height = ((LiveCodeActivity)getContext()).s_main_layout.getRootView().getHeight();
+        
+        // keyboard height equals (screen height - (user app height + status))
+        int t_keyboard_height = t_screen_height - (t_app_rect.height() + t_status_bar_height);
+        
+        return t_keyboard_height > 0;
+    }
 	
-	void updateKeyboardVisible(boolean p_visible)
+	void updateKeyboardVisible()
 	{
-		if (p_visible == m_keyboard_visible)
+        boolean t_visible = keyboardIsVisible();
+        
+		if (t_visible == m_keyboard_visible)
 			return;
 		
 		// Log.i(TAG, "updateKeyboardVisible(" + p_visible + ")");
 		
-		m_keyboard_visible = p_visible;
+		m_keyboard_visible = t_visible;
 		
 		// IM-2013-11-15: [[ Bug 10485 ]] Notify engine when keyboard visiblity changes
-		if (p_visible)
+		if (t_visible)
 			doKeyboardShown(0);
 		else
 			doKeyboardHidden();

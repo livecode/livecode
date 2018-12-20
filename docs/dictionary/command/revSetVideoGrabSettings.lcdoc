@@ -56,7 +56,8 @@ References: revVideoGrabSettings (command), function (control structure),
 video capture (glossary), Standalone Application Settings (glossary),
 standalone application (glossary), QuickTime (glossary),
 command (glossary), LiveCode custom library (glossary),
-Video library (library)
+Video library (library), dontUseQT (property), 
+dontUseQTEffects (property)
 
 Tags: multimedia
 

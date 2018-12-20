@@ -27,8 +27,8 @@ put revXMLAttribute(currTree,currNode,the short name of field x) \
 
 Parameters:
 treeID:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
+The number returned by the <revXMLCreateTree> or <revXMLCreateTreeFromFile>
+function when you created the <XML tree>.
 
 node:
 The path to the node whose attribute value you want to get.
@@ -40,7 +40,7 @@ Returns:
 The <revXMLAttribute> <function> returns a <string>.
 
 Description:
-Use the <revXMLAttribute> <function> to get an attribute's value.un
+Use the <revXMLAttribute> <function> to get an attribute's value.
 
 If the <revXMLAttribute> <function> encounters an error, it
 <return|returns> an error message starting with "xmlerr".
@@ -54,7 +54,8 @@ If the <revXMLAttribute> <function> encounters an error, it
 > checkbox is checked.
 
 References: function (control structure), revXMLAttributes (function),
-revXMLNodeContents (function), LiveCode custom library (glossary),
+revXMLNodeContents (function), revXMLCreateTree (function),
+revXMLCreateTreeFromFile (function), LiveCode custom library (glossary),
 node (glossary), Standalone Application Settings (glossary),
 standalone application (glossary), return (glossary),
 attribute (glossary), XML tree (glossary), string (keyword),

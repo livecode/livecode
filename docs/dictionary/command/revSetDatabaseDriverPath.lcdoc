@@ -5,8 +5,8 @@ Type: command
 Syntax: revSetDatabaseDriverPath <driverFolder>
 
 Summary:
-Specifies where the <Database library> should look for <database
-driver|database drivers>.
+Specifies where the <Database library> should look for 
+<database driver|database drivers>.
 
 Associations: database library
 

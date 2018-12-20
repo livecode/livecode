@@ -36,8 +36,8 @@ The <revXMLFirstChild> <function> returns a <string> consisting of the
 path to the first child node.
 
 Description:
-Use the <revXMLFirstChild> <function> to begin scanning the <child
-node|child nodes> of a <parent node>.
+Use the <revXMLFirstChild> <function> to begin scanning the 
+<child node|child nodes> of a <parent node>.
 
 If the <revXMLFirstChild> <function> encounters an error, it
 <return|returns> an error message starting with "xmlerr".

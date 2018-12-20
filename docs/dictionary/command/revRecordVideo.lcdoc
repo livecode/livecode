@@ -72,7 +72,8 @@ execute (glossary), AVI (glossary),
 Standalone Application Settings (glossary), QuickTime (glossary),
 standalone application (glossary), video grabber (glossary),
 command (glossary), LiveCode custom library (glossary),
-Video library (library)
+Video library (library), dontUseQT (property), 
+dontUseQTEffects (property)
 
 Tags: multimedia
 

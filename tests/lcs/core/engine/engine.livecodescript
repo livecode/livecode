@@ -501,6 +501,31 @@ wait 2 ticks
 TestAssert "the ticks change with time", the ticks - tTime >= 2
 end TestTicks
 
+on TestEffectiveRectIsUpdatedWhileScreenIsLocked
+   local tRectBefore, tRectAfter, tEffectiveRectBefore, tEffectiveRectAfter
+   
+   local tLeft,tTop
+   put 100 into tLeft
+   put 200 into tTop
+   
+   create stack "TestStack"
+   put the rect of stack "TestStack" into tRectBefore
+   lock screen
+   set the top of stack "TestStack" to the top of stack "TestStack" + tTop
+   set the left of stack "TestStack" to the left of stack "TestStack" + tLeft
+   put the effective rect of stack "TestStack" into tEffectiveRectBefore
+   put the rect of stack "TestStack" into tRectAfter
+   unlock screen
+   put the effective rect of stack "TestStack" into tEffectiveRectAfter
+   add tTop to item 2 of tRectBefore
+   add tTop to item 4 of tRectBefore
+   add tLeft to item 1 of tRectBefore
+   add tLeft to item 3 of tRectBefore
+   TestAssert "rect of stack is updated while screen is locked", tRectBefore is tRectAfter
+   TestAssert "effective rect of stack is updated while screen is locked", tEffectiveRectBefore is tEffectiveRectAfter
+   delete stack "TestStack" 
+end TestEffectiveRectIsUpdatedWhileScreenIsLocked
+
 on TestUngroupAndQuit
     -- Bug 21500: run a subprocess in which we ungroup a group and
     -- then quit, to test that it no longer crashes

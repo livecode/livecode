@@ -25,8 +25,8 @@ revXMLAddDTD theCurrTree,the templateDTD of me
 
 Parameters:
 treeID:
-The numbe returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
+The number returned by the <revXMLCreateTree> or 
+<revXMLCreateTreeFromFile> function when you created the XML tree.
 
 DTDText (string):
 A string that makes up a valid Document Type Definition.
@@ -47,7 +47,9 @@ Use the <revXMLAddDTD> <command> to specify the format of an <XML tree>.
 > checkbox is checked.
 
 References: revXMLAppend (command), revXMLValidateDTD (function),
-result (function), Standalone Application Settings (glossary),
+result (function), revXMLCreateTree (function),
+revXMLCreateTreeFromFile (function), 
+Standalone Application Settings (glossary), 
 standalone application (glossary), DTD (glossary), XML tree (glossary),
 command (glossary), LiveCode custom library (glossary),
 XML library (library)
