@@ -18,6 +18,7 @@
 #define __MC_SCRIPT_PRIVATE__
 
 #include <stdlib.h>
+#include "libscript/script.h"
 
 // Win32 doesn't have the "__func__" macro
 #ifdef _WIN32
@@ -324,64 +325,6 @@ struct MCScriptSyntaxDefinition: public MCScriptDefinition
     // The list of methods.
     MCScriptSyntaxMethod *methods;
     uindex_t method_count;
-};
-
-enum MCJavaCallType {
-    MCJavaCallTypeInstance,
-    MCJavaCallTypeStatic,
-    MCJavaCallTypeNonVirtual,
-    MCJavaCallTypeConstructor,
-    MCJavaCallTypeInterfaceProxy,
-    MCJavaCallTypeGetter,
-    MCJavaCallTypeSetter,
-    MCJavaCallTypeStaticGetter,
-    MCJavaCallTypeStaticSetter,
-    
-    /* This value is used to indicate that the call type was not known - it is
-     * only used internally in libscript. */
-    MCJavaCallTypeUnknown = -1,
-};
-
-/* MCScriptForeignHandlerLanguage describes the type of foreign handler which
- * has been bound - based on language. */
-enum MCScriptForeignHandlerLanguage
-{
-    /* The handler has not yet been bound, or failed to bind */
-    kMCScriptForeignHandlerLanguageUnknown,
-    
-    /* The handler should be called using libffi */
-    kMCScriptForeignHandlerLanguageC,
-    
-    /* The handler has a lc-compile generated shim, so can be called directly */
-    kMCScriptForeignHandlerLanguageBuiltinC,
-    
-    /* The handler should be called using objc_msgSend */
-    kMCScriptForeignHandlerLanguageObjC,
-    
-    /* The handler should be called using the JNI */
-    kMCScriptForeignHandlerLanguageJava,
-};
-
-/* MCScriptThreadAffinity describes which thread a foreign handler should be
- * executed on. This applies to Android and iOS, where a handler can either be
- * run on the default (engine) thread, or the UI (main) thread. */
-enum MCScriptThreadAffinity
-{
-    kMCScriptThreadAffinityDefault,
-    kMCScriptThreadAffinityUI,
-};
-
-/* MCScriptForeignHandlerObjcCallType describes how to call the objective-c
- * method. */
-enum MCScriptForeignHandlerObjcCallType
-{
-    /* Call the method using method_invoke on the instance (on the default
-     * thread) */
-    kMCScriptForeignHandlerObjcCallTypeInstanceMethod,
-    
-    /* Call the method using method_invoke on the class instance (on the default
-     * thread) */
-    kMCScriptForeignHandlerObjcCallTypeClassMethod,
 };
 
 struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
