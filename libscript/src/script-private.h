@@ -896,28 +896,4 @@ MCScriptBytecodeDecodeSignedArgument(uindex_t p_original_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Compiled modules are serialized to disk in the following format:
-//
-//   byte       magic[0] = 'L'
-//   byte       magic[1] = 'C'
-//   byte    	version[0]
-//   byte       version[1]
-//   <pickle of module struct>
-
-// The module version will be incremented for every public release of the libscript
-// which occurs in which the module binary format changes.
-//
-// We will only aim to support module formats which have been released as final and
-// stable.
-//
-// The following constants keep track of, and should be updated to reflect the meaning
-// of each module version.
-
-#define kMCScriptModuleVersion_8_0_0_DP_1 0
-#define kMCScriptModuleVersion_8_1_0_DP_2 1
-#define kMCScriptModuleVersion_9_0_0_DP_4 2
-#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_9_0_0_DP_4
-
-////////////////////////////////////////////////////////////////////////////////
-
 #endif
