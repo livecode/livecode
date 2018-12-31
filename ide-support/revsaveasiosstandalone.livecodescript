@@ -976,8 +976,10 @@ private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle
          return & "ipad pro 12.9 portrait splash,-iPadProPortrait@2x" & return & "ipad pro 12.9 landscape splash,-iPadProLandscape@2x" & \
          return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-667h@2x" & \
          return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x" & \
-         return & "iphone X portrait splash,-812h@3x" & return & "iphone X landscape splash,-375h@3x")
-      get pSettings["ios," & item 1 of tType]
+         return & "iphone X portrait splash,-812h@3x" & return & "iphone X landscape splash,-375h@3x" & \
+         return & "iphone XR portrait splash,-896h@2x" & return & "iphone XR landscape splash,-414h@2x" & \
+         return & "iphone XSMAX portrait splash,-896h@3x" & return & "iphone X landscape splash,-414h@3x")
+      get pSettings["ios," & item 1 of tType] 
       if not (it begins with "/") then
          put pBaseFolder & slash before it
       end if
@@ -1707,9 +1709,17 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       if tIPhoneOrientation contains "Portrait" then
          put "Default-736h@3x|Default-736h|{414, 736}|Portrait" & return after tSplashScreens
          put "Default-812h@3x|Default-812h|{375, 812}|Portrait" & return after tSplashScreens
+         // iPhone XR
+         put "Default-896h@2x|Default-896h|{414, 896}|Portrait" & return after tSplashScreens
+         // iPhone XSMAX
+         put "Default-896h@3x|Default-896h|{414, 896}|Portrait" & return after tSplashScreens
       else
          put "Default-414h@3x|Default-414h|{414, 736}|Landscape" & return after tSplashScreens
          put "Default-375h@3x|Default-375h|{375, 812}|Landscape" & return after tSplashScreens
+         // iPhone XR
+         put "Default-414h@2x|Default-414h|{414, 896}|Landscape" & return after tSplashScreens
+         // iPhone XSMAX
+         put "Default-414h@3x|Default-414h|{414, 896}|Landscape" & return after tSplashScreens
       end if      
    end if   
    if 2 is among the items of tDeviceFamily then      
