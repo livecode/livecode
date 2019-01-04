@@ -30,10 +30,10 @@ yet, the <socketTimeout> <message> is sent to the <object(glossary)>
 whose <script> contains the <read from socket> or <write to socket>
 <command>. 
 
-LiveCode checks the <socketTimeoutInterval> every time a <read from
-socket> or <write to socket> <command> is <execute|executed>, so you can
-specify different intervals for different <command|commands> by changing
-the <socketTimeoutInterval> before issuing the <command>.
+LiveCode checks the <socketTimeoutInterval> every time a 
+<read from socket> or <write to socket> <command> is <execute|executed>, 
+so you can specify different intervals for different <command|commands> 
+by changing the <socketTimeoutInterval> before issuing the <command>.
 
 As long as the action is still pending, the <socketTimeout> <message> is
 sent every time the <socketTimeoutInterval> elapses. For example, if the

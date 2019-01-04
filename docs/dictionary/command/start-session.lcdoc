@@ -36,9 +36,9 @@ that identifier.
 The location where the <$_SESSION(keyword)> array is stored on the
 server is configured using the <sessionSavePath> <property>.
 
-A session is stored until it expires or is deleted using the <delete
-session command>. The maximum age of a session is configured using the
-<sessionLifetime> <property>.
+A session is stored until it expires or is deleted using the 
+<delete session command>. The maximum age of a session is configured 
+using the <sessionLifetime> <property>.
 
 >*Note:* You do not need to alter any of the session properties in order
 > to start and use sessions. They provide a way for advanced users to
