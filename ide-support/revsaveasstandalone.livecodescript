@@ -2564,7 +2564,7 @@ command revRedirectMacOSResourcesRecurse pSourceFolder, pTargetFolder
             get shell("mv" && quote & pSourceFolder & slash & tFile & quote && \
                   quote & pTargetFolder & slash & tFile & quote)
             break
-         case "windows"
+         case "win32"
             --following line does not work properly for symlink folders
             rename (pSourceFolder & slash & tFile) to (pTargetFolder & slash & tFile)
             break
