@@ -63,7 +63,7 @@ lost or altered:
 References: save (command), version (function), stack file (glossary),
 stack (glossary), Unicode (glossary), field (glossary), button (glossary),
 script (glossary), custom property (glossary), card (glossary),
-widget (glossary), blendLevel (property), ink (property),
+widget (object), blendLevel (property), ink (property), 
 textFont (property), textStyle (property), textSize (property),
 unicodeToolTip (property), antialiased (property), opaque (property),
 minStackFileVersion (property)
