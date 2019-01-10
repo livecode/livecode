@@ -67,11 +67,17 @@ create the <absolute file path|full path>.
 
 You cannot delete the current <defaultFolder>.
 
->*Important:*  The <folderPath> is specified using <Unix> conventions,
+>*Important:*  The folderPath is specified using <Unix> conventions,
 > even on <Mac OS> and <Windows> systems. The names of <folder|folders>
 > are separated with a "/" character, 
 > and <absolute file path|absolute paths> (starting with a disk or 
 > partition name) must begin with a "/" character. 
+
+>*Note:* When setting the <defaultFolder>, any trailing slash will be
+> removed. For example:
+
+    set the defaultFolder to /Users/John/
+    put the defaultFolder -- returns /Users/John
 
 References: absolute file path (glossary), command (glossary), 
 create alias (command), current folder (glossary), effective (keyword), 
