@@ -640,10 +640,12 @@ Boolean MCImage::magmdown(uint2 which)
 
     // PM-2014-04-01: [[Bug 11072]] Convert image to mutable if an editing tool is selected, to prevent LC crashing
     if (isEditingTool(getstack()->gettool(this)))
+    {
         convert_to_mutable();
     
-	if (static_cast<MCMutableImageRep *>(m_rep)->image_mdown(which) == True)
-		return True;
+        if (static_cast<MCMutableImageRep *>(m_rep)->image_mdown(which) == True)
+            return True;
+    }
 
 	state |= CS_MFOCUSED;
 
