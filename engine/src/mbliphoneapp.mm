@@ -1518,7 +1518,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
             t_image_names[1] = nil;
         }
         
-        // the iPhone X allows for portrait and landscape splash screens
+        // the iPhone X/XS allows for portrait and landscape splash screens
         else if ([[UIScreen mainScreen] bounds] . size . height == 812 || [[UIScreen mainScreen] bounds] . size . width == 812)
         {
             switch(p_new_orientation)
@@ -1532,6 +1532,42 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
                 case UIInterfaceOrientationLandscapeRight:
                     t_image_names[0] = @"Default-375h@3x.png";
                     t_image_angles[0] = 0.0f;
+                    break;
+            }
+            t_image_names[1] = nil;
+        }
+        
+        // iPhone XR: 414x896 points are rendered in 2x, resulting in 828x1792 pixels
+        // iPhone XSMAX: 414x896 points are rendered in 3x, resulting in 1242x2688 pixels
+        else if ([[UIScreen mainScreen] bounds] . size . height == 896 || [[UIScreen mainScreen] bounds] . size . width == 896)
+        {
+            switch(p_new_orientation)
+            {
+                case UIInterfaceOrientationPortrait:
+                case UIInterfaceOrientationPortraitUpsideDown:
+                    if ([[UIScreen mainScreen] scale] == 3.0)
+                    {
+                        t_image_names[0] = @"Default-896h@3x.png";
+                        t_image_angles[0] = 0.0f;
+                    }
+                    else if ([[UIScreen mainScreen] scale] == 2.0)
+                    {
+                        t_image_names[0] = @"Default-896h@2x.png";
+                        t_image_angles[0] = 0.0f;
+                    }
+                    break;
+                case UIInterfaceOrientationLandscapeLeft:
+                case UIInterfaceOrientationLandscapeRight:
+                    if ([[UIScreen mainScreen] scale] == 3.0)
+                    {
+                        t_image_names[0] = @"Default-414h@3x.png";
+                        t_image_angles[0] = 0.0f;
+                    }
+                    else if ([[UIScreen mainScreen] scale] == 2.0)
+                    {
+                        t_image_names[0] = @"Default-414h@2x.png";
+                        t_image_angles[0] = 0.0f;
+                    }
                     break;
             }
             t_image_names[1] = nil;
