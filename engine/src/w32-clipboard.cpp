@@ -1421,10 +1421,11 @@ HRESULT MCWin32DataObject::QueryGetData(FORMATETC* pformatetcIn)
 	return FindDataForFormat(pformatetcIn, t_ignored);
 }
 
+// This is called when calling InitializeFromBitmap() of the IDragSourceHelper interface to store to dragimage
+// The dragimage is shown only if the returned value is S_OK
 HRESULT MCWin32DataObject::SetData(FORMATETC* pformatetcIn, STGMEDIUM* pmedium, BOOL fRelease)
 {
-	// Not supported
-	return E_NOTIMPL;
+	return S_OK;
 }
 
 HRESULT MCWin32DataObject::FindDataForFormat(FORMATETC* pformatetcIn, MCDataRef& r_data)

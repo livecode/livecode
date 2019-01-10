@@ -156,6 +156,9 @@ MCDragAction MCScreenDC::dodragdrop(Window w, MCDragActionSet p_allowed_actions,
 					t_drag_image . crColorKey = 0x010101;
 
 					HRESULT t_err;
+                    // The call to InitializeFromBitmap calls SetData of the IDataObject interface.
+                    // The implementation of MCWin32DataObject::SetData needs to return S_OK otherwise
+                    // the dragimage is not shown
 					t_err = t_source_helper -> InitializeFromBitmap(&t_drag_image, t_transfer_data);
 
 					DeleteObject(t_drag_bitmap);
