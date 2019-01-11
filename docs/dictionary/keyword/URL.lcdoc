@@ -96,7 +96,7 @@ URLs when working on fully cross platform applications.
 
 Changes:
 As of LiveCode 7.0.0, the <URL> <keyword> has been upgraded to
-understand <Unicode> files when using URL ("<file(keyword):"). If the
+understand <Unicode> files when using URL ("<file(keyword)>:"). If the
 <file(glossary)> located at the path has a Byte Order Mark at its
 beginning, then <URL(keyword)> will decode the <file(glossary)>
 according to that Byte Order Mark (UTF-8, UTF-16BE, UTF-16LE, UTF-32BE
@@ -111,7 +111,8 @@ expression (glossary), file (glossary), FTP (glossary),
 keyword (glossary), LiveCode custom library (glossary),
 local file (glossary),
 platform (glossary), resource (glossary), resource fork (glossary),
-server (glossary), text file (glossary), Unicode (glossary),
+server (glossary), standalone application (glossary),
+text file (glossary), Unicode (glossary),
 URL (glossary), URL scheme (glossary), web server (glossary),
 binfile (keyword), file (keyword), ftp (keyword), http (keyword),
 resfile (keyword), URL (keyword), Internet library (library),
