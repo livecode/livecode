@@ -272,9 +272,19 @@ public:
 class MCContainer
 {
 public:
+    enum
+    {
+        /* A short path length of 6 has been chosen as it means an MCContainer
+         * occupies 64 bytes on 64-bit and 48 bytes on 32-bit. */
+        kShortPathLength = 6,
+        
+        /* The extension size to use for a long path, should be a power-of-two. */
+        kLongPathSegmentLength = 8,
+    };
+    
     MCContainer() = default;
     
-    MCContainer(MCVariable *var) : m_variable(var) {}
+    MCContainer(MCVariable *var) : m_path_length(0), m_variable(var) {}
 
     ~MCContainer(void);
 
@@ -283,12 +293,9 @@ public:
     bool remove(MCExecContext& ctxt);
     
     bool eval(MCExecContext& ctxt, MCValueRef& r_value);
-    bool eval_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> p_path, MCValueRef& r_value);
+    bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     
     bool set(MCExecContext& ctxt, MCValueRef p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
-    bool set_on_path(MCExecContext& ctxt, MCSpan<MCNameRef> path, MCValueRef p_value);
-    
-    bool eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
     bool give_value(MCExecContext& ctxt, MCExecValue p_value, MCVariableSettingStyle p_setting = kMCVariableSetInto);
     
 	bool replace(MCExecContext& ctxt, MCValueRef p_replacement, MCRange p_range);
@@ -302,19 +309,28 @@ public:
 
     MCSpan<MCNameRef> getpath();
 
-	static bool createwithvariable(MCVariable *var, MCContainer& r_container);
-	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer& r_container);
-    static bool copywithpath(MCContainer *p_container, MCNameRef *p_path, uindex_t p_length, MCContainer& r_container);
-    
     MCVariable *getvar()
     {
         return m_variable;
     }
     
 private:
+    /* If m_path_length <= 6 then m_short_path contains the path, otherwise
+     * m_long_path (a dynamically allocated vector) will contain it. */
+    uindex_t m_path_length = 0;
+    union
+    {
+        MCNameRef m_short_path[kShortPathLength];
+        struct
+        {
+            uindex_t m_long_path_capacity;
+            MCNameRef *m_long_path;
+        };
+    };
 	MCVariable *m_variable = nullptr;
-    MCAutoNameRefArray m_path;
-	bool m_case_sensitive = false;
+    
+    friend class MCVarref;
+    friend class MCContainerBuilder;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

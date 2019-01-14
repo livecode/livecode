@@ -2049,6 +2049,9 @@ MC_DLLEXPORT integer_t MCNumberFetchAsInteger(MCNumberRef number);
 MC_DLLEXPORT uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef number);
 MC_DLLEXPORT real64_t MCNumberFetchAsReal(MCNumberRef number);
 
+MC_DLLEXPORT bool MCNumberStrictFetchAsIndex(MCNumberRef number,
+                                             index_t& r_index);
+
 MC_DLLEXPORT bool MCNumberParseOffsetPartial(MCStringRef p_string, uindex_t offset, uindex_t &r_chars_used, MCNumberRef &r_number);
 
 MC_DLLEXPORT bool MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_t char_count, MCNumberRef &r_number);
@@ -2284,6 +2287,9 @@ MC_DLLEXPORT bool MCStringIsMutable(const MCStringRef string);
 
 // Returns true if the string is the empty string.
 MC_DLLEXPORT bool MCStringIsEmpty(MCStringRef string);
+    
+// Returns true if the string is a (strict) integer string <-?(0|[1-9][0-9]*)>*/
+MC_DLLEXPORT bool MCStringIsInteger(MCStringRef string);
 
 // Returns true if the the string only requires native characters to represent.
 MC_DLLEXPORT bool MCStringCanBeNative(MCStringRef string);
@@ -2772,12 +2778,16 @@ MC_DLLEXPORT bool MCNameCreate(MCStringRef string, MCNameRef& r_name);
 MC_DLLEXPORT bool MCNameCreateWithChars(const unichar_t *chars, uindex_t count, MCNameRef& r_name);
 // Create a name using native chars.
 MC_DLLEXPORT bool MCNameCreateWithNativeChars(const char_t *chars, uindex_t count, MCNameRef& r_name);
-
+// Create a name using an index
+MC_DLLEXPORT bool MCNameCreateWithIndex(index_t p_index, MCNameRef& r_name);
+    
 // Create a name using the given string, releasing the original.
 MC_DLLEXPORT bool MCNameCreateAndRelease(MCStringRef string, MCNameRef& r_name);
 
 // Looks for an existing name matching the given string.
 MC_DLLEXPORT MCNameRef MCNameLookupCaseless(MCStringRef string);
+// Looks for an existing name matching the given index.
+MC_DLLEXPORT MCNameRef MCNameLookupIndex(index_t p_index);
 
 // Returns a unsigned integer which can be used to order a table for a binary
 // search.

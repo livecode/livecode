@@ -107,6 +107,29 @@ uinteger_t MCNumberFetchAsUnsignedInteger(MCNumberRef self)
 	return self -> real >= 0.0 ? (uinteger_t)(self -> real + 0.5) : (uinteger_t)0.0;
 }
 
+MC_DLLEXPORT_DEF
+bool MCNumberStrictFetchAsIndex(MCNumberRef self,
+                                index_t& r_index)
+{
+    static_assert(sizeof(index_t) == sizeof(integer_t), "index_t is not the same size as integer_t");
+    
+    if (MCNumberIsInteger(self))
+    {
+        r_index = self->integer;
+        return true;
+    }
+    
+    index_t t_as_int = (index_t)(self -> real);
+    if (self->real - t_as_int != 0.0)
+    {
+        return false;
+    }
+    
+    r_index = t_as_int;
+
+    return true;
+}
+
 compare_t MCNumberCompareTo(MCNumberRef self, MCNumberRef p_other_self)
 {
 	// First determine the storage types of both numbers.
@@ -283,7 +306,7 @@ static bool __MCNumberParseOffset(MCStringRef p_string, uindex_t offset, uindex_
         char_count = length - offset;
     
     if (!MCStringIsNative(p_string))
-        return MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string) + offset, char_count, r_number);
+        return __MCNumberParseUnicodeChars(MCStringGetCharPtr(p_string) + offset, char_count, p_integer_only, r_number);
     
     bool t_success;
     t_success = false;
