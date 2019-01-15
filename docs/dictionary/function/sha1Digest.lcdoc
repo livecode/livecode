@@ -26,15 +26,15 @@ Parameters:
 message(data): A <binary data> string.
 
 Returns:
-Returns the message digest of the <message> as a 20 <byte> <binary
-data> string.
+Returns the message digest of the <message> as a 20 <byte> 
+<binary data> string.
 
 Description:
 Compute a message digest of <message> using the SHA-1 cryptographic
 hash function.
 
 > *Warning:* Serious flaws have been found in the SHA-1 hash algorithm
-> that make in unsuitable to use for security-critical purposes.
+> that make it unsuitable to use for security-critical purposes.
 > Unless you need backwards compatibility with existing systems, use
 > one of the other algorithms available with the <messageDigest> <function>
 

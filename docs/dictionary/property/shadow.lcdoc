@@ -26,14 +26,14 @@ By default, the <shadow> of a newly created <stack> is set to true. The
 <shadow> of a newly created <control> is false by <default>, but may be
 true if it is created by the <development environment>. (For example,
 choosing Object menu &gt; New Control &gt; Shadow Button creates a
-button whose <shadow> is true.).
+button whose <shadow> is true.)
 
 Description:
 Use the <shadow> <property> to draw a drop shadow.   
 
 While the <shadow> <property> can be set for any <control(keyword)>, it
 affects the appearance of only <field|fields> and <button|buttons>.
-Other <control(object)|controls> do not display a drop shadow,
+Other <control(glossary)|controls> do not display a drop shadow,
 regardless of the setting of their <shadow> <property>.
 
 The <shadow> of a <stack window> is drawn by the operating system. On
@@ -54,16 +54,14 @@ shadow with the <shadowOffset> <property>. (The <shadowOffset> has no
 effect on <stack window|stack windows>.)
 
 Changes:
-The ability to specify the <shadow> of a <stack> was added in version 2.
-
-1. 
+The ability to specify the <shadow> of a <stack> was added in version 2.1. 
 
 
 References: object (glossary), property (glossary), Unix (glossary),
 Windows (glossary), Mac OS (glossary), stack window (glossary),
 development environment (glossary), default (keyword), button (keyword),
 field (keyword), control (keyword), button (object), field (object),
-stack (object), control (object), pixels (property),
+stack (object), pixels (property),
 shadowOffset (property)
 
 Tags: ui

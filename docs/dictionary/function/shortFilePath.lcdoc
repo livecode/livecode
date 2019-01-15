@@ -7,8 +7,8 @@ Syntax: the shortFilePath of <filePath>
 Syntax: shortFilePath(<filePath>)
 
 Summary:
-<return|Returns> the 8.3-format equivalent of a <Windows> long <file
-path>. 
+<return|Returns> the 8.3-format equivalent of a <Windows> long 
+<file path>. 
 
 Introduced: 1.1
 

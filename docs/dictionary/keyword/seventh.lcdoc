@@ -20,8 +20,8 @@ Example:
 put "Hello!" into seventh line of field "Greetings"
 
 Description:
-Use the <seventh> <keyword> in an <object reference> or <chunk
-expression>. 
+Use the <seventh> <keyword> in an <object reference> or 
+<chunk expression>. 
 
 The <seventh> <keyword> can be used to specify any <object(glossary)>
 whose <number> <property> is 7. It can also be used to designate the
