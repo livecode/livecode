@@ -627,8 +627,12 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
    
    -- OK-2008-03-24 : Bug 6171. Restructured a little to ensure that the icon can be either relative or absolute.
    -- If the icon cannot be found at the exact location, assume its relative to the stack and put the stack path before it.
-   if there is no file sStandaloneSettingsA["OSX,iconFile"] and sStandaloneSettingsA["OSX,iconFile"] is not empty then
-      put tStackPath & "/" before sStandaloneSettingsA["OSX,iconFile"]
+   if sStandaloneSettingsA["OSX,iconFile"] is not empty then
+      if there is no file sStandaloneSettingsA["OSX,iconFile"] or \
+            (the folder is tStackPath and \
+            there is a file (the folder & "/" & sStandaloneSettingsA["OSX,iconFile"])) then
+         put tStackPath & "/" before sStandaloneSettingsA["OSX,iconFile"]
+      end if
    end if
    
    -- If the icon cannot be found (and we are building for OS X and its not empty) then add a warning.
@@ -704,7 +708,7 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
       
       -- Add a random uuid to use in the executable's uuid load command.
       put uuid() into tDeployInfo["uuid"]
-
+      
       revStandaloneDeployWithParams tTarget, tStackSourceFile, tDeployInfo
       
       -- Make sure we finish off the bundle contents
