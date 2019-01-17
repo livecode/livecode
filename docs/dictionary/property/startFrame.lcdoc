@@ -5,8 +5,8 @@ Type: property
 Syntax: startFrame
 
 Summary:
-The <startFrame> <property> is not implemented and is <reserved
-word|reserved>.
+The <startFrame> <property> is not implemented and is 
+<reserved word|reserved>.
 
 Introduced: 1.0
 

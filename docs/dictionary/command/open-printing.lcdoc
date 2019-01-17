@@ -57,14 +57,12 @@ The following handler prints cards that have been collected in a global
 variable: 
 
     on printSomeCards
-    global cardsToPrint
-    open printing with dialog
-    repeat with x = 1 to the number of lines of cardsToPrint
-
-    print card (line x of cardsToPrint)
-    end repeat
-    close printing -- send group of cards to printer
-
+        global cardsToPrint
+        open printing with dialog
+        repeat with x = 1 to the number of lines of cardsToPrint
+            print card (line x of cardsToPrint)
+        end repeat
+        close printing -- send group of cards to printer
     end printSomeCards
 
 

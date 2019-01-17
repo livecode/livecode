@@ -30,8 +30,8 @@ Use the <printPaperSize> to determine or set the size of the paper to
 print to. This size is the size of the physical paper before any scaling
 or rotation is applied.
 
-To have an effect, this property must be set before calling <open
-printing>. 
+To have an effect, this property must be set before calling 
+<open printing>. 
 
 References: open printing (command), answer printer (command)
 

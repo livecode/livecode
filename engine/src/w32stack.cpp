@@ -487,13 +487,26 @@ MCRectangle MCStack::view_platform_getwindowrect() const
 	RECT wrect;
 	GetWindowRect((HWND)window->handle.window, &wrect);
 
-	MCRectangle t_rect;
-	t_rect = MCRectangleFromWin32RECT(wrect);
-
-	// IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
-	t_rect = MCscreen->screentologicalrect(t_rect);
-
-	return t_rect;
+	MCRectangle t_frame_rect;
+	t_frame_rect = MCRectangleFromWin32RECT(wrect);
+    
+    // IM-2014-01-28: [[ HiDPI ]] Convert screen to logical coords
+    t_frame_rect = MCscreen->screentologicalrect(t_frame_rect);
+    
+    if (MClockscreen != 0)
+    {
+        MCRectangle t_content_rect, t_diff_rect;
+        MCscreen->platform_getwindowgeometry(window, t_content_rect);
+        // the content rect of a window should always be contained (or equal) to the frame rect
+        // so compute these 4 margins and then apply them to the rect of the stack
+        t_diff_rect.x = rect.x - (t_content_rect.x - t_frame_rect.x);
+        t_diff_rect.y = rect.y - (t_content_rect.y - t_frame_rect.y);
+        t_diff_rect.width = rect.width + (t_frame_rect.width - t_content_rect.width);
+        t_diff_rect.height = rect.height + (t_frame_rect.height - t_content_rect.height);
+        return t_diff_rect;
+    }
+    
+	return t_frame_rect;
 }
 
 // IM-2013-09-23: [[ FullscreenMode ]] Factor out device-specific window sizing
@@ -600,13 +613,14 @@ void MCStack::constrain(intptr_t lp)
 		mmptr -> ptMaxPosition . x = t_workarea . x - t_viewport . x;
 		mmptr -> ptMaxPosition . y = t_workarea . y - t_viewport . y;
 	}
+		
+	MCGFloat t_screenPixelScale = t_display->pixel_scale;
 
-	// MW-2007-07-27: In Windows 98 we need to clamp to 32767...
-	
-	mmptr -> ptMinTrackSize . x = minwidth + dx;
-	mmptr -> ptMinTrackSize . y = minheight + dy;
-	mmptr -> ptMaxTrackSize . x = MCU_min(32767, maxwidth + dx);
-	mmptr -> ptMaxTrackSize . y = MCU_min(32767, maxheight + dy);
+	// AB-2018-10-23: We no longer support Windows 98 -> remove clamping
+	mmptr -> ptMinTrackSize . x = minwidth * t_screenPixelScale + dx;
+	mmptr -> ptMinTrackSize . y = minheight * t_screenPixelScale + dy;
+	mmptr -> ptMaxTrackSize . x = maxwidth * t_screenPixelScale + dx;
+	mmptr -> ptMaxTrackSize . y = maxheight * t_screenPixelScale + dy;
 
 }
 

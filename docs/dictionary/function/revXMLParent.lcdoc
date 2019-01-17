@@ -5,8 +5,8 @@ Type: function
 Syntax: revXMLParent(<treeID>, <childNode>)
 
 Summary:
-<return|Returns> the path to the <parent node> of a <node> in an <XML
-tree>. 
+<return|Returns> the path to the <parent node> of a <node> in an 
+<XML tree>. 
 
 Associations: xml library
 
@@ -26,8 +26,8 @@ put revXMLParent(thisTree,thisNode) into field "Parent"
 
 Parameters:
 treeID:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
+The number returned by the <revXMLCreateTree> or <revXMLCreateTreeFromFile>
+function when you created the <XML tree>.
 
 childNode:
 The path to the node where you want to start.
@@ -53,7 +53,8 @@ If the <revXMLParent> <function> encounters an error, it
 > checkbox is checked.
 
 References: function (control structure), revXMLRootNode (function),
-revXMLFirstChild (function), LiveCode custom library (glossary),
+revXMLFirstChild (function), revXMLCreateTree (function),
+revXMLCreateTreeFromFile (function), LiveCode custom library (glossary),
 node (glossary), Standalone Application Settings (glossary),
 standalone application (glossary), return (glossary), XML tree (glossary),
 parent node (glossary), XML library (library)

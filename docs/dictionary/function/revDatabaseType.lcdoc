@@ -53,8 +53,8 @@ perform different operations depending on what kind of database is being
 used. 
 
 You can use the <revDatabaseType> <function> to distinguish between
-different <database> types. For example, you may need to frame a <SQL
-query> differently depending on what type of <database> you are
+different <database> types. For example, you may need to frame a 
+<SQL query> differently depending on what type of <database> you are
 communicating with.
 
 >*Important:*  The <revDatabaseType> <function> is part of the 

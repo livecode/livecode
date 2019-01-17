@@ -42,8 +42,8 @@ prevent the <field> from being created.
 
 References: copy (command), clone (command), paste (command),
 pass (control structure), object (glossary), trap (glossary),
-templateField (glossary), message (glossary), tool (glossary),
-message path (glossary), field (keyword), script (property)
+message (glossary), tool (glossary), message path (glossary), 
+field (keyword), script (property), templateField (keyword)
 
 Tags: objects
 

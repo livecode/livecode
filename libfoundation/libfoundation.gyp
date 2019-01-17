@@ -6,11 +6,17 @@
 		[
 			'libFoundation',
 		],
+        'module_test_include_dirs':
+        [
+            'include',
+            'src',
+        ],
 		'module_test_sources':
 		[
 			'test/environment.cpp',
             'test/test_foreign.cpp',
 			'test/test_hash.cpp',
+            'test/test_memory.cpp',
 			'test/test_proper-list.cpp',
 			'test/test_string.cpp',
 			'test/test_typeconvert.cpp',

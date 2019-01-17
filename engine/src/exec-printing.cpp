@@ -525,8 +525,8 @@ void MCPrintingExecPrintRectOfAllCards(MCExecContext& ctxt, MCStack *p_stack, bo
 	MCRectangle t_src_rect;
 	t_src_rect . x = p_from . x;
 	t_src_rect . y = p_from . y;
-	t_src_rect . width = p_to . x - p_to . x;
-	t_src_rect . height = p_to . y - p_to . y;
+	t_src_rect . width = p_to . x - p_from . x;
+	t_src_rect . height = p_to . y - p_from . y;
 	
 	MCprinter -> LayoutStack(p_stack, p_only_marked, &t_src_rect);
 

@@ -7,8 +7,8 @@ Syntax: set the rawDragData[<key>] to <data>
 Syntax: set the rawDragData to empty
 
 Summary:
-provides low-level access to the contents of the <drag-and-drop
-clipboard>. 
+provides low-level access to the contents of the 
+<drag and drop|drag-and-drop> <clipboard>. 
 
 Introduced: 8.0
 
@@ -29,13 +29,13 @@ set the rawDragData["public.utf8-plain-text"] \
 
 Value:
 The <rawDragData> pseudo-array provides low-level access to the data on
-the drag-and-drop clipboard. It can be accessed at any time but may be
-erased when another program begins a drag-and-drop operation. The keys
-for the <rawDragData> are platform-specific.
+the <drag and drop|drag-and-drop> <clipboard>. It can be accessed at 
+any time but may be erased when another program begins a drag-and-drop 
+operation. The keys for the <rawDragData> are platform-specific.
 
 Description:
 Use the <rawClipboardData> to gain low-level access to the system
-drag-and-drop clipboard..
+<drag and drop|drag-and-drop> <clipboard>.
 
 This property should only be used if you require low-level access; the
 <fullDragData> is more appropriate for most uses.
@@ -57,7 +57,8 @@ platform-specific, but can be summarised as:
 > <textEncode>/<textDecode> functions to convert to/from the appropriate
 > encoding. 
 
-References: dragData (property), fullDragData (property),
+References: clipboard (glossary), drag and drop (glossary),
+dragData (property), fullDragData (property),
 rawClipboardData (property)
 
 Tags: ui, drag-and-drop

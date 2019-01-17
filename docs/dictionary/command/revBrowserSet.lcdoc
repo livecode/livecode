@@ -116,10 +116,10 @@ will move to that stack.
 For example, to toggle the resizable property of a stack hosting a
 browser use the following code:
 
-revBrowserSet pBrowserId, "windowId", 0
-set the resizable of stack pBrowserStack to pNewResizeableValue
-revBrowserSet pBrowserId, "windowId", the windowId of stack
-pBrowserStack 
+    revBrowserSet pBrowserId, "windowId", 0
+    set the resizable of stack pBrowserStack to pNewResizeableValue
+    revBrowserSet pBrowserId, "windowId", the windowId of stack
+    pBrowserStack 
 
 Cross Platform Caution: Due to a limitation in the current browser
 implementation, the behavior of the scrollbars property is slightly
@@ -129,33 +129,26 @@ revBrowser won't allow you to turn scrollbars back on. The way to work
 around this and create a browser that allows scrollbars to be toggled on
 both platforms is like this:
 
-local sBrowserId
+    local sBrowserId
 
-on browserOpen
-
-    put revBrowserOpen(the windowId \
+    on browserOpen
+        put revBrowserOpen(the windowId \
           of me, http://www.livecode.com) into sBrowserId
+        if the platform is MacOS then
+            send browserDisableScrollbars to me in 1 second
+        else
+            revBrowserSet sBrowserId, scrollbars, false
+        end if
+    end browserOpen
 
-    if the platform is MacOS then
-    send browserDisableScrollbars to me in 1 second
+    on browserDisableScrollbars
+        revBrowserSet sBrowserId, scrollbars, false
+    end browserDisableScrollbars
 
-    else
-    revBrowserSet sBrowserId, scrollbars, false
-
-    end if
-
-end browserOpen
-
-on browserDisableScrollbars
-
-    revBrowserSet sBrowserId, scrollbars, false
-
-end browserDisableScrollbars
-
-on browserToggleScrollbars
-
-    revBrowserSet sBrowserId, scrollbars, (not(revBrowserGet(sBrowserId,
-    scrollbars))) end browserToggleScrollbars
+    on browserToggleScrollbars
+        revBrowserSet sBrowserId, scrollbars, \
+          (not(revBrowserGet(sBrowserId, scrollbars))) 
+    end browserToggleScrollbars
 
 
 >*Note:*  For general information on using the browser library, see the

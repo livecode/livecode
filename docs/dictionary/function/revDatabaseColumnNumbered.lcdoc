@@ -52,7 +52,7 @@ that <variable>.
 Description:
 Use the <revDatabaseColumnNumbered> <function> to obtain the contents of
 a given <database field>, in the current <record> of the specified
-<record set (database cursor)(glossary)>.
+<record set>.
 
 If you specify a <holderVariable>, the data is placed in that
 <variable>. Otherwise, the data is <return|returned> by the <function>.
@@ -84,7 +84,7 @@ revDatabaseColumnCount (function), revCurrentRecord (function),
 revDatabaseColumnNamed (function), revDatabaseColumnLengths (function),
 revDatabaseColumnIsNull (function), LiveCode custom library (glossary),
 return (glossary), variable (glossary),
-record set (database cursor) (glossary), record (glossary),
+record set (glossary), record (glossary),
 Standalone Application Settings (glossary),
 standalone application (glossary), database field (glossary),
 string (keyword), Database library (library)

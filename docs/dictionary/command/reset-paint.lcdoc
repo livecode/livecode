@@ -41,7 +41,7 @@ The <reset paint> <command> assigns the following <property>
 * The polySides <property> is set to 4.
 * The roundEnds <property> is set to false.
 * The slices <property> is set to 16.
-* The spray <property> is set to 31<a/>.
+* The spray <property> is set to 31.
 
 
 References: reset cursors (command), reset (command), revert (command),

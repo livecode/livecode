@@ -6,8 +6,8 @@ Syntax: of
 
 Summary:
 Designates the <object(glossary)> a <property> belongs to, or the
-<parameter> of a <function>, or the <string> that contains a <chunk
-expression>. 
+<parameter> of a <function>, or the <string> that contains a 
+<chunk expression>. 
 
 Introduced: 1.0
 

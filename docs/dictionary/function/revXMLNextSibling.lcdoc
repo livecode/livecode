@@ -5,8 +5,8 @@ Type: function
 Syntax: revXMLNextSibling(<treeID>, <siblingNode>, [incText] )
 
 Summary:
-<return|Returns> the path to a <child node|child node's> next <sibling
-node>. 
+<return|Returns> the path to a <child node|child node's> next 
+<sibling node>. 
 
 Associations: xml library
 
@@ -26,8 +26,8 @@ put revXMLNextSibling(the currTree of me,thisNode) into nextNode
 
 Parameters:
 treeID:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
+The number returned by the <revXMLCreateTree> or <revXMLCreateTreeFromFile>
+function when you created the <XML tree>.
 
 siblingNode:
 The path to the node where you want to start.
@@ -62,7 +62,8 @@ If the <revXMLNextSibling> <function> encounters an error, it
 > checkbox is checked.
 
 References: function (control structure), revXMLRootNode (function),
-revXMLFirstChild (function), LiveCode custom library (glossary),
+revXMLFirstChild (function), revXMLCreateTree (function),
+revXMLCreateTreeFromFile (function), LiveCode custom library (glossary),
 sibling node (glossary), Standalone Application Settings (glossary),
 standalone application (glossary), return (glossary),
 child node (glossary), XML library (library), nodes (property)

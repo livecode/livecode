@@ -26,7 +26,8 @@ sort lines of myVar by random(the number of lines of myVar)
 
 Parameters:
 upperLimit:
-A number.
+Any positive number that would be rounded to an integer greater 
+than or equal to 1.
 
 Returns:
 The <random> <function> <return|returns> an <integer>.
@@ -44,8 +45,7 @@ To generate a random number between two integers, use a handler like
 this: 
 
     function randomInRange lowerLimit,upperLimit
-    return random(upperLimit - lowerLimit + 1) + lowerLimit - 1
-
+        return random(upperLimit - lowerLimit + 1) + lowerLimit - 1
     end randomInRange
 
 

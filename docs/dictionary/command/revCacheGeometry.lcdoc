@@ -24,7 +24,7 @@ if the rect of me is not savedRect then revCacheGeometry
 Description:
 Use the <revCacheGeometry> <command> to update the Geometry pane's
 internal settings, after changing the size or position of
-<control(object)|controls> that you have used the Geometry pane to
+<control|controls> that you have used the Geometry pane to
 specify behavior for.
 
 The <revCacheGeometry> <command> rebuilds the Geometry <pane|pane's>
@@ -41,7 +41,7 @@ normally updated automatically.
 Normally, you do not need to use the <revCacheGeometry> <command> at
 all, since LiveCode automatically updates the geometry settings when a
 <control> is moved or resized. However, if you move or resize
-<control(object)|controls> manually or in a <handler>, and the
+<control|controls> manually or in a <handler>, and the
 <resizeControl> or <moveControl> <message> is not sent, you may need to
 use the <revCacheGeometry> <command> to update the baseline positions.
 
@@ -68,7 +68,7 @@ group (glossary), standalone application (glossary), control (glossary),
 pane (glossary), command (glossary), Geometry library (library),
 library (library), moveControl (message), openBackground (message),
 startup (message), preOpenStack (message), openStack (message),
-resizeControl (message), preOpenCard (message), control (object)
+resizeControl (message), preOpenCard (message)
 
 Tags: ui
 

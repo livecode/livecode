@@ -23,8 +23,8 @@ Description:
 Handle the <searchKey> message to perform an action when the search
 button is pressed.
 
-The <searchKey> message is sent to the current card of the <default
-stack> when the hardware search button is pressed.
+The <searchKey> message is sent to the current card of the 
+<default stack> when the hardware search button is pressed.
 
 References: backKey (message), menuKey (message),
 default stack (property)

@@ -1,0 +1,1 @@
+# Ensure extension resources are found in macOS standalones

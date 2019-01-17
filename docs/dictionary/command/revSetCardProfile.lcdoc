@@ -28,9 +28,7 @@ The profileName specifies which profile to use.
 
 stackName:
 The short name of an open stack. If you don't specify a stack, the
-current card of the topStack is changed. >*Note:* Although the
-revSetCardProfile command changes a card, you specify a stack name, not
-a card name.
+current card of the topStack is changed. 
 
 Description:
 Use the <revSetCardProfile> <command> to change <property> settings on a

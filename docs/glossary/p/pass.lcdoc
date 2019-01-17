@@ -5,8 +5,8 @@ Synonyms: pass, passed, passing
 Type: glossary
 
 Description:
-To relinquish a <message> to the next <object(glossary)> in the <message
-path>. 
+To relinquish a <message> to the next <object(glossary)> in the 
+<message path>. 
 
 Also, to send data from one <handler> to another; to share data between
 <handler|handlers>. 

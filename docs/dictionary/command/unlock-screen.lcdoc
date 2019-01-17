@@ -32,16 +32,16 @@ unlock screen with visual barn door open to white with sound "Yelp"
 
 Parameters:
 effectName:
-Works as described in the <visual effect> command.
+Works as described in the <visual effect> <command>.
 
 speed:
-Works as described in the <visual effect> command.
+Works as described in the <visual effect> <command>.
 
 finalImage:
-Works as described in the <visual effect> command.
+Works as described in the <visual effect> <command>.
 
 audioClip:
-Works as described in the <visual effect> command.
+Works as described in the <visual effect> <command>.
 
 Description:
 Use the <unlock screen> <command> to allow changes to the screen
@@ -52,20 +52,21 @@ When all pending <handler|handlers> are finished <execute|executing>,
 the <lockScreen> <property> is automatically set to false.
 
 Changes:
-The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
-new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
-systems apart from pre OS X 10.8. The Windows build of LiveCode no
-longer supports any <QuickTime> features and setting the <dontUseQT> and
-<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
-not include 64 bit support and therefore can not be supported on OS X 64
-bit builds of LiveCode.
+From LiveCode version 8.1 for Mac, the use of <QuickTime> is deprecated with
+new defaults for <dontUseQT> and <dontUseQTEffects> being set to true on all
+systems from macOS 10.8. Additionally <QuickTime> does not include 64 bit 
+support and therefore can not be supported on macOS 64-bit builds of LiveCode.
+Also, the Windows build of LiveCode version 8.1 deprecates all <QuickTime> 
+features, so setting <dontUseQT> and <dontUseQTEffects> will have no effect. 
 
 References: allowFieldRedraw (property), command (glossary), 
 dontUseQT (property), dontUseQTEffects (property), execute (glossary), 
 handler (glossary), lock (glossary), lock screen (command), 
-lockScreen (property), property (glossary), unlock colorMap (command), 
+lockScreen (property), property (glossary), 
+QuickTime (glossary), unlock colorMap (command), 
 unlock cursor (command), unlock error dialogs (command), 
-unlock moves (command), unlock recent (command)
+unlock moves (command), unlock recent (command),
+visual effect (command)
 
 Tags: ui
 

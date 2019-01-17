@@ -30,8 +30,8 @@ reduces the memory required by your <stack>, because the movie or sound
 data is only <loaded into memory> when it's being used, rather than
 being <loaded into memory> whenever the <stack file> is open. However,
 it also makes it possible for the movie or sound data to be misplaced
-during distribution, since the <file> is separate from your <stack
-file>. 
+during distribution, since the <file> is separate from your 
+<stack file>. 
 
 A player is contained in a card, group, or background. Players cannot 
 contain other objects.

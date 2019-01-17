@@ -810,7 +810,12 @@ IO_stat MCWidget::save(IO_handle p_stream, uint4 p_part, bool p_force_ext, uint3
     // Make the widget generate a rep.
 	MCAutoValueRef t_rep;
 	if (m_widget != nil)
+    {
 		MCWidgetOnSave(m_widget, &t_rep);
+        // A widget might not have an OnSave handler (e.g. colorswatch widget)
+        if (*t_rep == nil)
+            t_rep = kMCNull;
+    }
 	else if (m_rep != nil)
 		t_rep = m_rep;
 	else

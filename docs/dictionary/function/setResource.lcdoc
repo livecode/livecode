@@ -38,9 +38,15 @@ resName (string):
 
 flagsList:
 A list that can contain one or more flag characters. The possible
-resource flags are as follows: S System heap U Purgeable L Locked P
-Protected R Preload C Compressed resourceThe flags may be listed in any
-order. If a character is included, its corresponding resource flag is
+resource flags are as follows: 
+- S System heap 
+- U Purgeable 
+- L Locked 
+- P Protected 
+- R Preload 
+- C Compressed resource
+
+The flags may be listed in any order. If a character is included, its corresponding resource flag is
 set to true. If the character is not included in the flagsList, its
 corresponding resource flag is set to false. If the flagsList is empty,
 all the flags are set to false.
@@ -60,9 +66,9 @@ Use the <setResource> <function> to create a <resource> or change its
 data. 
 
 If the <destinationFile> does not exist, the <setResource> <function>
-creates the <file>. If the <destinationFile> exists but has no <resource
-fork>, the <setResource> function creates the <resource fork> and copies
-the <resource> to it.
+creates the <file>. If the <destinationFile> exists but has no 
+<resource fork>, the <setResource> function creates the <resource fork> 
+and copies the <resource> to it.
 
 If the specified resource already exists, the <setResource> <function>
 replaces the data in the <resource> with the <data>. Otherwise, the
@@ -92,4 +98,3 @@ deleteResource (function), resource fork (glossary), resource (glossary),
 Mac OS (glossary), return (glossary), resfile (keyword), file (keyword)
 
 Tags: file system
-

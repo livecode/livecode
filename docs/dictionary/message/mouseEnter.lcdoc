@@ -36,19 +36,27 @@ If two controls overlap, a <mouseEnter> <message> is sent whenever the
 <control> that is completely hidden by another <control> on top of it
 will never receive a <mouseEnter> <message>.
 
-If the mouse button is down when the mouse pointer enters the control,
-no <mouseEnter> <message> is sent unless the mouse button is released
+If the mouse button is down when the <mouse pointer> enters the <control>,
+the <mouseEnter> <message> is not sent unless the mouse button is released
 while the pointer is still in the <control>.
 
-If a control is shown (by changing its visible <property> to true or
+If a <control> is shown (by changing its visible <property> to true or
 using the <show> <command>), and the <mouse pointer> is over the
 <control> when it is shown, LiveCode sends a <mouseEnter> <message> to
 the <control>.
 
+>*Note:* Take care when using both <mouseEnter> and <mouseLeave> in the
+> same <control> that an unintentional infinite <loop> may be invoked. 
+> To prevent a <loop>, use a condition in the <mouseLeave> <message> handler
+> to ensure the <mouse pointer> is still outside of the <control> or
+> in the <mouseEnter> <message> to check the <mouse pointer> is still inside
+> the <control>.
+
 References: show (command), mouseControl (function), property (glossary),
 highlight (glossary), Browse tool (glossary), message (glossary),
 mouse pointer (glossary), command (glossary), object (glossary),
-control (keyword), dragEnter (message), button (object)
+control (keyword), dragEnter (message), button (object), mouseLeave (message),
+loop (glossary)
 
 Tags: ui
 

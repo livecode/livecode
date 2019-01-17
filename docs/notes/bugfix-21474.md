@@ -1,0 +1,1 @@
+# Fix unresponsive stack after drag and drop

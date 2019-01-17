@@ -24,6 +24,7 @@ import android.content.res.*;
 import android.widget.*;
 import android.util.*;
 import android.content.pm.PackageManager;
+import android.graphics.*;
 
 // This is the main activity exported by the application. This is
 // split into two parts, a customizable sub-class that gets dynamically
@@ -76,6 +77,15 @@ public class LiveCodeActivity extends Activity
         
         // prevent soft keyboard from resizing our view when shown
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        
+        s_main_layout.getRootView().getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener()
+        {
+            @Override
+            public void onGlobalLayout()
+            {
+                s_main_view.updateKeyboardVisible();
+            }
+        });
 	}
 
 	@Override

@@ -1,0 +1,1 @@
+# Fix failure to load HTML5 standalones when mainstack is greater than 1MB

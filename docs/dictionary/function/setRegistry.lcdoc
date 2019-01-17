@@ -84,9 +84,9 @@ Changes:
 The type parameter was added in version 2.0. In previous versions, the
 type information could not be set.
 
-References: function (control structure), deleteRegistry (function),
-MCISendString (function), file (glossary), error message (glossary),
-binaryEncode (glossary), return (glossary), Windows (glossary),
+References: function (control structure), binaryEncode (function),
+deleteRegistry (function), MCISendString (function), file (glossary), 
+error message (glossary), return (glossary), Windows (glossary),
 binary file (glossary), registry (glossary), binary (glossary),
 command (glossary), behavior (glossary), default (keyword),
 string (keyword)

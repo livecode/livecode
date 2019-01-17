@@ -26,8 +26,8 @@ Returns (bool):
 The <revIsSpeaking> <function> <return|returns> true or false.
 
 Description:
-Use the <revIsSpeaking> <function> to avoid interrupting a <text to
-speech|speech>. 
+Use the <revIsSpeaking> <function> to avoid interrupting a 
+<text to speech|speech>. 
 
 If you execute the <revSpeak> <command> while the computer is already
 speaking, the first speech is stopped and the second speech begins

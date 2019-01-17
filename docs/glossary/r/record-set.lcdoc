@@ -15,8 +15,8 @@ Deprecated:
 database cursor
 
 Description:
-In a <database>, the set of <record|records> returned by a <SQL
-query|query>. 
+In a <database>, the set of <record|records> returned by a 
+<SQL query|query>. 
 
 You can use commands in the <Database library> to move among the subset
 of <record|records> that makes up a record set.

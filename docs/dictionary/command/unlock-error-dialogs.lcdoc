@@ -18,7 +18,7 @@ Example:
 unlock error dialogs
 
 Example:
-if the platform is not "Windows" then unlock error dialogs
+if the platform is not "Win32" then unlock error dialogs
 
 Description:
 Use the <unlock error dialogs> <command> to allow LiveCode to display

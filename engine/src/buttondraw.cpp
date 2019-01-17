@@ -580,9 +580,6 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
                 drawdirectionaltext(dc, rect.x + leftmargin, starty, t_name, m_font);
 			}
 			
-			if (t_use_alpha_layer)
-				dc->end();
-
 			// MW-2012-01-27: [[ Bug 9432 ]] Native GTK handles focus borders itself
 			//   so don't render the win95-style one.
 			if (MClook == LF_WIN95 && !IsNativeGTK() && state & CS_KFOCUSED && !(flags & F_AUTO_ARM) && !white)
@@ -627,6 +624,12 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
 			}
 		}
+        
+        if (t_use_alpha_layer)
+        {
+            dc->end();
+        }
+        
 		if (flags & F_DISABLED && MClook == LF_MOTIF)
 			dc->setfillstyle(FillSolid, nil, 0 , 0);
 		if (indicator && !(flags & F_SHOW_ICON)

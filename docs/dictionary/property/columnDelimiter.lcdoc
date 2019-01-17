@@ -45,4 +45,4 @@ only for the current handler and setting it in one handler does not
 affect its value in other handlers called.
 
 References: combine (command), split (command), split (command), 
-character (keyword)
+tab (constant), character (keyword)

@@ -35,9 +35,8 @@ prevent the <scrollbar> from being created.
 
 References: copy (command), clone (command), paste (command),
 pass (control structure), object (glossary), trap (glossary),
-message (glossary), templateScrollbar (glossary), tool (glossary),
-message path (glossary), templateScrollbar (keyword), scrollbar (keyword),
-script (property)
+message (glossary), tool (glossary), message path (glossary), 
+templateScrollbar (keyword), scrollbar (keyword), script (property)
 
 Tags: objects
 

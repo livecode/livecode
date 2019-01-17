@@ -723,7 +723,7 @@ public:
 	
 	// MW-2011-09-12: [[ MacScroll ]] The 'next' scroll setting (i.e. what it should be with
 	//   current menubar and such).
-	int32_t getnextscroll(void);
+	int32_t getnextscroll(bool p_ignore_opened);
 	// MW-2011-09-12: [[ MacScroll ]] Return the current scroll setting of the stack.
 	int32_t getscroll(void) const;
 	// MW-2011-09-12: [[ MacScroll ]] Apply any necessary scroll setting, based on current

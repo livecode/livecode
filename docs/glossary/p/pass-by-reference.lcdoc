@@ -18,7 +18,7 @@ its name with the <@> character in the called <handler|handler's> first
 line. 
 
 References: handler (glossary), parameter (glossary), variable (glossary),
-local variable (glossary), @ (glossary), call (glossary)
+local variable (glossary), call (glossary), @ (keyword)
 
 Tags: properties
 

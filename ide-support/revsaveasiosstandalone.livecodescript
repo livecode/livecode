@@ -311,21 +311,26 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       set the itemDelimiter to "."
       put item 1 to -2 of tSourceFile into tSourceName
       
+      if there is a file tLib then
+         put tSourceFile into tCopiedExternals[tSourceName]["location"]
+      else
+         create folder (pAppBundle & "/Frameworks")
+         put "Frameworks/" & tSourceFile into tCopiedExternals[tSourceName]["location"]
+      end if
+      
       if pTarget is "Device" then
          put "extension-code-resource" into tCopiedExternals[tSourceName]["type"]
          put tLib into tCopiedExternals[tSourceName]["arm"]
-         put tSourceFile into tCopiedExternals[tSourceName]["location"]
       else
          --!TODO Add support for static libraries and frameworks by linking the engine for a simulator build
          if there is a file tLib then
             revSBCopyFileToFile tLib, pAppBundle & slash & tSourceFile, "revStandaloneProgressCallback", the long id of me
          else
             -- framework
-            revSBCopyFolderToDestination tLib, pAppBundle, "revStandaloneProgressCallback", the long id of me
+            revSBCopyFolderToDestination tLib, pAppBundle & "/Frameworks", "revStandaloneProgressCallback", the long id of me
          end if
          put "extension-code-resource" into tCopiedExternals[tSourceName]["type"]
          put tLib into tCopiedExternals[tSourceName]["sim"]
-         put tSourceFile into tCopiedExternals[tSourceName]["location"]
       end if
    end repeat
    
@@ -333,6 +338,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    -- MM-2012-09-18: Use the new copied externals array instead of the copy files.
    --
    local tDeployExternals, tLibraryMappings
+   if pSettings["ios,library"] is not empty then
+      put pSettings["ios,library"] & return after tLibraryMappings 
+   end if
    repeat for each key tExternalName in tCopiedExternals
       local tExternalRec
       put tCopiedExternals[tExternalName] into tExternalRec
@@ -455,12 +463,12 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
                      put "-force_load" && quote & tCopiedExternals[tLinkExt][tInstSet] & "/" & tFileName & quote & return after tLinkCommand
                   else
                      -- dynamic framework iOS 8+
-                     revSBCopyFolderToDestination tCopiedExternals[tLinkExt][tInstSet], pAppBundle, "revStandaloneProgressCallback", the long id of me
+                     revSBCopyFolderToDestination tCopiedExternals[tLinkExt][tInstSet], pAppBundle & "/Frameworks", "revStandaloneProgressCallback", the long id of me
                      if tCopiedExternals[tLinkExt][tInstSet] ends with ".framework" then
                         -- remove simulator slices
                         -- if we are copying a bundle these can only be used for resources
                         local tCopiedFrameworkBinary
-                        put quote & pAppBundle & "/" & tFileName & ".framework/" & tFileName  & quote into tCopiedFrameworkBinary
+                        put quote & pAppBundle & "/Frameworks/" & tFileName & ".framework/" & tFileName  & quote into tCopiedFrameworkBinary
                         repeat for each word tArch in "i386 x86_64"
                            get shell("lipo -remove" && quote & tArch & quote && "-output" && tCopiedFrameworkBinary && tCopiedFrameworkBinary)
                         end repeat
@@ -660,7 +668,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    
    -- delete the last LF
    delete last char of tDeploy["fontmappings"]
-
+   
    -- Make sure the standalone is generated with a unique uuid
    put uuid() into tDeploy["uuid"]
    
@@ -801,7 +809,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       --try
       -- Perform the codesigning of the main bundle
       local tResult
-      __CodesignFrameworks pAppBundle, tCertificate, tEntitlementsFile
+      __CodesignFrameworks pAppBundle & "/Frameworks", tCertificate, tEntitlementsFile
       put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & tCertificate & quote && \
             "--entitlements" && quote & tEntitlementsFile & quote && \
             quote & pAppBundle & quote) into tResult
@@ -968,8 +976,10 @@ private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle
          return & "ipad pro 12.9 portrait splash,-iPadProPortrait@2x" & return & "ipad pro 12.9 landscape splash,-iPadProLandscape@2x" & \
          return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-667h@2x" & \
          return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x" & \
-         return & "iphone X portrait splash,-812h@3x" & return & "iphone X landscape splash,-375h@3x")
-      get pSettings["ios," & item 1 of tType]
+         return & "iphone X portrait splash,-812h@3x" & return & "iphone X landscape splash,-375h@3x" & \
+         return & "iphone XR portrait splash,-896h@2x" & return & "iphone XR landscape splash,-414h@2x" & \
+         return & "iphone XSMAX portrait splash,-896h@3x" & return & "iphone X landscape splash,-414h@3x")
+      get pSettings["ios," & item 1 of tType] 
       if not (it begins with "/") then
          put pBaseFolder & slash before it
       end if
@@ -1441,7 +1451,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    -- AB-2017-05-31: Add more background modes
    local tBackgroundModes
    
-    if tEnableBackgroundExecution is empty then
+   if tEnableBackgroundExecution is empty then
       put "false" into tEnableBackgroundExecution
    end if
    
@@ -1685,7 +1695,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    replace "${STATUS_BAR_SOLID}" with "<" & tStatusBarSolid & "/>" in pPlist
    
-  -- the icons-related part of the plist is stored in sCFBundleIcons
+   -- the icons-related part of the plist is stored in sCFBundleIcons
    replace "${BUNDLE_ICONS}" with sCFBundleIcons in pPlist
    
    -- MM-2014-09-30: [[ iOS8 Support ]] Added new iOS 7 style entries for the splash screens
@@ -1699,9 +1709,17 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       if tIPhoneOrientation contains "Portrait" then
          put "Default-736h@3x|Default-736h|{414, 736}|Portrait" & return after tSplashScreens
          put "Default-812h@3x|Default-812h|{375, 812}|Portrait" & return after tSplashScreens
+         // iPhone XR
+         put "Default-896h@2x|Default-896h|{414, 896}|Portrait" & return after tSplashScreens
+         // iPhone XSMAX
+         put "Default-896h@3x|Default-896h|{414, 896}|Portrait" & return after tSplashScreens
       else
          put "Default-414h@3x|Default-414h|{414, 736}|Landscape" & return after tSplashScreens
          put "Default-375h@3x|Default-375h|{375, 812}|Landscape" & return after tSplashScreens
+         // iPhone XR
+         put "Default-414h@2x|Default-414h|{414, 896}|Landscape" & return after tSplashScreens
+         // iPhone XSMAX
+         put "Default-414h@3x|Default-414h|{414, 896}|Landscape" & return after tSplashScreens
       end if      
    end if   
    if 2 is among the items of tDeviceFamily then      
@@ -1775,7 +1793,10 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       // On iOS 11+ we need a new key NSLocationAlwaysAndWhenInUseUsageDescription AND the old NSLocationWhenInUseUsageDescription key, in case 
       // we want the app to access Location Services when it is used. If we want to access Location Services always, we need the old NSLocationAlwaysUsageDescription 
       // key too (i.e. 3 keys in total). Moreover, NSLocationAlwaysUsageDescription is required for backwards compatibility
-      if revIDEDeployIOSGetSDKVersions() contains "11" then
+      local tSdkVersion
+      put revIDEDeployIOSGetSDKVersions() into tSdkVersion
+      set the itemDel to "."
+      if item 1 of tSdkVersion >= 11 then
          get "<key>NSLocationAlwaysAndWhenInUseUsageDescription</key><string>This application requires access to Location Services</string>" & CR \
                & "<key>NSLocationWhenInUseUsageDescription</key><string>This application requires access to Location Services when in use</string>" 
          

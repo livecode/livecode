@@ -34,8 +34,8 @@ created for it. When the clip is finished, the <playStopped> <message>
 is sent to it.
 
 >*Note:* The <playStopped> <message> is sent when a <card(keyword)>
-> containing the <player(keyword)> closes and when the <player's
-> filename property> is changed. If the <player(object)> is hidden, or
+> containing the <player(keyword)> closes and when the 
+> player's <filename> is changed. If the <player(object)> is hidden, or
 > the movie or sound is not currently running, the message will still be
 > sent. To prevent a playStopped <handler> from being <execute|executed>
 > inappropriately, set the <lockMessages> to true before changing the
@@ -49,8 +49,8 @@ is sent to it.
 References: start (command), play (command), handler (glossary),
 player (glossary), message (glossary), command (glossary),
 execute (glossary), card (keyword), player (keyword),
-playPaused (message), player's filename property (object), card (object),
-player (object), lockMessages (property), filename (property)
+playPaused (message), card (object), player (object), 
+filename (property), lockMessages (property), filename (property)
 
 Tags: multimedia
 

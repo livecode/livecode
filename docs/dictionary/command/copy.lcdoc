@@ -69,6 +69,9 @@ the <clipboard> (including text styles).
 > crosses <line> boundaries, the <copy> <command> copies the entire
 > <line> or <line|lines> containing the <chunk>.
 
+>*Note:* Copy operations that result in an object being placed on the 
+> clipboard are not supported on mobile devices.
+
 References: select (command), doMenu (command), undo (command),
 cut (command), paste (command), clone (command), group (command),
 place (command), clipboard (function), copyResource (function),

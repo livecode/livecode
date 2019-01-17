@@ -5,8 +5,8 @@ Type: property
 Syntax: set the pointerFocus to {true | false}
 
 Summary:
-Specifies whether typed text is sent to the window under the <mouse
-pointer> or to the frontmost window.
+Specifies whether typed text is sent to the window under the 
+<mouse pointer> or to the frontmost window.
 
 Introduced: 1.0
 
@@ -41,10 +41,10 @@ correctly.
 If the application is started from a Unix command line, this property
 can be set to true on startup by using the -pointerfocus option.
 
->*Cross-platform note:*  On <Mac OS>, <OS X>, and <Windows|Windows
-> systems>, setting the <pointerFocus> <property> to false changes
-> window activation in minor ways which are not particularly useful, and
-> has no other effect.
+>*Cross-platform note:*  On <Mac OS>, <OS X>, and 
+> <Windows|Windows systems>, setting the <pointerFocus> <property> 
+> to false changes  window activation in minor ways which are not 
+> particularly useful, and has no other effect.
 
 References: property (glossary), OS X (glossary),
 explicit focus (glossary), active window (glossary), Windows (glossary),

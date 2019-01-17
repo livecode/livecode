@@ -142,8 +142,8 @@ BOM is ignored.
 References: kill (command), close process (command),
 read from process (command), write to process (command),
 exit (control structure), screenName (function), command (glossary),
-OS X (glossary), textDecode (glossary), Windows (glossary),
-Mac OS (glossary), Unix (glossary), textEncode (glossary),
+OS X (glossary), textDecode (function), Windows (glossary),
+Mac OS (glossary), Unix (glossary), textEncode (keyword),
 background (glossary), process (glossary), characters (keyword),
 hideConsoleWindows (property)
 

@@ -5,7 +5,9 @@ Type: command
 Syntax: revMoveToRecord <recordSetId>, <recordNumber>
 
 Summary:
-Moves to the specified record in a record set (database cursor).
+Moves to the specified record in a <record set>.
+
+Associations: database library
 
 Introduced: 3.5
 
@@ -61,5 +63,6 @@ command will not be supported. The error
 
 References: revMoveToPreviousRecord (command),
 revMoveToNextRecord (command), result (function),
-function (glossary), revOpenDatabase (function)
+function (glossary), revOpenDatabase (function),
+record set (glossary), Database library (library)
 

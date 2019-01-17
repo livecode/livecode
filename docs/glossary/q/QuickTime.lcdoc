@@ -12,13 +12,12 @@ Also, a <file> <format> that can hold video or sound information (a
 QuickTime <movie>).
 
 Changes:
-The use of <QuickTime> was deprecated in version 8.1 of LiveCode with
-new defaults for <dontUseQT> and <dontUseQTEffects> as true on all
-systems apart from pre OS X 10.8. The Windows build of LiveCode no
-longer supports any <QuickTime> features and setting the <dontUseQT> and
-<dontUseQTEffects> will have no effect. Additionally <QuickTime> does 
-not include 64 bit support and therefore can not be supported on OS X 64
-bit builds of LiveCode.
+From LiveCode version 8.1 for Mac, the use of <QuickTime> is deprecated with
+new defaults for <dontUseQT> and <dontUseQTEffects> being set to true on all
+systems from macOS 10.8. Additionally <QuickTime> does not include 64 bit 
+support and therefore can not be supported on macOS 64-bit builds of LiveCode.
+Also, the Windows build of LiveCode version 8.1 deprecates all <QuickTime> 
+features, so setting <dontUseQT> and <dontUseQTEffects> will have no effect. 
 
 References: format (glossary), file (glossary), movie (glossary),
 dontUseQT (property), dontUseQTEffects (property)

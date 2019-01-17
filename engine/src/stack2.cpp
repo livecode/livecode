@@ -548,7 +548,13 @@ Boolean MCStack::takewindow(MCStack *sptr)
 	flags &= ~(F_TAKE_FLAGS | F_VISIBLE);
 	flags |= sptr->flags & (F_TAKE_FLAGS | F_VISIBLE);
 	decorations = sptr->decorations;
-	rect = sptr->rect;
+    rect = sptr->rect;
+    
+    // sptr has not been closed so may still have a scroll while this stack has been closed
+    // so has had clearscroll called on it so scroll will be 0. applyscroll is called later.
+    rect.height += getnextscroll(true);
+    m_scroll = 0;
+    
 	minwidth = sptr->minwidth;
 	minheight = sptr->minheight;
 	maxwidth = sptr->maxwidth;
@@ -949,13 +955,13 @@ void MCStack::updatemenubar()
 
 // MW-2011-09-12: [[ MacScroll ]] Compute the scroll as it should be now taking
 //   into account the menubar and such.
-int32_t MCStack::getnextscroll()
+int32_t MCStack::getnextscroll(bool p_ignore_opened)
 {
 #ifdef _MACOSX
 	MCControl *mbptr;
 	if (!(state & CS_EDIT_MENUS) && hasmenubar()
 	        && (mbptr = curcard->getchild(CT_EXPRESSION, MCNameGetString(getmenubar()), CT_GROUP, CT_UNDEFINED)) != NULL
-	        && mbptr->getopened() && mbptr->isvisible())
+	        && (p_ignore_opened || mbptr->getopened()) && mbptr->isvisible())
 	{
 		MCRectangle r = mbptr->getrect();
 		return (r.y + r.height);
@@ -2114,10 +2120,13 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		setparentstack(parentptr);
 	
 	// IM-2014-01-16: [[ StackScale ]] Ensure view has the current stack rect
-	view_setstackviewport(rect);
-	
-	if (window == NULL)
+	// If we have a window then set the viewport after opening to cover lockscreen
+    bool t_had_window = window != NULL;
+	if (!t_had_window)
+    {
+        view_setstackviewport(rect);
 		createwindow();
+    }
 
 	if (substacks != NULL)
 		opened++;
@@ -2125,7 +2134,12 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	{
 		MCObject::open();
 	}
-
+    
+    if (t_had_window)
+    {
+        view_setstackviewport(rect);
+    }
+    
 	MCRectangle trect;
 	switch (mode)
 	{

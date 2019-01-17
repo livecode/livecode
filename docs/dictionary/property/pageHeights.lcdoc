@@ -32,9 +32,9 @@ full of text.
 
 You can use the <pageHeights> <property> to print the entire contents of
 a <field(keyword)> by printing the <field(keyword)>, setting the
-<field(object)|field's> <scroll> to the first line of the <pageHeights>,
-printing the <field(keyword)> again, setting the <scroll> to the current
-<scroll> plus line 2 of the <pageHeights>, and so on.
+<field(object)|field's> <vScroll> to the first line of the <pageHeights>,
+printing the <field(keyword)> again, setting the <vScroll> to the current
+<vScroll> plus line 2 of the <pageHeights>, and so on.
 
 The computations used by the <pageHeights> <property> assume the
 <field(object)|field's> <borderWidth> <property> is set to zero and its
@@ -43,7 +43,7 @@ The computations used by the <pageHeights> <property> assume the
 References: textHeightSum (function), property (glossary),
 integer (glossary), field (keyword), line (keyword), field (object),
 borderWidth (property), formatForPrinting (property), pixels (property),
-margins (property), scroll (property)
+margins (property), vScroll (property)
 
 Tags: printing
 

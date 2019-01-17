@@ -38,21 +38,14 @@ The four items of an object's <rectangle> describe the
 <object|object's> left, top, right, and bottom edges:
 
 * The <left> is the number of <pixels> between the left edge of the 
-
 <stack window> and the leftmost pixel of the <object(glossary)>.
-
 * The <top> is the number of <pixels> between the top edge of the 
-
 <stack window> and the topmost pixel of the <object(glossary)>.
-
 * The <right> is the horizontal distance in <pixels> between the left 
-
 edge of the <stack window> and the rightmost pixel of the 
 <object(glossary)>.
-
 * The <bottom> is the vertical distance in <pixels> between the top
-  edge of the <stack window> and the bottommost pixel of the 
-
+edge of the <stack window> and the bottommost pixel of the 
 <object(glossary)>.
 
 >*Note:* The sides of an <object|object's> <rectangle> specify the
@@ -92,10 +85,8 @@ rectangle.
 >*Note:*As of version 6.0 the effective rect property of stacks returns 
 > the rect of the given stack with its decorations and frame taken into 
 > account. The effective rect of a stack can also be set. Here, the
-> rect 
-> of the frame of the stack will be set appropriately before setting
-> the 
-> rect of the stack.
+> rect of the frame of the stack will be set appropriately before setting
+> the rect of the stack.
 
 Changes:
 The use of the effective keyword with the rectangle property was 

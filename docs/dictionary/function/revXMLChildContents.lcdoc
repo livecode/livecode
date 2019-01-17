@@ -29,8 +29,8 @@ put revXMLChildContents(tTreeId, "root", tab, return, "full", -1) into tChildPat
 
 Parameters:
 treeID:
-The number returned by the revXMLCreateTree or revXMLCreateTreeFromFile
-function when you created the XML tree.
+The number returned by the <revXMLCreateTree> or <revXMLCreateTreeFromFile>
+function when you created the <XML tree>.
 
 startNode:
 The path to the node where you want to start.
@@ -42,12 +42,13 @@ nodeDelim (string):
 A string that separates each child node from the rest.
 
 includePathDetails:
-The includePathDetails can take the following values:   - "false" : just
-the name of each node is returned (default) - "true" : includes which
-child number each node is in brackets after its name - "full" : the full
-path of each node is returned including child numbers in brackets where
-required - "relative" : a path relative to startNode is included with
-child numbers in brackets where required
+The includePathDetails can take the following values:  
+- "false" : just the name of each node is returned (default)
+- "true" : includes which child number each node is in brackets after its name
+- "full" : the full path of each node is returned including child numbers in brackets 
+where required
+- "relative" : a path relative to startNode is included with child numbers in brackets 
+where required
 
 depth:
 The depth specifies how many generations of the XML tree to show. If you
@@ -85,7 +86,8 @@ string "Text" when called with "root" as the <startNode> and 1 as the
 > checkbox is checked.
 
 References: revXMLAppend (command), function (control structure),
-revXMLAttributes (function), revXMLNumberOfChildren (function),
+revXMLAttributes (function), revXMLCreateTree (function),
+revXMLCreateTreeFromFile (function), revXMLNumberOfChildren (function),
 LiveCode custom library (glossary),
 Standalone Application Settings (glossary), tag (glossary),
 standalone application (glossary), return (glossary), XML tree (glossary),

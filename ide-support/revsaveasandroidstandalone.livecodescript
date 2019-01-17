@@ -108,7 +108,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    dispatch "revIDEDeployAndroidInitialize" to stack "revDeployLibrary"
    
    -- If we're searching for inclusions, do it here 
-   local tConfirm
+   local tConfirm, tResult
    put true into tConfirm
    if pSettings["inclusions"] is "search" then 
       put false into tConfirm
@@ -122,8 +122,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    -- Make sure all dependencies are included
    revSBUpdateForDependencies "android", "armv6", , pSettings
    revSBEnsurePerExtensionSettings "android", pSettings
-   if the result is not empty then
-      return the result
+   put the result into tResult
+   if tResult is not empty then
+      throw tResult
    end if
    
    -- Manually remove built-in implementations from detected script library inclusions
@@ -357,7 +358,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       if the result is not empty then
          throw "Cannot find the template Manifest"
       end if
-      replace "${LABEL}" with textEncode(pSettings["android,label"], "utf-8") in tManifest
+      local tEscapedLabel
+      put escapeLabel(pSettings["android,label"]) into tEscapedLabel
+      replace "${LABEL}" with textEncode(tEscapedLabel, "utf-8") in tManifest
       replace "${NAME}" with ".mblandroid" in tManifest
       replace "${IDENTIFIER}" with pSettings["android,identifier"] in tManifest
       replace "${VERSION_NAME}" with pSettings["android,version name"] in tManifest
@@ -382,7 +385,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       replace "${ORIENTATION}" with tInitialOrientation in tManifest
       
       replace "${MIN_SDK_VERSION}" with pSettings["android,minimum version"] in tManifest
-     
+      
       local tUsesFeature, tUsesPermission, tFeatures, tPermissions, tAd
       repeat for each key tFeature in pSettings["android,device capabilities"]
          put "  <uses-feature android:name="&quote&"android."&tFeature&quote&" android:required="&quote&"${REQUIRED}"&quote&" />" into tUsesFeature
@@ -753,7 +756,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       
       local tResourceClasses
       generateResourceClasses tBuildFolder, tResBuildFolder, \
-         tManifestFile, pSettings, tResourceClasses
+            tManifestFile, pSettings, tResourceClasses
       if the result is not empty then
          throw "could not build R.java" & return & the result
       end if
@@ -786,7 +789,11 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       
       put tExternals into pSettings["externals"]
       
-      put "revsecurity:./librevsecurity" into pSettings["android,library"]
+      if pSettings["android,library"] is empty then
+         put "revsecurity:./librevsecurity" into pSettings["android,library"]
+      else
+         put return & "revsecurity:./librevsecurity" after pSettings["android,library"]
+      end if
       repeat for each line tEntry in tExternals
          put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
       end repeat
@@ -1017,6 +1024,17 @@ end revSaveAsMobileStandaloneMain
 
 ################################################################################
 
+private function escapeLabel pLabel
+   replace "&" with "&amp;" in pLabel
+   replace "@" with "\@" in pLabel
+   replace "?" with "\?" in pLabel
+   replace "<" with "&lt;" in pLabel
+   replace ">" with "&gt;" in pLabel
+   replace "'" with "\'" in pLabel
+   replace quote with "\" & quote in pLabel
+   return pLabel
+end escapeLabel
+   
 private command processAaptResult @xResult   
    -- MW-2012-07-04: On Linux, 'aapt' can complain about libz version info
    --   so we delete that line from the result before checking for an error.
@@ -1189,6 +1207,10 @@ private command addAssetsFromFolderToArchive pFolder, pBaseName, pArchive, @pFon
    -- Ignore any .svn folders
    if the last item of pFolder is ".svn" then
       exit addAssetsFromFolderToArchive
+   end if
+
+   if char -1 of pFolder is slash then
+      delete char -1 of pFolder
    end if
    
    local tOldFolder

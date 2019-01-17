@@ -1,0 +1,1 @@
+# Ensure stack vScroll due to a menubar on Mac is handled correctly when opening a card in an existing window

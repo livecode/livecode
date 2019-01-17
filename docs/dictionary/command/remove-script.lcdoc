@@ -31,8 +31,8 @@ the <message path>.
 You can remove a script only if it has previously been inserted in the
 message path with the <insert script> <command>. The <remove script>
 <command> does not affect <object|objects> that are normally in the
-<message path> or <script|scripts> that were placed in the <message
-path> with the <start using> <command>.
+<message path> or <script|scripts> that were placed in the 
+<message path> with the <start using> <command>.
 
 References: start using (command), stop using (command),
 insert script (command), backScripts (function), frontScripts (function),

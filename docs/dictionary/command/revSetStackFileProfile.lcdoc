@@ -28,9 +28,7 @@ The profileName specifies which profile to use.
 
 stackName:
 The short name of an open stack. If you don't specify a stack, the stack
-file that the topStack belongs to is changed. >*Note:* Although the
-revSetStackFileProfile command changes a stack file, you specify a stack
-name, not a file name.
+file that the topStack belongs to is changed. 
 
 Description:
 Use the <revSetStackFileProfile> <command> to change <property> settings
@@ -47,12 +45,12 @@ to the settings you specified. This helps you quickly switch the
 appearance and behavior of the <object(glossary)> without needing to set
 its <properties> individually.
 
-The <revSetStackFileProfile> <command> changes the current <property
-profile|profile> of the specified <stack>, all the <stacks> in the same
-<stack file>, and all the <object|objects> in all these <stacks>. If an
-<object(glossary)> does not have a <property profile|profile> with the
-specified <profileName>, the <object|object's> <properties> are not
-changed. 
+The <revSetStackFileProfile> <command> changes the current 
+<property profile|profile> of the specified <stack>, all the <stacks> in 
+the same <stack file>, and all the <object|objects> in all these 
+<stacks>. If an <object(glossary)> does not have a 
+<property profile|profile> with the specified <profileName>, the 
+<object|object's> <properties> are not changed. 
 
 >*Important:*  The <revSetStackFileProfile> <command> is part of the
 > <Profile library>. To ensure that the <command> works in a 

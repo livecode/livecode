@@ -40,8 +40,8 @@ Description:
 Use the <revVideoGrabDialog> <command> to specify settings for use with
 the <video grabber>.
 
-You must use the revInitializeVideoGrabber <command> to open the <video
-grabber> before you can use the <revVideoGrabDialog> <command>.
+You must use the revInitializeVideoGrabber <command> to open the 
+<video grabber> before you can use the <revVideoGrabDialog> <command>.
 
 Use the <settingsType> <parameter> to specify which <dialog box> you
 want to show.
@@ -73,7 +73,8 @@ video capture (glossary), VFW (glossary),
 Standalone Application Settings (glossary), QuickTime (glossary),
 statement (glossary), standalone application (glossary),
 parameter (glossary), video grabber (glossary), dialog box (glossary),
-LiveCode custom library (glossary), Video library (library)
+LiveCode custom library (glossary), Video library (library),
+dontUseQT (property), dontUseQTEffects (property)
 
 Tags: multimedia
 

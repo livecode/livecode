@@ -47,7 +47,7 @@ bit builds of LiveCode.
 
 References: QuickTime VR (glossary), message (glossary),
 property (glossary), player (keyword), hotspotClicked (message),
-currentNode (property)
+currentNode (property), dontUseQT (property), dontUseQTEffects (property)
 
 Tags: multimedia
 

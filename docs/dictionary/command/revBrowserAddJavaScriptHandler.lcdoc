@@ -18,13 +18,13 @@ Security: network
 
 Example:
 local tBrowserID
-put revOpenBrowserCef(the windowId \
+put revBrowserOpenCef(the windowId \
       of this stack, "http://www.livecode.com" ) into tBrowserID
 revBrowserAddJavaScriptHandler tBrowserID, "myLiveCodeHandler"
 
 Parameters:
 instanceID:
-the ID of the browser instance returned by the revOpenBrowser function.
+the ID of the browser instance returned by the <revBrowserOpen> function.
 
 handlerName:
 the name of a LiveCode handler in the script of the card / stack
@@ -44,9 +44,8 @@ any parameters given to the JavaScript function.
 A LiveCode card has the following handler:
 
     on myLiveCodeHandler pID, pArg1, pArg2
-
-    answer "Browser ID" && pID &&
-    "called myLiveCodeHandler with arguments" && pArg1 && "and" && pArg2
+        answer "Browser ID" && pID &&
+        "called myLiveCodeHandler with arguments" && pArg1 && "and" && pArg2
     end myLiveCodeHandler
 
 
@@ -60,14 +59,13 @@ handler via the registered function:
 
 
     if (tIsRevBrowser)
-
-    liveCode.myBrowserHandler(tValue1, tValue2);
+        liveCode.myBrowserHandler(tValue1, tValue2);
 
 
 References: revBrowserStop (command), revBrowserPrint (command),
 revBrowserSet (command), revBrowserMakeTextBigger (command),
 revBrowserNavigate (command), revBrowserRemoveJavaScriptHandler (command),
-revBrowserClose (command), revBrowserOpenCef (function),
+revBrowserClose (command), revBrowserOpen (function), revBrowserOpenCef (function),
 browserOver (message), browserNewInstance (message),
 browserNewUrlWindow (message), browserDownloadRequest (message),
 browserNavigateCompleteFrame (message)

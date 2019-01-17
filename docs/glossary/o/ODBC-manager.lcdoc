@@ -5,8 +5,8 @@ Synonyms: odbc manager
 Type: glossary
 
 Description:
-A utility program that manages <database> connections made via <Open
-Database Connectivity (ODBC)|ODBC>.
+A utility program that manages <database> connections made via 
+<Open Database Connectivity|ODBC>.
 
 Typically, you use an ODBC manager program to create one or more
 <DSN|DSNs> with all the information needed to communicate with a
@@ -14,7 +14,7 @@ Typically, you use an ODBC manager program to create one or more
 <revOpenDatabase> <function> to communicate with that <database>.
 
 References: revOpenDatabase (function), DSN (glossary),
-Open Database Connectivity (ODBC) (glossary), database (glossary),
+Open Database Connectivity (glossary), database (glossary),
 function (glossary)
 
 Tags: database

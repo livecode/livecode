@@ -20,8 +20,8 @@ Example:
 subtract sixth line of me from first line of me
 
 Description:
-Use the <sixth> <keyword> in an <object reference> or <chunk
-expression>. 
+Use the <sixth> <keyword> in an <object reference> or 
+<chunk expression>. 
 
 The <sixth> <keyword> can be used to specify any <object(glossary)>
 whose <number> <property> is 6. It can also be used to designate the

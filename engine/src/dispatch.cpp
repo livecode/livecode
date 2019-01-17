@@ -1705,7 +1705,7 @@ MCDragAction MCDispatch::wmdragdrop(Window w)
 		dodrop(false);
 
     // The drag operation has ended. Remove the drag board contents.
-	MCmousestackptr = nil;
+    MCmousestackptr = findstackd(w);
     MCdragboard->Clear();
 	m_drag_target = false;
 
@@ -2050,7 +2050,7 @@ check:
             MCU_geturl(*ctxt, MCNameGetString(p_name), &t_output);
             // SN-2014-05-09 [[ Bug 12409 ]] Fields in LC 7 fail to display binfile url imagesource
             // isempty is not what we want to use, since it returns false for a cleared result
-			if (MCresult->isclear())
+			if (MCresult->isclear() || MCresult->isempty())
             {
                 MCAutoDataRef t_data;
 

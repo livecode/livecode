@@ -438,7 +438,7 @@ bool MCImageGetRepForFileWithStackContext(MCStringRef p_filename, MCStack *p_sta
 		// else try to resolve from stack file location
 		MCAutoStringRef t_path;
 		t_success = p_stack->resolve_relative_path(p_filename, &t_path);
-		if (t_success)
+		if (t_success && MCS_exists(*t_path, True))
 			t_success = MCImageRepGetDensityMapped(*t_path, t_rep);
 		
 		// else try to resolve from current folder
