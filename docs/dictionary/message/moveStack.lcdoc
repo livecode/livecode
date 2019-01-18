@@ -34,9 +34,12 @@ Description:
 Handle the <moveStack> <message> if you want to respond to movement of
 the <stack window>.
 
-The <moveStack> <message> is sent only if the user moved the <stack
-window>. This <message> is not sent when a <handler> moves the window by
-changing its <location>, <rectangle>, or other <properties>.
+The <moveStack> <message> is sent only if the user moved the 
+<stack window>. This <message> is not sent when a <handler> moves the 
+window by changing its <location>, <rectangle>, or other <properties>.
+
+>*Known issue:* Currently errors in <moveStack> and <resizeStack> are
+> ignored, as this was causing a hang in the IDE.
 
 References: grab (command), handler (glossary), current card (glossary),
 message (glossary), stack window (glossary), rectangle (glossary),
