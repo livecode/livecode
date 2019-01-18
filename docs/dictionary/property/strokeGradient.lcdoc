@@ -33,65 +33,47 @@ gradient card of the property inspector which has full control over each
 parameter. The stroke gradient will be observed in the border lines of
 the shape. The allowed keys are as follows:
 
-strokeGradient["type"]
+* strokeGradient["type"] - The type of gradient. It can take the 
+following values: 
+  * "linear" 
+  * "radial"
+  * "conical"
+  * "spiral"
+  * "diamond"
+  * "xy"
+  * "sqrtxy"
 
-    The type of gradient, can take the values, "linear", "radial",
-    "conical", "spiral", "diamond", "xy", "sqrtxy"
+* strokeGradient["ramp"] - A return delimited list of gradient 
+stops that define the layout of the of the gradient. A gradient stop 
+is a comma delimited list of numbers that specify the following values: 
+  * position - a number between 0 and 1
+  * red, green, blue - numbers between 0 and 255
+  * alpha - number between 0 (transparent) and 255 (opaque), 
+if omitted it is assumed to be 255.
 
+* strokeGradient["from"] - A coordinate specifying the starting 
+point of the gradient
 
-strokeGradient["ramp"]
+* strokeGradient["to"] - A coordinate specifying the end point 
+of the gradient
 
-    A return delimited list of gradient  stops (see below) that define
-    the layout of the of the gradient.
+* strokeGradient["via"] - A coordinate specifying the intermediate 
+point of the gradient (affects scaling and shearing of the gradient)
 
+* strokeGradient["quality"] - The quality can be set to normal or good 
+(higher detail but slower). This property is normal by default.
 
-strokeGradient["from"]
+* strokeGradient["repeat"] - A number between 1 and 255 that specifies 
+the number of times the gradient ramp is repeated between the start and 
+end points. This property is 1 by default.
 
-    A coordinate specifying the starting point of the gradient
+* strokeGradient["mirror"] - A boolean value specifying whether 
+alternating repetitions of the ramp are reversed. This property is false 
+by default.
 
-
-strokeGradient["to"]
-
-    A coordinate specifying the end point of the gradient
-
-
-strokeGradient["via"]
-
-    A coordinate specifying the intermediate point of the gradient
-    (affects scaling and shearing of the gradient)
-
-
-strokeGradient["quality"]        
-
-    The quality can be set to normal or good (higher detail but slower).
-    This property is normal by default.
-
-
-strokeGradient["repeat"]
-
-    A number between 1 and 255 that specifies the number of times the
-    gradient ramp is repeated between the start and end points. This
-    property is 1 by default.
-
-
-strokeGradient["mirror"]      
-
-    A boolean value specifying whether alternating repetitions of the
-    ramp are reversed. This property is false by default.
-
-
-strokeGradient["wrap"]
-
-    A boolean value specifying whether the ramp is repeated to fill the
-    entire graphic a object.    This property is false by default.
-
-
-A gradient stop is a comma is a comma delimited list of numbers that
-specify the following values: position - number between 0 and 1
-
-    red, green, blue - numbers between 0 and 255
-    alpha - number between 0 (transparent) and 255 (opaque), if omitted
-    it is assumed \ to be 255.
+*strokeGradient["wrap"] - A boolean value specifying whether the ramp is 
+repeated to fill the entire graphic a object. This property is false by 
+default.
 
 
 References: opaque (property), antialiased (property)

@@ -50,12 +50,12 @@ with <statRound> is not skewed upward, the way it is with the <round>
 <function>. Therefore, you should use <statRound> when statistical
 accuracy is required.
 
-A positive <precision> indicates a place to the right of the <decimal
-point>, and a <negative> <precision> indicates a place to the left. For
-example, 1 rounds off to the nearest tenth, 2 rounds off to the nearest
-hundredth, -1 rounds off by ten, and so on. If you don't specify a
-<precision>, zero is used, meaning that the <number> is rounded off to a
-whole number.
+A positive <precision> indicates a place to the right of the 
+<decimal point>, and a <negative> <precision> indicates a place to the 
+left. For example, 1 rounds off to the nearest tenth, 2 rounds off to the 
+nearest hundredth, -1 rounds off by ten, and so on. If you don't specify 
+a <precision>, zero is used, meaning that the <number> is rounded off to 
+a whole number.
 
 >*Note:* The <statRound> <function> is equivalent to
 > <HyperCard|HyperTalk's> "round" <function>.

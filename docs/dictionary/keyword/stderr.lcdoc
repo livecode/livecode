@@ -5,8 +5,8 @@ Type: keyword
 Syntax: stderr
 
 Summary:
-Used with the <write to file> <command> to designate the <standard
-error> location.
+Used with the <write to file> <command> to designate the 
+<standard error> location.
 
 Introduced: 1.0
 
@@ -18,8 +18,8 @@ Example:
 write field 3 to stderr
 
 Description:
-Use the <stderr> <keyword> to write error messages to the <standard
-error> location, usually the screen or console window.
+Use the <stderr> <keyword> to write error messages to the 
+<standard error> location, usually the screen or console window.
 
 On Unix systems, error messages from a program are normally displayed on
 the console, but can be redirected to go to another device, process, or

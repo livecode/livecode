@@ -5,7 +5,7 @@ Type: property
 Syntax: set the style of <object> to <styleName>
 
 Summary:
-Specifies the general appearance and behavior of an <object(object)>.
+Specifies the general appearance and behavior of an <object(glossary)>.
 
 Associations: button
 
@@ -94,8 +94,8 @@ following:
 
 
 References: modeless (command), pulldown (command), object (glossary),
-property (glossary), behavior (glossary), opaque (glossary),
-regular polygon (glossary), checkbox (glossary), Motif (glossary),
+property (glossary), behavior (glossary), regular polygon (glossary), 
+checkbox (glossary), Motif (glossary),
 appearance (glossary), background (glossary), standard (keyword),
 opaque (keyword), popup (keyword), shadow (keyword), scrollbar (object),
 graphic (object), field (object), stack (object), roundEnds (property),
