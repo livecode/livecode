@@ -63,8 +63,10 @@ true.)
 > scroll is not included in the <pNewHeight> and <pOldHeight>. This means 
 > that the <parameter|parameters> of the <resizeStack> 
 > <message(keyword)> are always equal to the stack's <height> before
-> and 
-> after resizing, regardless of the <vScroll> setting.
+> and  after resizing, regardless of the <vScroll> setting.
+
+>*Known issue:* Currently errors in <moveStack> and <resizeStack> are
+> ignored, as this was causing a hang in the IDE.
 
 References: revChangeWindowSize (command), lock screen (command),
 object (glossary), property (glossary), current card (glossary),
