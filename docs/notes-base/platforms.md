@@ -93,7 +93,6 @@ It will run on the following versions of Android:
 * 6.0 (Marshmallow)
 * 7.x (Nougat)
 * 8.x (Oreo)
-* 9.x (Pie)
 
 To enable deployment to Android devices, you need to download the
 [Android SDK](https://developer.android.com/sdk/index.html#Other), and
