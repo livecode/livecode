@@ -39,12 +39,11 @@ The <sin> <function> repeats every 2*pi <radian|radians>:
 for any value of x.
 
 The <sin> <function> requires its input to be in <radian|radians>. To
-provide an angle in <degree|degrees>, use the following <custom
-function>:
+provide an angle in <degree|degrees>, use the following 
+<custom function>:
 
     function sinInDegrees angleInDegrees
-    return sin(angleInDegrees * pi / 180)
-
+        return sin(angleInDegrees * pi / 180)
     end sinInDegrees
 
 

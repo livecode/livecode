@@ -365,10 +365,36 @@ bool MCExecContext::ConvertToData(MCValueRef p_value, MCDataRef& r_data)
 
 bool MCExecContext::ConvertToName(MCValueRef p_value, MCNameRef& r_name)
 {
-    if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeName)
+    
+    switch(MCValueGetTypeCode(p_value))
     {
-        r_name = MCValueRetain((MCNameRef)p_value);
-        return true;
+        case kMCValueTypeCodeName:
+        {
+            r_name = MCValueRetain((MCNameRef)p_value);
+            return true;
+        }
+            
+        case kMCValueTypeCodeString:
+        {
+            return MCNameCreate((MCStringRef)p_value,
+                                r_name);
+        }
+            
+        case kMCValueTypeCodeNumber:
+        {
+            index_t t_index;
+            if (MCNumberStrictFetchAsIndex((MCNumberRef)p_value,
+                                           t_index))
+            {
+                return MCNameCreateWithIndex(t_index,
+                                             r_name);
+            }
+            else
+                break;
+        }
+            
+        default:
+            break;
     }
     
     MCAutoStringRef t_string;

@@ -22,8 +22,8 @@ A <brushID> is a built-in brush number between 1 and 36. (These brushes
 correspond to LiveCode's built-in patterns 101 to 136.)
 
 An <imageID> is the ID of an <image> to use for painting with the spray
-can. LiveCode looks for the specified <image> first in the <current
-stack>, then in other open <stacks>.
+can. LiveCode looks for the specified <image> first in the 
+<current stack>, then in other open <stacks>.
 
 By default, the <spray> is set to 34 (a round splatter pattern).
 

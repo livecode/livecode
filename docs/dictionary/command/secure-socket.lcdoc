@@ -78,9 +78,10 @@ it).
 
 References: open socket (command),
 Standalone Application Settings (glossary), command (glossary),
-LiveCode custom library (glossary), SSL & Encryption library (library),
-message (glossary), socketError (message),
-property (glossary), sslCertificates (property)
+LiveCode custom library (glossary), 
+standalone application (glossary), SSL & Encryption library (library), 
+message (glossary), socketError (message), property (glossary), 
+sslCertificates (property)
 
 Tags: file system
 

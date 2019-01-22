@@ -80,6 +80,6 @@ verified against. Support has now been added to locate and load the root
 certificates installed (and kept up to date) as part of the OS.
 
 References: encrypt (command), Standalone Application Settings (glossary),
-property (glossary), LiveCode custom library (glossary),
-SSL & Encryption library (library)
+standalone application (glossary), property (glossary), 
+LiveCode custom library (glossary), SSL & Encryption library (library)
 

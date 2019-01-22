@@ -181,6 +181,9 @@ on androidDevicesChanged
    
    put empty into sAvailableDevices
    repeat for each line tDevice in tDevices
+      if tDevice contains "no serial number" then
+         put quote&quote into word 1 to -2 of tDevice
+      end if
       put word 2 of tDevice into sAvailableDevices[word 1 of tDevice]
    end repeat
    

@@ -107,21 +107,21 @@ Centered Hello World
 Left-aligned Hello unicodeString
 
 This would transpire as the following array:
-1 =
-style = { textAlign = center }
-runs =
-1 = { text = Centered  }
-2 =
-style = { textStyle = bold }
-text = Hello
-3 = { text =  World }
-2 =
-runs =
-1 = { text = Left-aligned  }
-2 =
-style = { textColor = 255,0,0 }
-text = Hello
-3 = { unicodeText = unicodeString }
+    1 =
+      style = { textAlign = center }
+      runs =
+        1 = { text = Centered  }
+        2 =
+          style = { textStyle = bold }
+          text = Hello
+        3 = { text =  World }
+    2 =
+      runs =
+        1 = { text = Left-aligned  }
+        2 =
+          style = { textColor = 255,0,0 }
+          text = Hello
+        3 = { unicodeText = unicodeString }
 
 [ For brevity, single element arrays are represented using { ... }
 notation ]

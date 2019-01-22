@@ -23,8 +23,8 @@ By default, the <secureMode> <property> is set to false.
 
 Description:
 Use the <secureMode> <property> to lock down <file> access in situations
-where security is required: for example, for a kiosk application or <web
-server>. 
+where security is required: for example, for a kiosk application or 
+<web server>. 
 
 If the <secureMode> <property> is set to true, the <application> cannot
 use the <get>, <put>, <open file>, <read from file>, or <write to file>

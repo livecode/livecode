@@ -26,8 +26,8 @@ Description:
 Use the <size> <property> to judge how much memory an <object(glossary)>
 takes when displayed.
 
-The <size> of an <image>, <EPS|EPS object>, <audio clip>, or <video
-clip> is is the number of <byte|bytes> of disk space that the
+The <size> of an <image>, <EPS|EPS object>, <audio clip>, or 
+<video clip> is is the number of <byte|bytes> of disk space that the
 <object(glossary)> takes up.
 
 The <size> <property> of a <stack> is always 10000. For <stacks>, this
