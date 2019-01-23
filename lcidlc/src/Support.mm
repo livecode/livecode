@@ -1871,7 +1871,7 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 			{
 				const LCBytes *t_bytes;
 				t_bytes = va_arg(p_args, const LCBytes *);
-				t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsCData, &t_bytes);
+				t_error = (MCError) LCValueStore(t_argv[i], kLCValueOptionAsCData, (void *)t_bytes);
 			}
 			break;
                 
