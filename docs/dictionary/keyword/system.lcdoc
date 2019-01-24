@@ -22,8 +22,8 @@ Use the <system> <keyword> to correctly format dates and times that will
 be viewed by the user (for example, dates and times that are displayed
 in a <field>).
 
-The <system> <format> is set by the Date & Time control panel (on <Mac
-OS|Mac OS systems>), the Date control panel (on <Windows|Windows
+The <system> <format> is set by the Date & Time control panel (on 
+<Mac OS|Mac OS systems>), the Date control panel (on <Windows|Windows
 systems>), or the LANG environment variable (on <Unix|Unix systems>).
 
 You can use the <system> keyword in combination with the <long>,

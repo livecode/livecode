@@ -35,14 +35,13 @@ set the textStyle["bold"] of field "name" to true
 Value:
 The <textStyle> of an <object(glossary)> or <chunk> is either "plain",
 empty, "mixed", or one or more of the following, separated by commas:
-
-        - bold
-        - italic
-        - underline
-        - strikeout
-        - <box> 
-        - threeDbox
-        - link (or group)
+ - bold
+ - italic
+ - underline
+ - strikeout
+ - <box> 
+ - threeDbox
+ - link (or group)
 
 
 Description:
@@ -67,12 +66,12 @@ The "link" style can be used only for chunks of a field, not for
 objects. Setting the <textStyle> of a <chunk> to "link" turns it into a
 <grouped text|text group>.
 
-the <textStyle> [&lt;style&gt;]
+    the <textStyle> [&lt;style&gt;]
 
 Here, style can be one of bold, condensed, expanded, italic, oblique,
-box, threedbox, underline, strikeout, link. For example
+box, threedbox, underline, strikeout, link. For example:
 
-set the <textStyle> ["bold"] of field 1 to true
+    set the <textStyle> ["bold"] of field 1 to true
 
 Changes:
 The "link" style was introduced in version 1.1. In previous versions,

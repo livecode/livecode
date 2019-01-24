@@ -7,8 +7,8 @@ Syntax: set the systemFileSelector to {true | false}
 Summary:
 Specifies whether the <ask file>, <answer file>, and <answer folder>
 <command|commands> use the standard <file dialog box|file dialog boxes>
-built in to the current operating system, or a built-in <file dialog
-box>. 
+built in to the current operating system, or a built-in 
+<file dialog box>. 
 
 Introduced: 1.0
 
