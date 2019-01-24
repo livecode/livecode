@@ -832,7 +832,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
             // field, so we assume that we must process it.
 			if (!curinfo->live || curinfo->keymove == KM_KEY_DOWN || deadcharfollower || isInAltPlusSequence)
 			{
-				// Pressing Alt and the key "+" starts a number-typing sequence.
+				// Pressing Alt starts a number-typing sequence.
 				//  Otherwise, we are not in such a sequence - be it because a normal
 				//  char has been typed, or because the sequence is terminated.
 				isInAltPlusSequence = (MCmodifierstate == MS_ALT);
