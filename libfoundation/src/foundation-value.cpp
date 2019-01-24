@@ -588,11 +588,17 @@ bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_v
 
 void __MCValueDestroy(__MCValue *self)
 {
-	if ((self -> flags & kMCValueFlagIsInterred) != 0)
-		__MCValueUninter(self);
-
     MCValueTypeCode t_code;
     t_code = __MCValueGetTypeCode(self);
+    
+	if ((self -> flags & kMCValueFlagIsInterred) != 0)
+    {
+        if (t_code != kMCValueTypeCodeName)
+        {
+            __MCValueUninter(self);
+        }
+    }
+
 	switch(t_code)
 	{
 	case kMCValueTypeCodeNull:

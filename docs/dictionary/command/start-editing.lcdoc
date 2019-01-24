@@ -43,9 +43,9 @@ group-editing mode, using the fonts and colors of the <stack> the
 <stop editing> <command>, the <group(glossary)|group's> correct
 appearance is restored.
 
->*Note:* The <start editing> <command> temporarily modifies the <object
-> hierarchy>, displaying only the <object|objects> that belong to the
-> <group(command)> being edited. <inheritance|Inherited> font and color
+>*Note:* The <start editing> <command> temporarily modifies the 
+> <object hierarchy>, displaying only the <object|objects> that belong to 
+> the <group(command)> being edited. <inheritance|Inherited> font and color
 > <properties> may not appear correctly while the <group(command)> is
 > being edited, but will be restored whhen you exit group-editing mode.
 > Also, if the <start editing> <command> is included in a <handler>,

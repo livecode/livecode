@@ -74,8 +74,8 @@ depending on the <object type>:
   the <scrollbar>.
 
 
-* The <shadowColor> of a <graphic>, <player>, <audio clip>, <video
-  clip>, or <EPS|EPS object> has no effect.
+* The <shadowColor> of a <graphic>, <player>, <audio clip>, 
+  <video clip>, or <EPS|EPS object> has no effect.
 
 
 * The <shadowColor> of an <image(keyword)> is the seventh color in the

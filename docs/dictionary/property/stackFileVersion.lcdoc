@@ -28,8 +28,8 @@ the <stack version> directly, as an optional parameter of the <save>
 Use the <stackFileVersion> to obtain or change the default stack file
 format version LiveCode uses when saving stacks.
 
-Setting the <stackFileVersion> to something less than the newest <stack
-version> could result in data being lost when stacks are saved. For
+Setting the <stackFileVersion> to something less than the newest 
+<stack version> could result in data being lost when stacks are saved. For
 example, setting the <stackFileVersion> to 7.0 will cause any widgets in
 the stack to be lost, along with their scripts and properties.
 
@@ -53,5 +53,5 @@ Changes:
 Deprecated from version 8.0.0.
 
 
-References: save (command), stack version (glossary),
+References: save (command), command (glossary), stack version (glossary),
 minStackFileVersion (property)

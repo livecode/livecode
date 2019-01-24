@@ -67,8 +67,8 @@ do two successive sorts to create subcategories within the major sort
 categories. For example, to sort the cards of a stack by ZIP code and
 sort within each ZIP code by last names, use these two statements:
 
-sort cards by field "Last Name"
-sort cards numeric by field "ZIP code"
+    sort cards by field "Last Name"
+    sort cards numeric by field "ZIP code"
 
 The 'text' and 'international' forms are affected by the caseSensitive
 and formSensitive properties.

@@ -34,8 +34,8 @@ value (string):
 
 
 Description:
-Use the <set> <command> to change the setting of a <property> or <custom
-property>. 
+Use the <set> <command> to change the setting of a <property> or 
+<custom property>. 
 
 If you specify a property that doesn't exist, LiveCode creates a custom
 property with that name for the <object(glossary)>.

@@ -5,8 +5,8 @@ Type: keyword
 Syntax: stdin
 
 Summary:
-Used with the <read from file> <command> to designate the <standard
-input>. 
+Used with the <read from file> <command> to designate the 
+<standard input>. 
 
 Introduced: 1.0
 

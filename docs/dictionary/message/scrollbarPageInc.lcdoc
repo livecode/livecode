@@ -28,8 +28,8 @@ The new position of the scrollbar thumb.
 
 Description:
 Handle the <scrollbarPageInc> <message> if you want to respond to the
-user clicking in the gray region below or to the right of the <scrollbar
-thumb>. 
+user clicking in the gray region below or to the right of the 
+<scrollbar thumb>. 
 
 Dragging the scrollbar thumb does not send a <scrollbarPageInc>
 <message>. 

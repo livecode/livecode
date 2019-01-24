@@ -5,8 +5,8 @@ Type: keyword
 Syntax: stdout
 
 Summary:
-Used with the <write to file> <command> to designate the <standard
-output>. 
+Used with the <write to file> <command> to designate the 
+<standard output>. 
 
 Introduced: 1.0
 
@@ -18,8 +18,8 @@ Example:
 write field 3 to stdout
 
 Description:
-Use the <stdout> <keyword> to write data to the <standard output,
-(glossary)>usually the screen or console window.
+Use the <stdout> <keyword> to write data to the 
+<standard output (glossary)>, usually the screen or console window.
 
 On Unix systems, output from a program is normally written to the
 screen, but can be redirected to go to another device, process, or file.
@@ -42,7 +42,7 @@ Support for using <stdout> on <OS X|OS X systems> was added in version
 2.0. 
 
 References: write to process (command), write to file (command),
-standard output (glossary), keyword (glossary),  (glossary),
+standard output (glossary), keyword (glossary),
 command (glossary), OS X (glossary), stdin (keyword), stderr (keyword)
 
 Tags: file system

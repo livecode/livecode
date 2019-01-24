@@ -5,8 +5,8 @@ Type: keyword
 Syntax: URL
 
 Summary:
-Designates a <container> consisting of an Internet <resource> or <local
-file> in the form of a <URL(glossary)>.
+Designates a <container> consisting of an Internet <resource> or 
+<local file> in the form of a <URL(glossary)>.
 
 Introduced: 1.0
 
@@ -46,8 +46,8 @@ on textRead
 end textRead
 
 Description:
-Use the <URL(keyword)> <keyword> to access the contents of a <local
-file> or a <file(glossary)> accessible on the Web.
+Use the <URL(keyword)> <keyword> to access the contents of a 
+<local file> or a <file(glossary)> accessible on the Web.
 
 A <URL(keyword)> is a method of designating a <file(glossary)> or other
 <resource>. You can use a <URL(keyword)> like any other <container>. You
@@ -75,17 +75,15 @@ schemes>, see [RFC 1630](https://tools.ietf.org/html/rfc1630).
 >*Important:*  The <http>, <ftp> and <https> <keyword|keywords> are
 > part 
 > of the <Internet library> on desktop <platform|platforms>. To ensure 
-> that the <keyword|keywords> work in a desktop <standalone
-> application>, 
-> you must include this <LiveCode custom library|custom library> when 
-> you create your <standalone application|standalone>. In the
-> Inclusions 
+> that the <keyword|keywords> work in a desktop 
+> <standalone application>,  you must include this 
+> <LiveCode custom library|custom library> when you create your 
+> <standalone application|standalone>. In the Inclusions 
 > pane of the <Standalone Application Settings> window, make sure the 
 > "Internet" script library is selected.
 
 >*Cross-platform note:* On iOS and Android, you can use the <http>,
-> <ftp> 
-> and <https> <keyword|keywords> without the need for the 
+> <ftp> and <https> <keyword|keywords> without the need for the 
 > <Internet library>. When specifying <URL(glossary)|URLs> for iOS and 
 > Android, you must use the appropriate form that conforms to 
 > [RFC 1630](https://tools.ietf.org/html/rfc1630). 
@@ -98,7 +96,7 @@ URLs when working on fully cross platform applications.
 
 Changes:
 As of LiveCode 7.0.0, the <URL> <keyword> has been upgraded to
-understand <Unicode> files when using URL ("<file(keyword):"). If the
+understand <Unicode> files when using URL ("<file(keyword)>:"). If the
 <file(glossary)> located at the path has a Byte Order Mark at its
 beginning, then <URL(keyword)> will decode the <file(glossary)>
 according to that Byte Order Mark (UTF-8, UTF-16BE, UTF-16LE, UTF-32BE
@@ -110,9 +108,11 @@ References: launch url (command), libURLSetAuthCallback (command),
 libURLSetExpect100 (command), load (command), urlEncode (function),
 binary file (glossary), command (glossary), container (glossary),
 expression (glossary), file (glossary), FTP (glossary),
-keyword (glossary), library (glossary), local file (glossary),
+keyword (glossary), LiveCode custom library (glossary),
+local file (glossary),
 platform (glossary), resource (glossary), resource fork (glossary),
-server (glossary), text file (glossary), Unicode (glossary),
+server (glossary), standalone application (glossary),
+text file (glossary), Unicode (glossary),
 URL (glossary), URL scheme (glossary), web server (glossary),
 binfile (keyword), file (keyword), ftp (keyword), http (keyword),
 resfile (keyword), URL (keyword), Internet library (library),

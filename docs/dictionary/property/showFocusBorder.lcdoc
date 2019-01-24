@@ -53,8 +53,8 @@ The focusBorder of <card|cards> and <stacks> has no effect.
 References: modeless (command), focus (command), modal (command),
 stacks (function), object (glossary), property (glossary), EPS (glossary),
 insertion point (glossary), dialog box (glossary), Unix (glossary),
-active control (glossary), field (keyword), card (object), image (object),
-field (object), control (object), focusPattern (property),
+active control (glossary), control (glossary), field (keyword), 
+card (object), image (object), field (object), focusPattern (property),
 properties (property)
 
 Tags: ui

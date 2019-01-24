@@ -9,8 +9,8 @@ The place where the output, or result, of a program is directed.
 
 Usually, the standard output is the <command line|command-line> window
 by default. On <Unix|Unix systems>, the standard output can be
-redirected to a <file>, a printer, or another port or device. On <OS
-X|OS X systems>, the standard output is the Console window.
+redirected to a <file>, a printer, or another port or device. On 
+<OS X|OS X systems>, the standard output is the Console window.
 
 References: file (glossary), Unix (glossary), OS X (glossary),
 command line (glossary)

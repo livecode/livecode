@@ -27,8 +27,8 @@ The new position of the scrollbar thumb.
 
 Description:
 Handle the <scrollbarPageDec> <message> if you want to respond to the
-user clicking in the gray region above or to the left of the <scrollbar
-thumb>. 
+user clicking in the gray region above or to the left of the 
+<scrollbar thumb>. 
 
 Dragging the scrollbar thumb does not send a <scrollbarPageDec>
 <message>. 

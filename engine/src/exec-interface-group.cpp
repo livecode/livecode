@@ -139,8 +139,6 @@ void MCGroup::SetRadioBehavior(MCExecContext& ctxt, uint32_t part, bool setting)
 	bool t_dirty;
 	t_dirty = changeflag(setting, F_RADIO_BEHAVIOR);
 
-	if (flags & F_RADIO_BEHAVIOR)
-		flags |= F_TAB_GROUP_BEHAVIOR;
 	radio(part, kfocused);
 	radio(part, mfocused);
 
