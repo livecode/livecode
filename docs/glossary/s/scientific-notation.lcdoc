@@ -10,7 +10,7 @@ a <value> between one and ten, multiplied by the appropriate power of
 ten. 
 
 >*Note:* Whenever a string takes the form xEy in LiveCode, where x is a 
-> number and y is in an <integer>, it is interpreted as a number in 
+> number and y is an <integer>, it is interpreted as a number in 
 > scientific notation. This means that such a string is evaluated as 
 > x*10^y. For example:
 
