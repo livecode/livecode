@@ -36,6 +36,12 @@ Use the <=> (equality) <operator> to find out whether two <numeric>
 <expression|expressions> yield the same number or whether two
 <string|strings> are equivalent.
 
+>*Note:* A string in the form "xEy", where x is a number and y is an
+>integer will be treated as a number in <scientific notation>. This 
+>means that such a string is evaluated as x * 10^y. For example:
+
+    put "5e2" = "500" -- returns true
+
 When comparing strings, the <=> <operator> compares the two
 <value|values> <character> by <character>. If the <caseSensitive>
 <property> is true, the comparison between two <string|strings> treats
@@ -75,7 +81,8 @@ Previously, comparing two arrays would have converted both arrays into
 the empty string, and always returned true.
 
 References: property (glossary), operator (glossary),
-case-sensitive (glossary), value (glossary), string (glossary),
+case-sensitive (glossary), scientific notation (glossary),
+value (glossary), string (glossary),
 expression (glossary), character (keyword), numeric (keyword),
 &lt;&gt; (operator), contains (operator), caseSensitive (property)
 
