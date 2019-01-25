@@ -40,7 +40,7 @@ Use the <=> (equality) <operator> to find out whether two <numeric>
 >integer will be treated as a number in <scientific notation>. This 
 >means that such a string is evaluated as x * 10^y. For example:
 
-    put "5e2" = "500" -- returns true
+    put "3e2" = "300" -- returns true
 
 When comparing strings, the <=> <operator> compares the two
 <value|values> <character> by <character>. If the <caseSensitive>

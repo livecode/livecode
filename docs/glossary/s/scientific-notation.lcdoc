@@ -14,7 +14,7 @@ ten.
 > scientific notation. This means that such a string is evaluated as 
 > x*10^y. For example:
 
-    
+    put 1e2 is 100 -- returns true    
 
 References: format (glossary), integer (glossary), value (glossary)
 
