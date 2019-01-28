@@ -95,9 +95,9 @@ at the end of each <statementList>. This ensures that only one
 
 This also means that you can attach more than one <caseValue> or
 <caseCondition> to the same <statementList>, simply by placing one
-<case> line above the next. The following example beeps if the <current
-card> is either the last or first <card>, and goes to the next <card>
-otherwise: 
+<case> line above the next. The following example beeps if the 
+<current card> is either the last or first <card>, and goes to the 
+next <card> otherwise: 
 
     switch (the number of this card)
     case 1
@@ -121,7 +121,8 @@ more slowly the <switch> <control structure|structure>
 > <command> and appears in the <commandNames>.
 
 References: switch (control structure), if (control structure),
-break (control structure), value (function), commandNames (function),
+break (control structure), repeat (control structure), 
+try (control structure), value (function), commandNames (function),
 current card (glossary), value (glossary), execute (glossary),
 statement (glossary), keyword (glossary), expression (glossary),
 control structure (glossary), evaluate (glossary), command (glossary),

@@ -29,8 +29,8 @@ a text entry box.
 
 If no <themeClass> is specified, the engine will auto-detect the
 appropriate type based on the properties of the object. To retrieve this
-auto-detected type when the property is empty use <the effective
-themeClass>. 
+auto-detected type when the property is empty use the <effective>
+<themeClass>. 
 
 Unlike many other appearance-related properties, the <themeClass>
 property is not inherited.

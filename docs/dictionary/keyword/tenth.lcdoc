@@ -20,8 +20,8 @@ Example:
 multiply the tenth word of tCurrentAmounts by ten
 
 Description:
-Use the <tenth> <keyword> in an <object reference> or <chunk
-expression>. 
+Use the <tenth> <keyword> in an <object reference> or 
+<chunk expression>. 
 
 The <tenth> <keyword> can be used to specify any <object(glossary)>
 whose <number> <property> is 10. It can also be used to designate the

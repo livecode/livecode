@@ -35,9 +35,10 @@ the <properties> of the <templateVideoClip> does not affect existing
 The properties of the <templateVideoClip> can be returned to the default
 settings using the <reset> command.
 
-You can refer to the <templateVideoClip> using any of the following
-forms: templateVideoClip
+You can refer to the <templateVideoClip> using any of the 
+following forms: 
 
+    templateVideoClip
     the templateVideoClip
     templateVideoClip()
 
