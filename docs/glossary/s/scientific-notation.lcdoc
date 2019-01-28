@@ -9,7 +9,14 @@ A way of <format|formatting> numbers where the number is represented as
 a <value> between one and ten, multiplied by the appropriate power of
 ten. 
 
-References: format (glossary), value (glossary)
+>*Note:* Whenever a string takes the form xEy in LiveCode, where x is a 
+> number and y is an <integer>, it is interpreted as a number in 
+> scientific notation. This means that such a string is evaluated as 
+> x*10^y. For example:
+
+    put 1e2 is 100 -- returns true    
+
+References: format (glossary), integer (glossary), value (glossary)
 
 Tags: math
 
