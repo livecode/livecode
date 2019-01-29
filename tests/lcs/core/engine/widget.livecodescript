@@ -86,6 +86,19 @@ on TestWidgetThrowInOnCreate
    delete stack "WidgetThrowOnSaveTest"
 end TestWidgetThrowInOnCreate
 
+on TestSetReadOnlyPropOfWidget
+   local tSVG
+   create widget "mySVG" as "com.livecode.widget.svgpath"
+   put it into tSVG
+   TestAssertThrow "set read-only prop", \
+         "_TestSetReadOnlyPropOfWidgetError", the long id of me, \ 
+         "EE_PROPERTY_CANTSETOBJECT", tSVG
+end TestSetReadOnlyPropOfWidget
+
+private command _TestSetReadOnlyPropOfWidgetError pWidget
+   set the scaledWidth of pWidget to 100
+end _TestSetReadOnlyPropOfWidgetError
+
 on TestWidgetRetainRep
    create stack "WidgetRetainRepTest"
    set the defaultStack to "WidgetRetainRepTest"
