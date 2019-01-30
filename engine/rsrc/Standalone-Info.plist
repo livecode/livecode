@@ -49,6 +49,11 @@
 	<true/>
 	<key>LFPrefersCarbon</key>
 	<true/>
+	<key>LSEnvironment</key>
+	<dict>
+		<key>MallocNanoZone</key>
+		<string>0</string>
+	</dict>
 	<key>LSGetAppDiedEvents</key>
 	<true/>
 	<key>NSAppleScriptEnabled</key>
