@@ -362,7 +362,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put escapeLabel(pSettings["android,label"]) into tEscapedLabel
       replace "${LABEL}" with textEncode(tEscapedLabel, "utf-8") in tManifest
       replace "${NAME}" with ".mblandroid" in tManifest
-      replace "${IDENTIFIER}" with pSettings["android,identifier"] in tManifest
+      local tLegalizedIdentifier
+      put legalizeIdentifier(pSettings["android,identifier"]) into tLegalizedIdentifier
+      replace "${IDENTIFIER}" with tLegalizedIdentifier in tManifest
       replace "${VERSION_NAME}" with pSettings["android,version name"] in tManifest
       replace "${VERSION_CODE}" with pSettings["android,version code"] in tManifest
       if there is a file tIcon then
@@ -1034,6 +1036,11 @@ private function escapeLabel pLabel
    replace quote with "\" & quote in pLabel
    return pLabel
 end escapeLabel
+
+private function legalizeIdentifier pIdentifier
+   replace "-" with "_" in pIdentifier
+   return pIdentifier
+end legalizeIdentifier
    
 private command processAaptResult @xResult   
    -- MW-2012-07-04: On Linux, 'aapt' can complain about libz version info
