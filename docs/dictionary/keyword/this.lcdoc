@@ -7,8 +7,8 @@ Type: keyword
 Syntax: this
 
 Summary:
-Indicates the <current stack>, or the <current card> of the <current
-stack>. 
+Indicates the <current stack>, or the <current card> of the 
+<current stack>. 
 
 Introduced: 1.0
 
@@ -27,8 +27,8 @@ Example:
 send preOpenStack to this stack
 
 Description:
-Use the <this> <keyword> to indicate the <current card> or <current
-stack> in an <expression>.
+Use the <this> <keyword> to indicate the <current card> or 
+<current stack> in an <expression>.
 
 When used in a sort <command>, the <this> <keyword> indicates each
 <card(keyword)> to be sorted. You can use the <this> <keyword> to sort

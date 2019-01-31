@@ -20,8 +20,8 @@ Example:
 repeat until third line of tKeysPressed is "Control"
 
 Description:
-Use the <third> <keyword> in an <object reference> or <chunk
-expression>. 
+Use the <third> <keyword> in an <object reference> or 
+<chunk expression>. 
 
 The <third> <keyword> can be used to specify any <object(glossary)>
 whose <number> <property> is 3. It can also be used to designate the

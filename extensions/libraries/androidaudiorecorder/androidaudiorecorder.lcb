@@ -43,6 +43,8 @@ __safe foreign handler _JNI_MediaRecorderStop(in pRecorder as JObject) returns n
 	binds to "java:android.media.MediaRecorder>stop()V"
 __safe foreign handler _JNI_MediaRecorderReset(in pRecorder as JObject) returns nothing \
 	binds to "java:android.media.MediaRecorder>reset()V"
+__safe foreign handler _JNI_MediaRecorderRelease(in pRecorder as JObject) returns nothing \
+binds to "java:android.media.MediaRecorder>release()V"
 __safe foreign handler _JNI_MediaRecorderGetMaxAmplitude(in pRecorder as JObject) returns JInt \
     binds to "java:android.media.MediaRecorder>getMaxAmplitude()I"
 
@@ -188,7 +190,8 @@ public handler androidRecorderStopRecording()
 	end if
 	
 	_JNI_MediaRecorderStop(mRecorder)
-	_JNI_MediaRecorderReset(mRecorder)
+	_JNI_MediaRecorderRelease(mRecorder)
+    put nothing into mRecorder
 end handler
 
 /**

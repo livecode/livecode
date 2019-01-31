@@ -40,8 +40,8 @@ infinite (undefined). The <tan> <function> instead <return|returns> a
 very large number for such angles, due to internal number handling.
 
 The <tan> <function> requires its input to be in <radian|radians>. To
-provide an angle in <degree|degrees>, use the following <custom
-function>:
+provide an angle in <degree|degrees>, use the following 
+<custom function>:
 
     function tanInDegrees angleInDegrees
         return tan(angleInDegrees * pi / 180)

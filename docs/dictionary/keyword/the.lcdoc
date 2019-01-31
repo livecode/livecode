@@ -31,7 +31,6 @@ The <the> <keyword> is mandatory before the names of built-in
     get the time -- must use "the" if () are not used
     get time()   -- cannot use "the" if () are used
 
-
 The <the> <keyword> is optional before the names of <properties>, but it
 is good style to include it.
 

@@ -35,9 +35,8 @@ You can use the <set> <command> to set the <properties> of the
 <default>. This example creates a <radio button>:
 
     on makeRadio
-    set the style of the templateButton to "radioButton"
-    create button "Red" -- "Red" is a radio button
-
+        set the style of the templateButton to "radioButton"
+        create button "Red" -- "Red" is a radio button
     end makeRadio
 
 
