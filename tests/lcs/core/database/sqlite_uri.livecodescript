@@ -50,7 +50,7 @@ on TestBinaryWithOptionURI
    
    local tDatabaseFileReadWriteCreate 
    put lDatabaseDir & "/sqlite-uri.db?mode=rwc" into tDatabaseFileReadWriteCreate
-   __createDatabase tDatabaseFile, true
+   __createDatabase tDatabaseFileReadWriteCreate, true
    TestAssert "check creation of read-write-create SQLite database with uri option", lDatabaseID is a number
    __deleteDatabase tDatabaseFileReadWriteCreate
    
