@@ -40,13 +40,11 @@ on TestBinaryWithOptionURI
    put lDatabaseDir & "/sqlite-uri.db?mode=ro" into tDatabaseFileReadOnly
    __createDatabase tDatabaseFileReadOnly, true
    TestAssert "check creation of a read-only SQLite database with uri option", lDatabaseID is not a number
-   __deleteDatabase tDatabaseFileReadOnly
    
    local tDatabaseFileReadWrite  
    put lDatabaseDir & "/sqlite-uri.db?mode=rw" into tDatabaseFileReadWrite
    __createDatabase tDatabaseFileReadWrite, true
    TestAssert "check creation of SQLite read-write database with uri option", lDatabaseID is not a number
-   __deleteDatabase tDatabaseFileReadWrite
    
    local tDatabaseFileReadWriteCreate 
    put lDatabaseDir & "/sqlite-uri.db?mode=rwc" into tDatabaseFileReadWriteCreate
