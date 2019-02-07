@@ -25,8 +25,8 @@ By default, the <toggleHilites> <property> of newly created
 <field(object)|fields> is set to false.
 
 Description:
-Use the <toggleHilites> <property> to control the <behavior> of <list
-field|list fields>.
+Use the <toggleHilites> <property> to control the <behavior> of 
+<list field|list fields>.
 
 If a field's <toggleHilites> <property> is set to true, clicking a
 <selected> line deselects the line. If the <toggleHilites> is false,

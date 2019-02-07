@@ -27,14 +27,14 @@ stack:
 Any stack reference.
 
 Description:
-Use the <topLevel> <command> to display a <stack> in an <editable
-window>. 
+Use the <topLevel> <command> to display a <stack> in an 
+<editable window>. 
 
 An editable window can be resized (if its resizable <property> is true),
 and its <control|controls> can be <selected>, moved, and changed. To
-edit a <stack> of a different style (a <palette>, <modeless>, or <modal
-dialog box|modal dialog>), use the <topLevel> <command> to display it in
-an <editable window>.
+edit a <stack> of a different style (a <palette>, <modeless>, or 
+<modal dialog box|modal dialog>), use the <topLevel> <command> to 
+display it in an <editable window>.
 
 The <topLevel> <command> closes the <stack> and reopens it as an
 <editable window>, so <closeStack> and <openStack>, <closeCard> and
@@ -50,11 +50,11 @@ does not close and reopen it.
 References: palette (command), lock messages (command), drawer (command),
 modeless (command), choose (command), property (glossary),
 current card (glossary), execute (glossary), message (glossary),
-editable window (glossary), command (glossary),
+editable window (glossary), command (glossary), control (glossary),
 modal dialog box (glossary), openCard (message), closeStack (message),
 closeCard (message), closeBackground (message), openStack (message),
-openBackground (message), stack (object), control (object),
-cantModify (property), selected (property)
+openBackground (message), stack (object), cantModify (property), 
+selected (property)
 
 Tags: windowing
 
