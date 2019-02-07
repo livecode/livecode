@@ -54,12 +54,6 @@ be used for <image> IDs:
 * 200,000-299,999: reserved for application use
 
 
-For all other objects, the <ID> <property> is assigned when the
-<object(glossary)> is created and never changes. This means that for all
-<object|objects> except <stacks> and <image(object)|images>, the <ID>
-<property> is guaranteed to be persistent. An <object|object's> <name>
-or <number> may change, but its <ID> does not.
-
 For all objects, the <ID> is guaranteed to be unique within a <stack>.
 IDs are not reused if the <object(glossary)> is deleted.
 
