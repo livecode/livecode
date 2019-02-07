@@ -36,16 +36,16 @@ If the field's <listBehavior> <property> is false, the setting of the
 <toggleHilites> <property> has no effect.
 
 >*Important:*  Setting the <toggleHilites> to true automatically sets
-> the <field|field's> <noncontiguousHilites> and <multipleLines>
+> the <field|field's> <noncontiguousHilites> and <multipleHilites>
 > <properties> to true. (However, setting the <toggleHilites> to false
 > does not set these <properties> back to false.) To set the
 > <toggleHilites> to true and the <noncontiguousHilites> or
-> <multipleLines> to false, be sure to set the <toggleHilites> first,
+> <multipleHilites> to false, be sure to set the <toggleHilites> first,
 > then set the other <properties> to false.
 
 References: property (glossary), behavior (glossary),
 list field (glossary), field (keyword), field (object),
-multipleLines (property), toggleHilites (property), properties (property),
+multipleHilites (property), toggleHilites (property), properties (property),
 listBehavior (property), selected (property),
 noncontiguousHilites (property), threeDHilite (property),
 hilitedLine (property)
