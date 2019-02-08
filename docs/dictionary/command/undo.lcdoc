@@ -20,11 +20,11 @@ Description:
 The undo command undoes the last action performed by the user. Undoable
 actions include:
 
-	* Using the paint tools
-	* Deleting controls by selecting them with the Pointer tool and
-      pressing Delete
-	* Moving controls with the Pointer tool
-	* Editing actions (such as typing, cutting, and pasting) in a field
+ * Using the paint tools
+ * Deleting controls by selecting them with the Pointer tool and
+pressing Delete
+ * Moving controls with the Pointer tool
+ * Editing actions (such as typing, cutting, and pasting) in a field
 
 
 The undo command cannot be used to undo actions performed by a script.

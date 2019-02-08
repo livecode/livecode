@@ -22,8 +22,7 @@ set the umask to 0077
 
 Description:
 Use the <umask> command to set the access permissions for
-
-    <files> and <folders> created by LiveCode.
+<files> and <folders> created by LiveCode.
 
 
 The umask is a positive integer, or empty.
@@ -31,18 +30,20 @@ The umask is a positive integer, or empty.
 By default, the umask is set to the user's Unix "umask" setting.
 
 The <umask> blocks specific permissions from being granted for newly
-created <files> and <folders>. It affects <files> created with the <open
-file> <command>, <folders> created with the <create folder> <command>,
-and <files> and <folders> created on the local system with the <URL>
-<keyword>. 
+created <files> and <folders>. It affects <files> created with the 
+<open file> <command>, <folders> created with the <create folder> 
+<command>, and <files> and <folders> created on the local system with 
+the <URL> <keyword>. 
 
 The <umask> is most easily represented in <octal>.  Each digit of the
 <octal> representation of the <umask> specifies a set of permissions:
-<ul> <li> Read permission (4) lets a user read or copy the file or
-folder.</li> <li> Write permission (2) lets a user change the contents
-of the file or folder.</li> <li> Execute permission (1) lets a user run
+ - Read permission (4) lets a user read or copy the file or
+folder.
+ - Write permission (2) lets a user change the contents
+of the file or folder.
+ - Execute permission (1) lets a user run
 the file (if it is a program file), or work with files in the
-folder.</li> </ul>
+folder.
 
 Each digit is the sum of the permission values that are to be blocked.
 For example, to specify that read and execute permission should both be

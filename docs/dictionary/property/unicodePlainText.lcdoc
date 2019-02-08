@@ -20,8 +20,8 @@ aided unicode text manipulation is no longer required. This property
 should not be used in new code; simply get the plainText as normal. The
 following are now equivalent:
 
-get the unicodePlainText of field 1
-get textEncode(the plainText of field 1, "UTF16")
+    get the unicodePlainText of field 1
+    get textEncode(the plainText of field 1, "UTF16")
 
 OS: mac, windows, linux
 

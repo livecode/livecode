@@ -30,8 +30,8 @@ unless "Suspend LiveCode UI" is turned on in the Development <menu>.
 This means that the <undoKey> <message> is not received by a <stack> if
 it's running in the <development environment>.
 
-The <undoKey> <message> is sent when the user presses Command-Z (on <Mac
-OS|Mac OS systems>), Control-Z (on <Windows|Windows systems>),
+The <undoKey> <message> is sent when the user presses Command-Z (on 
+<Mac OS|Mac OS systems>), Control-Z (on <Windows|Windows systems>),
 Alt-Backspace (on <Unix|Unix systems>), or the keyboard <Undo> key.
 
 The message is sent to the active (focused) control, or to the current

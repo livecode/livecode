@@ -18,7 +18,7 @@ Example:
 truewordOffset("Chile",tListOfCountries) -- returns 48
 
 Example:
-truewordOffset("d'Ãªtre","Ce n'est pas tant d'Ãªtre riche qui fait le bonheur, c'est de le devenir.") -- returns 5
+truewordOffset("d'être","Ce n'est pas tant d'être riche qui fait le bonheur, c'est de le devenir.") -- returns 5
 
 Parameters:
 stringToFind (string):

@@ -33,7 +33,7 @@ of the <convert> command when a time specifier is used.
 If the <twelveHourTime> is true, the time function <return|returns> a
 value including AM or PM. If the <twelveHourTime> is false, AM or PM is
 not included; instead, the hour is not reset to 1 after noon. For
-example, the time 2:35 PM <a/>in 12-hour time is equivalent to 14:35 in
+example, the time 2:35 PM in 12-hour time is equivalent to 14:35 in
 24-hour time.
 
 References: convert (command), function (control structure),
