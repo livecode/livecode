@@ -42,8 +42,8 @@ For example, an editable window has a mode of 1, and a
 <palette(command)> has a mode of 4. If several
 <palette(glossary)|palettes> and <editable window|editable windows> are
 open, the <topStack> is the frontmost editable <stack>, although
-<palette(glossary)|palettes> may be in front of it. If all the <editable
-window|editable windows> are then closed, the frontmost
+<palette(glossary)|palettes> may be in front of it. If all the 
+<editable window|editable windows> are then closed, the frontmost
 <palette(command)> becomes the <topStack>, since there is now no window
 with a lower <mode>.
 

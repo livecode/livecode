@@ -44,12 +44,12 @@ pattern used to draw the raised edge of the <object(glossary)>.
 
 Pattern images can be color or black-and-white.
 
->*Cross-platform note:*  To be used as a pattern on <Mac OS|Mac OS
-> systems>, an <image> must be 128x128 <pixels> or less, and both its
-> <height> and <width> must be a power of 2. To be used on <Windows> and
-> <Unix|Unix systems>, <height> and <width> must be divisible by 8. To
-> be used as a fully cross-platform pattern, both an image's dimensions
-> should be one of 8, 16, 32, 64, or 128.
+>*Cross-platform note:*  To be used as a pattern on 
+> <Mac OS|Mac OS systems>, an <image> must be 128x128 <pixels> or less, 
+> and both its <height> and <width> must be a power of 2. To be used on
+> <Windows> and <Unix|Unix systems>, <height> and <width> must be 
+> divisible by 8. To be used as a fully cross-platform pattern, both an 
+> image's dimensions should be one of 8, 16, 32, 64, or 128.
 
 The <topPattern> of <control(object)|controls> is drawn starting at the
 <control(object)|control's> upper right corner: if the
@@ -104,8 +104,8 @@ depending on the <object type>:
   bottom and right edges of the scroll area.
 
 
-* The <topPattern> of a <graphic>, <image>, <audio clip>, or <video
-  clip> has no effect.
+* The <topPattern> of a <graphic>, <image>, <audio clip>, or 
+  <video clip> has no effect.
 
 
 * The <topPattern> of a <player> or <EPS|EPS object> forms a border on
@@ -120,13 +120,13 @@ References: group (command), stacks (function), object (glossary),
 property (glossary), EPS (glossary), audio clip (glossary),
 Windows (glossary), object type (glossary), Mac OS (glossary),
 keyword (glossary), Unix (glossary), video clip (glossary),
-current stack (glossary), effective (keyword), field (keyword),
-image (keyword), button (keyword), card (keyword), scrollbar (keyword),
-player (keyword), graphic (keyword), control (keyword), button (object),
-field (object), stack (object), control (object), pixels (property),
-textStyle (property), owner (property), height (property),
-width (property), topColor (property), bottom (property),
-hiliteBorder (property), bottomPattern (property),
+current stack (glossary), control (glossary), effective (keyword), 
+field (keyword), image (keyword), button (keyword), card (keyword), 
+scrollbar (keyword), player (keyword), graphic (keyword), 
+control (keyword), button (object), field (object), stack (object), 
+pixels (property), textStyle (property), owner (property), 
+height (property), width (property), topColor (property), 
+bottom (property), hiliteBorder (property), bottomPattern (property),
 threeDHilite (property), threeD (property)
 
 Tags: ui
