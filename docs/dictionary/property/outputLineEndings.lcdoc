@@ -30,10 +30,10 @@ The type of line ending to use.
 
 
 Description:
-Use the <outputTextEncoding> property to determine what text conversion
-to perform when writing text strings to stdout.
+Use the <outputLineEndings> property to determine what line ending
+conversion to perform on text output.
 
-<outputTextEncoding> is only available when running in CGI mode
+<outputLineEndings> is only available when running in CGI mode
 (Server). 
 
 The quoted literals *must* be used when setting this property - the
@@ -43,5 +43,4 @@ line-ending. The reason behind this is two-fold - (1) it is more
 line-ending rather than the sequence of bytes to use (2) 'cr' and 'lf'
 are defined as the same numToChar(10) constant on all platforms.
 
-References: outputTextEncoding (property)
-
+References:
