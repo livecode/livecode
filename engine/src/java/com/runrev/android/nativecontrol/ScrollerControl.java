@@ -153,7 +153,10 @@ class ScrollerControl extends NativeControl
                     {
                         m_dragging = true;
                         m_tracking = false;
-                        onScrollBeginDrag();
+                        
+                        int x = (int)e.getX();
+                        int y = (int)e.getY();
+                        onScrollBeginDrag(x,y);
                         e.setAction(MotionEvent.ACTION_CANCEL);
                     }
                     else
@@ -169,7 +172,9 @@ class ScrollerControl extends NativeControl
                     {
                         m_dragging = false;
                         m_tracking = false;
-                        onScrollEndDrag();
+                        int x = (int)e.getX();
+                        int y = (int)e.getY();
+                        onScrollEndDrag(x,y);
                     }
                 }
                 
@@ -234,15 +239,15 @@ class ScrollerControl extends NativeControl
         m_module.getEngine().wakeEngineThread();
     }
     
-    protected void onScrollBeginDrag()
+    protected void onScrollBeginDrag(int x, int y)
     {
-        doScrollBeginDrag();
+        doScrollBeginDrag(x,y);
         m_module.getEngine().wakeEngineThread();
     }
     
-    protected void onScrollEndDrag()
+    protected void onScrollEndDrag(int x, int y)
     {
-        doScrollEndDrag();
+        doScrollEndDrag(x,y);
         m_module.getEngine().wakeEngineThread();
     }
     
@@ -307,6 +312,6 @@ class ScrollerControl extends NativeControl
     }
     
     public native void doScrollChanged(int left, int top);
-    public native void doScrollBeginDrag();
-    public native void doScrollEndDrag();
+    public native void doScrollBeginDrag(int x, int y);
+    public native void doScrollEndDrag(int x, int y);
 }

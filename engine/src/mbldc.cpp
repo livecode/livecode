@@ -908,11 +908,25 @@ uint16_t MCScreenDC::platform_getheight()
 	return device_getheight() / logicaltoscreenscale();
 }
 
+extern bool MCAndroidUpdateMouseCoords(int &x, int &y);
 void MCScreenDC::platform_querymouse(int16_t &r_x, int16_t &r_y)
 {
-	// IM-2014-03-03: [[ Bug 11836 ]] Mouse loc and window position now stored in logical coords
-	r_x = m_mouse_x + m_window_left;
-	r_y = m_mouse_y + m_window_top;
+#ifdef _ANDROID_MOBILE
+    int t_x,t_y;
+    if (!MCAndroidUpdateMouseCoords(t_x,t_y))
+    {
+#endif
+        // IM-2014-03-03: [[ Bug 11836 ]] Mouse loc and window position now stored in logical coords
+        r_x = m_mouse_x + m_window_left;
+        r_y = m_mouse_y + m_window_top;
+#ifdef _ANDROID_MOBILE
+    }
+    else
+    {
+        r_x = t_x;
+        r_y = t_y;
+    }
+#endif
 }
 
 void MCScreenDC::platform_setmouse(int16_t p_x, int16_t p_y)
