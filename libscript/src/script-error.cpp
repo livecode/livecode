@@ -397,3 +397,13 @@ MCScriptCreateErrorExpectedError(MCErrorRef& r_error)
 						  MCSTR("error propagated without error object"),
 						  nil);
 }
+
+bool MCScriptThrowCannotSetReadOnlyPropertyError(MCScriptInstanceRef p_instance, MCNameRef p_property)
+{
+    return MCErrorCreateAndThrow(kMCScriptCannotSetReadOnlyPropertyErrorTypeInfo,
+                                 "module",
+                                 p_instance -> module -> name,
+                                 "property",
+                                 p_property,
+                                 nil);
+}

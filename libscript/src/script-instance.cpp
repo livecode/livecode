@@ -420,6 +420,10 @@ MCScriptSetPropertyInInstance(MCScriptInstanceRef self,
 	MCScriptDefinition *t_setter;
 	t_setter = t_property_def->setter != 0 ? self->module->definitions[t_property_def->setter - 1] : nil;
 	
+    // If there is no setter for the property then this is an error.
+    if (t_setter == nil)
+        return MCScriptThrowCannotSetReadOnlyPropertyError(self, p_property);
+    
 	/* LOAD CHECK */
 	__MCScriptAssert__(t_setter != nil,
 					   "property has no setter");
