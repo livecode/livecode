@@ -1367,6 +1367,14 @@ bool MCPlatformInitializeMenu(void)
                                                  length: kDiamondTiffImageLength
                                            freeWhenDone: NO]];
     
+    if (![NSApp windowsMenu])
+    {
+        // prepend an up to date "Window" list to the Dock menu
+        NSMenu* t_windows_menu = [[NSMenu alloc] initWithTitle:@"Window"];
+        [NSApp setWindowsMenu:t_windows_menu];
+        [t_windows_menu release];
+    }
+    
     return true;
 }
 
