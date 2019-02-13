@@ -701,6 +701,10 @@ void MCiOSScrollerControl::ExecFlashScrollIndicators(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+static int sX,sY;
+static bool sInScroller = false;
+
 void MCiOSScrollerControl::HandleEvent(MCNameRef p_message)
 {
 	MCObject *t_target;
@@ -709,6 +713,7 @@ void MCiOSScrollerControl::HandleEvent(MCNameRef p_message)
 	{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
+        
 		t_target->message(p_message);
 		ChangeTarget(t_old_target);
 	}
@@ -722,6 +727,7 @@ void MCiOSScrollerControl::HandleEndDragEvent(bool p_decelerate)
 	{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
+        
 		t_target->message_with_valueref_args(MCM_scroller_end_drag, p_decelerate ? kMCTrue : kMCFalse);
 		ChangeTarget(t_old_target);
 	}
@@ -745,6 +751,7 @@ void MCiOSScrollerControl::HandleScrollEvent(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 
 UIView *MCiOSScrollerControl::CreateView(void)
 {
@@ -774,6 +781,8 @@ UIView *MCiOSScrollerControl::CreateView(void)
         // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
         [t_view setCanCancelContentTouches: YES];
     }
+
+    sInScroller = true;
 	
 	return t_view;
 }
@@ -784,6 +793,8 @@ void MCiOSScrollerControl::DeleteView(UIView *p_view)
 	[p_view release];
 	
 	[m_delegate release];
+    
+    sInScroller = false;
 }
 
 void MCiOSScrollerControl::UpdateForwarderBounds(void)
@@ -883,7 +894,7 @@ private:
 		return nil;
 	
 	m_instance = instance;
-	
+    
 	return self;
 }
 
@@ -891,13 +902,26 @@ private:
 {
 	MCCustomEvent *t_event;
 	t_event = new MCiOSScrollerEvent(m_instance, MCM_scroller_begin_drag);
+    
+    CGPoint touchPoint = [scrollView.panGestureRecognizer locationInView:scrollView];
+
+    sX = (int)touchPoint.x;
+    sY = (int)touchPoint.y;
+    
 	MCEventQueuePostCustom(t_event);
 }
+
 
 - (void)scrollViewDidEndDragging: (UIScrollView*)scrollView willDecelerate:(BOOL)decelerate
 {
 	MCCustomEvent *t_event;
 	t_event = new MCiOSScrollerEndDragEvent(m_instance, decelerate);
+    
+    CGPoint touchPoint = [scrollView.panGestureRecognizer locationInView:scrollView];
+    
+    sX = (int)touchPoint.x;
+    sY = (int)touchPoint.y;
+    
 	MCEventQueuePostCustom(t_event);
 
 	m_instance->UpdateForwarderBounds();
@@ -941,10 +965,19 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+
 bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 {
 	r_control = new MCiOSScrollerControl;
 	return true;
+}
+
+bool MCSystemUpdateMouseCoords(int &x, int &y)
+{
+    x = sX;
+    y = sY;
+    return sInScroller;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

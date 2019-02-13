@@ -537,7 +537,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
     }
 }
 
-bool MCAndroidUpdateMouseCoords(int &x, int &y)
+bool MCSystemUpdateMouseCoords(int &x, int &y)
 {
     x = sX;
     y = sY;
