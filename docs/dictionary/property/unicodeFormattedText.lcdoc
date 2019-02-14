@@ -21,8 +21,8 @@ aided unicode text manipulation is no longer required. This property
 should not be used in new code; simply get the formattedText as normal.
 The following are now equivalent:
 
-get the unicodeFormattedText of field 1
-get textEncode(the formattedText of field 1, "UTF16")
+    get the unicodeFormattedText of field 1
+    get textEncode(the formattedText of field 1, "UTF16")
 
 OS: mac, windows, linux, ios, android
 
