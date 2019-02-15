@@ -5,7 +5,7 @@ Type: property
 Syntax: set the yScale of <EPSObject> to <number>
 
 Summary:
-Specifies the ratio of the height of an <EPS|EPS object's> <PostScript>
+Specifies the ratio of the height of an <EPS|EPS object's> <postScript>
 bounding box to the object's screen height.
 
 Introduced: 1.0
@@ -28,12 +28,12 @@ Use the <yScale> <property> to control an <EPS|EPS object's> screen
 appearance. 
 
 The <number> 1 indicates no scaling--that is, the <EPS|EPS object's>
-height is the same as the height specified by the <PostScript> code it
+height is the same as the height specified by the <postScript> code it
 contains. Numbers greater than one indicate that the <object|object's>
-height is less than the <PostScript> height; the screen
+height is less than the <postScript> height; the screen
 <object(glossary)> is scaled down. Numbers less than one indicate that
-the <object|object's> height is greater than the <PostScript> height,
-and the screen <object(glossary)> is scaled up from the <PostScript>.
+the <object|object's> height is greater than the <postScript> height,
+and the screen <object(glossary)> is scaled up from the <postScript>.
 
 In geometric terms, yScale = yExtent/height.
 

@@ -6,7 +6,7 @@ Syntax: set the yOffset of <EPSObject> to <points>
 
 Summary:
 Specifies the location of the top edge of an <EPS|EPS object's>
-<PostScript> code.
+<postScript> code.
 
 Introduced: 1.0
 
@@ -25,8 +25,8 @@ Use the <yOffset> <property> to control the placement of an <EPS|EPS
 object> on the paper when it's printed.
 
 The <yOffset> is the distance in <points> from the top edge of the paper
-to the top edge of the <PostScript> object. This controls the placement
-of the <PostScript> object when it's rendered.
+to the top edge of the <postScript> object. This controls the placement
+of the <postScript> object when it's rendered.
 
 The <yOffset> of an <EPS|EPS object> is equal to the second <item> in
 the object's <boundingBox> <property>.
