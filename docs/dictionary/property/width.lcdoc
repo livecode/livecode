@@ -51,8 +51,8 @@ The <width> of an object cannot be set to zero. Attempting to do so will
 set the <width> to 1 instead.
 
 >*Cross-platform note:*  On <Mac OS> and <OS X|OS X systems>, the
-> maximum <width> of an <image> is 16384 divided by the screen's <bit
-> depth>. (For example, if the number of colors is "Millions", the
+> maximum <width> of an <image> is 16384 divided by the screen's 
+> <bit depth>. (For example, if the number of colors is "Millions", the
 > maximum image width is 4096 <pixels>.)
 
 >*Note:* The current architecture uses 16-bit signed integers for all

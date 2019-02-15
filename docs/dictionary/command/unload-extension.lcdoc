@@ -27,11 +27,11 @@ extensionIdentifier:
 The identifier of the extension to unload.
 
 Description:
-Use the <unload extension> <command> to unload a <LiveCode Builder
-extension>. The extension is removed from memory. If the extension is a
-library, its public handlers will no longer be in the message path. If
-it is a widget, it will no longer be available as a control to add to a
-stack. 
+Use the <unload extension> <command> to unload a 
+<LiveCode Builder extension>. The extension is removed from memory. If 
+the extension is a library, its public handlers will no longer be in the 
+message path. If it is a widget, it will no longer be available as a 
+control to add to a stack. 
 
 If a module with the given identifier has already been loaded into
 memory, the result will be set to "module already loaded".

@@ -23,8 +23,8 @@ Description:
 Use the <xExtent> <property> to control the appearance of an <EPS|EPS
 object>. 
 
-An EPS object's <xExtent> is the width in <points> of the <PostScript>.
-This controls the size of the <PostScript> when it's printed.
+An EPS object's <xExtent> is the width in <points> of the <postScript>.
+This controls the size of the <postScript> when it's printed.
 
 The <xExtent> of an <EPS|EPS object> is equal to the third <item> in the
 <object|object's> <boundingBox> <property>.
