@@ -786,7 +786,9 @@ function symbolsForAddresses pAddresses, pAppBundle, pLoadAddress
    local tCommand
    local tSymbols
    replace return with space in pAddresses
-   put "xcrun atos -o" && escapeArg(tExecutable) && "-l" && format("%#x", pLoadAddress) && pAddresses into tCommand
+   --put "xcrun atos -o" && escapeArg(tExecutable) && "-l" && format("%#x", pLoadAddress) && pAddresses into tCommand
+   put "xcrun atos -o" && escapeArg(tExecutable) && "-arch x86_64 " && "-l" && pLoadAddress && pAddresses into tCommand
+   
    get shell(tCommand)
    if the result is not zero then throw "failed to symbolicate address list using atos:" && it
    put it into tSymbols
