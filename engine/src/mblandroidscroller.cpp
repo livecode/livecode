@@ -504,9 +504,6 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
     }
 }
 
-static int sX,sY;
-static bool sInScroller = false;
-
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollBeginDrag(JNIEnv *env, jobject object, jint x, jint y) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollBeginDrag(JNIEnv *env, jobject object, jint x, jint y)
 {
@@ -516,8 +513,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
     
     if (MCAndroidControl::FindByView(object, t_control))
     {
-        sX=x;
-        sY=y;
+        MCscreen -> device_updatemouse(x,y);
         t_control->PostNotifyEvent(MCM_scroller_begin_drag);
     }
 }
@@ -531,17 +527,9 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
     
     if (MCAndroidControl::FindByView(object, t_control))
     {
-        sX=x;
-        sY=y;
+        MCscreen -> device_updatemouse(x,y);
         t_control->PostNotifyEvent(MCM_scroller_end_drag);
     }
-}
-
-bool MCSystemUpdateMouseCoords(int &x, int &y)
-{
-    x = sX;
-    y = sY;
-    return sInScroller;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -550,7 +538,6 @@ jobject MCAndroidScrollerControl::CreateView(void)
 {
     jobject t_view;
     MCAndroidEngineRemoteCall("createScrollerControl", "o", &t_view);
-    sInScroller = true;
     return t_view;
 }
 
@@ -560,7 +547,6 @@ void MCAndroidScrollerControl::DeleteView(jobject p_view)
     env = MCJavaGetThreadEnv();
     
     env->DeleteGlobalRef(p_view);
-    sInScroller = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

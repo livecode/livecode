@@ -16,6 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include "mbldc.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -33,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mbliphonecontrol.h"
 #include "mblcontrol.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -701,10 +703,6 @@ void MCiOSScrollerControl::ExecFlashScrollIndicators(MCExecContext& ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-static int sX,sY;
-static bool sInScroller = false;
-
 void MCiOSScrollerControl::HandleEvent(MCNameRef p_message)
 {
 	MCObject *t_target;
@@ -782,9 +780,7 @@ UIView *MCiOSScrollerControl::CreateView(void)
         [t_view setCanCancelContentTouches: YES];
     }
 
-    sInScroller = true;
-	
-	return t_view;
+    return t_view;
 }
 
 void MCiOSScrollerControl::DeleteView(UIView *p_view)
@@ -793,8 +789,6 @@ void MCiOSScrollerControl::DeleteView(UIView *p_view)
 	[p_view release];
 	
 	[m_delegate release];
-    
-    sInScroller = false;
 }
 
 void MCiOSScrollerControl::UpdateForwarderBounds(void)
@@ -905,8 +899,7 @@ private:
     
     CGPoint touchPoint = [scrollView.panGestureRecognizer locationInView:scrollView];
 
-    sX = (int)touchPoint.x;
-    sY = (int)touchPoint.y;
+    MCscreen -> device_updatemouse((int32_t)touchPoint.x,(int32_t)touchPoint.y);
     
 	MCEventQueuePostCustom(t_event);
 }
@@ -919,8 +912,7 @@ private:
     
     CGPoint touchPoint = [scrollView.panGestureRecognizer locationInView:scrollView];
     
-    sX = (int)touchPoint.x;
-    sY = (int)touchPoint.y;
+    MCscreen -> device_updatemouse((int)touchPoint.x,(int)touchPoint.y);
     
 	MCEventQueuePostCustom(t_event);
 
@@ -971,13 +963,6 @@ bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 {
 	r_control = new MCiOSScrollerControl;
 	return true;
-}
-
-bool MCSystemUpdateMouseCoords(int &x, int &y)
-{
-    x = sX;
-    y = sY;
-    return sInScroller;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

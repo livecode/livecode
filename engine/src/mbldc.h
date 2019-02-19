@@ -97,6 +97,7 @@ public:
 	bool device_getwindowgeometry(Window w, MCRectangle &drect);
 	void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	void device_setmouse(int16_t p_x, int16_t p_y);
+    void device_updatemouse(int32_t p_x, int32_t p_y);
 
 	bool fullscreenwindows(void);
 	MCRectangle fullscreenrect(const MCDisplay *p_display);
