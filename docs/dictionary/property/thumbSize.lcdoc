@@ -5,8 +5,8 @@ Type: property
 Syntax: set the thumbSize of <scrollbar> to <number>
 
 Summary:
-Specifies how large a <scrollbar|scrollbar's> draggable <scrollbar
-thumb|thumb> is.
+Specifies how large a <scrollbar|scrollbar's> draggable 
+<scrollbar thumb|thumb> is.
 
 Associations: scrollbar
 

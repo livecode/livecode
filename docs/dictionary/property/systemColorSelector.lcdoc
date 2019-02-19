@@ -5,8 +5,8 @@ Type: property
 Syntax: systemColorSelector
 
 Summary:
-The <systemColorSelector> <property> is not implemented and is <reserved
-word|reserved>.
+The <systemColorSelector> <property> is not implemented and is 
+<reserved word|reserved>.
 
 Introduced: 1.1
 

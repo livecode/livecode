@@ -7,8 +7,8 @@ Type: property
 Syntax: set the text of {<button> | <field> | <image>} to <string>
 
 Summary:
-Specifies the text contained by a <button> or <field> or the <binary
-file|binary data> in an <image>.
+Specifies the text contained by a <button> or <field> or the 
+<binary file|binary data> in an <image>.
 
 Associations: field, button, image
 

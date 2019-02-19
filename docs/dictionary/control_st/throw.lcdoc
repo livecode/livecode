@@ -24,7 +24,7 @@ end if
 Parameters:
 errorString (string):
 The string that is returned to the calling try control structure. The
-errorString becomes the parameter of the catch lin in the try control
+errorString becomes the parameter of the catch line in the try control
 structure. 
 
 Description:
@@ -35,9 +35,10 @@ within a <try> <control structure>.
 inside a <handler>.
 
 If LiveCode generates the error (for example, an execution error from a
-built-in command), it returns a positive number to the <try> <control
-structure>. To avoid confusion, therefore, a <throw> <control structure>
-should return a <negative> number, or a non-numeric <string>.
+built-in command), it returns a positive number to the <try> 
+<control structure>. To avoid confusion, therefore, a <throw> 
+<control structure> should return a <negative> number, or a 
+non-numeric <string>.
 
 If a <throw> <control structure> is <execute|executed> in a <handler>
 that was not <call|called> from within a <try> <control structure>, an

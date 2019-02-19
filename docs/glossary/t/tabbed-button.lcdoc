@@ -8,8 +8,8 @@ Type: glossary
 Description:
 A <button> type that lets you select a section of a <dialog box> or
 window. A tabbed button looks like a stack of file folders, with several
-tabs across the top. Clicking a tab displays its section in the <dialog
-box>. 
+tabs across the top. Clicking a tab displays its section in the 
+<dialog box>. 
 
 References: button (glossary), dialog box (glossary)
 
