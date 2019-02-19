@@ -32,9 +32,9 @@ Use the <zoomBox> property to display the zoom box or maximize box in a
 window's title bar.
 
 The terminology varies depending on platform. The <zoomBox> <property>
-determines whether the <zoom box> (Mac OS and OS X systems) or <maximize
-button|maximize box> (Unix and <Windows|Windows systems>) appears in a
-<stack window|stack window's> <title bar>.
+determines whether the <zoom box> (Mac OS and OS X systems) or 
+<maximize button|maximize box> (Unix and <Windows|Windows systems>) 
+appears in a <stack window|stack window's> <title bar>.
 
 >*Note:* On <OS X|OS X systems>, if the <zoomBox> <property> is false,
 > the <zoom box> is disabled rather than hidden.
