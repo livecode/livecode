@@ -25,8 +25,8 @@ The <toolTipDelay> is a <non-negative> <integer>.
 By default, the <toolTipDelay> is 500 (half a second).
 
 Description:
-Use the <toolTipDelay> <property> to control the responsiveness of <tool
-tip|tool tips>.
+Use the <toolTipDelay> <property> to control the responsiveness of 
+<tool tip|tool tips>.
 
 A tool tip is a small box containing a line or two of text, which pops
 up on the screen when the mouse pointer hovers over a control. Use the

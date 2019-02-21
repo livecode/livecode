@@ -29,11 +29,11 @@ set the cIsRaining of me to true
 Description:
 Use the <to> <keyword> to complete a <command> that requires it.
 
-The <to> <keyword> is used with the <add>, <convert>, <copy>, <create
-alias>, <drag>, <exit to top>, <export>, <go>, <move>, <open socket>,
-<post>, print card, <rename>, <seek>, <send>, <send to program>, <write
-to file>, <write to process>, <write to socket>, and <write to driver>
-<command|commands>. 
+The <to> <keyword> is used with the <add>, <convert>, <copy>, 
+<create alias>, <drag>, <exit to top>, <export>, <go>, <move>, 
+<open socket>, <post>, print card, <rename>, <seek>, <send>, 
+<send to program>, <write to file>, <write to process>, 
+<write to socket>, and <write to driver> <command|commands>. 
 
 It is also used to designate the final color in visual effects, and with
 the set <command> to designate the new <property> setting.

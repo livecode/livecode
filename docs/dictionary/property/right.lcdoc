@@ -37,11 +37,12 @@ Description:
 Use the <right> <property> to change the horizontal placement of a
 <control> or window.
 
-The <right> of a <stack> is in <absolute (screen)
-coordinates(glossary)>. The <right> of a <card> is always the width of
-the <stack window>; setting the <right> of a <card> does not cause a
-<error|script error>, but it has no effect. The <right> of a <group> or
-<control> is in <relative (window) coordinates(glossary)>.
+The <right> of a <stack> is in 
+<absolute coordinates|absolute (screen) coordinates>. The <right> of a 
+<card> is always the width of the <stack window>; setting the <right> of 
+a <card> does not cause a <error|script error>, but it has no effect. 
+The <right> of a <group> or <control> is in 
+<relative coordinates|relative (window) coordinates>.
 
 Changing the <right> of an <object(glossary)> shifts it to the new
 position without resizing it. To change an <object|object's> width, set

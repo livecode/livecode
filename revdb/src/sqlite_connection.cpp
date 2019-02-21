@@ -78,6 +78,8 @@ Bool DBConnection_SQLITE::connect(char **args, int numargs)
 		//   path encoded as UTF-8.
 		fname = os_path_to_native_utf8(args[0]);
 		
+        bool t_use_uri = false;
+        
 		// MW-2014-01-29: [[ Sqlite382 ]] If there's a second argument, then interpret
 		//   it as an options string.
 		if (numargs >= 2)
@@ -98,6 +100,8 @@ Bool DBConnection_SQLITE::connect(char **args, int numargs)
 					m_enable_binary = true;
 				if ((t_end - t_start) == 10 && strncasecmp(t_start, "extensions", 10) == 0)
 					m_enable_extensions = true;
+                if ((t_end - t_start) == 3 && strncasecmp(t_start, "uri", 3) == 0)
+                    t_use_uri = true;
 				
 				// If the end points to NUL we are done.
 				if (*t_end == '\0')
@@ -111,7 +115,7 @@ Bool DBConnection_SQLITE::connect(char **args, int numargs)
 		try
 		{
 			mDB.setDatabase(fname);
-			if(mDB.connect() == DB_CONNECTION_NONE) 
+			if(mDB.connect(t_use_uri) == DB_CONNECTION_NONE)
 			{
 				ret = False;
 			}

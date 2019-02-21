@@ -39,11 +39,11 @@ Description:
 Use the <topLeft> <property> to change the placement of a <control> or
 window. 
 
-The <topLeft> of a <stack> is in <absolute (screen)
-coordinates(glossary)>. The first <item> (the <left>) of a card's
+The <topLeft> of a <stack> is in <absolute coordinates|absolute (screen) 
+coordinates>. The first <item> (the <left>) of a card's
 <topLeft> <property> is always zero; the second <item> (the <top>) is
-always zero. The <topLeft> of a <group> or <control> is in <relative
-(window) coordinates(glossary)>.
+always zero. The <topLeft> of a <group> or <control> is in 
+<relative coordinates|relative (window) coordinates>.
 
 In window coordinates, the point 0,0 is at the top left of the stack
 window. In screen coordinates, the point 0,0 is at the top left of the

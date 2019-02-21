@@ -5,8 +5,8 @@ Type: command
 Syntax: ungroup
 
 Summary:
-Makes a <group(glossary)|group's> <object|objects> into <card
-control|card objects>, deleting the <group(command)>.
+Makes a <group(glossary)|group's> <object|objects> into 
+<card control|card objects>, deleting the <group(command)>.
 
 Associations: group
 

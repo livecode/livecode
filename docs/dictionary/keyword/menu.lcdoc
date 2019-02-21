@@ -45,7 +45,7 @@ The syntax for menu item strings is:
     [&lt;flags&gt;] &lt;label&gt; ['/' &lt;accelerator&gt; ['|' &lt;tag&gt;]]
 
 
-Where `&lt;flags&gt;` may include:
+Where &lt;flags&gt; may include:
 
 * `!c`, `!n`, `!r`: the menu item has respectively, a check, no check,
   or a selected radio button
@@ -55,15 +55,15 @@ Where `&lt;flags&gt;` may include:
   menu item; use this to create submenus
 
 
-The `&lt;accelerator&gt;` can be specified as one of:
+The &lt;accelerator&gt; can be specified as one of:
 
-* `&lt;char&gt;`: Command key + specified char
-* `&lt;keyname&gt;`: Named key without modifiers
-* `&lt;modifiers&gt; &lt;char&gt;`: Specified modifiers + character
-* `&lt;modifiers&gt; &lt;keyname&gt;`: Specified modifiers + named key
+* &lt;char&gt;: Command key + specified char
+* &lt;keyname&gt;: Named key without modifiers
+* &lt;modifiers&gt; &lt;char&gt;: Specified modifiers + character
+* &lt;modifiers&gt; &lt;keyname&gt;: Specified modifiers + named key
 
 
-In the `&lt;accelerator&gt;`, `&lt;modifiers&gt;` is either:
+In the &lt;accelerator&gt;, &lt;modifiers&gt; is either:
 
 * a space separated list of: 'command' or 'cmd', 'control' or 'ctrl',
   'option' or 'opt', 'alt', 'shift'; in this case the keyname/char

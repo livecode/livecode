@@ -28,8 +28,8 @@ The <revXMLTrees> <function> returns a list of tree IDs, one per <line>.
 
 Description:
 Use the <revXMLTrees> <function> to find out which <XML tree|XML trees>
-have been created, or when you want to perform an action on all the <XML
-tree|XML trees> you're working with.
+have been created, or when you want to perform an action on all the 
+<XML tree|XML trees> you're working with.
 
 Each tree ID is the number returned by the <revXMLCreateTree> or
 <revXMLCreateTreeFromFile> <function> when you created the <XML tree>.
