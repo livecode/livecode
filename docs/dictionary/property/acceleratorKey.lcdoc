@@ -34,9 +34,9 @@ shortcut. By default, the <acceleratorKey> of a newly created <button>
 is empty.
 
 Description:
-Use the <acceleratorKey> <property> to give users a shortcut <key
-combination> for often-used <button(object)|buttons>, or to provide a
-<keyboard equivalent|keyboard shortcut> to a <button(keyword)> that's
+Use the <acceleratorKey> <property> to give users a shortcut 
+<key combination> for often-used <button(object)|buttons>, or to provide 
+a <keyboard equivalent|keyboard shortcut> to a <button(keyword)> that's
 used as a <menu item> in a <stack menu>.
 
 Press the key combination defined in a button's <acceleratorKey>
@@ -47,7 +47,7 @@ The key(s) specified in the acceleratorModifiers <property> must be
 pressed along with the <acceleratorKey>.
 
 >*Important:*  The <acceleratorKey> <property> is <case-sensitive>. You
-> must specify a lowercase letter as the <letterChar>; the uppercase
+> must specify a lowercase letter as the letterChar; the uppercase
 > letter is not equivalent.
 
 If the insertion point is in a field, the keypress is sent to the field,
