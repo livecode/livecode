@@ -32,8 +32,8 @@ DTDText:
 A Document Type Definition.
 
 Returns:
-The <revXMLValidateDTD> <function> <return|returns> empty if the <XML
-tree> validates against the DTD.
+The <revXMLValidateDTD> <function> <return|returns> empty if the 
+<XML tree> validates against the DTD.
 
 Description:
 Use the <revXMLValidateDTD> <function> to <validate> an <XML tree>

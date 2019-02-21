@@ -606,6 +606,11 @@ MCScriptInternalHandlerQuery(MCHandlerRef handler,
 bool
 MCScriptThrowPropertyNotFoundError(MCScriptInstanceRef instance,
 								   MCNameRef property);
+
+bool
+MCScriptThrowCannotSetReadOnlyPropertyError(MCScriptInstanceRef instance,
+                                   MCNameRef property);
+
 bool
 MCScriptThrowHandlerNotFoundError(MCScriptInstanceRef instance,
 								  MCNameRef handler);

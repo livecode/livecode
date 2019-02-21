@@ -62,9 +62,8 @@ the <angle> <property> affects only the screen display of the
 <image(keyword)>, not the actual picture data in it, so setting it
 repeatedly does not introduce distortion.
 
-    >*Note:*Rotating an image using good or best <resizeQuality> might
-    > cause the mask to be promoted to an alpha channel.
-
+>*Note:*Rotating an image using good or best <resizeQuality> might
+> cause the mask to be promoted to an alpha channel.
 
 >*Note:* As rotate is an image editing operation, the target image needs
 > to be on the currently visible card of an open stack to function.

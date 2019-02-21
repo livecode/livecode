@@ -22,11 +22,11 @@ Example:
 if the tool is not "browse tool" then choose browse tool
 
 Returns (enum):
-The <tool> <function> <return|returns> one of the following <tool>
-names:browse, pointer, button, field, scrollbar, graphic, image, player,
-select, pencil, bucket, brush, eraser, spray can, rectangle, line, round
-rect, oval, polygon, curve, regular polygon, dropperfollowed by the word
-"tool" 
+The <tool> <function> <return|returns> one of the following 
+<tool> names: browse, pointer, button, field, scrollbar, graphic, image, 
+player, select, pencil, bucket, brush, eraser, spray can, rectangle, line, 
+round rect, oval, polygon, curve, regular polygon, or dropper, 
+followed by the word "tool" 
 
 
 Description:

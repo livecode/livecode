@@ -46,8 +46,8 @@ Returns:
 The <revXMLText> function returns XML text.
 
 Description:
-Use the <revXMLText> <function> to turn an <XML tree> back into an <XML
-document>. 
+Use the <revXMLText> <function> to turn an <XML tree> back into an 
+<XML document>. 
 
 If the <revXMLText> <function> encounters an error, it <return|returns>
 an error message starting with "xmlerr".

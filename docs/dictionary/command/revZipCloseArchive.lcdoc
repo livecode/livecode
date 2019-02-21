@@ -23,11 +23,9 @@ revZipCloseArchive the cArchive of me
 
 Parameters:
 archivePath:
-The absolute path to the zip archive to close. >*Note:* Any changes you
-make to an open zip archive will not be applied until you close the
-archive using this command. If revZipCloseArchive encounters an error,
-the result is set to an error code beginning with "ziperr", otherwise
-the result will be empty.
+The absolute path to the zip archive to close. 
+>*Note:* Any changes you make to an open zip archive will not be 
+>applied until you close the archive using this command. 
 
 The result:
 If <revZipCloseArchive> encounters an error, the result is set to an

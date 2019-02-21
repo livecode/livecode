@@ -5,8 +5,8 @@ Type: property
 Syntax: set the traversalOn of <object> to {true | false}
 
 Summary:
-Specifies whether a <control> can become the <active (focused)
-control(glossary)>. 
+Specifies whether a <control> can become the 
+<active control|active (focused) control>. 
 
 Associations: field, button, group
 

@@ -35,8 +35,8 @@ otherwise the result will be empty.
 Description:
 Use the <revZipExtractItemToVariable> command to load an item from a zip
 archive into memory as a variable in your LiveCode program. The archive
-must already have been opened by using the <revZipOpenArchive
-(command)>command. 
+must already have been opened by using the <revZipOpenArchive (command)> 
+command. 
 
 References: revZipOpenArchive (command),
 revZipExtractItemToFile (command), revZipEnumerateItems (function)

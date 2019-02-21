@@ -40,6 +40,7 @@ on TestSettingLocalTimeZone
 	TestAssert "timeZone successfully set to local", the timeZone of widget "testClock" is ""
 end TestSettingLocalTimeZone
 
+<<<<<<< HEAD
 on TestGetDefaultFaceColor
    TestAssert "dayFaceColor on creation is 224,224,224,64", the dayFaceColor of widget "testClock" is "224,224,224,64"
    TestAssert "nightFaceColor on creation is black", the nightFaceColor of widget "testClock" is "0,0,0,255"
@@ -99,3 +100,17 @@ on TestSettingNumberColor
    set the nightNumberColor of widget "testClock" to "0,0,255,255"
    TestAssert "nightNumberColor sucessfully set to non-default", the nightNumberColor of widget "testClock" is "0,0,255,255"
 end TestSettingNumberColor
+
+on TestSetReadOnlyPropOfWidget
+
+   local tName
+   put the name of widget "testClock" into tName
+   TestAssertThrow "set read-only prop", \
+         "_TestSetReadOnlyPropOfWidgetError", the long id of me, \ 
+         "EE_PROPERTY_CANTSETOBJECT", tName
+         
+end TestSetReadOnlyPropOfWidget
+
+command _TestSetReadOnlyPropOfWidgetError pWidget
+   set the isDay of pWidget to true
+end _TestSetReadOnlyPropOfWidgetError

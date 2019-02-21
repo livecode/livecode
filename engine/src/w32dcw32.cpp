@@ -832,10 +832,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
             // field, so we assume that we must process it.
 			if (!curinfo->live || curinfo->keymove == KM_KEY_DOWN || deadcharfollower || isInAltPlusSequence)
 			{
-				// Pressing Alt and the key "+" starts a number-typing sequence.
+				// Pressing Alt starts a number-typing sequence.
 				//  Otherwise, we are not in such a sequence - be it because a normal
 				//  char has been typed, or because the sequence is terminated.
-				isInAltPlusSequence = (t_keysym == '+' && MCmodifierstate == MS_ALT);
+				isInAltPlusSequence = (MCmodifierstate == MS_ALT);
 
 				// We don't want to send any Key message for the "+" pressed
 				//  to start the Alt+<number> sequence
@@ -969,6 +969,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				// codepoint.
 				// SN-2015-05-18: [[ Bug 15040 ]] We don't send any key message
 				//  if we are in an Alt+<number> sequence.
+                isInAltPlusSequence = (MCmodifierstate == MS_ALT);
 				if (!isInAltPlusSequence)
 					MCdispatcher->wkup(dw, *t_string, keysym);
 				curinfo->handled = curinfo->reset = True;

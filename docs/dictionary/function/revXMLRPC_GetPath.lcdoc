@@ -29,8 +29,8 @@ executed an <XML-RPC> request.
 
 Returns (string):
 The <revXMLRPC_GetPath> <function> returns the <file path>, which allows
-the <host> to determine which resource is the target of the <XML-RPC
-document>.
+the <host> to determine which resource is the target of the 
+<XML-RPC document>.
 
 Description:
 Use the <revXMLRPC_GetPath> <function> to retrieve the path that is the

@@ -251,11 +251,6 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureVariable tPackager, "ProductTitle", tProductName && getReadableVersion(pVersion)
    packageCompilerConfigureVariable tPackager, "ProductTag", tProductTag & "_" & getTaggedVersion(pVersion)
 
-   -- For Linux only, case-fold the product name to lowercase and
-   -- remove all spaces - we can just use the product tag
-   if pPlatform is "Linux" or pPlatform is "Linux-x86_64" or pPlatform is "Linux-armv6hf" then
-      put tProductTag into tProductName
-   end if
    packageCompilerConfigureVariable tPackager, "ProductName", tProductName
    
    -- The edition tags.
