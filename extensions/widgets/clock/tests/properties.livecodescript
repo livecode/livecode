@@ -40,7 +40,6 @@ on TestSettingLocalTimeZone
 	TestAssert "timeZone successfully set to local", the timeZone of widget "testClock" is ""
 end TestSettingLocalTimeZone
 
-<<<<<<< HEAD
 on TestGetDefaultFaceColor
    TestAssert "dayFaceColor on creation is 224,224,224,64", the dayFaceColor of widget "testClock" is "224,224,224,64"
    TestAssert "nightFaceColor on creation is black", the nightFaceColor of widget "testClock" is "0,0,0,255"
