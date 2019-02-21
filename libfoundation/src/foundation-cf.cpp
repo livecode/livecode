@@ -514,7 +514,7 @@ bool MCValueConvertToCFTypeRef(MCValueRef p_value, bool p_use_lists, CFTypeRef& 
         default:
             if (MCValueGetTypeInfo(p_value) == kMCObjcObjectTypeInfo)
             {
-                r_cf_type = MCObjcObjectGetId((MCObjcObjectRef)p_value);
+                r_cf_type = CFRetain(MCObjcObjectGetId((MCObjcObjectRef)p_value));
                 return true;
             }
             break;
