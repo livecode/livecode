@@ -23,9 +23,8 @@ set the arcAngle of graphic "Over" to theAngle
 
 Value:
 The <arcAngle> of a <graphic> is an <integer> between zero and 360.
-By default, the <arcAngle> <property> of a newly created <graphic> is
-
-360. 
+By default, the <arcAngle> <property> of a newly created <graphic> 
+is 360. 
 
 
 Description:
@@ -39,7 +38,7 @@ drawn.
 
 The <arcAngle> determines how much of the oval is used to form the arc,
 from zero (no arc) to 360 (a full oval). For example, if the
-<angleInDegrees> is 90, a quarter-oval arc is displayed.
+*angleInDegrees* is 90, a quarter-oval arc is displayed.
 
 The global setting of the <arcAngle> <property> controls the appearance
 of arcs drawn with the <paint tool|paint tools>. Once a paint arc is

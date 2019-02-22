@@ -58,8 +58,8 @@ you might want to include additional <characters> to hint at the
 >*Note:* Nothing happens when the user presses the key specified by the
 > <acceleratorText> <property> unless the <acceleratorKey> and
 > <acceleratorModifiers> are set. The <acceleratorText> <property>
-> creates a visual hint, but does not create the actual shortcut <key
-> combination>. 
+> creates a visual hint, but does not create the actual shortcut 
+> <key combination>. 
 
 References: property (glossary), key combination (glossary),
 modifier key (glossary), character (keyword), characters (keyword),

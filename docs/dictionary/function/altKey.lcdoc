@@ -43,7 +43,7 @@ systems), Meta key (Unix systems), or Alt key (Windows systems).
 References: return (constant), function (control structure),
 optionKey (function), value (function), keysDown (function),
 Meta key (glossary), return (glossary), function (glossary),
-Alt key (glossary), optionKeyDown (message)
+Alt key (glossary), Option key (glossary),  optionKeyDown (message)
 
 Tags: ui
 
