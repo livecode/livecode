@@ -77,7 +77,7 @@ depending on the <object type>:
 
 
 * The <bottomPattern> of a <button> forms a border on the bottom and
-  right edges of the <button>. If the button"s <threeD> <property> is
+  right edges of the <button>. If the button's <threeD> <property> is
   false, the <bottomPattern> has no effect.
 
 

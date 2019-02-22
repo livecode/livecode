@@ -38,8 +38,8 @@ perceptible amount of time, so it's a good idea to save a stack destined
 for a particular platform on that platform before delivering it to
 users. 
 
-The <charSet> <property> is changed for all <stacks> in the same <stack
-file> when the <stack file> is saved, so it is not possible for two
+The <charSet> <property> is changed for all <stacks> in the same 
+<stack file> when the <stack file> is saved, so it is not possible for two
 <stacks> in the same file to have a different <charSet>.
 
 References: numToChar (function), stacks (function), platform (function),

@@ -5,9 +5,9 @@ Synonyms: cgi program, cgi
 Type: glossary
 
 Description:
-Common Gateway Interface: a method  to transfer data between a <web
-server> and a program that does something with the data. Also, a program
-designed to handle data from a <web server>.
+Common Gateway Interface: a method  to transfer data between a 
+<web server> and a program that does something with the data. Also, a 
+program designed to handle data from a <web server>.
 
 References: web server (glossary)
 
