@@ -33,9 +33,9 @@ three <hexadecimal> numbers, one for each of red, green, and blue.
 
 Description:
 Use the <accentColor> to <hilite> a <menu item> associated with a
-<button>, when the user is in the process of choosing that <menu
-item>--that is, when the <menu> is open and the <mouse pointer> is over
-the <menu item>.
+<button>, when the user is in the process of choosing that 
+<menu item>--that is, when the <menu> is open and the <mouse pointer> 
+is over the <menu item>.
 
 This property is used only when the lookAndFeel <property> is set to
 "Macintosh" or "Windows 95". If the <lookAndFeel> <property> is set to

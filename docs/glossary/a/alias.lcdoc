@@ -6,7 +6,7 @@ Type: glossary
 
 Description:
 On <Mac OS> and <OS X|OS X systems>, a special file type that refers to
-another <file>, a <folder>, or a <disk>. The alias is an alternative
+another <file>, a <folder>, or a disk. The alias is an alternative
 icon for the original item, and double-clicking the alias opens the item
 it refers to.
 
@@ -14,8 +14,8 @@ it refers to.
 is the <shortcut>.)
 
 References: file (glossary), shortcut (glossary), OS X (glossary),
-disk (glossary), Windows (glossary), symbolic link (glossary),
-Unix (glossary), folder (glossary), Mac OS (glossary)
+Windows (glossary), symbolic link (glossary), Unix (glossary), 
+folder (glossary), Mac OS (glossary)
 
 Tags: file system
 

@@ -69,11 +69,11 @@ array1 = array2 if (and only if):
 > will return true is and only if tArray contains the empty string. For
 > example 
 
-put empty into tArray
-answer tArray is empty -- true
+    put empty into tArray
+    answer tArray is empty -- true
 
-put 100 into tArray["foo"]
-answer tArray is empty -- false (prior to 6.0 this would be true)
+    put 100 into tArray["foo"]
+    answer tArray is empty -- false (prior to 6.0 this would be true)
 
 Changes:
 The ability to compare two arrays using = was added in version 3.5.
