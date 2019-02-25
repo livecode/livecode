@@ -5,8 +5,8 @@ Type: property
 Syntax: set the allowInterrupts to {true | false}
 
 Summary:
-Specifies whether the user can halt a <handler> with a <key
-combination>. 
+Specifies whether the user can halt a <handler> with a 
+<key combination>. 
 
 Introduced: 1.0
 
@@ -53,7 +53,7 @@ equivalent to setting the <cantAbort> <property> to true for each open
 References: unlock error dialogs (command), exit (control structure),
 interrupt (function), property (glossary), return (glossary),
 key combination (glossary), handler (glossary), Windows (glossary),
-exit (glossary), interrupt (glossary), Mac OS (glossary), Unix (glossary),
+exit (glossary), Mac OS (glossary), Unix (glossary),
 stack (object), cantAbort (property)
 
 Tags: ui

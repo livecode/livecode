@@ -59,10 +59,13 @@ want to accept UDP datagrams.
 
 When a connection is made or a datagram is received, the <accept>
 <command> creates a new <socket> that can be used to communicate with
-the other system (or <process>). When using the <close socket>, <read
-from socket>, or <write to socket> <command|commands>, you can refer to
-this <socket> with a socket identifier that looks like this:
-host:port[|connectionID] where the connectionID is a number assigned by
+the other system (or <process>). When using the <close socket>, 
+<read from socket>, or <write to socket> <command|commands>, you can 
+refer to this <socket> with a socket identifier that looks like this:
+
+    host:port[|connectionID] 
+
+where the connectionID is a number assigned by
 the <accept> <command>. (You only need to specify the connection number
 if there is more than one <socket> connected to a particular <port> and
 <host>.) 

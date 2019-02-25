@@ -37,9 +37,10 @@ If the <autoTab> <property> of a <field(keyword)> is false, pressing the
 Return key moves the <insertion point> to the next line of the
 <field(keyword)>. 
 
-If the <autoTab> of a <field(keyword)> is true, and the <insertion
-point> is already at the last visible line of the <field(keyword)>, then
-pressing Return advances to the next <field(keyword)> on the <card>.
+If the <autoTab> of a <field(keyword)> is true, and the 
+<insertion point> is already at the last visible line of the 
+<field(keyword)>, then pressing Return advances to the next 
+<field(keyword)> on the <card>.
 
 References: property (glossary), insertion point (glossary),
 field (keyword), card (keyword), tabKey (message), field (object),

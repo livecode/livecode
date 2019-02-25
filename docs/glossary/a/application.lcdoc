@@ -5,8 +5,9 @@ Synonyms: application
 Type: glossary
 
 Description:
-The program that's currently running: either the LiveCode <development
-environment>, or a <standalone application> created with LiveCode.
+The program that's currently running: either the LiveCode 
+<development environment>, or a <standalone application> created with 
+LiveCode.
 
 References: development environment (glossary),
 standalone application (glossary)
