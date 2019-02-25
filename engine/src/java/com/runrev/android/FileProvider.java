@@ -53,7 +53,7 @@ public class FileProvider
 	{
 		m_infos = new HashMap<String, HashMap<String, String> >();
 		m_context = p_context;
-		m_content_uri_base = "content://" + p_context.getPackageName() + ".fileprovider";
+		m_content_uri_base = "content://" + p_context.getPackageName() + ".fileprovider/share";
 	}
 
 	private static FileProvider s_provider = null;
