@@ -41,9 +41,10 @@ References: write to file (command), open driver (command),
 close driver (command), read from driver (command),
 write to process (command), write to socket (command),
 function (control structure), driverNames (function), result (function),
-command (glossary), peripheral device (glossary), real8 (keyword),
-int1 (keyword), int4 (keyword), real4 (keyword), int2 (keyword),
-LPT1: (keyword), printer: (keyword), modem: (keyword), COMn: (keyword)
+command (glossary), peripheral device (glossary), COMn: (keyword), 
+real8 (keyword), int1 (keyword), int4 (keyword), real4 (keyword), 
+int2 (keyword), LPT1: (keyword), printer: (keyword), modem: (keyword) 
+
 
 Tags: networking
 

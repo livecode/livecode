@@ -63,7 +63,9 @@ area, and false if the <point> is in the <stack|stack's> <title bar> or
 borders. 
 
 The expression
-<point> is within the rect of <object(glossary)> 
+
+    <point> is within the rect of <object(glossary)> 
+
 is equivalent to
 
     within(<object(glossary)>, <point>)
