@@ -523,7 +523,6 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       replace "${PUSH_PERMISSIONS}" with tPushPermissions in tManifest
       replace "${PUSH_RECEIVER}" with tPushReceiver in tManifest
-      
       // Add the file provider to the manifest
       local tProvider
       put "<provider " & return into tProvider
@@ -531,6 +530,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put "      android:authorities=" & quote & pSettings["android,identifier"] & ".fileprovider" & quote & return after tProvider
       put "      android:exported=" & quote & "true" & quote & return after tProvider
       put "      android:grantUriPermissions=" & quote & "true" & quote & " >" & return after tProvider
+      // Add meta-data tag
+      put "      <meta-data" & return after tProvider
+      put "            android:name=" & quote & "android.support.FILE_PROVIDER_PATHS" & quote & return after tProvider
+      put "            android:resource=" & quote & "@xml/file_provider_paths" & quote & " />" & return after tProvider
       put "    </provider>" & return after tProvider
       
       replace "${PROVIDER}" with tProvider in tManifest
@@ -737,6 +740,15 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          throw "could not copy NFC tech filter file '" & tNFCTechFilter & "'"
       end if
       put tXMLResBuildFolder & slash & "nfc_tech_filter.xml" & return after tAssetFiles
+      
+      
+      local tFileProviderPaths
+      put mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "file_provider_paths.xml") into tFileProviderPaths
+      put url ("binfile:" & tFileProviderPaths) into url ("binfile:" & tXMLResBuildFolder & slash & "file_provider_paths.xml")
+      if the result is not empty then
+         throw "could not copy file provider paths file '" & tFileProviderPaths & "'"
+      end if
+      put tXMLResBuildFolder & slash & "file_provider_paths.xml" & return after tAssetFiles
       
       if there is a file tIcon then
          put url ("binfile:" & tIcon) into url ("binfile:" & tDrawableResBuildFolder & slash & "icon.png")
@@ -1571,6 +1583,9 @@ function mapFilePath pPath
          break
       case "nfc_tech_filter.xml"
          put merge("[[tBinariesFolder]]/nfc_tech_filter.xml") into tPath
+         break
+      case "file_provider_paths.xml"
+         put merge("[[tBinariesFolder]]/file_provider_paths.xml") into tPath
          break
       case "livecode_inputcontrol.xml"
          put merge("[[tBinariesFolder]]/livecode_inputcontrol.xml") into tPath
