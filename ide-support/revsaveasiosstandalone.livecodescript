@@ -1587,6 +1587,19 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    
    ----------
    
+   local tHealthKit
+   if pSettings["externals"] contains "mergHK" then
+      put "<key>NSHealthShareUsageDescription</key>" & CR & \
+            "<string>This application requires access to read the user's health data</string>" & CR & \
+            "<key>NSHealthUpdateUsageDescription</key>" & CR & \
+            "<string>This application requires access to update the user's health data</string>" \
+            into tHealthKit
+   else
+      put empty into tHealthKit
+   end if
+   
+   ----------
+   
    if pPlist is empty then
       put url ("binfile:" & tTemplateFile) into pPlist
    end if
@@ -1602,6 +1615,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${MINIMUM_OS_SUPPORT}" with "<string>" & tMinimumOSByArch["i386"] & "</string>" in pPlist
    replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
    replace "${DISABLE_ATS}" with tDisableATS in pPlist
+   replace "${HEALTHKIT}" with tHealthKit in pPlist
    
    -- PM-2018-01-15: [[Bug 20852]] Get info about Xcode/SDK versions
    if pTarget is "Device" then
