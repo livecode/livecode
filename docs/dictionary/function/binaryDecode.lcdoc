@@ -107,6 +107,7 @@ was actually converted. Here is an example:
 
     on convertStuff dataToConvert
         global headerData,placeholder,bodyData,footerData
+        local convertResult
         put binaryDecode("i5x2a24xi2",dataToConvert, \
               headerData,placeholder,bodyData,placeholder, \ 
               footerData) into convertResult
