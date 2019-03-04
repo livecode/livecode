@@ -341,8 +341,11 @@ command revDoSaveAsStandalone pStack, pFolder, pSettings, @xStandalonePaths
          else
             put tOutputFolder into tTargetFolder
          end if
+         
          -- Make sure folder exists
-         revSBEnsureFolder tTargetFolder
+         if tStandaloneSettingsA[tPlatform] then
+            revSBEnsureFolder tTargetFolder
+         end if
          
          switch tPlatform
             case "iOS"
