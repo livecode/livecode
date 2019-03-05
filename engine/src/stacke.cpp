@@ -758,25 +758,21 @@ Boolean scrolleffect_step(const MCRectangle &drect, MCStackSurface *p_target, MC
 	{
 		case VE_LEFT:
 			width = drect.width * t_position;
-            t_start_dst.origin.x -= width;
 			t_end_dst = MCGRectangleTranslate(t_end_src, t_end_src.size.width - width, 0.0);
 			break;
 			
 		case VE_RIGHT:
 			width = drect.width * t_position;
-            t_start_dst.origin.x += width;
 			t_end_dst = MCGRectangleTranslate(t_end_src, -t_end_src.size.width + width, 0.0);
 			break;
 			
 		case VE_UP:
 			height = drect.height * t_position;
-            t_start_dst.origin.y -= height;
 			t_end_dst = MCGRectangleTranslate(t_end_src, 0.0, t_end_src.size.height - height);
 			break;
 			
 		case VE_DOWN:
 			height = drect.height * t_position;
-            t_start_dst.origin.y += height;
 			t_end_dst = MCGRectangleTranslate(t_end_src, 0.0, -t_end_src.size.height + height);
 			break;
 			
@@ -787,7 +783,7 @@ Boolean scrolleffect_step(const MCRectangle &drect, MCStackSurface *p_target, MC
 	
 	t_end_dst.origin.x += drect.x;
 	t_end_dst.origin.y += drect.y;
-    
+	
 	p_target->Composite(t_start_dst, p_start, t_start_src, 1.0, kMCGBlendModeCopy);
 	p_target->Composite(t_end_dst, p_end, t_end_src, 1.0, kMCGBlendModeCopy);
 	
