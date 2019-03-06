@@ -27,10 +27,10 @@ comparisons.
 
 The <caseSensitive> <property> <control|controls> the <behavior> of the
 all <string> comparisons, including the comparison <operator|operators>
-<=>, &gt;, &lt; , &gt;=, &lt;=, <is in>, <is among>, <is not among>, and
-<contains>; the <command|commands> <filter>, <find>, and <replace>; and
-the <function|functions> <offset>, <itemOffset>, <wordOffset>,
-<lineOffset>, and <replaceText>.
+<=>, <&gt;>, <&lt;>, <&gt;=>, <&lt;=>, <is in>, <is among>, 
+<is not among>,  and <contains>; the <command|commands> <filter>, 
+<find>, and <replace>; and the <function|functions> <offset>, 
+<itemOffset>, <wordOffset>, <lineOffset>, and <replaceText>.
 
 If the <caseSensitive> <property> is set to true, all the <LiveCode>
 terms listed above, as well as all other <string> comparisons, treat
@@ -73,8 +73,9 @@ expression (glossary), command (glossary), function (glossary),
 LiveCode (glossary), custom property (glossary), key (glossary),
 message (glossary), handler (glossary), 
 string (keyword), = (operator), contains (operator), &gt; (operator),
-is among (operator), is not among (operator), &lt;= (operator),
-is in (operator), wholeMatches (property)
+&gt;= (operator), is among (operator), is not among (operator), 
+&lt; (operator), &lt;= (operator), is in (operator), 
+wholeMatches (property)
 
 Tags: database
 

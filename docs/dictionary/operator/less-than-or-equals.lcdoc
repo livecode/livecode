@@ -56,10 +56,10 @@ If the <caseSensitive> <property> is true, the comparison between two
 letters. If the <caseSensitive> <property> is false, the comparison is
 not <case-sensitive>, so "a" is considered equivalent to "A".
 
->*Cross-platform note:* The synonym ≤ can be used only on <OS X|OS X
-> systems>. If you use a <script> containing the ≤ character on a
-> <Windows> or <Unix|Unix system>, a <error|script error> may result. To
-> ensure cross-platform compatibility, use the synonym <&lt;=> instead.
+>*Cross-platform note:* The synonym ≤ can be used only on 
+> <OS X|OS X systems>. If you use a <script> containing the ≤ character 
+> on a <Windows> or <Unix|Unix system>, a <error|script error> may result. 
+> To ensure cross-platform compatibility, use the synonym <&lt;=> instead.
 
 References: min (function), max (function), value (function),
 return (glossary), string (glossary), property (glossary),

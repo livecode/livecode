@@ -8,10 +8,10 @@ Description:
 A single text symbol: a letter, number, punctuation mark, or control
 character. 
 
-Characters can be <single-byte character|single-byte> or <double-byte
-character|double-byte> (<Unicode>). When using the word "character" in a
-<chunk expression>, <single-byte character|single-byte characters> are
-assumed. 
+Characters can be <single-byte character|single-byte> or 
+<double-byte character|double-byte> (<Unicode>). When using the word 
+"character" in a <chunk expression>, 
+<single-byte character|single-byte characters> are assumed. 
 
 References: Unicode (glossary), double-byte character (glossary),
 single-byte character (glossary), chunk expression (glossary)
