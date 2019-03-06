@@ -129,6 +129,7 @@ public class IabHelper {
     public static final int IABHELPER_UNKNOWN_ERROR = -1008;
     public static final int IABHELPER_SUBSCRIPTIONS_NOT_AVAILABLE = -1009;
     public static final int IABHELPER_INVALID_CONSUMPTION = -1010;
+    public static final int IABHELPER_SERVICE_IS_NULL = -1011;
     
     // Keys for the responses from InAppBillingService
     public static final String RESPONSE_CODE = "RESPONSE_CODE";
@@ -788,7 +789,6 @@ public class IabHelper {
             return iab_msgs[code];
     }
     
-    
     // Checks that setup was done; if not, throws an exception.
     void checkSetupDone(String operation) {
         if (!mSetupDone) {
@@ -851,6 +851,9 @@ public class IabHelper {
         boolean verificationFailed = false;
         String continueToken = null;
         
+        if (mService == null)
+            return serviceIsDisconnected("queryPurchases");
+        
         do {
             logDebug("Calling getPurchases with continuation token: " + continueToken);
             Bundle ownedItems = mService.getPurchases(3, mContext.getPackageName(),
@@ -910,6 +913,8 @@ public class IabHelper {
     int querySkuDetails(String itemType, Inventory inv, List<String> moreSkus)
     throws RemoteException, JSONException {
         logDebug("Querying SKU details.");
+        if (mService == null)
+            return serviceIsDisconnected("querySkuDetails");
         ArrayList<String> skuList = new ArrayList<String>();
         skuList.addAll(inv.getAllOwnedSkus(itemType));
         if (moreSkus != null) {
@@ -1027,5 +1032,10 @@ public class IabHelper {
     
     void logWarn(String msg) {
         Log.w(mDebugTag, "In-app billing warning: " + msg);
+    }
+    
+    private int serviceIsDisconnected(String operation) {
+        logError("IabHelper.mService is null. Service not connected: " + operation);
+        return IABHELPER_SERVICE_IS_NULL;
     }
 }
