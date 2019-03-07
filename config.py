@@ -379,13 +379,13 @@ def configure_toolchain(opts):
     if opts['CC_PREFIX'] is not None:
         ccprefix = opts['CC_PREFIX']
     if opts['CC'] is None:
-        opts['CC'] = ccprefix + 'cc'
+        opts['CC'] = ccprefix + 'cc -fno-pie'
     if opts['CXX'] is None:
-        opts['CXX'] = ccprefix + 'c++'
+        opts['CXX'] = ccprefix + 'c++ -fno-pie'
     if opts['AR'] is None:
         opts['AR'] = ccprefix + 'ar'
     if opts['LINK'] is None:
-        opts['LINK'] = opts['CXX']
+        opts['LINK'] = opts['CXX'] + ' -no-pie'
     if opts['STRIP'] is None:
         opts['STRIP'] = ccprefix + 'strip'
     if opts['OBJCOPY'] is None:
