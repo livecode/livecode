@@ -703,12 +703,20 @@ Parse_stat MCRepeat::parse(MCScriptPoint &sp)
 						return PS_ERROR;
 					}
 					if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_STEP) == PS_NORMAL)
-						if (sp.parseexp(False, True, &step) != PS_NORMAL)
-						{
-							MCperror->add
-							(PE_REPEAT_BADWITHSTARTEXP, sp);
-							return PS_ERROR;
-						}
+                    {
+                        if (sp.parseexp(False, True, &step) != PS_NORMAL)
+                        {
+                            MCperror->add
+                            (PE_REPEAT_BADWITHSTARTEXP, sp);
+                            return PS_ERROR;
+                        }
+                    }
+                    else if (sp.next(type) != PS_EOL)
+                    {
+                        MCperror -> add
+                        (PE_REPEAT_BADCOND, sp);
+                        return PS_ERROR;
+                    }
 					break;
 				default: /* repeat form */
 					fprintf(stderr, "Repeat: ERROR bad control form\n");
