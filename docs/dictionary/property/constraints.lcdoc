@@ -26,12 +26,12 @@ set the pan of me to item 2 of line 1 of the constraints of me
 Value (enum):
 The <constraints> is a list consisting of three lines:
 
-        - The minimum and maximum <pan>, separated by commas.
-        - The minimum and maximum <tilt>, separated by commas.
-        - The minimum and maximum <zoom>, separated by commas.
+ - The minimum and maximum <pan>, separated by commas.
+ - The minimum and maximum <tilt>, separated by commas.
+ - The minimum and maximum <zoom>, separated by commas.
 
 Each value is a number.
-This property is read:only and cannot be set
+This property is read-only and cannot be set
 
 
 Description:

@@ -6,11 +6,10 @@ Type: library
 
 Description:
 The <LiveCode custom library|LiveCode custom library> that supports
-connections to MySQL, PostgreSQL, <Open Database Connectivity
-(ODBC)|ODBC>, Valentina, and Oracle (LiveCode Enterprise only)
-databases. 
+connections to MySQL, PostgreSQL, <ODBC>, Valentina, and Oracle 
+(LiveCode Enterprise only) databases. 
 
-References: Open Database Connectivity (ODBC) (glossary),
+References: ODBC (glossary),
 LiveCode custom library (glossary)
 
 Tags: database

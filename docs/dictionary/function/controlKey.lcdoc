@@ -24,18 +24,17 @@ Example:
 if controlKey() is down then go back
 
 Returns:
-The <controlKey> <function(control structure)> <return|returns> <down>
+The <controlKey> <function> <return|returns> <down>
 if the key is pressed and <up> if it's not. On Unix and Windows systems,
-the commandKey function <return|returns> the same value as the
-<controlKey> <function(control structure)>: the two
-<function(glossary)|functions> are synonyms.
+the <commandKey> <function> <return|returns> the same value as the
+<controlKey> <function>: the two <function|functions> are synonyms.
 
 Description:
 Use the <controlKey> <function> to check whether the user is pressing
 the Control key.
 
 References: down (constant), left (constant), up (constant),
-function (control structure), keysDown (function), return (glossary),
+commandKey (function), keysDown (function), return (glossary), 
 function (glossary), commandKeyDown (message)
 
 Tags: ui

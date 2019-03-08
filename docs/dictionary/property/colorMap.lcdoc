@@ -45,8 +45,8 @@ while running the <application>.
 If you leave a line blank when setting the <colorMap>, the color
 corresponding to that <line> is left unchanged.
 
->*Cross-platform note:*  On <Windows|Windows systems>, colors 110 and
-> 246256 cannot be changed.
+>*Cross-platform note:*  On <Windows|Windows systems>, colors 1-10 and
+> 246-256 cannot be changed.
 
 On Unix systems, setting the <colorMap> <property> sets the
 <privateColors> <property> to true.
