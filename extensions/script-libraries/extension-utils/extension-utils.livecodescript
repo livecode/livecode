@@ -271,6 +271,7 @@ private function __extensionIsBuiltin pID
       case "com.livecode.foreign"
       case "com.livecode.arithmetic"
       case "com.livecode.array"
+      case "com.livecode.assert"
       case "com.livecode.binary"
       case "com.livecode.bitwise"
       case "com.livecode.byte"
