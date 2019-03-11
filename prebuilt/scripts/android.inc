@@ -1,6 +1,14 @@
 # Android options
 ANDROID_NDK=${ANDROID_NDK:-"${HOME}/android/toolchain/android-ndk"}
-ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-26}
+
+case "${ANDROID_ARCH}" in
+	armv6|armv7|x86)
+		ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-16}
+		;;
+	*)
+		ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-26}
+		;;
+esac
 
 function configureAndroidToolchain {
 	ANDROID_ARCH=$1
