@@ -945,11 +945,15 @@ component TimeZone
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder ios:iphonesimulator11.2/packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphonesimulator12.1/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder ios:iphoneos9.2/packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder ios:iphoneos10.2/packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder ios:iphoneos11.2/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphoneos12.1/packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder windows:packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
