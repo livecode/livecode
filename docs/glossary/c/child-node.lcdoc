@@ -8,8 +8,8 @@ Description:
 A <node> beneath another <node> in an <XML tree>. Any <node> can have
 any number of child nodes.
 
-A child node corresponds to an element that is enclosed in the <parent
-node>. 
+A child node corresponds to an element that is enclosed in the 
+<parent node>. 
 
 References: node (glossary), XML tree (glossary), parent node (glossary)
 

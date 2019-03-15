@@ -44,11 +44,11 @@ released does not affect the <value> <return|returned> by the
 
 The first and second character numbers in the return value are always
 identical, unless the click was on a field but there was no text under
-it. In this case, the <clickCharChunk> <return|returns> a <chunk
-expression> of the form char charNumber to charNumber - 1 of field
-fieldNumber indicating the start of the clickLine. For example, if the
-mouse is over an empty <field>, the <clickCharChunk> <return|returns>
-char 1 to 0 of field fieldNumber.
+it. In this case, the <clickCharChunk> <return|returns> a 
+<chunk expression> of the form char charNumber to charNumber - 1 of 
+field fieldNumber indicating the start of the clickLine. For example, 
+if the mouse is over an empty <field>, the <clickCharChunk> 
+<return|returns> char 1 to 0 of field fieldNumber.
 
 If the field is locked, the <clickCharChunk> <function> is most useful
 within a <handler> (such as <mouseDown> or <mouseUp>) that is

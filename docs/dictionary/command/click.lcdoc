@@ -42,8 +42,8 @@ Any expression that evaluates to a point--a vertical and horizontal
 distance from the top left of the current stack, separated by a comma.
 
 key:
-One of,,, or. You can specify up to three keys, separated by commas. (On
-Windows and Unix,indicates the Control key.)
+One of shiftKey, commandKey, optionKey, altKey or controlKey. You can 
+specify up to three keys, separated by commas.
 
 Description:
 Use the <click> <command> to simulate the action of a click, instead of

@@ -32,31 +32,21 @@ Graphic Effects card of the property inspector which has full control
 over each parameter. To control the effect by script use the 
 following properties: 
 
-colorOverlay["color"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;The color of the overlay, in the format
+- colorOverlay["color"] : The color of the overlay, in the format 
 red,green,blue where each value is between 0 and 255.
 
-colorOverlay["blendMode"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How the overlay is blended with the
+- colorOverlay["blendMode"] : How the overlay is blended with the 
 object. This is one of the following values:
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "normal" :
-the glow is laid directly over the object.
+  - "normal" : the glow is laid directly over the object.
+  - "multiply" : this results in a darkening effect
+  - "colorDodge" : this results in a lightening effect
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- "multiply"
-: this results in a darkening effect
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-
-"colorDodge" : this results in a lightening effect
-
-colorOverlay["opacity"]
-
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;How opaque the overlay is. The value is
+colorOverlay["opacity"] : How opaque the overlay is. The value is
 between 0 (fully transparent) and 255 (fully opaque).
 
 References: innerShadow (property), innerGlow (property),
 dropShadow (property), outerGlow (property), blendLevel (property),
 ink (property)
+
 
