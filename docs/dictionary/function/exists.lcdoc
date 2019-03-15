@@ -36,8 +36,8 @@ create an <object(glossary)>.
 
 To find out whether any of a certain type of object exist, use the
 <exists> <function> with the number 1. For example, exists(image 1)
-<return|returns> true if there are any <image|images> on the <current
-card>, and false otherwise.
+<return|returns> true if there are any <image|images> on the 
+<current card>, and false otherwise.
 
 You can also specify a chunk of a container, but in this case the
 <exists> <function> always <return|returns> true.

@@ -17,8 +17,8 @@ Example:
 end if
 
 Description:
-Use the <end if> <keyword> to mark the end of an <if> <control
-structure>. 
+Use the <end if> <keyword> to mark the end of an <if> 
+<control structure>. 
 
 The <end if> <keyword> is used only with certain forms of the <if>
 <control structure>. If the entire <if> <control structure> is on one

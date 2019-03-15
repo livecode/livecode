@@ -61,21 +61,22 @@ available.
 Which elements are present in the <dragData> <array> depends on what
 type of data is being dragged. It is possible for more than one
 <element> in the <dragData> <array> to be populated. Different drop
-destinations can each use the data type they need. (For example, a <list
-field|list field's> <dragDrop> <handler> might use the dragData["text"]
-to ignore the styles, while an ordinary field's <dragDrop> <handler>
-might use the dragData["HTML"] to retain the styles.
+destinations can each use the data type they need. (For example, a 
+<list field|list field's> <dragDrop> <handler> might use the 
+dragData["text"] to ignore the styles, while an ordinary field's 
+<dragDrop> <handler> might use the dragData["HTML"] to retain the 
+styles.
 
 LiveCode will automatically synthesize the three text properties text,
 html and rtf if any text data is present. For example setting the
 dragData["text"] will result in the dragData["html"] being set
 appropriately. 
 
-If you don't specify a <dataType>, the <dragData> <property> reports or
+If you don't specify a *dataType*, the <dragData> <property> reports or
 sets the dragData["text"].
 
 >*Note:* It is necessary to use double quotes around the keys of the
-> <dragData> array because some of the key names (such as "files" ) are
+> <dragData> array because some of the key names (such as "files") are
 > LiveCode reserved words. Quoting array indexes (other than integers)
 > is a good practice anyway, but in the case of this property, it's
 > necessary to avoid script errors.
