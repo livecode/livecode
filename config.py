@@ -26,7 +26,6 @@ import shutil
 BUILDBOT_PLATFORM_TRIPLES = (
     'x86-linux-debian8',
     'x86_64-linux-debian8',
-    'armv6-android-sdk26_ndk16r15',
     'armv7-android-sdk26_ndk16r15',
     'arm64-android-sdk26_ndk16r15',
     'x86-android-sdk26_ndk16r15',
