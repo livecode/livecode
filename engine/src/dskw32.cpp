@@ -1613,8 +1613,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual bool GetMachine(MCStringRef& r_string)
     {
-		r_string = MCValueRetain(MCS_getprocessor());
-		return true;
+        return MCS_getprocessor(r_string);
     }
     
 	virtual bool GetAddress(MCStringRef& r_address)
