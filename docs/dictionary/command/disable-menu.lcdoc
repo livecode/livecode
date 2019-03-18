@@ -60,20 +60,19 @@ the Apple menu.
 Since a LiveCode menu bar is implemented as a group of buttons (one
 button per menu, with the menu items as lines in the button's text
 <property>), you can indicate a <menu> by specifying its <button>.
-<Disabled> <menu item|menu items> have an open parenthesis `(` before
-the name of that menu item, so when used to <disable> a <menu item>, the
-<disable menu> <command> adds an open parenthesis at the beginning of
+<disabled|Disabled> <menu item|menu items> have an open parenthesis `(` 
+before the name of that menu item, so when used to <disable> a <menu item>, 
+the <disable menu> <command> adds an open parenthesis at the beginning of
 the specified line.
 
 Example of disabling a sub menu item using an open parenthesis:
 
     Main1
-
-    Sub1
-    (Sub2
-    Sub3
-	Main2
-	Main3
+        Sub1
+        (Sub2
+        Sub3
+    Main2
+    Main3
 
 
 The menu item "Sub2" will be disabled.
