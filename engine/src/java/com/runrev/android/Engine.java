@@ -2047,18 +2047,7 @@ public class Engine extends View implements EngineApi
 			return;
 		}
 
-        // getPath() returns a path starting with /, e.g. /storage/emulated/0/Android/data/<app_id>/cache/..
-        // This path is appended to content://<app_id>.fileprovider/share/, resulting in an URI like:
-        //
-        // content://<app_id>.fileprovider//storage/emulated/0/Android/data/<app_id>/cache/..
-        //
-        // This is not a problem in general, but in _some_ devices (e.g. Huawei nova e3) this URI is
-        // normalized to:
-        //
-        // content://<app_id>.fileprovider/storage/emulated/0/Android/data/<app_id>/cache/..
-        //
-        // This results in the URI not being found. So use .substring(1) to remove the first slash
-		String t_path = m_temp_image_file.getPath().substring(1);
+		String t_path = m_temp_image_file.getPath();
 
 		Uri t_uri;
 		t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", true, ParcelFileDescriptor.MODE_WRITE_ONLY);
