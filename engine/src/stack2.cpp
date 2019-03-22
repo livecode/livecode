@@ -1573,7 +1573,7 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
                 return cptr;
             cptr = cptr->next();
         }
-        while (cptr != cards);
+        while (cptr != cards && cptr != savecards);
         return nil;
     }
     MCCard *found = nil;
@@ -1582,9 +1582,10 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
         found = cptr->findname(CT_CARD, p_name);
         if (found != nil && found->countme(backgroundid, (state & CS_MARKED) != 0))
             break;
+        
         cptr = cptr->next();
     }
-    while (cptr != cards);
+    while (cptr != cards && cptr != savecards);
     
     return found;
 }
