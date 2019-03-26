@@ -798,6 +798,8 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	{
 		if ([t_event type] == NSLeftMouseDown || [t_event type] == NSLeftMouseDragged)
 		{
+            if (s_last_mouse_event != nullptr)
+                [s_last_mouse_event release];
 			s_last_mouse_event = t_event;
 			[t_event retain];
 			[NSApp sendEvent: t_event];
