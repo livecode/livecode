@@ -1554,11 +1554,15 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
 		cards->setparent(this);
 	}
     
-    MCCard *cptr;
-	if (editing != NULL && savecards != NULL)
-		cptr = savecards;
-	else
-		cptr = cards;
+    MCCard *cptr, *cptr_sentinal;
+    if (editing != NULL && savecards != NULL)
+    {
+        cptr_sentinal = cptr = savecards;
+    }
+    else
+    {
+        cptr_sentinal = cptr = cards;
+    }
     
     uint2 t_num = 0;
     if (MCU_stoui2(MCNameGetString(p_name), t_num))
@@ -1573,7 +1577,7 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
                 return cptr;
             cptr = cptr->next();
         }
-        while (cptr != cards && cptr != savecards);
+        while (cptr != cptr_sentinal);
         return nil;
     }
     MCCard *found = nil;
@@ -1585,7 +1589,7 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
         
         cptr = cptr->next();
     }
-    while (cptr != cards && cptr != savecards);
+    while (cptr != cptr_sentinal);
     
     return found;
 }
