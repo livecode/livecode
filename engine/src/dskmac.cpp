@@ -2964,7 +2964,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     {
 		CFStringRef t_string;
 		if (MCStringConvertToCFStringRef(p_string, t_string))
+        {
 			NSLog(CFSTR("%@"), t_string);
+            CFRelease(t_string);
+        }
     }
 	
 	virtual real64_t GetCurrentTime(void)
