@@ -128,13 +128,15 @@ MCFontnode::~MCFontnode()
 {
     MCValueRelease(reqname);
     
-    // Don't delete the fontstruct for system fonts (it is still cached elsewhere)
+    /* The actual font handle for system fonts is cached by the theme related
+     * code on Mac so don't release it here. */
     if ((reqstyle & FA_SYSTEM_FONT) == 0)
     {
         // MM-2014-06-02: [[ CoreText ]] Updated to use core text fonts.
         coretext_font_destroy(font -> fid);
-        delete font;
     }
+    
+    delete font;
 }
 
 MCFontStruct *MCFontnode::getfont(MCNameRef fname, uint2 size, uint2 style)
