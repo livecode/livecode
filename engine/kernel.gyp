@@ -233,6 +233,7 @@
 							'libraries':
 							[
 								'-lGLESv1_CM',
+								'-lEGL',
 								'-ljnigraphics',
 								'-llog',
 								'-lm',

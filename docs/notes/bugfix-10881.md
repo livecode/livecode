@@ -1,0 +1,1 @@
+# Fix stack rendering when keyboard activated and deactivated on Android with acceleratedRendering
