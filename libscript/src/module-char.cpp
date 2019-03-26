@@ -48,8 +48,8 @@ bool MCCharStoreChunk(MCStringRef &x_target, MCStringRef p_value, MCRange p_grap
 
 extern "C" MC_DLLEXPORT_DEF void MCCharEvalNumberOfCharsIn(MCStringRef p_target, index_t& r_output)
 {
-    MCTextChunkIterator *tci;
-    tci = MCChunkCreateTextChunkIterator(p_target, nil, kMCChunkTypeCharacter, nil, nil, kMCStringOptionCompareExact);
+    MCAutoPointer<MCTextChunkIterator> tci =
+            MCChunkCreateTextChunkIterator(p_target, nil, kMCChunkTypeCharacter, nil, nil, kMCStringOptionCompareExact);
     r_output = tci -> CountChunks();
 }
 
@@ -65,8 +65,8 @@ extern "C" MC_DLLEXPORT_DEF void MCCharEvalIsAmongTheCharsOf(MCStringRef p_needl
         return;
     }
     
-    MCTextChunkIterator *tci;
-    tci = MCChunkCreateTextChunkIterator(p_target, nil, kMCChunkTypeCharacter, nil, nil, kMCStringOptionCompareExact);
+    MCAutoPointer<MCTextChunkIterator> tci =
+            MCChunkCreateTextChunkIterator(p_target, nil, kMCChunkTypeCharacter, nil, nil, kMCStringOptionCompareExact);
     r_output = tci -> IsAmong(p_needle);
 }
 

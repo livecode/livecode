@@ -417,7 +417,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     index_t t_sequenced_iterator;
     const byte_t *t_data_ptr;
     
-    MCTextChunkIterator *tci = nil;
+    MCAutoPointer<MCTextChunkIterator> tci;
     
     if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADFORCOND, &t_condition))
         return;
@@ -551,7 +551,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                 
             default:
             {
-                t_found = MCStringsTextChunkIteratorNext(ctxt, tci);
+                t_found = MCStringsTextChunkIteratorNext(ctxt, *tci);
                 endnext = tci -> IsExhausted();
                 
                 if (!t_found)
@@ -595,8 +595,6 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
         
         done = done || endnext;
     }
-    
-    delete tci;
 }
 
 void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCExpression *step, MCExpression *startcond, MCExpression *endcond, MCVarref *loopvar, real8 stepval, uint2 line, uint2 pos)
