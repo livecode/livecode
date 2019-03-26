@@ -40,6 +40,7 @@ extern void MCIPhoneSwitchToOpenGL(void);
 #define GL_GLEXT_PROTOTYPES
 #include <GLES/gl.h>
 #include <GLES/glext.h>
+#include <EGL/egl.h>
 extern void MCAndroidEnableOpenGLMode(void);
 extern void MCAndroidDisableOpenGLMode(void);
 #else
@@ -390,7 +391,17 @@ void MCTileCacheOpenGLCompositor_DeallocateTile(void *p_context, void *p_tile)
 
 static void MCTileCacheOpenGLCompositor_PrepareFrame(MCTileCacheOpenGLCompositorContext *self)
 {
-	self -> viewport_height = MCTileCacheGetViewport(self -> tilecache) . height;
+#if defined(_ANDROID_MOBILE)
+    EGLint t_height;
+    eglQuerySurface(eglGetCurrentDisplay(),
+                    eglGetCurrentSurface(EGL_DRAW),
+                    EGL_HEIGHT,
+                    &t_height);
+    
+    self -> viewport_height = t_height;
+#else
+    self -> viewport_height = MCTileCacheGetViewport(self -> tilecache) . height;
+#endif
 	self -> current_texture = 0;
 	self -> current_color = 0xffffffff;
 	self -> current_opacity = 255;
