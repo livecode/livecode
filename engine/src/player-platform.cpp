@@ -904,24 +904,24 @@ void MCPlayer::open()
 void MCPlayer::close()
 {
 	MCControl::close();
+
+    if (s_volume_popup != nil)
+        s_volume_popup -> close();
+
 	if (opened == 0)
 	{
 		state |= CS_CLOSING;
 		playstop();
 		state &= ~CS_CLOSING;
-	}
-    
-    if (s_volume_popup != nil)
-        s_volume_popup -> close();
-	
-	detachplayer();
 
-    
-    if (m_platform_player != nil)
-    {
-        MCPlatformPlayerRelease(m_platform_player);
-        m_platform_player = nullptr;
-    }
+		detachplayer();
+
+		if (m_platform_player != nil)
+		{
+			MCPlatformPlayerRelease(m_platform_player);
+			m_platform_player = nullptr;
+		}
+	}
 }
 
 Boolean MCPlayer::kdown(MCStringRef p_string, KeySym key)
