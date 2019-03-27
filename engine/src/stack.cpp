@@ -1419,8 +1419,17 @@ Boolean MCStack::del(bool p_check_flag)
 
     while (substacks)
     {
+        /* When a substack is deleted it removes itself from its mainstack,
+         * however it isn't actually destroyed - it must be explicitly
+         * scheduled for deletion. */
+        MCStack *t_substack = substacks;
         if (!substacks -> del(false))
             return False;
+        
+        /* Schedule the substack for deletion - unlike a main stack we don't
+         * need to check for it being in the MCtodestroy list as only mainstacks
+         * can ever be in that list. */
+        t_substack->scheduledelete();
     }
     
     return dodel();
