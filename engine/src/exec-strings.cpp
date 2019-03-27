@@ -1531,13 +1531,12 @@ bool MCStringsEvalIsAmongTheChunksOf(MCExecContext& ctxt, MCStringRef p_chunk, M
     MCChunkType t_type;
     t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
     
-    MCTextChunkIterator *tci;
-    tci = MCStringsTextChunkIteratorCreate(ctxt, p_text, p_chunk_type);
+    MCAutoPointer<MCTextChunkIterator> tci = 
+            MCStringsTextChunkIteratorCreate(ctxt, p_text, p_chunk_type);
 
     bool t_result;
     t_result = tci -> IsAmong(p_chunk);
     
-    delete tci;
     return t_result;
 
 }
@@ -1680,12 +1679,11 @@ __MCStringsEvalChunkOffset(MCExecContext& ctxt,
     MCChunkType t_type;
     t_type = MCChunkTypeFromChunkTerm(p_chunk_type);
     
-    MCTextChunkIterator *tci;
-    tci = MCStringsTextChunkIteratorCreate(ctxt, p_string, p_chunk_type);
+    MCAutoPointer<MCTextChunkIterator> tci =
+            MCStringsTextChunkIteratorCreate(ctxt, p_string, p_chunk_type);
     
     uindex_t t_offset = tci -> ChunkOffset(p_chunk, p_start_offset, nil, ctxt . GetWholeMatches());
     
-    delete tci;
     return t_offset;
 }
 
