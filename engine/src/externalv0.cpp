@@ -905,6 +905,10 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
     char *t_result;
     /* UNCHECKED */ MCStringNormalizeAndConvertToCString(*t_string, t_result);
     
+    /* Add the generated cstring to the pool that must be released when the
+     * external call finishes as the caller isn't responsible for freeing it. */
+    MCExternalAddAllocatedString(MCexternalallocpool, t_result);
+    
     // SN-2014-04-07 [[ Bug 12118 ]] revExecuteSQL writes incomplete data into SQLite BLOB columns
     // arg3 is not a char* but rather a MCString; whence setting the length should not be forgotten,
     // in case '\0' are present in the value fetched.
@@ -1425,7 +1429,11 @@ static char *get_variable_ex_utf8(const char *arg1, const char *arg2,
     char *t_result = nullptr;
     uindex_t t_char_count = 0;
     /* UNCHECKED */ convert_from_string(*t_string, p_is_text, t_result, t_char_count);
-
+    
+    /* Add the generated cstring/data to the pool that must be released when the
+     * external call finishes as the caller isn't responsible for freeing it. */
+    MCExternalAddAllocatedString(MCexternalallocpool, t_result);
+    
     // SN-2014-04-07 [[ Bug 12118 ]] revExecuteSQL writes incomplete data into SQLite BLOB columns
     // arg3 is not a char* but rather a MCString; whence setting the length should not be forgotten,
     // in case '\0' are present in the value fetched.
