@@ -1476,6 +1476,13 @@ void MCStack::removereferences()
     {
         MCdispatcher->remove_transient_stack(this);
     }
+    else if (!parent.IsValid() || parent->gettype() == CT_BUTTON)
+    {
+        /* If the parent is a button or non-existant then this is a
+         * menu-as-stack - registered with MCdispatcher as a panel. This code
+         * path is hit when performing dodel() on a menu-as-stack before it
+         * is explicitly deleted in MCButton::freemenu. */
+    }
     else if (parent->gettype() == CT_STACK)
     {
         remove(parent.GetAs<MCStack>()->substacks);
