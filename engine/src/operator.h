@@ -171,10 +171,10 @@ public:
                 Eval(ctxt, t_left . double_value, t_right . double_value, r_value . double_value);
         }
         
-        if (ctxt . HasError())
-            MCExecTypeRelease(r_value);
-        else
+        if (!ctxt . HasError())
+        {
             r_value . type = t_left . type;
+        }
 
         if (t_left . type == kMCExecValueTypeArrayRef)
             MCValueRelease(t_left . arrayref_value);
@@ -243,12 +243,13 @@ public:
                 Eval(ctxt, t_left . double_value, t_right . double_value, r_value . double_value);
         }
         
-        if (ctxt . HasError())
-            MCExecTypeRelease(r_value);
-        else if (t_left . type == kMCExecValueTypeDouble && t_right . type == kMCExecValueTypeDouble)
-            r_value . type = kMCExecValueTypeDouble;
-        else
-            r_value . type = kMCExecValueTypeArrayRef;
+        if (!ctxt . HasError())
+        {
+            if (t_left . type == kMCExecValueTypeDouble && t_right . type == kMCExecValueTypeDouble)
+                r_value . type = kMCExecValueTypeDouble;
+            else
+                r_value . type = kMCExecValueTypeArrayRef;
+        }
 
         if (t_left . type == kMCExecValueTypeArrayRef)
             MCValueRelease(t_left . valueref_value);

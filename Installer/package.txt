@@ -609,6 +609,7 @@ component Runtime.Android
 		file android-armeabi-v7a:livecode_inputcontrol.xml
 		file android-armeabi-v7a:notify_icon.png
 		file android-armeabi-v7a:nfc_tech_filter.xml
+		file android-armeabi-v7a:file_provider_paths.xml
 		with TargetFolder as [[ToolsFolder]]/Runtime/Android/armeabi-v7a do
 			set TargetArchitecture to armeabi-v7a
 			include Runtime.Android.Arch
@@ -966,11 +967,15 @@ component TimeZone
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder ios:iphonesimulator11.2/packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphonesimulator12.1/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder ios:iphoneos9.2/packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder ios:iphoneos10.2/packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder ios:iphoneos11.2/packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder ios:iphoneos12.1/packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder windows:packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place

@@ -34,8 +34,8 @@ with a grid of cells.
 If the  <vGrid> <property> is true, LiveCode draws a vertical line at
 each <tab stop> position in the <field(keyword)>. The lines are drawn in
 the <field(object)|field's> <borderColor>. This <property> is useful for
-<field(object)|fields> that are used like a spreadsheet, with each <tab
-stop> marking a column.
+<field(object)|fields> that are used like a spreadsheet, with each 
+<tab stop> marking a column.
 
 Any text in a column is truncated when it reaches the right edge of the
 column. To show the entire contents of the column, drag over the text to

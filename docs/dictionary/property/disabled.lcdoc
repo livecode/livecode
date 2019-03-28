@@ -56,8 +56,7 @@ References: disable (command), group (command), enable menu (command),
 send (command), menus (function), object (glossary), property (glossary),
 message (glossary), trigger (glossary), command (glossary),
 menu item (glossary), menu (glossary), control (keyword), menu (keyword),
-mouseUp (message), mouseEnter (message), control (object),
-enabled (property)
+mouseUp (message), mouseEnter (message), enabled (property)
 
 Tags: ui
 

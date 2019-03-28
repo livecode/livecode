@@ -63,9 +63,8 @@ deleted. Setting the <customKeys> to empty deletes all
 <custom property|custom properties> in the current custom property set.
 
 References: undefine (command), object (glossary), property (glossary),
-custom property (glossary), customPropertySet (glossary),
-custom property set (glossary), line (keyword),
-customPropertySets (property)
+custom property (glossary), custom property set (glossary), 
+line (keyword), customPropertySet(property), customPropertySets (property)
 
 Tags: properties
 

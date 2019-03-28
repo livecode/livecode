@@ -113,9 +113,9 @@ included in the operating system--the exact <WDEF|WDEFs> available vary
 from version to version. <WDEF> routines, like <externals>, can be
 written in a programming language and compiled.
 
->*Cross-platform note:*  <WDEF|WDEF resources> can be used only on <Mac
-> OS> and <OS X|OS X systems>. For a <cross-platform> method of changing
-> a window's shape, use the <windowShape> <property>.
+>*Cross-platform note:*  <WDEF|WDEF resources> can be used only on 
+> <Mac OS> and <OS X|OS X systems>. For a <cross-platform> method of 
+> changing a window's shape, use the <windowShape> <property>.
 
 Changes:
 The "close", "system", "noShadow", and "metal" options were introduced

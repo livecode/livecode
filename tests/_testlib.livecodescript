@@ -304,7 +304,7 @@ on TestAssertBroken pDescription, pExpectTrue, pReasonBroken
    _TestOutput pExpectTrue, pDescription, "TODO", pReasonBroken
 end TestAssertBroken
 
-on TestAssertThrow pDescription, pHandler, pTarget, pErrorCodes, pParam
+function _TestHandlerThrows pHandler, pTarget, pErrorCodes, pParam
    local tError
    try
       dispatch pHandler to pTarget with pParam
@@ -319,9 +319,20 @@ on TestAssertThrow pDescription, pHandler, pTarget, pErrorCodes, pParam
       put tSuccess and __TestErrorMatches(tError, tErrorCode) into tSuccess
       delete the first line of tError
    end repeat
+   return tSuccess
+end _TestHandlerThrows
 
+on TestAssertThrow pDescription, pHandler, pTarget, pErrorCodes, pParam
+   local tSuccess
+   put _TestHandlerThrows(pHandler, pTarget, pErrorCodes, pParam) into tSuccess
    TestAssert pDescription, tSuccess
 end TestAssertThrow
+
+on TestAssertBrokenThrow pDescription, pHandler, pReason, pTarget, pErrorCodes, pParam
+   local tSuccess
+   put _TestHandlerThrows(pHandler, pTarget, pErrorCodes, pParam) into tSuccess
+   TestAssertBroken pDescription, tSuccess, pReason
+end TestAssertBrokenThrow
 
 on TestAssertDoesNotThrow pDescription, pHandler, pTarget, pParam
   local tError

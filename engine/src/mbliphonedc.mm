@@ -850,6 +850,11 @@ Window MCScreenDC::get_current_window(void)
 	return m_current_window;
 }
 
+void MCScreenDC::refresh_current_window(void)
+{
+    
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);

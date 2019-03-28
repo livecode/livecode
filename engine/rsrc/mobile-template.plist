@@ -94,9 +94,6 @@
 	<string>This application requires access to Photo Library</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This application requires access to Photo Library</string>
-	<key>NSHealthShareUsageDescription</key>
-	<string>This application requires access to read the user's health data</string>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>This application requires access to update the user's health data</string>
+	${HEALTHKIT}
 </dict>
 </plist>

@@ -21,11 +21,11 @@ Value:
 The <windowBoundingRect> consists of four <integer|integers> separated
 by commas. By default the coordinates are in the same format as those
 returned by the <screenRect>. This means they are relative to the
-topleft of the primary monitor and may therefore be negative. On <Mac
-OS|Mac OS systems>, the <default> <windowBoundingRect> is adjusted to
-leave room for the <menu bar>. On <Windows|Windows systems>, the
-<default> <windowBoundingRect> is adjusted to leave room for the <task
-bar>. 
+topleft of the primary monitor and may therefore be negative. On 
+<Mac OS|Mac OS systems>, the <default> <windowBoundingRect> is adjusted 
+to leave room for the <menu bar>. On <Windows|Windows systems>, the
+<default> <windowBoundingRect> is adjusted to leave room for the 
+<task bar>. 
 
 Description:
 Use the <windowBoundingRect> <property> to ensure free space on the

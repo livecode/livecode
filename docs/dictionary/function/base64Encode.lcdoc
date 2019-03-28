@@ -7,7 +7,7 @@ Syntax: the base64Encode of <data>
 Syntax: base64Encode(<data>)
 
 Summary:
-<return|Returns> a base 64- <encodedstring>.
+<return|Returns> a base 64-<encode|encoded> string.
 
 Introduced: 1.0
 
@@ -46,8 +46,8 @@ For technical information about base 64 encoding, see [RFC 2045, section
 
 References: function (control structure), numToChar (function),
 md5Digest (function), base64Decode (function), encode (glossary),
-binary file (glossary), encodedstring (glossary), return (glossary),
-inverse (keyword), characters (keyword), line (keyword), string (keyword)
+binary file (glossary), return (glossary), inverse (keyword), 
+characters (keyword), line (keyword), string (keyword)
 
 Tags: text processing
 

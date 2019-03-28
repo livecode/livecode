@@ -5,10 +5,10 @@ Synonyms: common libraries, common library
 Type: library
 
 Description:
-One of the <LiveCode custom libraries>, which implements
-<function|functions> and <command|commands> that are shared between
-other <custom libraries> or used for miscellaneous purposes.
+One of the <LiveCode custom library|LiveCode custom libraries>, which 
+implements <function|functions> and <command|commands> that are shared 
+between other <LiveCode custom library|custom libraries> 
+or used for miscellaneous purposes.
 
-References: LiveCode custom libraries (glossary), command (glossary),
-function (glossary), custom libraries (glossary)
-
+References: LiveCode custom library (glossary), command (glossary),
+function (glossary)

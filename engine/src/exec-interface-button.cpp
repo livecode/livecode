@@ -940,15 +940,15 @@ void MCButton::GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width)
 				fwidth = 0;
 			else
             {
-                MCArrayRef lines;
-                MCStringSplit(t_label, MCSTR("\n"), nil, kMCCompareExact, lines);
-                uindex_t line_count = MCArrayGetCount(lines);
+                MCAutoArrayRef lines;
+                MCStringSplit(t_label, MCSTR("\n"), nil, kMCCompareExact, &lines);
+                uindex_t line_count = MCArrayGetCount(*lines);
                 int32_t max_length = 0;
                 
                 for (uindex_t i = 0; i < line_count; ++i)
                 {
                     MCValueRef line = nil;
-                    MCArrayFetchValueAtIndex(lines, i + 1, line);
+                    MCArrayFetchValueAtIndex(*lines, i + 1, line);
                     MCStringRef const string_line = static_cast<MCStringRef const>(line);
                     
                     int32_t string_line_length = MCFontMeasureText(m_font, string_line, getstack() -> getdevicetransform());

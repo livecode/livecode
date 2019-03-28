@@ -53,7 +53,7 @@ public class FileProvider
 	{
 		m_infos = new HashMap<String, HashMap<String, String> >();
 		m_context = p_context;
-		m_content_uri_base = "content://" + p_context.getPackageName() + ".fileprovider";
+		m_content_uri_base = "content://" + p_context.getPackageName() + ".fileprovider/share";
 	}
 
 	private static FileProvider s_provider = null;
@@ -87,6 +87,18 @@ public class FileProvider
 
 	private String getUriStringForFilePath(String p_path)
 	{
+        // If p_path begins with slash, then the resulting URI will be like e.g. :
+        
+        // content://<app_id>.fileprovider//storage/emulated/0/Android/data/<app_id>/cache/..
+        //
+        // This is not a problem in general, but in _some_ devices (e.g. Huawei nova e3) this URI is
+        // normalized to:
+        //
+        // content://<app_id>.fileprovider/storage/emulated/0/Android/data/<app_id>/cache/..
+        //
+        // This results in the URI not being found. So use .substring(1) to remove the first slash, if any
+        if (p_path.charAt(0) == '/')
+            p_path = p_path.substring(1);
 		return m_content_uri_base + "/" + p_path;
 	}
 

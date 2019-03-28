@@ -31,7 +31,7 @@ bool MCGRegionCreate(MCGRegionRef &r_region)
 	t_region = nil;
 	
 	if (t_success)
-		t_success = MCMemoryNew(t_region);
+		t_success = MCMemoryCreate(t_region);
 
 	if (t_success)
 		r_region = t_region;
@@ -46,7 +46,7 @@ void MCGRegionDestroy(MCGRegionRef p_region)
 	if (p_region == nil)
 		return;
 	
-	MCMemoryDelete(p_region);
+	MCMemoryDestroy(p_region);
 }
 
 bool MCGRegionCopy(MCGRegionRef p_region, MCGRegionRef &r_copy)

@@ -106,13 +106,12 @@ dataTypes as there is data for. Check the <value> that the
 was actually converted. Here is an example:
 
     on convertStuff dataToConvert
-    global headerData,placeholder,bodyData,footerData
-    put binaryDecode("i5x2a24xi2",dataToConvert, \
-
-    headerData,placeholder,bodyData,placeholder,footerData) \
-    into convertResult
-    if convertResult &lt; 3 then return "Error: data was corrupted"
-
+        global headerData,placeholder,bodyData,footerData
+        local convertResult
+        put binaryDecode("i5x2a24xi2",dataToConvert, \
+              headerData,placeholder,bodyData,placeholder, \ 
+              footerData) into convertResult
+        if convertResult &lt; 3 then return "Error: data was corrupted"
     end convertStuff
 
 

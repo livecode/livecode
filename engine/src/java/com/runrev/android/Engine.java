@@ -1644,7 +1644,8 @@ public class Engine extends View implements EngineApi
 	public void launchUrl(String p_url)
 	{
 		String t_type = null;
-		if (p_url.startsWith("file:"))
+        Uri t_uri;
+		if (p_url.startsWith("file:") || p_url.startsWith("binfile:"))
 		{
 			try
 			{
@@ -1657,13 +1658,29 @@ public class Engine extends View implements EngineApi
 
 			if (t_type == null)
 				t_type = URLConnection.guessContentTypeFromName(p_url);
+            
+            // Store the actual path
+            String t_path;
+            t_path = p_url.substring(p_url.indexOf(":") + 1);
+            
+            // In the new Android permissions model, "file://" and "binfile://" URIs are not allowed
+            // for sharing files with other apps. They need to be replaced with "content://" URI and
+            // use a FileProvider instead
+            t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, t_type, false, ParcelFileDescriptor.MODE_READ_ONLY);
 		}
-
+        else
+        {
+            t_uri = Uri.parse(p_url);
+        }
+        
 		Intent t_view_intent = new Intent(Intent.ACTION_VIEW);
+        
 		if (t_type != null)
-			t_view_intent.setDataAndType(Uri.parse(p_url), t_type);
+			t_view_intent.setDataAndType(t_uri, t_type);
 		else
-			t_view_intent.setData(Uri.parse(p_url));
+			t_view_intent.setData(t_uri);
+        
+        t_view_intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 		((LiveCodeActivity)getContext()).startActivityForResult(t_view_intent, LAUNCHURL_RESULT);
 	}
 

@@ -37,7 +37,7 @@ An <imageID> is the ID of an <image> to use for a pattern. LiveCode
 looks for the specified <image> first in the <current stack>, then in
 other open <stacks>.
 
-By default, the <backgroundPattern> for all <object|objects> is empty.
+By default, the <backgroundPattern> for all <object(glossary)|objects> is empty.
 
 Description:
 Use the <backgroundPattern> <property> to specify the pattern used for
@@ -56,7 +56,7 @@ Pattern images can be color or black-and-white.
 > pattern, both an image's dimensions should be one of 8, 16, 32, 64,
 > or 128. 
 
-The <backgroundPattern> of <control(object)|controls> is drawn starting
+The <backgroundPattern> of <control(glossary)|controls> is drawn starting
 at the <control(object)|control's> upper left corner: if the
 <control(keyword)> is moved, the pattern does not shift.
 
@@ -74,10 +74,10 @@ depending on the <object type>:
   <backgroundPattern>. 
 
 
->*Cross-platform note:*  On <Mac OS>, <OS X>, and <Windows|Windows
-> systems>, if the backgroundColor and <backgroundPattern> of all
-> <object|objects> in the <object hierarchy> is empty, the background
-> set by the system is used.
+>*Cross-platform note:*  On <Mac OS>, <OS X>, and 
+> <Windows|Windows systems>, if the backgroundColor and <backgroundPattern> 
+> of all <object|objects> in the <object hierarchy> is empty, the 
+> background set by the system is used.
 
 * The <backgroundPattern> of a <group> determines the
   <backgroundPattern> of each <object(glossary)> in the <group> that
@@ -147,7 +147,7 @@ Unix (glossary), object type (glossary), EPS (glossary),
 current stack (glossary), effective (keyword), field (keyword),
 image (keyword), button (keyword), card (keyword), scrollbar (keyword),
 player (keyword), graphic (keyword), control (keyword), graphic (object),
-button (object), field (object), stack (object), control (object),
+button (object), field (object), stack (object),
 metal (property), pixels (property), opaque (property),
 patterns (property), width (property), height (property),
 style (property), backgroundPattern (property), lookAndFeel (property),

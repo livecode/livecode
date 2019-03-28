@@ -992,17 +992,17 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 // JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new syntax.
 void MCFilter::exec_ctxt(MCExecContext &ctxt)
 {
-    MCValueRef t_source;
+    MCAutoValueRef t_source;
     MCAutoStringRef t_pattern;
     
     if (container != NULL)
     {
-        if (!ctxt . EvalExprAsValueRef(container, EE_FILTER_CANTGET, t_source))
+        if (!ctxt . EvalExprAsValueRef(container, EE_FILTER_CANTGET, &t_source))
             return;
     }
     else
     {
-        if (!ctxt . EvalExprAsValueRef(source, EE_FILTER_CANTGET, t_source))
+        if (!ctxt . EvalExprAsValueRef(source, EE_FILTER_CANTGET, &t_source))
             return;
     }
     
@@ -1014,7 +1014,7 @@ void MCFilter::exec_ctxt(MCExecContext &ctxt)
     
     if (chunktype == CT_LINE || chunktype == CT_ITEM)
     {
-        if (!ctxt . ConvertToString(t_source, &t_source_string))
+        if (!ctxt . ConvertToString(*t_source, &t_source_string))
         {
             ctxt . LegacyThrow(EE_FILTER_CANTGET);
             return;
@@ -1022,7 +1022,7 @@ void MCFilter::exec_ctxt(MCExecContext &ctxt)
     }
     else
     {
-        if (!ctxt . ConvertToArray(t_source, &t_source_array))
+        if (!ctxt . ConvertToArray(*t_source, &t_source_array))
         {
             ctxt . LegacyThrow(EE_FILTER_CANTGET);
             return;

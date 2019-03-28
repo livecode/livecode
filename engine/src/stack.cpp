@@ -1419,8 +1419,17 @@ Boolean MCStack::del(bool p_check_flag)
 
     while (substacks)
     {
+        /* When a substack is deleted it removes itself from its mainstack,
+         * however it isn't actually destroyed - it must be explicitly
+         * scheduled for deletion. */
+        MCStack *t_substack = substacks;
         if (!substacks -> del(false))
             return False;
+        
+        /* Schedule the substack for deletion - unlike a main stack we don't
+         * need to check for it being in the MCtodestroy list as only mainstacks
+         * can ever be in that list. */
+        t_substack->scheduledelete();
     }
     
     return dodel();
@@ -1475,6 +1484,13 @@ void MCStack::removereferences()
     else if (MCdispatcher->is_transient_stack(this))
     {
         MCdispatcher->remove_transient_stack(this);
+    }
+    else if (!parent.IsValid() || parent->gettype() == CT_BUTTON)
+    {
+        /* If the parent is a button or non-existant then this is a
+         * menu-as-stack - registered with MCdispatcher as a panel. This code
+         * path is hit when performing dodel() on a menu-as-stack before it
+         * is explicitly deleted in MCButton::freemenu. */
     }
     else if (parent->gettype() == CT_STACK)
     {

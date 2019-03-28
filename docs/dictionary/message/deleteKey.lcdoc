@@ -5,8 +5,8 @@ Type: message
 Syntax: deleteKey
 
 Summary:
-Sent to the <active (focused) control(glossary)>, or to the <current
-card> if there is no <active control>.
+Sent to the <active (focused) control(glossary)>, or to the 
+<current card> if there is no <active control>.
 
 Associations: card, field
 

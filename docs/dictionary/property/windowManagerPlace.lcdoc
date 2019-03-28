@@ -25,8 +25,8 @@ Value (bool):
 The <windowManagerPlace> of a <stack> is true or false.
 
 Description:
-Use the <windowManagerPlace> <property> to determine how the <stack
-window> is placed on <Unix|Unix systems>.
+Use the <windowManagerPlace> <property> to determine how the 
+<stack window> is placed on <Unix|Unix systems>.
 
 If the <windowManagerPlace> <property> is true, the window manager uses
 the "mwm" <resource|resources> "clientAutoPlace" and

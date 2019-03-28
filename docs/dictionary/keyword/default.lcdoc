@@ -6,9 +6,9 @@ Syntax: default
 
 Summary:
 Used with the <decorations> <property> to specify the standard
-appearance for a window type. When used within a <switch> <control
-structure>, specifies a section of <statement|statements> to be
-<execute|executed> in all cases.
+appearance for a window type. When used within a <switch> 
+<control structure>, specifies a section of <statement|statements> 
+to be <execute|executed> in all cases.
 
 Introduced: 1.0
 

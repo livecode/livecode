@@ -1578,6 +1578,10 @@ private command _svgEncodeTransform @xContext, pTransform
 end _svgEncodeTransform
 
 private command _svgEncodePath @xContext, pPath
+	local tFirstX, tFirstY
+	put 0 into tFirstX
+	put 0 into tFirstY
+
 	local tLastX, tLastY
 	put 0 into tLastX
 	put 0 into tLastY
@@ -1599,11 +1603,15 @@ private command _svgEncodePath @xContext, pPath
 			put kMCGDrawingPathOpcodeMoveTo into tOpcode
 			put tScalars[1] into tLastX
 			put tScalars[2] into tLastY
+			put tLastX into tFirstX
+			put tLastY into tFirstY
 			break
 
 		case "Z"
 		case "z"
 			put kMCGDrawingPathOpcodeCloseSubpath into tOpcode
+			put tFirstX into tLastX
+			put tFirstY into tLastY
 			break
 
 		case "l"

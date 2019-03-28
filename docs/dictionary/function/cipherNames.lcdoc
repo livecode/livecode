@@ -33,5 +33,5 @@ is the default, others have fixed sized key lengths.
 
 References: encrypt (command), Standalone Application Settings (glossary),
 function (glossary), LiveCode custom library (glossary),
-SSL & Encryption library (library)
+standalone application (glossary), SSL & Encryption library (library)
 
