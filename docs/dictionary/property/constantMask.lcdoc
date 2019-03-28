@@ -25,8 +25,8 @@ By default, the <constantMask> <property> of newly created
 <image(object)|images> is set to false.
 
 Description:
-Use the <constantMask> <property> to enable display of certain <animated
-GIF> <image(object)|images>.
+Use the <constantMask> <property> to enable display of certain 
+<animated GIF> <image(object)|images>.
 
 Some animated GIF images use an optimization technique in which the mask
 data is used to hold information about differences between successive

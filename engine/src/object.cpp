@@ -5190,6 +5190,26 @@ struct MCRequiredStackFileVersionVisitor : public MCObjectVisitor
 {
 	uint32_t required_version;
 	
+	bool OnStack(MCStack *p_stack)
+	{
+		MCStack *t_substacks = p_stack->getsubstacks();
+		
+		if (t_substacks != nil)
+		{
+			/* Check minimum version required for substacks */
+			MCStack *t_stack = t_substacks;
+			do
+			{
+				if (!t_stack->visit(kMCObjectVisitorRecursive, 0, this))
+					return false;
+				t_stack = t_stack->next();
+			}
+			while (t_stack != t_substacks);
+		}
+
+		return OnObject(p_stack);
+	}
+	
 	bool OnObject(MCObject *p_object)
 	{
 		required_version = MCMax(required_version, p_object->getminimumstackfileversion());
@@ -5220,7 +5240,7 @@ uint32_t MCObject::geteffectiveminimumstackfileversion(void)
 {
 	MCRequiredStackFileVersionVisitor t_visitor;
 	t_visitor.required_version = kMCStackFileFormatMinimumExportVersion;
-	visit(kMCObjectVisitorHeirarchical | kMCObjectVisitorRecursive, 0, &t_visitor);
+	visit(kMCObjectVisitorRecursive, 0, &t_visitor);
 	return t_visitor.required_version;
 }
 

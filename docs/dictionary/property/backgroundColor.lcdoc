@@ -63,8 +63,8 @@ the color specified by <backgroundColor>. The setting of the
 <backgroundColor> <property> has different effects, depending on the
 <object type>:
 
-* The <backgroundColor> of a <stack> or <card> fills the entire <stack
-  window>, as well as determining the <backgroundColor> of each
+* The <backgroundColor> of a <stack> or <card> fills the entire 
+  <stack window>, as well as determining the <backgroundColor> of each
   <object(glossary)> in the <stack> or <card> that does not have its own
   <backgroundColor>. 
 
@@ -83,9 +83,9 @@ the color specified by <backgroundColor>. The setting of the
   <button(object)|button's> outline. If the button's <style> is
   "checkbox", the <backgroundColor> fills the checkbox. If the
   <button(object)|button's> style is "radioButton", the
-  <backgroundColor> has no effect. If the <button(keyword)> is a <tabbed
-  button>, the <backgroundColor> fills the tab area and the frontmost
-  tab, but does not affect the other tabs.
+  <backgroundColor> has no effect. If the <button(keyword)> is a 
+  <tabbed button>, the <backgroundColor> fills the tab area and the 
+  frontmost tab, but does not affect the other tabs.
 
 
 >*Cross-platform note:* If the <lookAndFeel> is set to
@@ -149,12 +149,12 @@ if the <lookAndFeel> was set to "Appearance Manager", the setting of the
 <backgroundColor> had no effect on standard <button|buttons>.
 
 References: answer color (command), group (command), object (glossary),
-video clip (glossary), property (glossary), foregroundPattern (glossary),
+video clip (glossary), property (glossary),
 tabbed button (glossary), highlight (glossary), stack window (glossary),
 object type (glossary), Mac OS (glossary), OS X (glossary),
 chunk (glossary), object hierarchy (glossary), color palette (glossary),
 button menu (glossary), keyword (glossary), audio clip (glossary),
-EPS (glossary), owner (glossary), lookAndFeel (glossary),
+EPS (glossary), owner (glossary),
 Windows (glossary), word (glossary), image (keyword), effective (keyword),
 field (keyword), button (keyword), word (keyword), player (keyword),
 card (keyword), scrollbar (keyword), graphic (keyword),
@@ -169,7 +169,7 @@ firstIndent (property), tabstops (property), spaceBelow (property),
 listStyle (property), style (property), rightIndent (property),
 listDepth (property), hgrid (property), foregroundColor (property),
 linkHiliteColor (property), hScrollbar (property), owner (property),
-lookAndFeel (property), borderColor (property), formattedWidth (property)
+lookAndFeel (property), borderColor (property), formattedWidth (property),
 
 Tags: ui
 

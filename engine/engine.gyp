@@ -423,6 +423,25 @@
 									'cp', '<@(_inputs)', '<@(_outputs)',
 								],
 							},
+                            {
+                                'action_name': 'copy_file_provider_paths',
+                                'message': 'Copying file provider paths file',
+                                
+                                'inputs':
+                                [
+                                'rsrc/android-file_provider_paths.xml',
+                                ],
+                                
+                                'outputs':
+                                [
+                                '<(PRODUCT_DIR)/file_provider_paths.xml',
+                                ],
+                                
+                                'action':
+                                [
+                                'cp', '<@(_inputs)', '<@(_outputs)',
+                                ],
+                            },
 						],
 						
 						'all_dependent_settings':
@@ -435,6 +454,7 @@
 									'<(PRODUCT_DIR)/livecode_inputcontrol.xml',
 									'<(PRODUCT_DIR)/notify_icon.png',
 									'<(PRODUCT_DIR)/nfc_tech_filter.xml',
+                                    '<(PRODUCT_DIR)/file_provider_paths.xml',
 								],
 							},
 						},

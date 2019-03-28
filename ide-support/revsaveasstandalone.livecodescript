@@ -341,8 +341,11 @@ command revDoSaveAsStandalone pStack, pFolder, pSettings, @xStandalonePaths
          else
             put tOutputFolder into tTargetFolder
          end if
+         
          -- Make sure folder exists
-         revSBEnsureFolder tTargetFolder
+         if tStandaloneSettingsA[tPlatform] then
+            revSBEnsureFolder tTargetFolder
+         end if
          
          switch tPlatform
             case "iOS"
@@ -914,6 +917,7 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalone
    set the itemDelimiter to slash
    put the effective filename of stack pStack into tOriginalFileName
    put item 1 to -2 of tOriginalFileName into tStackPath
+   set the itemDelimiter to comma
    
    -- keep a copy of the standalone settings to restore after each build
    local tStandaloneSettingsA
@@ -932,7 +936,7 @@ command revSaveAsLinuxStandalone pStack, pRestoreFileName, pFolder, @xStandalone
       else
          put "x86" into tArch
       end if
-      revStandalonePreBuild pStack, pFolder, "linux", tArch, tStackName, tStackFileList     
+      revStandalonePreBuild pStack, char 1 to -2 of tDirectory, "linux", tArch, tStackName, tStackFileList     
       if the result is not empty then 
          return the result
       end if

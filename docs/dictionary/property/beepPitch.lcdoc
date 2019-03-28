@@ -25,7 +25,7 @@ The <beepPitch> is an <integer> between zero and 20000.
 Description:
 Use the <beepPitch> <property> to make the beep sound higher or lower.
 
-The <pitchFrequency> is the frequency in Hz (cycles per second). A value
+The *pitchFrequency* is the frequency in Hz (cycles per second). A value
 of 440 is A above middle C. Halving the frequency lowers the pitch one
 octave; doubling the frequency raises it one octave.
 

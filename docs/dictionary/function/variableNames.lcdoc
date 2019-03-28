@@ -7,8 +7,8 @@ Syntax: the variableNames
 Syntax: variableNames()
 
 Summary:
-<return|Returns> a list of all <parameter|parameters>, <local
-variable|local variables>, and <global> <variable|variables>.
+<return|Returns> a list of all <parameter|parameters>, 
+<local variable|local variables>, and <global> <variable|variables>.
 
 Introduced: 1.0
 
@@ -26,13 +26,12 @@ Returns:
 The <variableNames> function <return|returns> a value consisting of four
 <lines> :
 
-        1. Parameters passed to the current handler (including leading
-           '@' for parameters passed by-reference)
-        2. Local variables created in the current handler
-        3. Local variables created in the current script but outside all
-           handlers 
-        4. Global variables
-
+1. Parameters passed to the current handler (including leading
+'@' for parameters passed by-reference)
+2. Local variables created in the current handler
+3. Local variables created in the current script but outside all
+handlers 
+4. Global variables
 
 Within each line, the variable or parameter names are separated by
 commas. 

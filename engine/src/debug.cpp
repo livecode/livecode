@@ -145,16 +145,15 @@ void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
 
         MCAutoStringRef t_handler;
         t_handler = MCNameGetString(ctxt.GetHandler()->getname());
-        MCParameter *t_handler_parameter = new (nothrow) MCParameter;
-        t_handler_parameter -> setvalueref_argument(*t_handler);
+        MCParameter t_handler_parameter;
+        t_handler_parameter.setvalueref_argument(*t_handler);
         
         MCAutoNumberRef t_line;
-        MCParameter *t_line_parameter;
+        MCParameter t_line_parameter;
         if (MCNumberCreateWithUnsignedInteger(ctxt.GetLine(), &t_line))
         {
-            t_line_parameter = new (nothrow) MCParameter;
-            t_line_parameter -> setvalueref_argument(*t_line);
-            t_handler_parameter -> setnext(t_line_parameter);
+            t_line_parameter.setvalueref_argument(*t_line);
+            t_handler_parameter.setnext(&t_line_parameter);
         }
         
         bool t_added = false;
@@ -164,7 +163,7 @@ void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string)
             t_added = true;
         }
         
-        t_stat = t_target -> message(MCM_msgchanged, t_handler_parameter, True, True, False);
+        t_stat = t_target -> message(MCM_msgchanged, &t_handler_parameter, True, True, False);
         
         if (t_added)
             MCnexecutioncontexts--;

@@ -244,6 +244,7 @@ public:
 	// MW-2012-11-14: [[ Bug 10514 ]] Returns the current window on display.
 	Window get_current_window(void);
 	
+    void refresh_current_window(void);
 private:
 	// The top-left of the mobile 'window' in screen co-ordinates.
 	int32_t m_window_left;

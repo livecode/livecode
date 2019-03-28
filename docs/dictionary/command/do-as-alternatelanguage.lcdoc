@@ -37,27 +37,27 @@ The behavior of the <do as alternateLanguage> command is
 
 - On MacOS and OS X systems, the <alternateLanguage> is a script
   language (such as AppleScript) supported by the Open Scripting
-  Architecture.  The value returned by executing the <statementList>
+  Architecture.  The value returned by executing the <script>
   is placed into the <result>.
 
 - On Windows systems, the <alternateLanguage> is an "active
   scripting" language (such as VBScript) supported by the Windows
   Scripting Host.  The <result> is set to the value of any global
-  variable called `result` in the <statementList>, or empty if no such
+  variable called `result` in the <script>, or empty if no such
   variable was defined.  For example, the following code will show a
   dialog box containing "2":
 
       do "result = 1 + 1" as "vbscript"
       answer the result
 
-  Any <statementList> which contains a reference to `WScript` will
+  Any <script> which contains a reference to `WScript` will
   fail to run, because `WScript` objects do not exist in the LiveCode
   environment.  Put return values in a global `result` variable
   instead of using `WScript.Echo`.
 
 - In HTML5 applications, "JavaScript" is the only supported
   <alternateLanguage>.  The <result> is set to the value returned
-  by executing the <statementList>, as long as the value is a scalar
+  by executing the <script>, as long as the value is a scalar
   (a string, number, boolean or undefined).  Returning JavaScript
   arrays or objects is not supported.
 
@@ -80,7 +80,6 @@ Changes:
   9.0.0
 
 References: alternateLanguages (function), result (function),
-platform (function),
-command (glossary), file path (glossary),
+platform (function), command (glossary), file path (glossary),
 as (keyword),
 do (command)

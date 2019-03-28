@@ -38,8 +38,8 @@ another system.
 When the <URLDecode> function encounters a percent sign (%), it treats
 the next two characters as <hexadecimal> digits. (If one of the
 <characters> is not a <hexadecimal> digit, it's treated as a zero.) The
-number is converted to its <character> equivalent, using the <character
-set> currently in use.
+number is converted to its <character> equivalent, using the 
+<character set> currently in use.
 
 References: post (command), function (control structure),
 decompress (function), macToISO (function), arrayDecode (function),

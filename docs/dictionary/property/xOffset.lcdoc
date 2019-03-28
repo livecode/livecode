@@ -6,7 +6,7 @@ Syntax: set the xOffset of <EPSObject> to <number>
 
 Summary:
 Specifies the location of the left edge of an <EPS|EPS object's>
-<PostScript> code.
+<postScript> code.
 
 Introduced: 1.0
 

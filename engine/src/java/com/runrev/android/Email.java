@@ -126,7 +126,7 @@ class Email
 			
 			Uri t_uri;
 			t_uri = FileProvider.getProvider(p_context).addPath(name, t_tempfile.getPath(), mime_type, true, ParcelFileDescriptor.MODE_READ_ONLY);
-
+            
 			return addAttachment(t_uri, mime_type, name);
 		}
 		catch (Exception e)

@@ -87,14 +87,14 @@ inline FourCharCode FourCharCodeFromString(const char *p_string)
 
 bool FourCharCodeFromString(MCStringRef p_string, uindex_t p_start, FourCharCode& r_four_char_code)
 {
-    char *temp;
+    MCAutoStringRefAsCString t_temp;
     uint32_t t_four_char_code;
-    if (!MCStringConvertToCString(p_string, temp))
+    if (!t_temp.Lock(p_string))
         return false;
     
-    memcpy(&t_four_char_code, temp + p_start, 4);
+    memcpy(&t_four_char_code, *t_temp + p_start, 4);
     r_four_char_code = MCSwapInt32HostToNetwork(t_four_char_code);
-    delete temp;
+    
     return true;
 }
 
@@ -109,7 +109,7 @@ inline char *FourCharCodeToString(FourCharCode p_code)
 
 bool FourCharCodeToStringRef(FourCharCode p_code, MCStringRef& r_string)
 {
-    return MCStringCreateWithCString(FourCharCodeToString(p_code), r_string);
+    return MCStringCreateWithCStringAndRelease(FourCharCodeToString(p_code), r_string);
 }
 
 struct triplets
@@ -2964,7 +2964,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     {
 		CFStringRef t_string;
 		if (MCStringConvertToCFStringRef(p_string, t_string))
+        {
 			NSLog(CFSTR("%@"), t_string);
+            CFRelease(t_string);
+        }
     }
 	
 	virtual real64_t GetCurrentTime(void)

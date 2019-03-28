@@ -30,8 +30,8 @@ been opened previously with the open process command; otherwise, an
 error message is returned in the result.
 
 The result:
-The process to write to must be opened first with the <open process
-command>, and the mode the <process> was opened in must be write or
+The process to write to must be opened first with the <open process>
+<command>, and the mode the <process> was opened in must be write or
 update. If the process is not running or is read-only, the <result>
 function is set to "Process is not open for write.". If there is an
 error writing to the process, the <result> function <return|returns> the
@@ -41,7 +41,6 @@ Description:
 Use the <write to process> <command> to send input to another program.
 
 References: open process (command), read from process (command),
-write to driver (command), open process command (command),
-result (function), command (glossary), process (glossary),
-return (glossary), stdout (keyword)
+write to driver (command), result (function), command (glossary), 
+process (glossary), return (glossary), stdout (keyword)
 

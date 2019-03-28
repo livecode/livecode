@@ -411,7 +411,7 @@ void MCButton::macopenmenu(void)
 				MCAutoStringRef t_label;
 				MCPlatformGetMenuItemProperty(m_system_menu, s_popup_menuitem, kMCPlatformMenuItemPropertyTitle, kMCPlatformPropertyTypeMCString, &(&t_label));
                 
-				/* UNCHECKED */ MCStringCopy(*t_label, label);
+                MCValueAssign(label, *t_label);
 				flags |= F_LABEL;
 				
                 // SN-2014-08-25: [[ Bug 13240 ]] We need to keep the actual popup_menustring,

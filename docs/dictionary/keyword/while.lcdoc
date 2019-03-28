@@ -27,14 +27,13 @@ as a condition continues to be true.
 LiveCode evaluates the condition each time the loop repeats, at the top
 of the loop (before the statements in the <repeat structure> are
 executed). If the condition is false, the <loop> is skipped and
-<execute|execution> <resume|resumes> with the <statement> after the <end
-repeat> statement.
+<execute|execution> <resume|resumes> with the <statement> after the 
+<end repeat> statement.
 
-If the condition is already false when LiveCode reaches the <repeat
-statement>, the <loop> is not <execute|executed> at all.
+If the condition is already false when LiveCode reaches the <repeat>
+statement, the <loop> is not <execute|executed> at all.
 
-References: repeat statement (control structure),
-repeat structure (control structure), repeat (control structure),
+References: repeat (control structure),
 keyword (glossary), resume (glossary), statement (glossary),
 loop (glossary), control structure (glossary), execute (glossary),
 forever (keyword), for (keyword), end repeat (keyword)

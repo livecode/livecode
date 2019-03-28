@@ -258,12 +258,13 @@ static void compose_mail_prewait(void *p_context)
 			else
 				t_type = MCStringConvertToAutoreleasedNSString(ctxt -> attachments[i] . type);
 			
+            // "addAttachmentData:" requires that all three arguments are non-nil
 			if (ctxt -> attachments[i] . name == nil)
-				t_name = nil;
+				t_name = @"";
 			else
 				t_name = MCStringConvertToAutoreleasedNSString(ctxt -> attachments[i] . name);
 				
-			[ctxt -> dialog addAttachmentData: t_data mimeType: t_type fileName: t_name];
+            [ctxt -> dialog addAttachmentData: t_data mimeType: t_type fileName: t_name];
 		}
 	}
 
