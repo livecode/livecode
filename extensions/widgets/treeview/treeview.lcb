@@ -662,6 +662,13 @@ private handler elementIsProxyForMoreData(in pElement as Array) returns Boolean
 end handler
 
 public handler OnPaint() returns nothing
+	variable tRowHeight as Integer
+	put the size of my font + 8 into tRowHeight
+	if tRowHeight is not mRowHeight then
+		put tRowHeight into mRowHeight
+		put true into mRecalculate
+	end if
+	
 	set the font of this canvas to my font
 	if mUpdateDataList then
 		updateDataList()
