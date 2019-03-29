@@ -327,6 +327,10 @@ Boolean MCWidget::doubleup(uint2 p_which)
 
 MCObject* MCWidget::hittest(int32_t x, int32_t y)
 {
+    if (!(flags & F_VISIBLE || showinvisible()) ||
+        (flags & F_DISABLED && getstack()->gettool(this) == T_BROWSE))
+        return nil;
+    
     if (m_widget != nil)
         return MCwidgeteventmanager->event_hittest(this, x, y);
     return nil;
