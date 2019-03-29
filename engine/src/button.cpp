@@ -2860,23 +2860,11 @@ void MCButton::freemenu(Boolean force)
 		else
 		{
 			if (!MCStringIsEmpty(menustring) || force)
-            {
-                closemenu(False, True);
-                
-                /* In this case the button owns the menu so after removing
-                 * any references to it that might exist in the environment
-                 * it must be explicitly deleted. */
-                MCStack *t_menu_ptr = menu.Get();
-				MCdispatcher->removepanel(t_menu_ptr);
+			{
+				closemenu(False, True);
+				MCdispatcher->removepanel(menu);
 				MCstacks->deleteaccelerator(this, NULL);
-				t_menu_ptr->removeneed(this);
-                t_menu_ptr->dodel();
-                
-                /* It is safe to explicitly delete the menu stack here (rather
-                 * than 'scheduledelete()') as menu stacks and their contents
-                 * can never be on C stack as they don't contain script. */
-                delete t_menu_ptr;
-                
+				menu->removeneed(this);
 				menu = nil;
 			}
 		}
