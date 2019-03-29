@@ -429,6 +429,40 @@ property arrayStyle                 get mArrayStyle                 set setArray
 metadata arrayStyle.label is "Array style"
 
 /**
+Syntax: set the charsToTrimFromKey of <widget> to <pChars>
+Syntax: get the charsToTrimFromKey of <widget>
+
+Summary: The number of leading characters to trim from the key for display.
+
+Parameters:
+pChars: Number of leading characters to trim from the key.
+
+Description:
+The <charsToTrimFromKey> property controls the number of leading characters that 
+are removed from the keys of the <arrayData> of the widget.  This allows
+a custom sort where the sort portion of the key is not displayed.
+
+With <charsToTrimFromKey> set to 2, the following array:
+```
+	[1 CCC]
+	[2 BBB]
+	[3 AAA]
+```
+
+Would display in the widget as:
+```
+[CCC]
+[BBB]
+[AAA]
+```
+
+References: arrayData (property)
+**/
+
+property charsToTrimFromKey                 get mCharsToTrimFromKey                 set setCharsToTrimFromKey
+metadata charsToTrimFromKey.label is "Key chars to trim"
+
+/**
 Syntax: set the showSeparator of <widget> to {true|false}
 Syntax: get the showSeparator of <widget>
 
@@ -528,6 +562,8 @@ private variable mSortNumeric as Boolean
 
 private variable mPathDelimiter as String
 
+private variable mCharsToTrimFromKey as Integer
+
 private variable mShowSeparator as Boolean
 private variable mSeparatorRatio as Number
 private variable mSeparatorDragging as Boolean
@@ -592,6 +628,8 @@ public handler OnCreate() returns nothing
 	put true into mRedraw
 	put false into mFoldChanged
 	
+	put 0 into mCharsToTrimFromKey
+	
 	put false into mShowSeparator
 	put 0.5 into mSeparatorRatio
 	put false into mSeparatorDragging
@@ -614,6 +652,7 @@ public handler OnSave(out rProperties as Array)
 	put mHiliteNewElement into rProperties["hilite new element"]
 	put mScrollHilitedElementIntoView into rProperties["scroll hilited element into view"]
 
+	put mCharsToTrimFromKey into rProperties["chars to trim from key"]
 	put mShowSeparator into rProperties["show separator"]
 	put mSeparatorRatio into rProperties["separator ratio"]
 	return rProperties
@@ -622,16 +661,16 @@ end handler
 public handler OnLoad(in pProperties as Array)
 	put pProperties["read only"] into mReadOnly
 
-   if "array style" is among the keys of pProperties then
-      put pProperties["array style"] into mArrayStyle
-   end if
+	if "array style" is among the keys of pProperties then
+		put pProperties["array style"] into mArrayStyle
+	end if
 
 	if "sort ascending" is among the keys of pProperties then
-	  put pProperties["sort ascending"] into mSortAscending
+		put pProperties["sort ascending"] into mSortAscending
 	end if
 
 	if "sort numeric" is among the keys of pProperties then
-	  put pProperties["sort numeric"] into mSortNumeric
+		put pProperties["sort numeric"] into mSortNumeric
 	end if
 
 	if "auto fold state reset" is among the keys of pProperties then
@@ -646,14 +685,18 @@ public handler OnLoad(in pProperties as Array)
 		put pProperties["scroll hilited element into view"] into mScrollHilitedElementIntoView
 	end if
 
-	if "show separator" is among the keys of pProperties then
-	  put pProperties["show separator"] into mShowSeparator
+	if "chars to trim from key" is among the keys of pProperties then
+		put pProperties["chars to trim from key"] into mCharsToTrimFromKey
 	end if
-	 
+
+	if "show separator" is among the keys of pProperties then
+		put pProperties["show separator"] into mShowSeparator
+	end if
+
 	if "separator ratio" is among the keys of pProperties then
 		put pProperties["separator ratio"] into mSeparatorRatio
 	end if
-	  
+
 	setArrayData(pProperties["array"])
 end handler
 
@@ -1285,6 +1328,13 @@ private handler updateSeparator() returns nothing
 		if mRecalculateFit or "key_too_large" is not among the keys of tElement then
 			variable tKeyDisplay as String
 			put tElement["key"] into tKeyDisplay
+			if mCharsToTrimFromKey > 0 then
+				if the number of chars in tKeyDisplay < mCharsToTrimFromKey then
+					put "" into tKeyDisplay
+				else
+					delete char 1 to mCharsToTrimFromKey of tKeyDisplay
+				end if
+			end if
 			if mArrayStyle then
 				 put "[" & tKeyDisplay & "]" into tKeyDisplay
 			end if
@@ -2214,9 +2264,16 @@ private handler setSortOrder(in pType as String) returns nothing
         put tSortAscending into mSortAscending
         setArrayData(mData)
     end if  
-
 end handler
 
+private handler setCharsToTrimFromKey(in pChars as Integer) returns nothing
+	if pChars < 0 then
+		throw "Leading Characters to Trim From Key must be >= 0"
+	else if pChars is not mCharsToTrimFromKey then
+		put true into mRecalculateFit
+		put pChars into mCharsToTrimFromKey
+	end if
+end handler
 --------------------------------------------------------------------------------
 --
 --		Movable divide
