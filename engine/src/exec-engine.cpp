@@ -1219,7 +1219,7 @@ static void MCEngineSplitScriptIntoMessageAndParameters(MCExecContext& ctxt, MCS
             MCExecValue t_value;
             ctxt . eval_ctxt(ctxt, *t_expression, t_value);
             if (!ctxt.HasError())
-                newparam->give_exec_argument(t_value);
+                newparam->set_exec_argument(ctxt, t_value);
             else
                 newparam->setvalueref_argument(*t_expression);
             
