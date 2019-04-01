@@ -555,15 +555,9 @@ bool MCS_getsystemversion(MCStringRef& r_string)
 	return MCsystem->GetVersion(r_string);
 }
 
-MCStringRef MCS_getprocessor(void)
+bool MCS_getprocessor(MCStringRef& r_string)
 {
-    MCAutoStringRef t_arch;
-    if (!MCSInfoGetArchitecture(&t_arch))
-    {
-        return kMCEmptyString;
-    }
-    
-    return t_arch.Take();
+    return MCSInfoGetArchitecture(r_string);
 }
 
 bool MCS_getmachine(MCStringRef& r_string)

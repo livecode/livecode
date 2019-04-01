@@ -297,9 +297,8 @@ struct MCWindowsSystem: public MCSystemInterface
 
 	virtual bool GetMachine(MCStringRef& r_string)
 	{
-        r_string = MCValueRetain(MCS_getprocessor());
-        return true;
-	}
+        return MCS_getprocessor(r_string);
+    }
 
 	virtual void GetAddress(MCStringRef& r_address)
 	{

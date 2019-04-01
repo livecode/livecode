@@ -100,7 +100,7 @@ extern Boolean MCS_rmdir(MCStringRef path);
 extern uint4 MCS_getpid();
 extern bool MCS_getaddress(MCStringRef& r_string);
 extern bool MCS_getmachine(MCStringRef& r_string);
-extern MCStringRef MCS_getprocessor();
+extern bool MCS_getprocessor(MCStringRef& r_string);
 extern real8 MCS_getfreediskspace(void);
 extern bool MCS_getsystemversion(MCStringRef& r_string);
 extern bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text);
