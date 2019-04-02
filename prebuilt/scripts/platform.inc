@@ -114,14 +114,17 @@ function setCCForTarget {
 			else
 				CC_FLAGS_X86_NORELAX=
 			fi
-			echo "*DEBUG* CC_FLAGS: ${CC_FLAGS_X86_NORELAX}"
+			
+			CC_FLAGS="-fPIC ${CC_FLAGS_X86_NORELAX}"
+			
+			echo "*DEBUG* CC_FLAGS: ${CC_FLAGS}"
 			
 			if [ "${ARCH}" == "x86_64" ] ; then
-				CC="${CC_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
-				CXX="${CXX_BASE} -m64 ${CC_FLAGS_X86_NORELAX}"
+				CC="${CC_BASE} -m64 ${CC_FLAGS}"
+				CXX="${CXX_BASE} -m64 ${CC_FLAGS}"
 			elif [ "$1" == "x86" ] ; then
-				CC="${CC_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
-				CXX="${CXX_BASE} -m32 ${CC_FLAGS_X86_NORELAX}"
+				CC="${CC_BASE} -m32 ${CC_FLAGS}"
+				CXX="${CXX_BASE} -m32 ${CC_FLAGS}"
 			fi
 			;;
 		android)

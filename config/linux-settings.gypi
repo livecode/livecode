@@ -30,7 +30,7 @@
 	'target_conditions':
 	[
 		[
-			'_type == "loadable_module" or _type == "shared_library" or (_type == "static_library" and library_for_module != 0)',
+			'_type' == "executable" or '_type == "loadable_module" or _type == "shared_library" or (_type == "static_library" and library_for_module != 0)',
 			{
 				'cflags':
 				[
