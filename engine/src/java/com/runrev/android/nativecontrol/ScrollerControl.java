@@ -80,6 +80,12 @@ class ScrollerControl extends NativeControl
                     ScrollerControl.this.updateScroll(m_dispatching ? m_new_left : m_left, t);
                 super.onScrollChanged(l, t, oldl, oldt);
             }
+            
+            @Override
+            public boolean onInterceptTouchEvent (MotionEvent ev)
+            {
+                return true;
+            }
         };
         m_hscroll = new HorizontalScrollView(p_context) {
             @Override
@@ -88,6 +94,12 @@ class ScrollerControl extends NativeControl
                 if (l != oldl)
                     ScrollerControl.this.updateScroll(l, m_dispatching ? m_new_top : m_top);
                 super.onScrollChanged(l, t, oldl, oldt);
+            }
+            
+            @Override
+            public boolean onInterceptTouchEvent (MotionEvent ev)
+            {
+                return true;
             }
         };
         
