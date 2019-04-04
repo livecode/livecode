@@ -560,7 +560,10 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                     done = true;
                 }
                 else
+                {
+                    t_unit.Reset();
                     tci -> CopyString(&t_unit);
+                }
             }
             break;
         }
