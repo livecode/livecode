@@ -16,6 +16,8 @@ You must install Xcode.  This will allow you to build LiveCode for:
 You will not be able to compile the OS X desktop version of LiveCode
 unless you install some older OS X SDKs; see the next section for details.
 
+You will need to setup your Apple ID (aka developer account) in Xcode by going to _Preferences &rarr; Accounts_. without it the code signing step of the build process will fail. 
+
 ### Optional dependencies
 
 By default, LiveCode is compiled for a large number of versions of iPhoneSimulator, and requires quite a lot of Apple SDKs to be installed.
