@@ -57,12 +57,12 @@ command opens the main stack of the specified stack file.
 
 mode (enum):
 
--   editable window: 
--   palette: 
--   modal dialog box: 
--   modeless dialog box: 
--   sheet dialog box: appears in <defaultStack>
--   drawer: appears in <defaultStack>, centered at left side if there's
+-   editable window
+-   palette
+-   modal dialog box
+-   modeless dialog box 
+-   sheet dialog box - appears in <defaultStack>
+-   drawer - appears in <defaultStack>, centered at left side if there's
     room 
 
 

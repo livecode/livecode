@@ -93,7 +93,7 @@ color reference (glossary), insertion point (glossary),
 object type (glossary), EPS (glossary), effective (keyword),
 card (keyword), button (keyword), player (keyword), graphic (keyword),
 scrollbar (keyword), field (keyword), image (keyword), audioClip (object),
-button (object), control (object), stack (object), videoClip (object),
+button (object), stack (object), videoClip (object),
 style (property), owner (property), traversalOn (property),
 showFocusBorder (property), focusColor (property)
 
