@@ -41,14 +41,14 @@ unchanged however, allowing for the normal data parsing.
 For example, take the following content of text in a field and their
 associated <hidden> property settings:
 
-This is the text of line 1 -- hidden property 'false'
-This is the text of line 2 -- hidden property 'true'
-This is the text of line 3 -- hidden property 'false'
+    This is the text of line 1 -- hidden property 'false'
+    This is the text of line 2 -- hidden property 'true'
+    This is the text of line 3 -- hidden property 'false'
 
 The user sees the following:
 
-This is the text of line 1
-This is the text of line 3
+    This is the text of line 1
+    This is the text of line 3
 
 Executing 'put line 2 of field' results in 'This is the text of line 2'.
 
