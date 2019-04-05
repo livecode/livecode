@@ -61,9 +61,9 @@ mode (enum):
 -   palette
 -   modal dialog box
 -   modeless dialog box 
--   sheet dialog box - appears in <defaultStack>
--   drawer - appears in <defaultStack>, centered at left side if there's
-    room 
+-   sheet dialog box - appears in <defaultStack (property)>
+-   drawer - appears in <defaultStack (property)>, centered at left 
+    side if there's room 
 
 
 window:
