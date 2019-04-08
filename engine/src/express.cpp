@@ -480,7 +480,13 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 
 void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
 {
-    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, *name, line, pos, global_handler, true);
+    if (!resolved)
+    {
+        MCKeywordsExecResolveCommandOrFunction(ctxt, *name, true, handler);
+        resolved = true;
+    }
+    
+    MCKeywordsExecCommandOrFunction(ctxt, handler, params, *name, line, pos, global_handler, true);
     
     Exec_stat stat = ctxt . GetExecStat();
     
