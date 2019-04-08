@@ -469,6 +469,16 @@ bool MCWidgetBase::OnClick(bool& r_bubble)
     return DispatchBubbly(MCNAME("OnClick"), nil, 0, r_bubble);
 }
 
+bool MCWidgetBase::OnFocusEnter(bool& r_bubble)
+{
+    return DispatchBubbly(MCNAME("OnFocusEnter"), nil, 0, r_bubble);
+}
+
+bool MCWidgetBase::OnFocusLeave(bool& r_bubble)
+{
+    return DispatchBubbly(MCNAME("OnFocusLeave"), nil, 0, r_bubble);
+}
+
 bool MCWidgetBase::OnMouseScroll(coord_t p_delta_x, coord_t p_delta_y, bool& r_bubble)
 {
     MCAutoValueRefArray t_args;
@@ -1377,6 +1387,16 @@ bool MCWidgetOnMouseCancel(MCWidgetRef self, bool& r_bubble)
 bool MCWidgetOnClick(MCWidgetRef self, bool& r_bubble)
 {
     return MCWidgetAsBase(self) -> OnClick(r_bubble);
+}
+
+bool MCWidgetOnFocusEnter(MCWidgetRef self, bool& r_bubble)
+{
+    return MCWidgetAsBase(self) -> OnFocusEnter(r_bubble);
+}
+
+bool MCWidgetOnFocusLeave(MCWidgetRef self, bool& r_bubble)
+{
+    return MCWidgetAsBase(self) -> OnFocusLeave(r_bubble);
 }
 
 bool MCWidgetOnMouseScroll(MCWidgetRef self, real32_t p_delta_x, real32_t p_delta_y, bool& r_bubble)

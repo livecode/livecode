@@ -308,12 +308,16 @@ Name: OnFocusEnter
 Type: message
 Syntax: OnFocusEnter
 Summary: Sent when the widget gains focus.
+References: OnFocusLeave(message), FocusPrevious(statement),
+FocusNext(statement), FocusOut(statement), FocusIn(statement)
 
 
 Name: OnFocusLeave
 Type: message
 Syntax: OnFocusLeave
 Summary: Sent when the widget loses focus.
+References: OnFocusEnter(message), FocusPrevious(statement),
+FocusNext(statement), FocusOut(statement), FocusIn(statement)
 
 
 Name: OnKeyPress
@@ -1770,5 +1774,82 @@ public foreign handler MCWidgetGetNativeLayerCanRenderToContext(in pWidget as Wi
 public foreign handler MCWidgetSetNativeLayerCanRenderToContext(in pCanRender as CBool, in pWidget as Widget) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetGetMyNativeLayerCanRenderToContext(out rCanRender as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCWidgetSetMyNativeLayerCanRenderToContext(in pCanRender as CBool) returns nothing binds to "<builtin>"
+
+public foreign handler MCWidgetExecFocusIn() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecFocusOut() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecFocusNext() returns nothing binds to "<builtin>"
+public foreign handler MCWidgetExecFocusPrevious() returns nothing binds to "<builtin>"
+
+/**
+Summary:    Focus in on the widget.
+
+Description:
+Use focus in to take the object focus from the focused object. This is particularly
+useful for native views that may not pass events to the engine allowing it to
+determine focus changes.
+
+References: OnFocusEnter(message), OnFocusLeave(message), FocusPrevious(statement),
+FocusNext(statement), FocusOut(statement)
+*/
+
+syntax FocusIn is statement
+    "focus" "in"
+begin
+    MCWidgetExecFocusIn()
+end syntax
+
+/**
+Summary:    Remove the focus from the widget.
+
+Description:
+Use focus out to take the object focus from the widget. This is particularly
+useful for native views that may not pass events to the engine allowing it to
+determine focus changes.
+
+References: OnFocusEnter(message), OnFocusLeave(message), FocusPrevious(statement),
+FocusNext(statement), FocusIn(statement)
+*/
+
+syntax FocusOut is statement
+    "focus" "out"
+begin
+    MCWidgetExecFocusOut()
+end syntax
+
+/**
+Summary:    Focus on the next control with traversalOn true
+
+Description:
+Use focus next to focus on the next control with traversalOn true. This is particularly
+useful for native views that may not pass events to the engine allowing it to
+determine focus changes.
+
+References: OnFocusEnter(message), OnFocusLeave(message), FocusPrevious(statement),
+FocusOut(statement), FocusIn(statement)
+*/
+
+syntax FocusNext is statement
+    "focus" "next"
+begin
+    MCWidgetExecFocusNext()
+end syntax
+
+/**
+Summary:    Focus on the previous control with traversalOn true
+
+Description:
+Use focus previous to focus on the previous control with traversalOn true. This is
+particularly useful for native views that may not pass events to the engine allowing it to
+determine focus changes.
+
+References: OnFocusEnter(message), OnFocusLeave(message), FocusNext(statement),
+FocusOut(statement), FocusIn(statement)
+*/
+
+syntax FocusPrevious is statement
+    "focus" "previous"
+begin
+    MCWidgetExecFocusPrevious()
+end syntax
 
 end module

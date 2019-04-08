@@ -82,6 +82,9 @@ bool MCWidgetOnMouseUp(MCWidgetRef widget, bool& r_bubble);
 bool MCWidgetOnMouseCancel(MCWidgetRef widget, bool& r_bubble);
 bool MCWidgetOnClick(MCWidgetRef widget, bool& r_bubble);
 
+bool MCWidgetOnFocusEnter(MCWidgetRef widget, bool& r_bubble);
+bool MCWidgetOnFocusLeave(MCWidgetRef widget, bool& r_bubble);
+
 bool MCWidgetOnMouseScroll(MCWidgetRef widget, real32_t delta_x, real32_t delta_y, bool& r_bubble);
 
 bool MCWidgetHandlesTouchEvents(MCWidgetRef p_widget);

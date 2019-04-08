@@ -735,7 +735,7 @@ struct MCCefErrorInfo
 	CefLoadHandler::ErrorCode error_code;
 };
 
-class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler, CefDragHandler
+class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler, CefDragHandler, CefFocusHandler
 {
 private:
 	int m_browser_id;
@@ -824,7 +824,8 @@ public:
 	virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE { return this; }
-	
+    virtual CefRefPtr<CefFocusHandler> GetFocusHandler() OVERRIDE { return this; }
+    
 	void AddIgnoreUrl(const CefString &p_url)
 	{
 		m_ignore_urls.insert(p_url);
@@ -1249,6 +1250,16 @@ public:
 			p_model->Clear();
 	}
 	
+    // CefFocusHandler interface
+    
+    virtual void OnGotFocus(CefRefPtr<CefBrowser> browser) OVERRIDE
+    {
+        if (nil == m_owner)
+            return;
+        
+        m_owner -> OnFocus();
+    }
+    
 	IMPLEMENT_REFCOUNTING(MCCefBrowserClient)
 };
 

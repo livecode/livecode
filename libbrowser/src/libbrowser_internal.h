@@ -30,7 +30,10 @@ typedef bool (*MCBrowserIterateCallback)(MCBrowser *p_browser, void *p_context);
 class MCBrowserBase : public MCBrowser
 {
 public:
-	MCBrowserBase() : m_event_handler(nil), m_javascript_handler(nil)
+	MCBrowserBase()
+        : m_event_handler(nil),
+        m_javascript_handler(nil),
+        m_focus_handler(nil)
 	{
 	}
 	
@@ -40,10 +43,12 @@ public:
 	
 	void SetEventHandler(MCBrowserEventHandler *p_handler);
 	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);
+    void SetFocusHandler(MCBrowserFocusHandler *p_handler);
 
 	MCBrowserEventHandler *GetEventHandler(void);
 	MCBrowserJavaScriptHandler *GetJavaScriptHandler(void);
-	
+    MCBrowserFocusHandler *GetFocusHandler(void);
+    
 	virtual void OnNavigationBegin(bool p_in_frame, const char *p_url);
 	virtual void OnNavigationComplete(bool p_in_frame, const char *p_url);
 	virtual void OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error);
@@ -51,9 +56,11 @@ public:
 	virtual void OnDocumentLoadComplete(bool p_in_frame, const char *p_url);
 	virtual void OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error);
 	
-	virtual void OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url);
-	
-	virtual void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
+    virtual void OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url);
+    
+    virtual void OnFocus();
+    
+    virtual void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
 	
 	static bool BrowserListAdd(MCBrowser *p_browser);
 	static void BrowserListRemove(MCBrowser *p_browser);
@@ -71,6 +78,7 @@ private:
 	
 	MCBrowserEventHandler *m_event_handler;
 	MCBrowserJavaScriptHandler *m_javascript_handler;
+    MCBrowserFocusHandler *m_focus_handler;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
