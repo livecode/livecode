@@ -409,8 +409,10 @@ bool MCMacRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_by
         if (!FetchRepresentationAtIndex(i))
             return false;
         
-        MCAutoStringRef t_type(m_rep_cache[i]->CopyTypeString());
-        if (MCStringIsEqualTo(*t_type, p_type, kMCStringOptionCompareExact))
+        MCAutoStringRef t_type;
+        t_type.Give(m_rep_cache[i]->CopyTypeString());
+        if (t_type.IsSet() &&
+            MCStringIsEqualTo(*t_type, p_type, kMCStringOptionCompareExact))
         {
             // This is the rep we're looking for
             t_rep = m_rep_cache[i];
@@ -629,7 +631,8 @@ MCDataRef MCMacRawClipboardItemRep::CopyData() const
     else if ([m_item isKindOfClass:[NSPasteboardItem class]])
     {
         // Get the type string for this representation (as lookup is by type)
-        MCAutoStringRef t_type_string(CopyTypeString());
+        MCAutoStringRef t_type_string;
+        t_type_string.Give(CopyTypeString());
         if (*t_type_string == NULL)
             return NULL;
         
