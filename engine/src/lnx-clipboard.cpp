@@ -481,7 +481,8 @@ MCDataRef MCLinuxRawClipboard::CopyTargets() const
         
         // Add it to the data. Note that GDK expects 32-bit atoms to be in the
         // form of gulong, even when sizeof(gulong) > sizeof(uint32_t).
-        MCAutoStringRef t_type(t_rep->CopyTypeString());
+        MCAutoStringRef t_type;
+        t_type.Give(t_rep->CopyTypeString());
         gulong t_atom = gulong(CopyAtomForType(*t_type));
         MCDataAppendBytes(*t_data, (const byte_t*)&t_atom, sizeof(t_atom));
     }
@@ -626,8 +627,10 @@ bool MCLinuxRawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
     MCLinuxRawClipboardItemRep* t_rep = NULL;
     for (uindex_t i = 0; i < GetRepresentationCount(); i++)
     {
-        MCAutoStringRef t_type(m_reps[i]->CopyTypeString());
-        if (MCStringIsEqualTo(*t_type, p_type, kMCStringOptionCompareExact))
+        MCAutoStringRef t_type;
+        t_type.Give(m_reps[i]->CopyTypeString());
+        if (t_type.IsSet() &&
+            MCStringIsEqualTo(*t_type, p_type, kMCStringOptionCompareExact))
         {
             // This is the rep we're looking for. Updates it.
             t_rep = m_reps[i];

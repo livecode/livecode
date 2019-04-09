@@ -883,7 +883,8 @@ bool MCClipboard::CopyAsFileList(MCStringRef& r_file_list) const
             
             // Get the data for this representation and decode it
             MCAutoStringRef t_url;
-            MCAutoDataRef t_encoded_url(t_rep->CopyData());
+            MCAutoDataRef t_encoded_url;
+            t_encoded_url.Give(t_rep->CopyData());
 			if (*t_encoded_url == NULL)
 				return false;
             t_url.Reset(m_clipboard->DecodeTransferredFileList(*t_encoded_url));
@@ -912,7 +913,8 @@ bool MCClipboard::CopyAsFileList(MCStringRef& r_file_list) const
             return false;
         
 		// Decode the list of files
-        MCAutoDataRef t_data(t_rep->CopyData());
+        MCAutoDataRef t_data;
+        t_data.Give(t_rep->CopyData());
 		if (*t_data == NULL)
 			return false;
 		t_output = m_clipboard->DecodeTransferredFileList(*t_data);
@@ -1197,7 +1199,8 @@ int MCClipboard::GetLegacyOrdering() const
         const MCRawClipboardItemRep* t_rep = t_item->FetchRepresentationAtIndex(i);
         
         // Is this an image representation?
-        MCAutoStringRef t_type(t_rep->CopyTypeString());
+        MCAutoStringRef t_type;
+        t_type.Give(t_rep->CopyTypeString());
         if (MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypePNG))
             || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeGIF))
             || MCTypeMatches(*t_type, m_clipboard->GetKnownTypeString(kMCRawClipboardKnownTypeJPEG)))
@@ -1485,7 +1488,8 @@ bool MCClipboard::CopyAsEncodedText(const MCRawClipboardItem* p_item, MCRawClipb
         return false;
     
     // Get the data for this representation and decode it
-    MCAutoDataRef t_encoded(t_rep->CopyData());
+    MCAutoDataRef t_encoded;
+    t_encoded.Give(t_rep->CopyData());
 
 	// IM-2016-11-21: [[ Bug 18652 ]] Check for null return from CopyData()
 	if (!t_encoded.IsSet())
