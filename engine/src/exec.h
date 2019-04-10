@@ -1801,7 +1801,8 @@ void MCKeywordsExecNext(MCExecContext& ctxt);
 void MCKeywordsExecPass(MCExecContext& ctxt);
 void MCKeywordsExecPassAll(MCExecContext& ctxt);
 void MCKeywordsExecThrow(MCExecContext& ctxt, MCStringRef string);
-void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool platform_message, bool is_function);
+void MCKeywordsExecResolveCommandOrFunction(MCExecContext& ctxt, MCNameRef p_name, bool is_function, MCHandler*& r_handler);
+void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool platform_message, bool is_function);
 
 ////////////////////////////////////////////////////////////////////////////////
 

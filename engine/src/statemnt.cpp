@@ -373,7 +373,13 @@ Parse_stat MCComref::parse(MCScriptPoint &sp)
 
 void MCComref::exec_ctxt(MCExecContext& ctxt)
 {
-    MCKeywordsExecCommandOrFunction(ctxt, resolved, handler, params, name, line, pos, global_handler, false);
+    if (!resolved)
+    {
+        MCKeywordsExecResolveCommandOrFunction(ctxt, name, false, handler);
+        resolved = true;
+    }
+    
+    MCKeywordsExecCommandOrFunction(ctxt, handler, params, name, line, pos, global_handler, false);
     
     if (MCresultmode == kMCExecResultModeReturn)
     {

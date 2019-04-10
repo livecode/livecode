@@ -613,6 +613,7 @@ MCStack::~MCStack()
 		MCstaticdefaultstackptr = MCtopstackptr;
 	if (MCdefaultstackptr.IsBoundTo(this))
 		MCdefaultstackptr = MCstaticdefaultstackptr;
+    delete[] needs; /* Allocated with new[] */
 	if (stackfiles != NULL)
 	{
 		while (nstackfiles--)

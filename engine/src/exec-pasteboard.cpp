@@ -568,7 +568,13 @@ void MCPasteboardEvalRawClipboardOrDragKeys(MCExecContext& ctxt, const MCClipboa
 	uindex_t t_type_count = t_item->GetRepresentationCount();
 	for (uindex_t i = 0; t_success && i < t_type_count; i++)
 	{
-		MCAutoStringRef t_type(t_item->FetchRepresentationAtIndex(i)->CopyTypeString());
+        MCAutoStringRef t_type;
+        t_type.Give(t_item->FetchRepresentationAtIndex(i)->CopyTypeString());
+        if (!t_type.IsSet())
+        {
+            continue;
+        }
+        
 		t_success = MCListAppend(*t_list, *t_type);
 	}
 	

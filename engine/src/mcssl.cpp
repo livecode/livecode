@@ -108,7 +108,9 @@ Boolean InitSSLCrypt()
 #ifdef MCSSL
         OPENSSL_init_ssl(0, NULL);
         
-		RAND_seed(&MCrandomseed,I4L);
+        uint32_t t_randomseed_bytes[4];
+		RAND_seed(t_randomseed_bytes, sizeof(t_randomseed_bytes));
+        MCrandomseed = t_randomseed_bytes[0];
 		cryptinited = True;
 		
 		s_ssl_system_root_certs = nil;
