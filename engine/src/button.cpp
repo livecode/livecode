@@ -2860,11 +2860,19 @@ void MCButton::freemenu(Boolean force)
 		else
 		{
 			if (!MCStringIsEmpty(menustring) || force)
-			{
-				closemenu(False, True);
+            {
+                closemenu(False, True);
+                
+                /* In this case the button owns the menu so after removing
+                 * any references to it that might exist in the environment
+                 * it must be explicitly deleted. */
 				MCdispatcher->removepanel(menu);
 				MCstacks->deleteaccelerator(this, NULL);
 				menu->removeneed(this);
+                
+                /* Schedule deletion of the menu stack. */
+                menu->scheduledelete();
+                
 				menu = nil;
 			}
 		}

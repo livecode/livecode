@@ -105,38 +105,40 @@ static Exec_stat MCKeywordsExecuteStatements(MCExecContext& ctxt, MCStatement *p
     return stat;
 }
 
-void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool global_handler, bool is_function)
+void MCKeywordsExecResolveCommandOrFunction(MCExecContext& ctxt, MCNameRef p_name, bool is_function, MCHandler*& r_handler)
+{
+    // MW-2008-01-28: [[ Inherited parentScripts ]]
+    // If we are in parentScript context, then the object we search for
+    // private handlers in is the parentScript's object, rather than the
+    // ep's.
+    MCParentScriptUse *t_parentscript;
+    t_parentscript = ctxt . GetParentScript();
+    
+    MCObject *t_object;
+    if (t_parentscript == NULL)
+        t_object = ctxt . GetObject();
+    else
+        t_object = t_parentscript -> GetParent() -> GetObject();
+    
+    // MW-2008-10-28: [[ ParentScripts ]] Private handlers are resolved
+    //   relative to the object containing the handler we are executing.
+    MCHandler *t_resolved_handler;
+    t_resolved_handler = t_object -> findhandler(is_function ? HT_FUNCTION : HT_MESSAGE, p_name);
+    if (t_resolved_handler == NULL ||
+        !t_resolved_handler -> isprivate())
+    {
+        t_resolved_handler = nullptr;
+    }
+    r_handler = t_resolved_handler;
+}
+
+void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool global_handler, bool is_function)
 {    
 	if (MCscreen->abortkey())
 	{
 		ctxt . LegacyThrow(EE_HANDLER_ABORT);
 		return;
 	}
-    
-	if (!resolved)
-	{
-		// MW-2008-01-28: [[ Inherited parentScripts ]]
-		// If we are in parentScript context, then the object we search for
-		// private handlers in is the parentScript's object, rather than the
-		// ep's.
-		MCParentScriptUse *t_parentscript;
-		t_parentscript = ctxt . GetParentScript();
-        
-		MCObject *t_object;
-		if (t_parentscript == NULL)
-			t_object = ctxt . GetObject();
-        else
-            t_object = t_parentscript -> GetParent() -> GetObject();
-        
-        // MW-2008-10-28: [[ ParentScripts ]] Private handlers are resolved
-        //   relative to the object containing the handler we are executing.
-        MCHandler *t_resolved_handler;
-		t_resolved_handler = t_object -> findhandler(is_function ? HT_FUNCTION : HT_MESSAGE, name);
-		if (t_resolved_handler != NULL && t_resolved_handler -> isprivate())
-			handler = t_resolved_handler;
-        
-        resolved = true;
-    }
 	
     if (is_function)
         MCexitall = False;
@@ -156,7 +158,6 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, bool resolved, MCHandl
         {
             tptr -> clear_argument();
             MCExecValue t_value;
-            //HERE
             if (!ctxt . TryToEvaluateParameter(tptr, line, pos, is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM, t_value))
                 return;
             tptr->give_exec_argument(t_value);
@@ -560,7 +561,10 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
                     done = true;
                 }
                 else
+                {
+                    t_unit.Reset();
                     tci -> CopyString(&t_unit);
+                }
             }
             break;
         }

@@ -854,8 +854,10 @@ bool MCWin32RawClipboardItem::AddRepresentation(MCStringRef p_type, MCDataRef p_
 	MCWin32RawClipboardItemRep* t_rep = NULL;
 	for (uindex_t i = 0; i < GetRepresentationCount(); i++)
 	{
-		MCAutoStringRef t_type(m_reps[i]->CopyTypeString());
-		if (MCStringIsEqualTo(*t_type, p_type, kMCStringOptionCompareCaseless))
+        MCAutoStringRef t_type;
+        t_type.Give(m_reps[i]->CopyTypeString());
+		if (t_type.IsSet() &&
+            MCStringIsEqualTo(*t_type, p_type, kMCStringOptionCompareCaseless))
 		{
 			// This is the rep we're looking for. Update it.
 			t_rep = m_reps[i];

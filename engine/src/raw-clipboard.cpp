@@ -40,8 +40,10 @@ bool MCRawClipboardItem::HasRepresentation(MCStringRef p_type) const
     // Loop over the representations of this item and test each one
     for (uindex_t i = 0; i < GetRepresentationCount(); i++)
     {
-        MCAutoStringRef t_type(FetchRepresentationAtIndex(i)->CopyTypeString());
-        if (MCStringIsEqualTo(p_type, *t_type, kMCStringOptionCompareExact))
+        MCAutoStringRef t_type;
+        t_type.Give(FetchRepresentationAtIndex(i)->CopyTypeString());
+        if (t_type.IsSet() &&
+            MCStringIsEqualTo(p_type, *t_type, kMCStringOptionCompareExact))
             return true;
     }
     
@@ -57,8 +59,10 @@ const MCRawClipboardItemRep* MCRawClipboardItem::FetchRepresentationByType(MCStr
     // Loop over the representations of this item and test each one
     for (uindex_t i = 0; i < GetRepresentationCount(); i++)
     {
-        MCAutoStringRef t_type(FetchRepresentationAtIndex(i)->CopyTypeString());
-        if (MCStringIsEqualTo(p_type, *t_type, kMCStringOptionCompareExact))
+        MCAutoStringRef t_type;
+        t_type.Give(FetchRepresentationAtIndex(i)->CopyTypeString());
+        if (t_type.IsSet() &&
+            MCStringIsEqualTo(p_type, *t_type, kMCStringOptionCompareExact))
             return FetchRepresentationAtIndex(i);
     }
     
