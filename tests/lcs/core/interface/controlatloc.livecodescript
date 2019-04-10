@@ -37,6 +37,7 @@ on TestControlAtLoc
 			set the rect of it to 0,0,100,100
 			break
 		case "widget"
+			TestLoadExtension "com.livecode.library.widgetutils"
 			TestLoadExtension "com.livecode.widget.clock"
 			create widget "TestWidget" as "com.livecode.widget.clock"
 			break
