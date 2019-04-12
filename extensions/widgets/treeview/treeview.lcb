@@ -544,6 +544,29 @@ metadata textHeight.label is "Text Height"
 metadata textHeight.default is "0"
 
 /**
+Name: vScrollbar
+Type: property
+
+Syntax:
+set the vScrollbar of <widget> to <pEnabled>
+get the vScrollbar of <widget>
+
+Summary: Controls the visibility of the browser's vertical scrollbar.
+
+Value (boolean): 
+`true` if the vertical scrollbar should be enabled and displayed; 
+`false` otherwise.
+
+Description:
+Use the <vScrollbar> property to control the visibility of the widget's
+vertical scrollbar
+*/
+property vScrollbar get mVScrollbar set setVScrollbar
+metadata vScrollbar.editor is "com.livecode.pi.boolean"
+metadata vScrollbar.default is "true"
+metadata vScrollbar.label is "Vertical scrollbar"
+
+/**
 Syntax: set the showSeparator of <widget> to {true|false}
 Syntax: get the showSeparator of <widget>
 
@@ -612,6 +635,7 @@ private variable mRedraw as Boolean
 private variable mFoldChanged as Boolean
 
 private variable mAlternateRowBackgrounds as Boolean
+private variable mVScrollbar as Boolean
 
 private variable mIndentPixels as Integer
 private variable mHoverRow as Integer
@@ -694,6 +718,7 @@ public handler OnCreate() returns nothing
 	put "" into mHoverIcon
 	put 0 into mViewTopPosition
 	put true into mFrameBorder	
+	put true into mVScrollbar
 	initialiseScrollbar()	
 	
 	put false into mReadOnly
@@ -735,6 +760,7 @@ public handler OnSave(out rProperties as Array)
 	put mHiliteNewElement into rProperties["hilite new element"]
 	put mScrollHilitedElementIntoView into rProperties["scroll hilited element into view"]
 	put mTextHeight into rProperties["text height"]
+	put mVScrollbar into rProperties["vertical scrollbar"]
 
 	put mCharsToTrimFromKey into rProperties["chars to trim from key"]
 	put mShowSeparator into rProperties["show separator"]
@@ -771,6 +797,10 @@ public handler OnLoad(in pProperties as Array)
 
 	if "text height" is among the keys of pProperties then
 		put pProperties["text height"] into mTextHeight
+	end if
+
+	if "vertical scrollbar" is among the keys of pProperties then
+		put pProperties["vertical scrollbar"] into mVScrollbar
 	end if
 
 	if "chars to trim from key" is among the keys of pProperties then
@@ -2395,6 +2425,13 @@ private handler setViewTopPosition(in pViewTopPosition as Real) returns nothing
 		redraw all
 	end if
 end handler
+
+private handler setVScrollbar(in pEnabled as Boolean) returns nothing
+	if pEnabled is not mVScrollbar then
+		put pEnabled into mVScrollbar
+		redraw all
+	end if
+end handler
 --------------------------------------------------------------------------------
 --
 --		Movable divide
@@ -2541,7 +2578,7 @@ end handler
 // Will be the scrollbar's OnPaint handler
 public handler paintScrollbar(in pCanvas as Canvas)
 	// Draw scrollbar if there is any need
-	if mScrollbarHeight > 0 then
+	if mScrollbarHeight > 0 and mVScrollbar then
 		set the paint of pCanvas to my border paint
 		fill mScrollbarPath on pCanvas	
 	end if
