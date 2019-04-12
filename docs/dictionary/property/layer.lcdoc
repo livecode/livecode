@@ -57,8 +57,8 @@ equal to the number of <control(object)|controls>.
 
 The <layer> of <control(object)|controls> also determines the tab order.
 When you press the Tab key, the next <control(keyword)> whose
-<traversalOn> <property> is true becomes the <active (focused)
-control(glossary)>. For example, to set the tab order of
+<traversalOn> <property> is true becomes the <active control|active 
+(focused) control>. For example, to set the tab order of
 <field(object)|fields> in a data entry form, set the <layer> of each
 <field(keyword)> so that they are in order.
 

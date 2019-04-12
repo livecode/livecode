@@ -6,7 +6,7 @@ Syntax: libURLftpUploadFile <filePath>, <uploadURL> [, <callbackMessage>]
 
 Summary:
 <upload|Uploads> a file to an Internet <server> asynchronously via
-<FTP>. 
+<ftp|FTP>. 
 
 Associations: internet library
 
@@ -42,7 +42,7 @@ Use the <libURLftpUploadFile> <command> to put a <file> on a <server>.
 
 The <libURLftpUploadFile> <command> transfers the data directly from the
 <file> to the <server>. Unlike <libURLftpUpload> (or the <put> <command>
-used with an <FTP> <URL>), the data does not all need to be in memory at
+used with an <ftp|FTP> <URL>), the data does not all need to be in memory at
 once, so this <command> is a better choice for large <files>.
 
 The <libURLftpUploadFile> <command> transfers the file in <binary> mode.
