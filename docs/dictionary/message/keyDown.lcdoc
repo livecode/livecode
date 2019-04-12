@@ -54,7 +54,7 @@ being entered in the <field>.
 
 References: focus (command), keysDown (function), handler (glossary),
 character (glossary), pass (glossary), message (glossary),
-trap (glossary), field (keyword), rawKeyDown message (message),
+trap (glossary), field (keyword), rawKeyDown (message),
 commandKeyDown (message), returnKey (message), enterInField (message),
 controlKeyDown (message), arrowKey (message), backspaceKey (message),
 tabKey (message), functionKey (message), enterKey (message),

@@ -50,10 +50,11 @@ both on an external device and also on the device itself when in lock
 screen (via double-tapping on the Home button).
 
 Use the <iphoneSetRemoteControlDisplay> command to configure the
-> information that may be displayed on the remote control device, or on
-> the (locked) home screen controls.
+information that may be displayed on the remote control device, or on
+the (locked) home screen controls.
 >*Note:* There is no guarantee that any of this information will be
 > used, it is up to the remote control device / iOS to decide.
+
 >*Note:* This functionality is only available on iOS 5.x and above.
 
 References: iphoneEnableRemoteControl (command),

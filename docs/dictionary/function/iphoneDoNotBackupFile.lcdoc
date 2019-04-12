@@ -22,7 +22,7 @@ put iphoneDoNotBackupFile(specialFolderPath("documents") & "/appointments.txt") 
 
 Parameters:
 filename:
-The fulle path to the flagged file
+The full path to the flagged file
 
 Returns:
 true - the file has been flagged to prevent backup to the Cloud.

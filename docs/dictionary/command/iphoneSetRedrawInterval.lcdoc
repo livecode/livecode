@@ -57,7 +57,7 @@ elements. For example, scrollers, dragging and the move command all
 independently request redraws causing a build up which can lead to
 'judders' and other unwanted drawing issues.
 
->*Warning:* When the this feature, updates do not occur after each
+>*Warning:* When using this feature, updates do not occur after each
 > command. 
 
 >*Warning:* This feature should not be used if your scripts prevent
