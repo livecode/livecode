@@ -535,8 +535,9 @@ Parameters:
 pTextHeight: Custom text height for the widget
 
 Description:
-Use the <textHeight> property to get or set a custom text height for
-the widget.  A value of 0 will use the default calculated height.
+Use the <textHeight> property to set a custom text (row) height for
+the widget.  The default value is 0 which will use the calculated height
+based on the currently selected font and size.
 **/
 property textHeight						get mTextHeight			set mTextHeight
 metadata textHeight.label is "Text Height"
