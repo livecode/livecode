@@ -132,6 +132,54 @@ void MCKeywordsExecResolveCommandOrFunction(MCExecContext& ctxt, MCNameRef p_nam
     r_handler = t_resolved_handler;
 }
 
+bool MCKeywordsExecSetupCommandOrFunction(MCExecContext& ctxt, MCParameter *params, MCContainer *containers, uint2 line, uint2 pos, bool is_function)
+{
+    MCParameter *tptr = params;
+    uindex_t t_container_index = 0;
+    while (tptr != NULL)
+    {
+        /* If the parameter evaluates as a container, then place the result
+         * into the next available container slot and bump the index; otherwise
+         * evaluate as an expression. */
+        if (tptr -> evalcontainer(ctxt, containers[t_container_index]))
+        {
+            tptr -> set_argument_container(&containers[t_container_index]);
+            t_container_index += 1;
+        }
+        else
+        {
+            MCExecValue t_value;
+            
+            if (!ctxt.TryToEvaluateParameter(tptr,
+                                             line,
+                                             pos, 
+                                             is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM,
+                                             t_value))
+            {
+                return false;
+            }
+            
+            tptr -> clear_argument();
+            tptr->give_exec_argument(t_value);
+        }
+        
+        tptr = tptr->getnext();
+    }
+    
+    return true;
+}
+
+void MCKeywordsExecTeardownCommandOrFunction(MCParameter *params)
+{
+    // AL-2014-09-17: [[ Bug 13465 ]] Clear parameters after executing dispatch
+    MCParameter *tptr = params;
+    while (tptr != NULL)
+    {
+        tptr -> clear_argument();
+        tptr = tptr->getnext();
+    }
+}
+
 void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, MCHandler *handler, MCParameter *params, MCNameRef name, uint2 line, uint2 pos, bool global_handler, bool is_function)
 {    
 	if (MCscreen->abortkey())
@@ -139,36 +187,15 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, MCHandler *handler, MC
 		ctxt . LegacyThrow(EE_HANDLER_ABORT);
 		return;
 	}
-	
+        
     if (is_function)
         MCexitall = False;
-    
-	// Go through all the parameters to the function, if they are not variables, clear their current value. Each parameter stores an expression
-	// which allows its value to be re-evaluated in a given context. Re-evaluate each in the context of ep and set it to the new value.
-	// As the ep should contain the context of the caller at this point, the expression should be evaluated in that context.
+
     Exec_stat stat;
-	MCParameter *tptr = params;
-	while (tptr != NULL)
-	{
-        // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
-        MCAutoPointer<MCContainer> t_container = new (nothrow) MCContainer;
-        if (tptr -> evalcontainer(ctxt, **t_container))
-            tptr -> set_argument_container(t_container.Release());
-        else
-        {
-            tptr -> clear_argument();
-            MCExecValue t_value;
-            if (!ctxt . TryToEvaluateParameter(tptr, line, pos, is_function ? EE_FUNCTION_BADSOURCE : EE_STATEMENT_BADPARAM, t_value))
-                return;
-            tptr->give_exec_argument(t_value);
-        }
-        
-        tptr = tptr->getnext();
-    }
-	MCObject *p = ctxt . GetObject();
+    stat = ES_NOT_HANDLED;
+    MCObject *p = ctxt . GetObject();
 	MCExecContext *oldctxt = MCECptr;
 	MCECptr = &ctxt;
-	stat = ES_NOT_HANDLED;
 	Boolean added = False;
 	if (MCnexecutioncontexts < MAX_CONTEXTS)
 	{
@@ -218,6 +245,21 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, MCHandler *handler, MC
                 stat = p->handle(HT_FUNCTION, name, params, p);
                 if (oldstat == ES_PASS && stat == ES_NOT_HANDLED)
                     stat = ES_PASS;
+                
+                /* The following clause was pulled in from MCFuncref::eval_ctxt
+                 * it is not quite clear why this code path is different from
+                 * commands; however without the clause a test failure occurs
+                 * in 'TestExtensionLibraryHandlerCallErrors'. */
+                // MW-2007-08-09: [[ Bug 5705 ]] Throws inside private functions don't trigger an
+                //   exception.
+                if (!global_handler &&
+                    stat != ES_NORMAL &&
+                    stat != ES_PASS &&
+                    stat != ES_EXIT_HANDLER)
+                {
+                    MCeerror->add(EE_FUNCTION_BADFUNCTION, line, pos, name);
+                    stat = ES_ERROR;
+                }
             }
             else
             {
@@ -265,14 +307,6 @@ void MCKeywordsExecCommandOrFunction(MCExecContext& ctxt, MCHandler *handler, MC
         ctxt . SetExecStat(stat);
     else
         ctxt . SetExecStat(ES_NORMAL);
-
-    // AL-2014-09-17: [[ Bug 13465 ]] Clear parameters after executing command/function
-    tptr = params;
-    while (tptr != NULL)
-	{
-        tptr -> clear_argument();
-        tptr = tptr->getnext();
-    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

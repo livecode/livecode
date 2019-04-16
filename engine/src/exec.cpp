@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "variable.h"
 #include "handler.h"
 #include "hndlrlst.h"
+#include "keywords.h"
 
 #include "osspec.h"
 

@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "cmds.h"
 #include "license.h"
 #include "redraw.h"
+#include "keywords.h"
 
 #include "exec.h"
 

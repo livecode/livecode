@@ -448,7 +448,7 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
         if (MCHandlerTypeInfoGetParameterMode(t_signature, i) != kMCHandlerTypeFieldModeOut)
         {
             MCValueRef t_value;
-            if (!t_param -> eval(*MCECptr, t_value))
+            if (!t_param -> eval_argument(*MCECptr, t_value))
             {
                 t_success = false;
                 break;
@@ -467,6 +467,7 @@ Exec_stat MCEngineHandleLibraryMessage(MCNameRef p_message, MCParameter *p_param
             
             if (!t_arguments . Push(t_value))
             {
+                MCValueRelease(t_value);
                 t_success = false;
                 break;
             }

@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parentscript.h"
 #include "osspec.h"
 #include "card.h"
+#include "keywords.h"
 
 #include "exec-interface.h"
 
