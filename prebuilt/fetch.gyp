@@ -311,7 +311,7 @@
 					
 					'outputs':
 					[
-						'lib/android/armv6',
+						'lib/android/<(target_arch)',
 					],
 					
 					'action':
