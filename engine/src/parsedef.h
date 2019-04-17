@@ -2062,6 +2062,7 @@ enum Statements {
     S_LOCAL,
     S_LOAD,
     S_LOCK,
+    S_LOG,
     S_MARK,
     S_MODAL,
     S_MODELESS,

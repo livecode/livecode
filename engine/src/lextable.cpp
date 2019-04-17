@@ -363,6 +363,7 @@ const LT command_table[] =
         {"load", TT_STATEMENT, S_LOAD},
         {"local", TT_STATEMENT, S_LOCAL},
         {"lock", TT_STATEMENT, S_LOCK},
+        {"log", TT_STATEMENT, S_LOG},
         {"mark", TT_STATEMENT, S_MARK},
         {"modal", TT_STATEMENT, S_MODAL},
         {"modeless", TT_STATEMENT, S_MODELESS},

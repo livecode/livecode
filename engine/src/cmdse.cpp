@@ -535,6 +535,101 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
     }
 }
 
+MCLogCmd::~MCLogCmd(void)
+{
+    while(params != NULL)
+    {
+        MCParameter *t_param;
+        t_param = params;
+        params = params -> getnext();
+        delete t_param;
+    }
+}
+
+Parse_stat MCLogCmd::parse(MCScriptPoint& sp)
+{
+    initpoint(sp);
+    
+    if (getparams(sp, &params) != PS_NORMAL)
+    {
+        MCperror -> add(PE_STATEMENT_BADPARAMS, sp);
+        return PS_ERROR;
+    }
+    
+    /* If there are any parameters then compute the number of containers needed
+     * to execute the command. */
+    if (params != nullptr)
+    {
+        container_count = params->count_containers();
+    }
+    
+    return PS_NORMAL;
+}
+
+// This method follows along the same lines as MCComref::exec
+void MCLogCmd::exec_ctxt(MCExecContext &ctxt)
+{
+    // no-op if logMessage is empty
+    if (MCNameIsEmpty(MClogmessage))
+    {
+        return;
+    }
+    
+    /* Attempt to allocate the number of containers needed for the call. */
+    MCAutoPointer<MCContainer[]> t_containers = new MCContainer[container_count];
+    if (!t_containers)
+    {
+        ctxt.LegacyThrow(EE_NO_MEMORY);
+        return;
+    }
+    
+    /* If the argument list is successfully evaluated, then do the dispatch. */
+    if (MCKeywordsExecSetupCommandOrFunction(ctxt,
+                                             params,
+                                             *t_containers,
+                                             line,
+                                             pos,
+                                             false))
+    {
+        if (!ctxt.HasError())
+        {
+            ctxt.SetLineAndPos(line, pos);
+            MCHandler * t_handler = nullptr;
+            MCKeywordsExecResolveCommandOrFunction(ctxt, MClogmessage, false, t_handler);
+            MCKeywordsExecCommandOrFunction(ctxt, t_handler, params, MClogmessage, line, pos, false, false);
+        }
+    }
+    
+    /* Clean up the evaluated argument list */
+    MCKeywordsExecTeardownCommandOrFunction(params);
+    
+    if (MCresultmode == kMCExecResultModeReturn)
+    {
+        // Do nothing!
+    }
+    else if (MCresultmode == kMCExecResultModeReturnValue)
+    {
+        // Set 'it' to the result and clear the result
+        MCAutoValueRef t_value;
+        if (!MCresult->eval(ctxt, &t_value))
+        {
+            ctxt.Throw();
+            return;
+        }
+        
+        ctxt.SetItToValue(*t_value);
+        ctxt.SetTheResultToEmpty();
+    }
+    else if (MCresultmode == kMCExecResultModeReturnError)
+    {
+        // Set 'it' to empty
+        ctxt.SetItToEmpty();
+        // Leave the result as is but make sure we reset the 'return mode' to default.
+        MCresultmode = kMCExecResultModeReturn;
+    }
+}
+
+
 Parse_stat MCMessage::parse(MCScriptPoint &sp)
 {
 	initpoint(sp);
