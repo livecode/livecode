@@ -2779,8 +2779,12 @@ static void doSurfaceChangedCallback(void *p_is_init)
 	// We can now re-enable screen updates.
 	MCRedrawEnableScreenUpdates();
 
-	// Force a redraw of the current window without re-rendering
-    static_cast<MCScreenDC *>(MCscreen) -> refresh_current_window();
+	// Force a redraw of the current window. If this is an initializing change,
+	// re-render the whole screen.
+	if (t_is_init)
+		MCRedrawUpdateScreen();
+	else
+		static_cast<MCScreenDC *>(MCscreen) -> refresh_current_window();
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_OpenGLView_doSurfaceChanged(JNIEnv *env, jobject object, jobject p_view)
