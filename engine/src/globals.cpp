@@ -886,6 +886,8 @@ void X_clear_globals(void)
 #endif
 	
 	MCDateTimeInitialize();
+    
+    MClogmessage = MCNAME("log");
 }
 
 /* ---------------------------------------------------------------- */
@@ -1545,6 +1547,8 @@ int X_close(void)
         MCValueRelease(MCappcodepath);
     if (MCcmd != nullptr)
         MCValueRelease(MCcmd);
+    
+    MCValueRelease(MClogmessage);
     
 	return MCretcode;
 }

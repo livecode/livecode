@@ -369,6 +369,25 @@ void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCDebuggingGetLogMessage(MCExecContext& ctxt, MCStringRef& r_value)
+{
+    r_value = MCValueRetain(MCNameGetString(MClogmessage));
+}
+
+void MCDebuggingSetLogMessage(MCExecContext& ctxt, MCStringRef p_value)
+{
+    MCNewAutoNameRef t_logmessage;
+    if (!MCNameCreate(p_value, &t_logmessage))
+    {
+        ctxt.Throw();
+        return;
+    }
+    
+    MCValueAssign(MClogmessage, *t_logmessage);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, bool p_result)
 {
     switch(type)

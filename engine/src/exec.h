@@ -3780,6 +3780,8 @@ void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value);
 void MCDebuggingGetWatchedVariables(MCExecContext& ctxt, MCStringRef& r_value);
 void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value);
 void MCDebuggingExecPutIntoMessage(MCExecContext& ctxt, MCStringRef value, int where);
+void MCDebuggingGetLogMessage(MCExecContext& ctxt, MCStringRef& r_value);
+void MCDebuggingSetLogMessage(MCExecContext& ctxt, MCStringRef p_value);
 
 ///////////
 
