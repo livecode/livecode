@@ -137,10 +137,18 @@ MCAutoStringRef string_create_utf8(const char (&utf8)[N])
     return s;
 }
 
+template<size_t N>
+MCAutoStringRef string_create_native(const char (&native)[N])
+{
+    MCAutoStringRef s;
+    MCStringCreateWithNativeChars((const char_t *)native, N-1, &s);
+    return s;
+}
+
 TEST(hash, native_string)
 {
-    MCAutoStringRef t_mixed = string_create_utf8(u8"LiveCode");
-    MCAutoStringRef t_lower = string_create_utf8(u8"livecode");
+    MCAutoStringRef t_mixed = string_create_native("LiveCode");
+    MCAutoStringRef t_lower = string_create_native("livecode");
 
     /* Check a couple of specific values */
     EXPECT_EQ(string_hash_exact(kMCEmptyString), {2166136261});
