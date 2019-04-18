@@ -1055,6 +1055,11 @@ struct MCPlatformMenu
 	uint32_t references;
 	NSMenu *menu;
 	MCMenuDelegate *menu_delegate;
+    
+    // Hold the references to any submenus which are in this menu's items;
+    // otherwise false-positives occur when looking for leaks.
+    MCPlatformMenuRef *submenus;
+    uindex_t submenu_count;
 	
 	// If the menu is being used as a menubar then this is true. When this
 	// is the case, some items will be hidden and a (API-wise) invisible
@@ -1505,6 +1510,45 @@ void MCMacPlatformUnlockMenuSelect(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void MCPlatformAddSubmenuToMenu(MCPlatformMenuRef p_menu, MCPlatformMenuRef p_submenu)
+{
+    uindex_t t_first_free = p_menu->submenu_count;
+    for(uindex_t i = 0; i < p_menu->submenu_count; i++)
+    {
+        if (p_menu->submenus[i] == nullptr &&
+            i < t_first_free)
+        {
+            t_first_free = i;
+        }
+        
+        if (p_menu->submenus[i] == p_submenu)
+        {
+            return;
+        }
+    }
+    
+    if (t_first_free == p_menu->submenu_count)
+    {
+        /* UNCHECKED */ MCMemoryResizeArray(p_menu->submenu_count + 1,
+                                            p_menu->submenus,
+                                            p_menu->submenu_count);
+    }
+    
+    p_menu->submenus[t_first_free] = p_submenu;
+}
+
+static void MCPlatformRemoveSubmenuFromMenu(MCPlatformMenuRef p_menu, MCPlatformMenuRef p_submenu)
+{
+    for(uindex_t i = 0; i < p_menu->submenu_count; i++)
+    {
+        if (p_menu->submenus[i] == p_submenu)
+        {
+            p_menu->submenus[i] = nullptr;
+            return;
+        }
+    }
+}
+
 // Helper method that frees anything associated with an NSMenuItem in an NSMenu
 // (at the moment, this is the submenu).
 static void MCPlatformDestroyMenuItem(MCPlatformMenuRef p_menu, uindex_t p_index)
@@ -1523,6 +1567,8 @@ static void MCPlatformDestroyMenuItem(MCPlatformMenuRef p_menu, uindex_t p_index
 	// Update the submenu pointer (so we don't have any dangling
 	// refs).
     [t_item setSubmenu: nil];
+    
+    MCPlatformRemoveSubmenuFromMenu(p_menu, t_submenu_ref);
 	
 	// Now release the platform menu.
 	MCPlatformReleaseMenu(t_submenu_ref);
@@ -1566,6 +1612,9 @@ void MCPlatformCreateMenu(MCPlatformMenuRef& r_menu)
     t_menu -> quit_item = nil;
     t_menu -> preferences_item = nil;
     t_menu -> about_item = nil;
+    
+    t_menu->submenus = nil;
+    t_menu->submenu_count = 0;
 	
 	r_menu = t_menu;
 }
@@ -1590,6 +1639,7 @@ void MCPlatformReleaseMenu(MCPlatformMenuRef p_menu)
     [p_menu -> about_item release];
     [p_menu -> preferences_item release];
     [p_menu -> quit_item release];
+    MCMemoryDeleteArray(p_menu->submenus);
 	MCMemoryDelete(p_menu);
 }
 
@@ -1741,16 +1791,31 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
                     if (t_action == kMCPlatformMenuItemActionQuit)
                     {
                         [t_item setTag:kMCShadowedItemQuit];
+                        
+                        if (t_supermenu_ref->quit_item != nil)
+                        {
+                            [t_supermenu_ref->quit_item release];
+                        }
                         t_supermenu_ref -> quit_item = [t_item retain];
                     }
                     else if (t_action == kMCPlatformMenuItemActionPreferences)
                     {
                         [t_item setTag:kMCShadowedItemPreferences];
+                        
+                        if (t_supermenu_ref->preferences_item != nil)
+                        {
+                            [t_supermenu_ref->preferences_item release];
+                        }
                         t_supermenu_ref -> preferences_item = [t_item retain];
                     }
                     else if (t_action == kMCPlatformMenuItemActionAbout)
                     {
                         [t_item setTag: kMCShadowedItemAbout];
+                        
+                        if (t_supermenu_ref->about_item != nil)
+                        {
+                            [t_supermenu_ref->about_item release];
+                        }
                         t_supermenu_ref -> about_item = [t_item retain];
                     }
                 }
@@ -1817,6 +1882,8 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
 			{
 				MCPlatformMenuRef t_current_submenu_ref;
 				t_current_submenu_ref = [(MCMenuDelegate *)[t_current_submenu delegate] platformMenuRef];
+                
+                MCPlatformRemoveSubmenuFromMenu(p_menu, t_current_submenu_ref);
 				MCPlatformReleaseMenu(t_current_submenu_ref);
 			}
 			
@@ -1826,6 +1893,7 @@ void MCPlatformSetMenuItemProperty(MCPlatformMenuRef p_menu, uindex_t p_index, M
             [t_item setTarget: nil];
             
 			[t_item setSubmenu: (*(MCPlatformMenuRef *)p_value) -> menu];
+            MCPlatformAddSubmenuToMenu(p_menu, t_submenu_ref);
 		}
 		break;
 		case kMCPlatformMenuItemPropertyHighlight:
