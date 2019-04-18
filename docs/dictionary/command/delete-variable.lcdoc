@@ -7,7 +7,7 @@ Type: command
 Syntax: delete {local | global | variable} {<variableName> | <arrayIndex>}
 
 Summary:
-Removes a <variable> from memory.
+Removes a <variable> contents from memory.
 
 Introduced: 1.0
 
@@ -16,7 +16,8 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-delete local tempVariable
+local tVariable
+delete local tVariable
 
 Example:
 global gArray
@@ -34,14 +35,11 @@ array, without deleting the rest of the elements in the array.
 
 Description:
 Use the <delete variable> <command> to free memory used by a large
-<variable>, or to clean up after using many <variable> names.
+<variable>.  The <delete variable> <command> only removes the contents 
+of the <variable>.
 
-If you use theform, the <variableName>, <global> or <local>, is deleted.
-
-The <delete variable> <command> not only removes the contents of the
-<variable>, but deletes it entirely from memory. If you delete a <key>
-from an <array> <variable>, that <element> of the <array> no longer
-exists as part of the <variable>.
+If you delete a <key> from an <array> <variable>, that <element> of the 
+<array> no longer exists as part of the <variable>.
 
 >*Note:* <local variable|Local variables> that are used within a
 > <handler> are automatically deleted when the <handler> in which they
