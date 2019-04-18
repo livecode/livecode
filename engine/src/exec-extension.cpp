@@ -770,8 +770,8 @@ bool MCExtensionConvertToScriptType(MCExecContext& ctxt, MCValueRef& x_value)
                 MCValueRelease(t_imported);
                 return false;
             }
-
-            MCValueAssign(x_value, t_imported);
+            
+            MCValueAssignAndRelease(x_value, t_imported);
         }
         return true;
 
