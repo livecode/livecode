@@ -512,6 +512,11 @@ struct MCScriptModule: public MCScriptObject
     
     // This is the ordinal mapping array (if any) -- not pickled
     void **builtins;
+    
+    // This is a map from library name used in the module to MCSLibraryRef
+    // all foreign handler definitions which have the same library string share
+    // a single MCSLibraryRef -- not pickled
+    MCArrayRef libraries;
 };
 
 bool MCScriptWriteRawModule(MCStreamRef stream, MCScriptModule *module);

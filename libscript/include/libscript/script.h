@@ -255,6 +255,9 @@ void MCScriptSetModuleLicensed(MCScriptModuleRef self, bool p_licensed);
 // Gets the licensed state of a module
 bool MCScriptIsModuleLicensed(MCScriptModuleRef self);
 
+// Attempt to load the named library using any context provided by the module
+bool MCScriptLoadModuleLibrary(MCScriptModuleRef self, MCStringRef p_library, MCSLibraryRef& r_library);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Create an instance of the given module. If the module is single-instance it
