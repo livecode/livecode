@@ -74,6 +74,11 @@ MCPlatformWindow::~MCPlatformWindow(void)
 {
     //MCLog("Destroy window %p", this);
 	
+    if (m_cursor != nullptr)
+    {
+        MCPlatformReleaseCursor(m_cursor);
+    }
+    
 	MCRegionDestroy(m_dirty_region);
 	
 	MCPlatformWindowMaskRelease(m_mask);
