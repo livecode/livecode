@@ -164,7 +164,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 		}
 
 		MCVarref *tvar = NULL;
-		MCAutoStringRef init;
+		MCAutoValueRef init;
 		bool initialised = false;
 		if (sp.skip_token(SP_FACTOR, TT_BINOP, O_EQ) == PS_NORMAL)
 		{
@@ -194,9 +194,13 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 				}
                 // PM-2015-01-30: [[ Bug 14439 ]] Make sure minus sign is not ignored when assigning value to var at declaration
                 if (t_is_minus)
-                    /* UNCHECKED */ MCStringFormat(&init, "-%@", sp.gettoken_stringref());
+                    /* UNCHECKED */ MCStringFormat((MCStringRef&)&init, "-%@", sp.gettoken_stringref());
                 else
-                    init = sp.gettoken_stringref();
+                {
+                    /* Use the name form of the token to ensure initializers are
+                     * always unique. */
+                    init = sp.gettoken_nameref();
+                }
 			}
 			else
             {
@@ -224,7 +228,9 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
 					return PS_ERROR;
                 }
                 
-                init = sp.gettoken_stringref();
+                /* Use the name form of the token to ensure initializers are
+                 * always unique. */
+                init = sp.gettoken_nameref();
             }
 
 			initialised = true;
