@@ -169,7 +169,6 @@
 				#’widgets/multilist/multilist.lcb',
 				'widgets/navbar/navbar.lcb',
 				'widgets/paletteactions/paletteactions.lcb',
-				#’widgets/pinkcircle/pinkcircle.lcb',
 				#'widgets/progressbar/progressbar.lcb',
 				#'widgets/pushbutton/pushbutton.lcb',
 				#'widgets/radiobutton/radiobutton.lcb',

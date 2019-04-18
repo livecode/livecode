@@ -128,6 +128,9 @@
 			'sources':
 			[
 				'libraries/androidwavrecorder/androidwavrecorder.lcb',
+
+				'widgets/pinkcircle/pinkcircle.lcb',
+				'widgets/simplecomposed/simplecomposed.lcb',
 			],
 
 			'actions':
