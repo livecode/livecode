@@ -85,7 +85,7 @@ Exec_stat MCField::sort(MCExecContext &ctxt, uint4 parid, Chunk_term type,
         return ES_NORMAL;
 	}
 
-    MCAutoArray<MCSortnode> items;
+    MCAutoArrayZeroedNonPod<MCSortnode> items;
 	uint4 nitems = 0;
 	MCParagraph *pgptr;
     
