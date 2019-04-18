@@ -320,40 +320,43 @@ void MCLegacyExecImport(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_s
 	}
 
 	MCU_watchcursor(ctxt.GetObject()->getstack(), True);
+    
 	IO_handle t_stream;
-	
-	if ((t_stream = MCS_open(p_filename, kMCOpenFileModeRead, True, False, 0)) == NULL)
-	{
-		ctxt . LegacyThrow(EE_IMPORT_CANTOPEN);		
-		// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
-		//   return back to the caller.
-		MCU_unwatchcursor(ctxt .GetObject()->getstack(), True);
-		return;
+	if ((t_stream = MCS_open(p_filename, kMCOpenFileModeRead, True, False, 0)) != NULL)
+    {
+        if (p_is_stack)
+        {
+            MCStack *t_stack;
+            if (hc_import(p_filename, t_stream, t_stack) == IO_NORMAL)
+            {
+                t_stack->open();
+            }
+            else
+            {
+                ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
+            }
+        }
+        else
+        {
+            MCEPS *eptr = new (nothrow) MCEPS;
+            if (eptr->import(p_filename, t_stream))
+            {
+                eptr->setparent(MCdefaultstackptr);
+                eptr->attach(OP_CENTER, false);
+            }
+            else
+            {
+                delete eptr;
+                ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
+            }
+        }
+        
+        MCS_close(t_stream);
+    }
+    else
+    {
+		ctxt . LegacyThrow(EE_IMPORT_CANTOPEN);
 	}
-
-	if (p_is_stack)
-	{
-		MCStack *t_stack;
-		if (hc_import(p_filename, t_stream, t_stack) != IO_NORMAL)
-		{
-			MCS_close(t_stream);
-			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
-		}
-		t_stack->open();
-	}
-	else
-	{
-		MCEPS *eptr = new (nothrow) MCEPS;
-		if (!eptr->import(p_filename, t_stream))
-		{
-            delete eptr;
-			ctxt . LegacyThrow(EE_IMPORT_CANTREAD);
-			return;
-		}
-        eptr->setparent(MCdefaultstackptr);
-		eptr->attach(OP_CENTER, false);
-	}
-
 	// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 	//   return back to the caller.
 	MCU_unwatchcursor(ctxt . GetObject()->getstack(), True);
