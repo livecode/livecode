@@ -72,7 +72,7 @@ propertyNames (function), time (function), folders (function),
 files (function), dateFormat (function), date (function),
 keyword (glossary), property (glossary), command (glossary),
 object type (glossary), expression (glossary), object (glossary),
-card (keyword), short (keyword), abbreviated (keyword), ID (property)
+card (keyword), short (keyword), abbreviated (keyword), ID (property),
 name (property), owner (property), useSystemDate (property)
 
 Tags: file system

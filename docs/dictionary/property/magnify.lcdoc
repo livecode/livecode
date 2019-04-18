@@ -22,7 +22,7 @@ Value (bool):
 The <magnify> of an <image> is true or false.
 
 Description:
-Use the <magnify> <property> to edit an <image> <pixel> -by- <pixel>.
+Use the <magnify> <property> to edit an <image> <pixel>-by-<pixel>.
 
 When you set the <magnify> of an <image> to true, a <palette> appears
 displaying a close-up view of the center of the <image>. At the same

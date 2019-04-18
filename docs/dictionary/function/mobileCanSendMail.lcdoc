@@ -4,7 +4,7 @@ Synonyms: iphonecansendmail
 
 Type: function
 
-Syntax: mobileCanSendMail ()
+Syntax: mobileCanSendMail()
 
 Summary:
 Determines if a devices can be used to send emails.
@@ -16,11 +16,11 @@ OS: ios, android
 Platforms: mobile
 
 Example:
-answer mobileCanSendMail () with "okay"
+answer mobileCanSendMail() with "okay"
 
 Example:
-if mobileCanSendMail () is false then
-answer "This device does not support e-mail" with "Okay"
+if mobileCanSendMail() is false then
+    answer "This device does not support e-mail" with "Okay"
 end if
 
 Returns (enum):
