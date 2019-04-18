@@ -393,7 +393,7 @@ bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr, MCH
             return false;
     }
     else
-        t_name = MCValueRetain(p_name_in);
+        t_name = p_name_in;
 
     // get port & id if set
     MCAutoStringRef t_host;
@@ -468,7 +468,7 @@ bool MCS_name_to_host_and_port(MCStringRef p_name, MCStringRef &r_host, MCNumber
         }
     }
     else
-        t_host = MCValueRetain(p_name);
+        t_host = p_name;
 
     if (!MCStringIsEmpty(*t_host))
         MCValueAssign(r_host, *t_host);
