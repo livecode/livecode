@@ -15,19 +15,16 @@
 		{
 			'target_name': 'check',
 			'type': 'none',
-			'dependencies': 
-			[ 
-				'cpptest-run-all', 
-				
-				# Example widgets and libraries
-				'extensions/examples/examples.gyp:extension-examples',
+			'dependencies':
+			[
+				'cpptest-run-all',
 			],
 		},
 
 		{
 			'target_name': 'LiveCode-all',
 			'type': 'none',
-			
+
 			'dependencies':
 			[
 				# Engines

@@ -72,17 +72,17 @@
 			
 			'sources':
 			[
-				'script-libraries/extension-utils/extension-utils.livecodescript',
-							
-				'script-libraries/oauth2/oauth2.livecodescript',
-				'script-libraries/getopt/getopt.livecodescript',
-				'script-libraries/mime/mime.livecodescript',
-				'script-libraries/drawing/drawing.livecodescript',
-				'script-libraries/dropbox/dropbox.livecodescript',
-				'script-libraries/diff/diff.livecodescript',
-				'script-libraries/messageauthentication/messageauthentication.livecodescript',
-				'script-libraries/httpd/httpd.livecodescript',
-				'script-libraries/qr/qr.livecodescript',
+'script-libraries/extension-utils/extension-utils.livecodescript',
+
+			'script-libraries/oauth2/oauth2.livecodescript',
+			'script-libraries/getopt/getopt.livecodescript',
+			'script-libraries/mime/mime.livecodescript',
+			'script-libraries/drawing/drawing.livecodescript',
+			'script-libraries/dropbox/dropbox.livecodescript',
+			'script-libraries/diff/diff.livecodescript',
+			'script-libraries/messageauthentication/messageauthentication.livecodescript',
+			'script-libraries/httpd/httpd.livecodescript',
+			'script-libraries/qr/qr.livecodescript',
 			],
 			
 			'dependencies':
@@ -132,14 +132,14 @@
 				'../toolchain/lc-compile/lc-compile.gyp:lc-compile',
 				'../engine/lcb-modules.gyp:engine_lcb_modules',
 				'../engine/engine.gyp:server',
-				'../revzip/revzip.gyp:external-revzip-server',				
-				'../revxml/revxml.gyp:external-revxml-server',				
+				'../revzip/revzip.gyp:external-revzip-server',
+				'../revxml/revxml.gyp:external-revxml-server',
 			],
 
 			'sources':
 			[
 				'modules/widget-utils/widget-utils.lcb',
-				'modules/android-utils/android-utils.lcb',				
+				'modules/android-utils/android-utils.lcb',
 				'modules/scriptitems/scriptitems.lcb',
 
 				'libraries/androidbgaudio/androidbgaudio.lcb',
@@ -149,7 +149,7 @@
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
 				'libraries/objectrepository/objectrepository.lcb',
-				'libraries/timezone/timezone.lcb',				
+				'libraries/timezone/timezone.lcb',
 
 				'widgets/androidbutton/androidbutton.lcb',
 				'widgets/androidfield/androidfield.lcb',
@@ -158,21 +158,13 @@
 				'widgets/mactextfield/mactextfield.lcb',
 				'widgets/iosbutton/iosbutton.lcb',
 				'widgets/browser/browser.lcb',
-				#’widgets/chart/chart.lcb',
-				#'widgets/checkbox/checkbox.lcb',
 				'widgets/clock/clock.lcb',
 				'widgets/graph/graph.lcb',
 				'widgets/header/header.lcb',
 				'widgets/iconpicker/iconpicker.lcb',
-				#’widgets/list/list.lcb',
-				#’widgets/multilist/multilist.lcb',
 				'widgets/navbar/navbar.lcb',
 				'widgets/paletteactions/paletteactions.lcb',
-				#'widgets/progressbar/progressbar.lcb',
-				#'widgets/pushbutton/pushbutton.lcb',
-				#'widgets/radiobutton/radiobutton.lcb',
 				'widgets/segmented/segmented.lcb',
-				#'widgets/selector/selector.lcb',
 				'widgets/svgpath/svgpath.lcb',
 				'widgets/switchbutton/switchbutton.lcb',
 				'widgets/treeview/treeview.lcb',
@@ -180,6 +172,21 @@
 				'widgets/gradientrampeditor/gradientrampeditor.lcb',
 				'widgets/tile/tile.lcb',
 				'widgets/spinner/spinner.lcb',
+				
+				'examples/libraries/androidwavrecorder/androidwavrecorder.lcb',
+				'examples/libraries/ini/ini.lcb',
+				
+				'examples/widgets/pinkcircle/pinkcircle.lcb',
+				'examples/widgets/simplecomposed/simplecomposed.lcb',	
+				'examples/widgets/selector/selector.lcb',
+								
+				#’examples/widgets/chart/chart.lcb',
+				#'examples/widgets/checkbox/checkbox.lcb',
+				#'examples/widgets/list/list.lcb',
+				#’examples/widgets/multilist/multilist.lcb',
+				#'examples/widgets/progressbar/progressbar.lcb',
+				#'examples/widgets/pushbutton/pushbutton.lcb',
+				#'examples/widgets/radiobutton/radiobutton.lcb',
 			],
 
 			'actions':
@@ -217,7 +224,7 @@
 				},
 			],
 		},
-		
+
 		{
 			'target_name': 'cross-platform-extension-dependencies',
 			'type': 'none',
@@ -225,6 +232,9 @@
 			'dependencies':
 			[
 				'libraries/timezone/tz/tz.gyp:tz',
+
+                'examples/libraries/ini/inih/inih.gyp:inih',
+                'examples/libraries/androidwavrecorder/src/androidwavrecorder.gyp:androidwavrecorder',                
 			],
 		},
 	],
