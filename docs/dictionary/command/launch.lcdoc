@@ -52,8 +52,8 @@ foreground.
 If no <documentPath> is specified, the following two statements are
 equivalent: 
 
-launch application
-open process application for neither
+    launch application
+    open process application for neither
 
 >*Note:*  On OS X systems, you can use the <launch> command to start up
 > an application, but not a Unix process. To work with a Unix process,
@@ -62,7 +62,7 @@ open process application for neither
 >*Tip:*  On Windows systems, you can also start up an application by
 > using the shell function with the Windows "start" command:
 
-get shell("start MyProgram.exe")
+    get shell("start MyProgram.exe")
 
 References: launch url (command), kill (command),
 launch document (command), shell (function), command (glossary),

@@ -54,10 +54,10 @@ second part, and so on.
 References: post (command), libURLSetExpect100 (command),
 libURLMultipartFormAddPart (function), libURLMultipartFormData (function),
 application (glossary), standalone application (glossary),
-openBackground (glossary), function (glossary), openStack (glossary),
-main stack (glossary), keyword (glossary), group (glossary),
-startup (glossary), Standalone Application Settings (glossary),
-preOpenStack (glossary), message (glossary), preOpenCard (glossary),
-handler (glossary), LiveCode custom library (glossary),
-Internet library (library), library (library)
+function (glossary), main stack (glossary), keyword (glossary), 
+group (glossary), Standalone Application Settings (glossary),
+message (glossary), handler (glossary), LiveCode custom library (glossary),
+Internet library (library), library (library), openBackground (message),
+openStack (message), startup (message), preOpenStack (message),
+preOpenCard (message)
 
