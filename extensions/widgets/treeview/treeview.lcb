@@ -83,7 +83,7 @@ use com.livecode.library.widgetutils
 use com.livecode.foreign
 
 metadata author is "LiveCode"
-metadata version is "2.1.0"
+metadata version is "2.2.1"
 metadata title is "Tree View"
 metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1s-6.3-14.1-14.1-14.1c-6.4,0-11.8,4.3-13.5,10.1h-10v-16.1c8.4-1.8,14.8-9.3,14.8-18.3c0-10.4-8.4-18.8-18.8-18.8s-18.8,8.4-18.8,18.8c0,9,6.3,16.5,14.7,18.3v58.8h18c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1S160.2,249.7,152.4,249.7z M128.7,202h-7.5v-7.5h-7.5V187h7.5v-7.5h7.5v7.5h7.5v7.5h-7.5V202z"
 metadata _ide is "true"
@@ -126,6 +126,27 @@ property hilitedElement			get getSelectedElement			set setSelectedElement
 metadata hilitedElement.label is "Hilited element"
 
 /**
+Syntax: set the hilitedElementFoldState of <widget> to <pFoldState>
+Syntax: get the hilitedElementFoldState of <widget>
+
+Summary: Get/set the fold state of the selected element
+
+Parameters:
+pFoldState (enum): The fold state of the selected element.
+- "folded": Sub-array for the selected element is hidden.
+- "unfolded": Sub-array for the selected element is visible.
+- "leaf": Selected element is a leaf node.  This value may not be set.
+
+Description:
+<pFoldState> is the fold state of the selected element.  When setting
+the fold state, attempts to set the value for a leaf node will have no
+effect.  Setting the fold state when no element is selected has no effect.
+**/
+
+property hilitedElementFoldState			get getSelectedElementFoldState			set setSelectedElementFoldState
+metadata hilitedElementFoldState.user_visible is "false"
+
+/**
 Syntax: set the hiliteNewElement of <widget> to {true|false}
 Syntax: get the hiliteNewElement of <widget>
 
@@ -157,6 +178,22 @@ References: hilitedElement (property)
 
 property scrollHilitedElementIntoView		get mScrollHilitedElementIntoView		set mScrollHilitedElementIntoView
 metadata scrollHilitedElementIntoView.label is "Scroll hilited element into view"
+
+/**
+Syntax: set the autoFoldStateReset of <widget> to {true|false}
+Syntax: get the autoFoldStateReset of <widget>
+
+Summary: Automatically reset fold state when array data is set.
+
+Description:
+Use the <autoFoldStateReset> property to determine if the fold state is
+reset (tree is completely folded) when the <arrayData> property is set.
+
+References: arrayData (property)
+**/
+
+property autoFoldStateReset			get mAutoFoldStateReset				set mAutoFoldStateReset
+metadata autoFoldStateReset.label is "Automatically reset fold state when array data is set"
 
 /**
 Name: foreColor
@@ -245,8 +282,8 @@ Summary: Manipulates the order in which elements of the tree view are displayed,
 
 Parameters:
 pOrder (enum): The order in which to display elements of the tree view.
--"ascending": Display from first to last in the order. This is the default
--"descending": Display from last to first in the order.
+- "ascending": Display from first to last in the order. This is the default
+- "descending": Display from last to first in the order.
 
 Description:
 Use the <sortOrder> property to display the elements of the tree view in ascending or descending order of the
@@ -269,8 +306,8 @@ Summary: Manipulates the type of ordering in which elements of the tree view are
 
 Parameters:
 pType (enum): The type of ordering to use in displaying elements of the tree view.
--"text": Display in alphabetical order of the keys
--"numeric": Display in numeric order of the keys. This is the default
+- "text": Display in alphabetical order of the keys
+- "numeric": Display in numeric order of the keys. This is the default
 
 Description:
 Use the <sortType> property to use text or numeric comparison when ordering the keys of the <arrayData>
@@ -427,17 +464,21 @@ private variable mRecalculate as Boolean
 private variable mUpdateSeparator as Boolean
 private variable mUpdateDataList as Boolean
 private variable mRecalculateFit as Boolean
+private variable mRedraw as Boolean
+private variable mFoldChanged as Boolean
 
 private variable mAlternateRowBackgrounds as Boolean
 
 private variable mIndentPixels as Integer
 private variable mHoverRow as Integer
 private variable mHoverIcon as String
+private variable mMouseDownRow as Integer
 
 private variable mFrameBorder as Boolean
 
 private variable mSelectedElement as optional List
 private variable mFoldState as Array
+private variable mAutoFoldStateReset as Boolean
 private variable mLastKeyAdded as optional String
 private variable mHiliteNewElement as Boolean
 private variable mScrollHilitedElementIntoView as Boolean
@@ -520,6 +561,8 @@ public handler OnCreate() returns nothing
 	put true into mUpdateDataList
 	put true into mUpdateSeparator
 	put true into mRecalculateFit
+	put true into mRedraw
+	put false into mFoldChanged
 	
 	put false into mShowSeparator
 	put 0.5 into mSeparatorRatio
@@ -527,6 +570,7 @@ public handler OnCreate() returns nothing
 	
 	put the empty array into mFoldState
 	put the empty array into mData
+	put false into mAutoFoldStateReset
 	put false into mHiliteNewElement
 	put false into mScrollHilitedElementIntoView
 end handler
@@ -538,6 +582,7 @@ public handler OnSave(out rProperties as Array)
 	put mArrayStyle into rProperties["array style"]
 	put mSortAscending into rProperties["sort ascending"]
 	put mSortNumeric into rProperties["sort numeric"]
+	put mAutoFoldStateReset into rProperties["auto fold state reset"]
 	put mHiliteNewElement into rProperties["hilite new element"]
 	put mScrollHilitedElementIntoView into rProperties["scroll hilited element into view"]
 
@@ -559,6 +604,10 @@ public handler OnLoad(in pProperties as Array)
 
 	if "sort numeric" is among the keys of pProperties then
 	  put pProperties["sort numeric"] into mSortNumeric
+	end if
+
+	if "auto fold state reset" is among the keys of pProperties then
+		put pProperties["auto fold state reset"] into mAutoFoldStateReset
 	end if
 
 	if "hilite new element" is among the keys of pProperties then
@@ -806,6 +855,12 @@ public handler OnMouseDown() returns nothing
 			put true into mSeparatorDragging
 		end if
 	end if
+	
+	if mSeparatorDragging or scrollDragging() then
+		put 0 into mMouseDownRow
+	else
+		put yPosToRowNumber(the y of the mouse position) into mMouseDownRow
+	end if
 end handler
 
 public handler OnMouseMove() returns nothing
@@ -829,32 +884,32 @@ public handler OnMouseMove() returns nothing
 			put 0 into tNewRatio
 		else if tNewRatio > 1 then
 			put 1 into tNewRatio
-		end if	
+		end if
 		setSeparatorRatio(tNewRatio)
 	else
-        variable tRedraw as Boolean
-        put false into tRedraw
+		variable tRedraw as Boolean
+		put false into tRedraw
 		variable tNewHoverRow as Integer
 		put yPosToRowNumber(the y of the mouse position) into tNewHoverRow
 		if mHoverRow is not tNewHoverRow then
 			put tNewHoverRow into mHoverRow
-            put true into tRedraw
+			put true into tRedraw
 		end if
-        if mHoverRow is 1 then
-        	put "" into mHoverIcon
-        else
-            variable tHoverIcon as String
-            put xPosToIconString(the x of the mouse position, mHoverRow) into tHoverIcon
-            if mHoverIcon is not tHoverIcon then
-                put tHoverIcon into mHoverIcon
-                put true into tRedraw
-            end if
-            setHoverTooltip(tHoverIcon)
-        end if
-        
-        if tRedraw then
-            redraw all
-        end if
+		if mHoverRow is 1 then
+			put "" into mHoverIcon
+		else
+			variable tHoverIcon as String
+			put xPosToIconString(the x of the mouse position, mHoverRow) into tHoverIcon
+			if mHoverIcon is not tHoverIcon then
+				put tHoverIcon into mHoverIcon
+				put true into tRedraw
+			end if
+			setHoverTooltip(tHoverIcon)
+		end if
+
+		if tRedraw then
+			redraw all
+		end if
 	end if
 end handler
 
@@ -893,7 +948,7 @@ public handler OnMouseScroll(in pDeltaX as Real, in pDeltaY as Real) returns not
 		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition)
 		
 		redraw all
-    end if
+	end if
 end handler
 
 public handler OnClick() returns nothing
@@ -901,12 +956,6 @@ public handler OnClick() returns nothing
 		put yPosToRowNumber(the y of the mouse position) into mHoverRow
 	end if
 
-	// If the first row was clicked then add a new element
-	if mHoverRow is 1 then
-		addBaseLevelElement()
-		return
-	end if
-	
 	// Click in the scrollbar region does nothing
 	if the x of the click position > mViewWidth - scrollbarWidth() then
 		return
@@ -915,13 +964,24 @@ public handler OnClick() returns nothing
 	// Click on the separator does nothing
 	if mShowSeparator then
 		if mSeparatorDragging then
-				put false into mSeparatorDragging
-				return
+			put false into mSeparatorDragging
+			return
 		else if the click position is within separatorRectangle() then
 			return
 		end if
 	end if	
 
+	// Just return if mouseDown and mouseUp are not in the same row
+	if mHoverRow is not mMouseDownRow then
+		return
+	end if
+
+	// If the first row was clicked then add a new element
+	if mHoverRow is 1 then
+		addBaseLevelElement()
+		return
+	end if
+	
 	// Just return if the click was below all the data
 	if mHoverRow > the number of elements in mDataList then
 		return
@@ -932,15 +992,15 @@ public handler OnClick() returns nothing
 	
 	// Check if the delete icon was clicked
 	if mHoverIcon is "delete" then
-        variable tPrompt as String
-        variable tPath
-        put tData["path"] into tPath
-        combine tPath with "]["
-        put "Really delete array element at path [" & the result & "]?" into tPrompt
-        execute script "answer \q" & tPrompt & "\q with OK and Cancel; return it"
-        if the result is "OK" then
-            removePath(tData["path"])
-        end if
+		variable tPrompt as String
+		variable tPath
+		put tData["path"] into tPath
+		combine tPath with "]["
+		put "Really delete array element at path [" & the result & "]?" into tPrompt
+		execute script "answer \q" & tPrompt & "\q with OK and Cancel; return it"
+		if the result is "OK" then
+			removePath(tData["path"])
+		end if
 		return
 	end if
 	
@@ -970,12 +1030,12 @@ public handler OnClick() returns nothing
 			if not mShowSeparator or tX < the left of separatorRectangle() then
 				if tData["folded"] is true then
 					unfoldPath(tData["path"])
-	   		else
+				else
 					foldPath(tData["path"])
-		   	end if		
-	   		return
+				end if
+				return
 			end if
-	   end if
+		end if
 	end if
 	
 	if the click count is 1 then
@@ -989,15 +1049,15 @@ public handler OnClick() returns nothing
 
 	if the click count > 1 then
 		if tData["leaf"] then
-            combine tData["path"] with mPathDelimiter into tPathString
+			combine tData["path"] with mPathDelimiter into tPathString
 			post "actionDoubleClick" with [tPathString]
 		else
-		   if tData["folded"] is true then
-			   unfoldPath(tData["path"])
-		   else
-			   foldPath(tData["path"])
-		   end if
-	   end if
+			if tData["folded"] is true then
+				unfoldPath(tData["path"])
+			else
+				foldPath(tData["path"])
+			end if
+		end if
 	end if
 end handler
 
@@ -1358,6 +1418,32 @@ private handler getValueOnPath(in pPath as List, in pArray as Array) returns any
 	end if
 end handler
 
+private handler pathIsAnArray(in pPath as List, in pArray as any) returns Boolean
+	if pPath is the empty list then
+		return pArray is an array
+	else if (element 1 of pPath) is not among the keys of pArray then
+		return false
+	else if the number of elements in pPath is 1 then
+		return pArray[element 1 of pPath] is an array
+	else
+		return pathIsAnArray(element 2 to -1 of pPath, pArray[element 1 of pPath])
+	end if
+end handler
+
+-- Used to validate user input as a valid path
+-- An empty path is generally used to clear the selected row
+private handler pathIsValid(in pPath as List, in pArray as any) returns Boolean
+	if pPath is the empty list or not(pArray is an array) then
+		return false
+	else if (element 1 of pPath) is not among the keys of pArray then
+		return false
+	else if the number of elements in pPath is 1 then
+		return true
+	else
+		return pathIsValid(element 2 to -1 of pPath, pArray[element 1 of pPath])
+	end if
+end handler
+
 // Return the whole stored array
 private handler getArrayData() returns Array
 	return mData
@@ -1687,7 +1773,40 @@ private handler unfoldPath(in pPath as List)
 		// Changing fold state makes a recalculation necessary
 		put true into mRecalculate	
 		put true into mUpdateSeparator
-		redraw all
+		if mRedraw then
+			put false into mFoldChanged
+			redraw all
+		end if
+	end if
+end handler
+
+// Ensure all elements in a path are unfolded
+private handler unfoldFullPath(in pPath as List)
+	variable tTopPath as List
+	if mFirstDataItem > 1 then
+		put mDataList[mFirstDataItem]["path"] into tTopPath
+	end if
+
+	variable tElement as Integer
+	put false into mRedraw
+	repeat with tElement from 1 up to the number of elements in pPath
+		unfoldPath(element 1 to tElement of pPath)
+	end repeat
+	put true into mRedraw
+
+	if mFoldChanged and not(mScrollHilitedElementIntoView) and \
+			mFirstDataItem > 1 and \
+			mDataList[mFirstDataItem]["path"] is not tTopPath then
+		variable tCount as Integer
+		repeat with tCount from mFirstDataItem + 1 up to the number of elements in mDataList
+			if mDataList[tCount]["path"] is tTopPath then
+				variable tViewCount as Integer
+				put the ceiling of (mViewHeight / mRowHeight) into tViewCount
+				put 1 into mFirstDataItem
+				ensureElementInView(tCount + tViewCount - 1)
+				exit repeat
+			end if
+		end repeat
 	end if
 end handler
 
@@ -1715,18 +1834,16 @@ private handler selectPath(in pPath as List)
 	end if
 
 	if mSelectedElement is nothing or tPathNotAlreadySelected or \
-         mScrollHilitedElementIntoView then
-      if pPath is not the empty list and \
-            not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
-         put nothing into mSelectedElement
-      end if
-      if tPathNotAlreadySelected then
-         post "hiliteChanged"
-      end if
-      redraw all
+			mScrollHilitedElementIntoView or mFoldChanged then
+		put false into mFoldChanged
+		if not applyToNode(selectKey, pPath, 0, 1, mDataList, mData) then
+			put nothing into mSelectedElement
+		end if
+		if tPathNotAlreadySelected then
+			post "hiliteChanged"
+		end if
+		redraw all
 	end if
-		
-	
 end handler
 
 // Unselect the key at the target path
@@ -1811,13 +1928,21 @@ private handler applyFoldStateKey(in pKey as String, in pLevel as Integer, in pS
 		if tElement["key"] is pKey and pLevel is tElement["indent"] then
 			// Either splice in the below elements
 			if pFoldState["folded"] is false then
-				put false into xList[tCount]["folded"] 
+				
+				if "folded" is not among the keys of xList[tCount] then
+					put true into xList[tCount]["folded"]
+				end if
+				
+				if xList[tCount]["folded"] then
+					put false into xList[tCount]["folded"]
+					put true into mFoldChanged
+				
+					splice convertArrayToList(pArray, pLevel + 1, tElement["path"]) after element tCount of xList
 			
-				splice convertArrayToList(pArray, pLevel + 1, tElement["path"]) after element tCount of xList
-		
-				// Apply the fold state on the subelements
-				if "array" is among the keys of pFoldState then
-					applyFoldState(pLevel + 1, tCount, pFoldState["array"], pArray, xList)
+					// Apply the fold state on the subelements
+					if "array" is among the keys of pFoldState then
+						applyFoldState(pLevel + 1, tCount, pFoldState["array"], pArray, xList)
+					end if
 				end if
 			// or delete them
 			else
@@ -1862,6 +1987,9 @@ end handler
 
 // Replace the existing data wholesale with a new array pData
 private handler setArrayData(in pData as Array) returns nothing
+	if mAutoFoldStateReset then
+		put the empty array into mFoldState
+	end if
 	put pData into mData
 	put true into mUpdateDataList
 	redraw all
@@ -1870,12 +1998,6 @@ end handler
 private handler setFrameBorder(in pFrameBorder as Boolean) returns nothing
 	put pFrameBorder into mFrameBorder
 	redraw all
-end handler
-
-private handler setSelectedElement(in pElement as String)
-	variable tPath as List
-	split pElement by mPathDelimiter into tPath
-	selectPath(tPath)
 end handler
 
 private handler getSelectedElement() returns String
@@ -1888,6 +2010,57 @@ private handler getSelectedElement() returns String
 		put the empty string into tElement
 	end if
 	return tElement
+end handler
+
+private handler setSelectedElement(in pElement as String)
+	variable tPath as List
+	split pElement by mPathDelimiter into tPath
+	if pathIsValid(tPath, mData) then
+		if the number of elements in tPath > 1 then
+			unfoldFullPath(element 1 to -2 of tPath)
+		end if
+		selectPath(tPath)
+	else
+		unselectPath(mSelectedElement)
+	end if
+end handler
+
+private handler getSelectedElementFoldState() returns String
+	variable tFoldState as String
+	put the empty string into tFoldState
+	if mSelectedElement is not nothing then
+		variable tCount as Integer
+		repeat with tCount from 2 up to the number of elements in mDataList
+			if mDataList[tCount]["selected"] then
+				if mDataList[tCount]["leaf"] then
+					put "leaf" into tFoldState
+				else if mDataList[tCount]["folded"] then
+					put "folded" into tFoldState
+				else
+					put "unfolded" into tFoldState
+				end if
+				exit repeat
+			end if
+		end repeat
+	end if
+	return tFoldState
+end handler
+
+private handler setSelectedElementFoldState(in pFoldState as String) returns nothing
+	variable tSetTheFoldState as Boolean
+	put (mSelectedElement is not nothing) and \
+			pathIsAnArray(mSelectedElement, mData) into tSetTheFoldState
+	if pFoldState is "folded" then
+		if tSetTheFoldState then
+			foldPath(mSelectedElement)
+		end if
+	else if pFoldState is "unfolded" then
+		if tSetTheFoldState then
+			unFoldPath(mSelectedElement)
+		end if
+	else
+		throw "Invalid fold state"
+	end if
 end handler
 
 private handler setReadOnly(in pReadOnly as Boolean)
