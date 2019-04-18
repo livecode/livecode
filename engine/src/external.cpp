@@ -291,7 +291,7 @@ MCExternal *MCExternal::Load(MCStringRef p_filename)
 			s_externals = t_external;
 
 			t_external -> m_references = 0;
-			t_external -> m_module = t_module.Take();
+            t_external -> m_module.Give(t_module.Take());
 			t_external -> m_name = nil;
 			
 			t_success = t_external -> Prepare();
