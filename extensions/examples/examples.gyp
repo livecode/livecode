@@ -128,7 +128,8 @@
 			'sources':
 			[
 				'libraries/androidwavrecorder/androidwavrecorder.lcb',
-
+				'libraries/ini/ini.lcb',
+				
 				'widgets/pinkcircle/pinkcircle.lcb',
 				'widgets/simplecomposed/simplecomposed.lcb',
 			],
@@ -175,7 +176,8 @@
 
 			'dependencies':
 			[
-				'libraries/androidwavrecorder/src/androidwavrecorder.gyp:androidwavrecorder',			
+				'libraries/androidwavrecorder/src/androidwavrecorder.gyp:androidwavrecorder',
+				'libraries/ini/inih/inih.gyp:inih',					
 			],
 		},
 	],

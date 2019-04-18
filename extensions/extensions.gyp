@@ -149,7 +149,6 @@
 				'libraries/iconsvg/iconsvg.lcb',
 				'libraries/json/json.lcb',
 				'libraries/objectrepository/objectrepository.lcb',
-				'libraries/ini/ini.lcb',
 				'libraries/timezone/timezone.lcb',				
 
 				'widgets/androidbutton/androidbutton.lcb',
@@ -225,7 +224,6 @@
 
 			'dependencies':
 			[
-				'libraries/ini/inih/inih.gyp:inih',
 				'libraries/timezone/tz/tz.gyp:tz',
 			],
 		},
