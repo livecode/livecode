@@ -695,10 +695,10 @@ static void MCEventQueueDestroyEvent(MCEvent *p_event)
     {
         MCStackHandle(MCEventQueueGetEventStack(p_event)).ExternalRelease();
     }
-#ifdef _MOBILE
     else if (p_event -> type == kMCEventTypeCustom)
+    {
         p_event -> custom . event -> Destroy();
-#endif
+    }
     
     MCMemoryDelete(p_event);
 }
