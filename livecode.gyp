@@ -15,7 +15,13 @@
 		{
 			'target_name': 'check',
 			'type': 'none',
-			'dependencies': [ 'cpptest-run-all', ],
+			'dependencies': 
+			[ 
+				'cpptest-run-all', 
+				
+				# Example widgets and libraries
+				'extensions/examples/examples.gyp:extension-examples',
+			],
 		},
 
 		{
