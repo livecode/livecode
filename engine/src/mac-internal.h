@@ -19,7 +19,6 @@ class MCMacPlatformSurface;
 - (id)initWithEvent: (const AppleEvent *)event andReply: (AppleEvent *)reply;
 - (void)dealloc;
 
-- (OSErr)process;
 @end
 
 @compatibility_alias MCPendingAppleEvent com_runrev_livecode_MCPendingAppleEvent;

@@ -144,8 +144,8 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
     if (self == nil)
         return nil;
     
-    AEDuplicateDesc(event, &m_event);
-    AEDuplicateDesc(reply, &m_reply);
+    m_event = *event;
+    m_reply = *reply;
     
     return self;
 }
@@ -155,11 +155,6 @@ NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
     AEDisposeDesc(&m_event);
     AEDisposeDesc(&m_reply);
     [super dealloc];
-}
-
-- (OSErr)process
-{
-    return AEResumeTheCurrentEvent(&m_event, &m_reply, (AEEventHandlerUPP)kAEUseStandardDispatch, 0);
 }
 
 - (AppleEvent *)getEvent
