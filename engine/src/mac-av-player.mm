@@ -69,6 +69,8 @@ class MCAVFoundationPlayer;
 
 @interface com_runrev_livecode_MCAVFoundationPlayerView : NSView
 
+- (void)dealloc;
+
 - (AVPlayer*)player;
 - (void)setPlayer:(AVPlayer *)player;
 
@@ -271,6 +273,16 @@ private:
 
 @implementation com_runrev_livecode_MCAVFoundationPlayerView
 
+- (void)dealloc
+{
+    if ([self layer] != nil)
+    {
+        [(AVPlayerLayer *)[self layer] setPlayer: nil];
+    }
+    [self setLayer: nil];
+    [super dealloc];
+}
+
 - (AVPlayer*)player
 {
     if ([self layer] != nil)
@@ -368,15 +380,7 @@ MCAVFoundationPlayer::~MCAVFoundationPlayer(void)
     // MW-2014-10-22: [[ Bug 13267 ]] Remove the end-time observer.
     if (m_endtime_observer_token != nil)
         [m_player removeTimeObserver:m_endtime_observer_token];
-    
-    @try
-    {
-        [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
-    }
-    @catch (id anException) {
-        //do nothing, obviously it wasn't attached because an exception was thrown
-    }
-    
+
     // Cancel any pending 'perform' requests on the observer.
     [NSObject cancelPreviousPerformRequestsWithTarget: m_observer];
     
@@ -787,17 +791,18 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     
     // Block-wait until the status becomes something.
     [m_player addObserver: m_observer forKeyPath: @"status" options: 0 context: nil];
+    
     while([m_player status] == AVPlayerStatusUnknown)
         MCPlatformWaitForEvent(60.0, true);
 
-    [m_player removeObserver: m_observer forKeyPath: @"status"];
-
+    [m_player removeObserver: m_observer forKeyPath: @"status" context: nil];
+    
+    if(p_is_url)
+        [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges" context: nil];
+    
     // If we've failed, leave things as they are (dealloc the new player).
     if ([m_player status] == AVPlayerStatusFailed)
     {
-        // error obtainable via [t_player error]
-        if (p_is_url)
-            [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
 		Unload();
         return;
     }
@@ -808,8 +813,6 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     */
     if ([m_player currentItem] == nil)
     {
-        if(p_is_url)
-            [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
         // PM-2014-12-17: [[ Bug 14232 ]] If we reach here it means the filename is invalid
         m_has_invalid_filename = true;
         Unload();
@@ -833,14 +836,6 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
     {
         [m_player removeTimeObserver:m_endtime_observer_token];
         m_endtime_observer_token = nil;
-    }
-    
-    @try
-    {
-        [m_player removeObserver: m_observer forKeyPath: @"currentItem.loadedTimeRanges"];
-    }
-    @catch (id anException) {
-        //do nothing, obviously it wasn't attached because an exception was thrown
     }
     
     // PM-2014-08-25: [[ Bug 13268 ]] Make sure we release the frame of the old movie before loading a new one
