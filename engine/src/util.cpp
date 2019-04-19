@@ -266,9 +266,9 @@ void MCU_setnumberformat(MCStringRef d, uint2 &fw,
                          uint2 &trailing, uint2 &force)
 {
 	fw = MCStringGetLength(d);
-    char *temp_d;
-    /* UNCHECKED */ MCStringConvertToCString(d, temp_d);
-	const char *sptr = temp_d;
+    MCAutoPointer<char> temp_d;
+    /* UNCHECKED */ MCStringConvertToCString(d, &temp_d);
+	const char *sptr = *temp_d;
 	const char *eptr = sptr;
 	while (eptr - sptr < fw && *eptr != '.')
 		eptr++;
