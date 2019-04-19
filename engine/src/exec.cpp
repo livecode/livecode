@@ -3548,11 +3548,13 @@ void MCExecTypeConvertAndReleaseAlways(MCExecContext& ctxt, MCExecValueType p_fr
         else if (p_from_type == kMCExecValueTypeStringRef)
         {
             MCExecTypeConvertStringToNumber(ctxt, *(MCStringRef*)p_from_value, p_to_type, p_to_value);
+            MCValueRelease(*(MCStringRef*)p_from_value);
             return;
         }
         else if (p_from_type == kMCExecValueTypeNameRef)
         {
             MCExecTypeConvertStringToNumber(ctxt, MCNameGetString(*(MCNameRef*)p_from_value), p_to_type, p_to_value);
+            MCValueRelease(*(MCNameRef*)p_from_value);
             return;
         }
     }
