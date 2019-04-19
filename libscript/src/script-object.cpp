@@ -253,6 +253,8 @@ void MCScriptDestroyObject(MCScriptObject *self)
             __MCScriptAssert__(false, "invalid kind");
             break;
     }
+    
+    MCMemoryDeallocate(self);
 }
 
 MCScriptObject *MCScriptRetainObject(MCScriptObject *self)

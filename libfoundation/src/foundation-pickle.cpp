@@ -978,6 +978,8 @@ static void MCPickleReleaseField(MCPickleFieldType p_kind, void *p_base_ptr, voi
                                 MCPickleRelease(t_info -> cases[t_case] . record, t_variant);
                                 break;
                             }
+                        
+                        free(t_variant);
                     }
                 }
                 free(*(void **)p_field_ptr);
