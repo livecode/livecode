@@ -30,13 +30,8 @@ typedef bool (*MCBrowserIterateCallback)(MCBrowser *p_browser, void *p_context);
 class MCBrowserBase : public MCBrowser
 {
 public:
-	MCBrowserBase() : m_event_handler(nil), m_javascript_handler(nil)
-	{
-	}
-	
-	virtual ~MCBrowserBase()
-	{
-	}
+    MCBrowserBase(void);
+    virtual ~MCBrowserBase(void);
 	
 	void SetEventHandler(MCBrowserEventHandler *p_handler);
 	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);

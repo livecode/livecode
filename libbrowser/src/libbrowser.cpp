@@ -50,6 +50,21 @@ void MCBrowserRefCounted::Destroy()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCBrowserBase::MCBrowserBase(void)
+    : m_event_handler(nil),
+      m_javascript_handler(nil)
+{
+}
+
+MCBrowserBase::~MCBrowserBase(void)
+{
+    if (m_event_handler)
+        m_event_handler->Release();
+    
+    if (m_javascript_handler)
+        m_javascript_handler->Release();
+}
+
 void MCBrowserBase::SetEventHandler(MCBrowserEventHandler *p_handler)
 {
 	if (p_handler)
@@ -470,6 +485,9 @@ bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback
 		return false;
 	
 	p_browser->SetEventHandler(t_wrapper);
+    
+    t_wrapper->Release();
+    
 	return true;
 }
 
@@ -515,6 +533,9 @@ bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCa
 		return false;
 	
 	p_browser->SetJavaScriptHandler(t_wrapper);
+    
+    t_wrapper->Release();
+    
 	return true;
 }
 
