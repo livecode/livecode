@@ -21,6 +21,36 @@ private function q pString
    return pString
 end q
 
+on TestParagraphTabStopsRoundtrip
+   create stack "Test"
+   set the defaultStack to "Test"
+
+   create field "TestField"
+   
+   // set up styledText array with text and tabAlign
+   local tStyledText
+   put "left" & tab & "center" & tab & "right" into tStyledText[1]["runs"][1]["text"]
+   put "100,200,300" into tStyledText[1]["style"]["tabStops"]
+   
+   set the styledText of field "TestField" to tStyledText
+   TestAssert "styledText supports tabStops", the tabStops of line 1 of field "TestField" is "100,200,300"
+   
+   put the styledText of field "testField" into tStyledText
+   TestAssert "styledText roundtrips tabStops", tStyledText[1]["style"]["tabStops"] is "100,200,300"
+
+   // clear field styles
+   set the text of field "testField" to "left" & tab & "center" & tab & "right"
+   set the tabStops of field "testField" to "10,20,30"
+
+   put the styledText of field "testField" into tStyledText
+   TestAssert "styledText doesn't include inherited tabStops", "tabStops" is not among the keys of tStyledText[1]["style"]
+   
+   put the effective styledText of field "testField" into tStyledText
+   TestAssert "effective styledText does include inherited tabStops", tStyledText[1]["style"]["tabStops"] is "10,20,30"
+   
+   delete stack "Test"
+end TestParagraphTabStopsRoundtrip
+
 on TestParagraphTabAlignRoundtrip
    create stack "Test"
    set the defaultStack to "Test"
@@ -44,7 +74,7 @@ on TestParagraphTabAlignRoundtrip
    set the tabAlign of field "testField" to "right,center,left"
 
    put the styledText of field "testField" into tStyledText
-   TestAssert "styledText doesn't include inherited tabAlign", tabAlign is not among the keys of tStyledText[1]["style"]
+   TestAssert "styledText doesn't include inherited tabAlign", "tabAlign" is not among the keys of tStyledText[1]["style"]
    
    put the effective styledText of field "testField" into tStyledText
    TestAssert "effective styledText does include inherited tabAlign", tStyledText[1]["style"]["tabAlign"] is "right,center,left"
