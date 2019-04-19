@@ -284,6 +284,13 @@ void MCScriptDestroyModule(MCScriptModuleRef self)
                 break;
             }
     
+    // Free any loaded libraries
+    if (self->libraries != nullptr)
+    {
+        MCValueRelease(self->libraries);
+    }
+    
+    // Free the compiled module representation
     MCPickleRelease(kMCScriptModulePickleInfo, self);
 }
 
@@ -907,6 +914,74 @@ bool MCScriptEnsureModuleIsUsable(MCScriptModuleRef self)
  error_cleanup:
 	self -> is_in_usable_check = false;
 	return false;
+}
+
+bool
+MCScriptLoadModuleLibrary(MCScriptModuleRef self,
+                          MCStringRef p_library_name_string,
+                          MCSLibraryRef& r_library)
+{
+    /* If the string is empty, then use the library containing libscript (i.e.
+     * 'builtin'). */
+    if (MCStringIsEmpty(p_library_name_string))
+    {
+        r_library = MCScriptGetLibrary();
+        return true;
+    }
+    
+    /* Create a nameref for the library so we can lookup up in the module's
+     * library list. */
+    MCNewAutoNameRef t_library_name;
+    if (!MCNameCreate(p_library_name_string,
+                      &t_library_name))
+    {
+        return false;
+    }
+    
+    /* If there is a libraries array, then check whether the library has been
+     * loaded before, and if so use that library. Otherwise create the libraries
+     * array. */
+    if (self->libraries != nullptr)
+    {
+        if (MCArrayFetchValue(self->libraries,
+                              true,
+                              *t_library_name,
+                              (MCValueRef&)r_library))
+        {
+            return true;
+        }
+    }
+    else
+    {
+        if (!MCArrayCreateMutable(self->libraries))
+        {
+            return false;
+        }
+    }
+    
+    /* Attempt to load the library */
+    MCSAutoLibraryRef t_library;
+    if (!MCScriptLoadLibrary(self,
+                             p_library_name_string,
+                             &t_library))
+    {
+        return false;
+    }
+    
+    /* Store the library in the libraries array for the module. */
+    if (!MCArrayStoreValue(self->libraries,
+                           true,
+                           *t_library_name,
+                           *t_library))
+    {
+        return false;
+    }
+    
+    /* Return the library (unretained - as the module holds a reference through
+     * its array). */
+    r_library = *t_library;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
