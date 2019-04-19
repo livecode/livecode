@@ -5571,8 +5571,6 @@ bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCString
             return MCStringSplitByDelimiterNative(self, p_elem_del, p_options, r_list);
     }
     
-    MCAutoArray<MCValueRef> t_strings;
-    
     if (__MCStringIsIndirect(p_elem_del))
         p_elem_del = p_elem_del -> string;
     
@@ -5599,24 +5597,24 @@ bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCString
     bool t_success;
     t_success = true;
     
+    MCAutoStringRefArray t_strings;
     for(;;)
     {
         uindex_t t_found_del_length, t_end_offset;
         
         split_find_end_of_element(t_sptr, t_to_end, self_native, t_echar, t_del_length, del_native, p_options, t_end_offset, t_found_del_length);
         
-        MCStringRef t_string;
-        t_string = nil;
+        MCAutoStringRef t_string;
+        if (!MCStringCopySubstring(self, MCRangeMake(t_offset, t_end_offset), &t_string))
+        {
+            return false;
+        }
         
-        if (t_success)
-            t_success = MCStringCopySubstring(self, MCRangeMake(t_offset, t_end_offset), t_string);
-        
-        if (t_success)
-            t_success = t_strings . Push(t_string);
-        
-        if (!t_success)
-            break;
-        
+        if (!t_strings.Push(*t_string))
+        {
+            return false;
+        }
+                
         if (t_end_offset + t_found_del_length >= t_to_end)
             break;
         
@@ -5624,19 +5622,8 @@ bool MCStringSplitByDelimiter(MCStringRef self, MCStringRef p_elem_del, MCString
         t_sptr = (const char *)t_sptr + (self_native ? t_end_offset + t_found_del_length : 2 * (t_end_offset + t_found_del_length));
         t_to_end -= (t_end_offset + t_found_del_length);
     }
-
-    if (t_success)
-        t_success = MCProperListCreate(t_strings . Ptr(), t_strings .Size(), r_list);
-
-    if (!t_success)
-    {
-        for (uindex_t i = 0; i < t_strings . Size(); i++)
-            MCValueRelease(t_strings[i]);
-        
-        return false;
-    }
     
-	return true;
+    return t_strings.TakeAsProperList(r_list);
 }
 
 static bool
@@ -5648,8 +5635,6 @@ MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStrin
     if (__MCStringIsIndirect(p_elem_del))
         p_elem_del = p_elem_del -> string;
     
-    MCAutoArray<MCValueRef> t_strings;
-    
     const char_t *t_sptr;
     const char_t *t_eptr;
     t_sptr = self -> native_chars;
@@ -5658,19 +5643,22 @@ MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStrin
     bool t_success;
     t_success = true;
     
+    MCAutoStringRefArray t_strings;
     for(;;)
     {
         const char_t *t_element_end = NULL;
         split_find_end_of_element_native(t_sptr, t_eptr, p_elem_del -> native_chars, p_elem_del -> char_count, t_element_end, p_options);
         
-        MCStringRef t_string;
-        t_string = nil;
+        MCAutoStringRef t_string;
+        if (!MCStringCreateWithNativeChars(t_sptr, t_element_end - t_sptr, &t_string))
+        {
+            return false;
+        }
         
-        if (t_success)
-            t_success = MCStringCreateWithNativeChars(t_sptr, t_element_end - t_sptr, t_string);
-        
-        if (t_success)
-            t_success = t_strings . Push(t_string);
+        if (!t_strings.Push(*t_string))
+        {
+            return false;
+        }
         
         if (t_element_end + p_elem_del -> char_count >= t_eptr)
             break;
@@ -5681,18 +5669,7 @@ MCStringSplitByDelimiterNative(MCStringRef self, MCStringRef p_elem_del, MCStrin
         t_sptr = t_element_end + p_elem_del -> char_count;
     }
     
-    if (t_success)
-        t_success = MCProperListCreate(t_strings . Ptr(), t_strings .Size(), r_list);
-    
-    if (!t_success)
-    {
-        for (uindex_t i = 0; i < t_strings . Size(); i++)
-            MCValueRelease(t_strings[i]);
-        
-        return false;
-    }
-    
-	return true;
+    return t_strings.TakeAsProperList(r_list);
 }
 
 MC_DLLEXPORT_DEF
