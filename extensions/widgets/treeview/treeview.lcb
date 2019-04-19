@@ -2090,7 +2090,7 @@ private handler setSelectedElement(in pElement as String)
 			unfoldFullPath(element 1 to -2 of tPath)
 		end if
 		selectPath(tPath)
-	else
+	else if mSelectedElement is not nothing then
 		unselectPath(mSelectedElement)
 	end if
 end handler
