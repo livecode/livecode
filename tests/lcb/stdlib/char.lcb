@@ -397,13 +397,26 @@ public handler TestRepeatChar()
 	variable tCount
 
 	put 0 into tCount
-
 	repeat for each char tIter in "xyz"
 		add 1 to tCount
 		test "repeatchar (iter)" when tIter is char tCount of "xyz"
 	end repeat
-
 	test "repeatchar (count)" when tCount is 3
+
+	put 0 into tCount
+	repeat for each char tIter in "a\u{1d11e}c"
+		add 1 to tCount
+		test "repeatchar SMP (iter)" when tIter is char tCount of "a\u{1d11e}c"
+	end repeat
+	test "repeatchar SMP (count)" when tCount is 3
+
+	put 0 into tCount
+	repeat for each char tIter in "av\u{fe0e}c"
+		add 1 to tCount
+		test "repeatchar VAR (iter)" when tIter is char tCount of "av\u{fe0e}c"
+	end repeat
+	test "repeatchar VAR (count)" when tCount is 3
+
 end handler
 
 handler TestReverse_Inplace(in pDesc as String, \
