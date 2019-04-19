@@ -469,7 +469,11 @@ bool MCEngineConvertToScriptParameters(MCExecContext& ctxt, MCProperListRef p_ar
         
 		MCParameter *t_param;
 		t_param = new (nothrow) MCParameter;
+        
+        /* setvalueref_argument retains its argument so set then release the
+         * value */
 		t_param -> setvalueref_argument(t_value);
+        MCValueRelease(t_value);
         
 		if (t_last_param == nil)
 			&t_params = t_param;
