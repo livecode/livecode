@@ -1137,6 +1137,118 @@ private:
 	uindex_t m_size = 0;
 };
 
+/* Use the MCAutoArrayZeroedNonPod class when T has a destructor which will
+ * only delete non-null members. */
+template<typename T> class MCAutoArrayZeroedNonPod
+{
+public:
+    constexpr MCAutoArrayZeroedNonPod() = default;
+    
+    ~MCAutoArrayZeroedNonPod(void)
+    {
+        for(uindex_t i = 0; i < m_size; i++)
+            m_ptr[i].~T();
+        MCMemoryDeleteArray(m_ptr);
+    }
+    
+    //////////
+    
+    T* Ptr()
+    {
+        return m_ptr;
+    }
+    
+    uindex_t Size() const
+    {
+        return m_size;
+    }
+    
+    //////////
+    
+    bool New(uindex_t p_size)
+    {
+        MCAssert(m_ptr == nil);
+        return MCMemoryNewArray(p_size, m_ptr, m_size);
+    }
+    
+    void Delete(void)
+    {
+        MCMemoryDeleteArray(m_ptr);
+        m_ptr = nil;
+        m_size = 0;
+    }
+    
+    //////////
+    
+    bool Resize(uindex_t p_new_size)
+    {
+        return MCMemoryResizeArray(p_new_size, m_ptr, m_size);
+    }
+    
+    bool Extend(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size >= m_size);
+        return Resize(p_new_size);
+    }
+    
+    void Shrink(uindex_t p_new_size)
+    {
+        MCAssert(p_new_size <= m_size);
+        Resize(p_new_size);
+    }
+    
+    //////////
+    
+    bool Push(T p_value)
+    {
+        if (!Extend(m_size + 1))
+            return false;
+        m_ptr[m_size - 1] = p_value;
+        return true;
+    }
+    
+    //////////
+    
+    T*& PtrRef()
+    {
+        MCAssert(m_ptr == nil);
+        return m_ptr;
+    }
+    
+    uindex_t& SizeRef()
+    {
+        MCAssert(m_size == 0);
+        return m_size;
+    }
+    
+    //////////
+    
+    void Take(T*& r_array, uindex_t& r_count)
+    {
+        r_array = m_ptr;
+        r_count = m_size;
+        
+        m_ptr = nil;
+        m_size = 0;
+    }
+    
+    //////////
+    
+    T& operator [] (uindex_t p_index)
+    {
+        return m_ptr[p_index];
+    }
+    
+    const T& operator [] (uindex_t p_index) const
+    {
+        return m_ptr[p_index];
+    }
+    
+private:
+    T *m_ptr = nullptr;
+    uindex_t m_size = 0;
+};
+
 // Version of MCAutoArray that applies the provided deallocator to each element of the array when freed
 template <typename T, void (*FREE)(T)> class MCAutoCustomPointerArray
 {

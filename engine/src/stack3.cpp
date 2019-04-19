@@ -1903,7 +1903,7 @@ bool MCStack::sort(MCExecContext &ctxt, Sort_type dir, Sort_type form,
 	MCStack *olddefault = MCdefaultstackptr;
 	MCdefaultstackptr = this;
 	MCCard *cptr = curcard;
-	MCAutoArray<MCSortnode> items;
+	MCAutoArrayZeroedNonPod<MCSortnode> items;
 	uint4 nitems = 0;
 	MCerrorlock++;
     
