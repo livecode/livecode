@@ -257,6 +257,21 @@ struct __MCString: public __MCValue
         MCStringRef string;
         struct
         {
+#ifdef __32_BIT__
+            uindex_t char_count;
+            union
+            {
+                unichar_t *chars;
+                char_t *native_chars;
+            };
+            double numeric_value;
+            uindex_t capacity;
+            /* The padding is here to ensure the size of the struct is 32-bytes
+             * on all platforms. This ensures consistency between Win and UNIX
+             * ABIs which have slightly different rules concerning double
+             * alignment. */
+            uint32_t __padding;
+#else
             uindex_t char_count;
             uindex_t capacity;
             union
@@ -265,6 +280,7 @@ struct __MCString: public __MCValue
                 char_t *native_chars;
             };
             double numeric_value;
+#endif
         };
     };
 };
@@ -307,7 +323,6 @@ struct __MCName: public __MCValue
 	uintptr_t next;
 	uintptr_t key;
 	MCStringRef string;
-    hash_t hash;
 #endif
 };
 

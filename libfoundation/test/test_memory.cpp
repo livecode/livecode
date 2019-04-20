@@ -65,3 +65,30 @@ TEST(memory, information)
     _memory_malloc_size(48);
     _memory_malloc_size(64);
 }
+
+TEST(memory, sizes)
+{
+#ifdef __32_BIT__
+    EXPECT_EQ(sizeof(__MCNull), 8);
+    EXPECT_EQ(sizeof(__MCBoolean), 8);
+    EXPECT_EQ(sizeof(__MCNumber), 16);
+    EXPECT_EQ(sizeof(__MCName), 24);
+    EXPECT_EQ(sizeof(__MCString), 32);
+    EXPECT_EQ(sizeof(__MCData), 20);
+    EXPECT_EQ(sizeof(__MCArray), 16);
+    EXPECT_EQ(sizeof(__MCList), 16);
+    EXPECT_EQ(sizeof(__MCSet), 16);
+    EXPECT_EQ(sizeof(__MCProperList), 16);
+#else
+    EXPECT_EQ(sizeof(__MCNull), 8);
+    EXPECT_EQ(sizeof(__MCBoolean), 8);
+    EXPECT_EQ(sizeof(__MCNumber), 16);
+    EXPECT_EQ(sizeof(__MCName), 32);
+    EXPECT_EQ(sizeof(__MCString), 32);
+    EXPECT_EQ(sizeof(__MCData), 24);
+    EXPECT_EQ(sizeof(__MCArray), 24);
+    EXPECT_EQ(sizeof(__MCList), 24);
+    EXPECT_EQ(sizeof(__MCSet), 24);
+    EXPECT_EQ(sizeof(__MCProperList), 24);
+#endif
+}
