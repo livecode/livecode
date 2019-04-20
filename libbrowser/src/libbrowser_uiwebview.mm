@@ -233,7 +233,10 @@ MCUIWebViewBrowser::~MCUIWebViewBrowser(void)
 		
 		if (m_delegate != nil)
 			[m_delegate release];
-		
+        
+        if (m_js_handlers != nil)
+            MCCStringFree(m_js_handlers);
+        
 		if (m_js_handler_list != nil)
 			[m_js_handler_list release];
 	});

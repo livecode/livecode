@@ -58,13 +58,12 @@ However, you can set the <hilitedLine> of the field even if the
 > field to false has no effect.
 
 References: property (glossary), highlight (glossary),
-dontWrap property (glossary), lock (glossary), message (glossary),
-autoHilite (glossary), listBehavior (glossary), line (glossary),
+lock (glossary), message (glossary), line (glossary),
 list field (glossary), field (glossary), field (keyword),
 selection (keyword), mouseDown (message), mouseRelease (message),
 mouseUp (message), field (object), noncontiguousHilites (property),
 dontWrap (property), autoHilite (property), lockText (property),
-multipleLines (property), threeDHilite (property),
+multipleHilites (property), threeDHilite (property),
 toggleHilites (property), hilitedLine (property)
 
 Tags: ui

@@ -4728,7 +4728,7 @@ void MCObject::GetRevAvailableVariables(MCExecContext& ctxt, MCNameRef p_key, MC
         r_variables = nil;
 }
 
-void MCObject::GetRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_status)
+void MCObject::GetRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_desc)
 {
     if (!getstack() -> iskeyed())
     {
@@ -4737,15 +4737,27 @@ void MCObject::GetRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_status
     }
     
     MCAutoValueRefBase<MCScriptObjectRef> t_object_ref;
-    
-    if (MCEngineScriptObjectCreate(this, 0, &t_object_ref))
+    if (!MCEngineScriptObjectCreate(this, 0, &t_object_ref))
     {
-        r_status = MCEngineExecDescribeScriptOfScriptObject(*t_object_ref);
-        if (MCExtensionConvertToScriptType(ctxt, r_status))
-            return;
+        ctxt.Throw();
+        return;
     }
     
-    ctxt . Throw();
+    MCValueRef t_desc = MCEngineExecDescribeScriptOfScriptObject(*t_object_ref);
+    if (t_desc == nil)
+    {
+        ctxt.Throw();
+        return;
+    }
+    
+    if (!MCExtensionConvertToScriptType(ctxt, t_desc))
+    {
+        MCValueRelease(t_desc);
+        ctxt.Throw();
+        return;
+    }
+
+    r_desc = t_desc;
 }
 
 void MCObject::GetEffectiveRevScriptDescription(MCExecContext& ctxt, MCValueRef& r_descriptions)
@@ -4770,18 +4782,21 @@ void MCObject::GetEffectiveRevScriptDescription(MCExecContext& ctxt, MCValueRef&
         {
             if (!t_object_ref -> getremoved() && t_object_ref -> getobject() -> getstack() -> iskeyed())
             {
-                MCAutoValueRef t_description;
-                
                 MCAutoValueRefBase<MCScriptObjectRef> t_script_object_ref;
-                
                 if (t_success)
                     t_success = MCEngineScriptObjectCreate(t_object_ref -> getobject(), 0, &t_script_object_ref);
                 
+                MCAutoArrayRef t_description;
+                if (t_success)
+                {
+                    t_description.Give(MCEngineExecDescribeScriptOfScriptObject(*t_script_object_ref,
+                                                                                t_object_ref -> getobject() == this));
+                    t_success = t_description.IsSet();
+                }
+                    
                 MCAutoArrayRef t_object_description;
                 if (t_success)
                 {
-                    t_description = MCEngineExecDescribeScriptOfScriptObject(*t_script_object_ref, t_object_ref -> getobject() == this);
-                
                     MCAutoStringRef t_object_id;
                     t_object_ref -> getobject() -> GetLongId(ctxt, 0, &t_object_id);
                     
@@ -4821,6 +4836,10 @@ void MCObject::GetEffectiveRevScriptDescription(MCExecContext& ctxt, MCValueRef&
     {
         t_value = t_descriptions.Take();
         t_success = MCExtensionConvertToScriptType(ctxt, t_value);
+        if (!t_success)
+        {
+            MCValueRelease(t_value);
+        }
     }
     
     if (!t_success)

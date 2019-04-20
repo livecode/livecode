@@ -805,7 +805,7 @@ void MCObject::timer(MCNameRef mptr, MCParameter *params)
             {
                 MCExecContext ctxt(this, nil, nil);
                 MCAutoValueRef t_value_valueref;
-				/* UNCHECKED */ params->eval(ctxt, &t_value_valueref);
+				/* UNCHECKED */ params->eval_argument(ctxt, &t_value_valueref);
                 MCAutoStringRef t_value;
                 /* UNCHECKED */ ctxt . ConvertToString(*t_value_valueref, &t_value);
                 MCStringFormat(&t_mptr_string, "%@ %@", mptr, *t_value);

@@ -294,13 +294,21 @@ template <>
 struct PodFieldPropType<MCInterfaceFieldTabAlignments>
 {
     typedef MCInterfaceFieldTabAlignments value_type;
-    typedef MCInterfaceFieldTabAlignments stack_type;
+    struct stack_type
+    {
+        MCInterfaceFieldTabAlignments alignments;
+        ~stack_type()
+        {
+            if (alignments.m_alignments != nil)
+                MCMemoryDeallocate(alignments.m_alignments);
+        }
+    };
     typedef MCInterfaceFieldTabAlignments return_type;
     typedef const MCInterfaceFieldTabAlignments& arg_type;
     
-    template<typename X> static void getter(MCExecContext& ctxt, X *sptr, void (X::*p_getter)(MCExecContext& ctxt, return_type&), return_type& r_value)
+    template<typename X> static void getter(MCExecContext& ctxt, X *sptr, void (X::*p_getter)(MCExecContext& ctxt, return_type&), stack_type& r_value)
     {
-        (sptr ->* p_getter)(ctxt, r_value);
+        (sptr ->* p_getter)(ctxt, r_value.alignments);
     }
     
     template<typename X> static void setter(MCExecContext &ctxt, X *sptr, void (X::*p_setter)(MCExecContext& ctxt, arg_type), arg_type p_value)
@@ -308,21 +316,21 @@ struct PodFieldPropType<MCInterfaceFieldTabAlignments>
         (sptr ->* p_setter)(ctxt, p_value);
     }
     
-    static void init(MCInterfaceFieldTabAlignments& self)
+    static void init(stack_type& self)
     {
-        self . m_count = 0;
-        self . m_alignments = 0;
+        self.alignments.m_count = 0;
+        self.alignments.m_alignments = 0;
     }
     
     static void input(value_type p_value, stack_type& r_value)
     {
-        r_value = p_value;
+        r_value.alignments = p_value;
     }
     
     static bool equal(const stack_type& a, const stack_type& b)
     {
-        return (a . m_count == b . m_count
-                && MCMemoryCompare(a . m_alignments, b . m_alignments, a . m_count * sizeof(intenum_t)) == 0);
+        return (a.alignments.m_count == b.alignments.m_count
+                && MCMemoryCompare(a.alignments.m_alignments, b.alignments.m_alignments, a.alignments.m_count * sizeof(intenum_t)) == 0);
     }
     
     //static void assign(stack_type& x, stack_type y)
@@ -330,9 +338,10 @@ struct PodFieldPropType<MCInterfaceFieldTabAlignments>
     //    x = y;
     //}
     
-    static void output(stack_type p_value, return_type& r_value)
+    static void output(stack_type& p_value, return_type& r_value)
     {
-        r_value = p_value;
+        r_value = p_value.alignments;
+        p_value.alignments.m_alignments = nil;
     }
     
     static bool need_layout()
@@ -340,9 +349,9 @@ struct PodFieldPropType<MCInterfaceFieldTabAlignments>
         return true;
     }
     
-    static bool is_set(const MCInterfaceFieldTabAlignments& p_alignments)
+    static bool is_set(stack_type& p_alignments)
     {
-        return p_alignments.m_alignments != nil;
+        return p_alignments.alignments.m_alignments != nil;
     }
 };
 

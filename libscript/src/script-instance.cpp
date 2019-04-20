@@ -805,28 +805,20 @@ __MCScriptResolveForeignFunctionBindingForC(MCScriptInstanceRef p_instance,
     {
         return false;
     }
-    
-    /* TODO: This leaks a module handle if library is not empty (builtin) */
+
     MCSLibraryRef t_module;
-    if (MCStringIsEmpty(*t_library))
+    if (!MCScriptLoadModuleLibrary(MCScriptGetModuleOfInstance(p_instance),
+                                   *t_library,
+                                   t_module))
     {
-        t_module = MCScriptGetLibrary();
-    }
-    else
-    {
-        if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
-                                 *t_library,
-                                 t_module))
+        if (r_bound == nil)
         {
-            if (r_bound == nil)
-            {
-                return MCScriptThrowUnableToLoadForiegnLibraryError();
-            }
-        
-            *r_bound = false;
-        
-            return true;
+            return MCScriptThrowUnableToLoadForiegnLibraryError();
         }
+        
+        *r_bound = false;
+        
+        return true;
     }
     
     /* Resolve the symbol from the module which we've loaded */
@@ -948,27 +940,19 @@ __MCScriptResolveForeignFunctionBindingForObjC(MCScriptInstanceRef p_instance,
         return false;
     }
     
-    /* TODO: This leaks a module handle if library is not empty (builtin) */
     MCSLibraryRef t_module;
-    if (MCStringIsEmpty(*t_library))
+    if (!MCScriptLoadModuleLibrary(MCScriptGetModuleOfInstance(p_instance),
+                                   *t_library,
+                                   t_module))
     {
-        t_module = MCScriptGetLibrary();
-    }
-    else
-    {
-        if (!MCScriptLoadLibrary(MCScriptGetModuleOfInstance(p_instance),
-                                 *t_library,
-                                 t_module))
+        if (r_bound == nil)
         {
-            if (r_bound == nil)
-            {
-                return MCScriptThrowUnableToLoadForiegnLibraryError();
-            }
-        
-            *r_bound = false;
-        
-            return true;
+            return MCScriptThrowUnableToLoadForiegnLibraryError();
         }
+        
+        *r_bound = false;
+        
+        return true;
     }
     
     MCScriptThreadAffinity t_thread_affinity;

@@ -5,7 +5,7 @@ Type: command
 Syntax: libURLftpUpload <value>, <uploadURL> [, <callbackMessage>]
 
 Summary:
-<upload|Uploads> data to an Internet <server> asynchronously via <FTP>.
+<upload|Uploads> data to an Internet <server> asynchronously via <ftp|FTP>.
 
 Associations: internet library
 

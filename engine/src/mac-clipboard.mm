@@ -59,8 +59,9 @@ MCRawClipboard* MCRawClipboard::CreateSystemClipboard()
 
 MCRawClipboard* MCRawClipboard::CreateSystemSelectionClipboard()
 {
-    // Create a pasteboard internal to LiveCode
-    return new MCMacRawClipboard([NSPasteboard pasteboardWithUniqueName]);
+    // Create a pasteboard internal to LiveCode. Pasteboards created in this
+    // manner must be released using 'releaseGlobally'.
+    return new MCMacRawClipboard([NSPasteboard pasteboardWithUniqueName], true);
 }
 
 MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
@@ -69,11 +70,13 @@ MCRawClipboard* MCRawClipboard::CreateSystemDragboard()
 }
 
 
-MCMacRawClipboard::MCMacRawClipboard(NSPasteboard* p_pasteboard) :
+MCMacRawClipboard::MCMacRawClipboard(NSPasteboard* p_pasteboard,
+                                     bool p_release_globally) :
   MCRawClipboard(),
   m_pasteboard(p_pasteboard),
   m_last_changecount(0),
   m_items(nil),
+  m_release_globally(p_release_globally),
   m_dirty(false),
   m_external_data(false)
 {
@@ -83,6 +86,14 @@ MCMacRawClipboard::MCMacRawClipboard(NSPasteboard* p_pasteboard) :
 MCMacRawClipboard::~MCMacRawClipboard()
 {
     [m_items release];
+    
+    /* If the pasteboard requires global release, then do this before releasing
+     * it in the usual way. */
+    if (m_release_globally)
+    {
+        [m_pasteboard releaseGlobally];
+    }
+    
     [m_pasteboard release];
 }
 

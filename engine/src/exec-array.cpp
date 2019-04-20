@@ -889,14 +889,13 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
     // AL-2014-05-15: [[ Bug 12203 ]] Check initial byte for version 7.0 encoded array.
     bool t_legacy;
     t_legacy = t_type < kMCEncodedValueTypeArray;
-    
-    MCArrayRef t_array;
-	t_array = nil;
-	if (t_success)
-		t_success = MCArrayCreateMutable(t_array);
 
+    MCArrayRef t_array = nil;
 	if (t_legacy)
     {
+        if (t_success)
+            t_success = MCArrayCreateMutable(t_array);
+        
         if (t_success)
             if (MCS_putback(t_type, t_stream_handle) != IO_NORMAL)
                 t_success = false;
@@ -918,6 +917,15 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
             if (MCArrayLoadFromStreamLegacy(t_array, *t_stream) != IO_NORMAL)
                 t_success = false;
         
+        if (t_success)
+        {
+            if (!MCArrayCopyAndRelease(t_array, t_array))
+            {
+                MCValueRelease(t_array);
+                t_success = false;
+            }
+        }
+        
         delete t_stream;
     }
     else
@@ -934,8 +942,6 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCDataRef p_encoding, MCArrayR
 		r_array = t_array;
 		return;
 	}
-
-	MCValueRelease(t_array);
 
 	ctxt . Throw();
 }

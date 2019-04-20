@@ -647,14 +647,9 @@ bool MCWidget::setcustomprop(MCExecContext& ctxt, MCNameRef p_set_name, MCNameRe
         return MCObject::setcustomprop(ctxt, p_set_name, p_prop_name, p_path, p_value);
     
     MCAutoValueRef t_value;
-    if (MCExecTypeIsValueRef(p_value . type))
-        t_value = p_value . valueref_value;
-    else
-    {
-        MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_value.type, &p_value.valueref_value, Out(t_value));
-        if (ctxt . HasError())
-            return false;
-    }
+    MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, p_value.type, &p_value.valueref_value, Out(t_value));
+    if (ctxt . HasError())
+        return false;
     
     MCTypeInfoRef t_get_type, t_set_type;
     if (p_path != nil)

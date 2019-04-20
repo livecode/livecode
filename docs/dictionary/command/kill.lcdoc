@@ -42,7 +42,7 @@ Use the <kill> command to send a signal to a <process> (on <Unix|Unix
 systems>), or to terminate a <process> with extreme prejudice.
 
 On Mac OS systems, the <kill> <command> sends a "Quit Application"
-<Apple event> to the specified application.
+<Apple Event|Apple event> to the specified application.
 
 On Unix systems, the <kill> command sends the specified signal to the
 <process>. If no signal is specified, the <kill> command sends SIGTERM.

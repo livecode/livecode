@@ -463,7 +463,14 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 			return PS_ERROR;
 		}
 	}
-	
+    
+    /* If there are any parameters then compute the number of containers needed
+     * to execute the command. */
+    if (params != nullptr)
+    {
+        container_count = params->count_containers();
+    }
+    
 	return PS_NORMAL;
 }
 
@@ -488,51 +495,36 @@ void MCDispatchCmd::exec_ctxt(MCExecContext &ctxt)
 	}
 	else
 		t_target_ptr = nil;
-	
-	// Evaluate the parameter list
-    bool t_success, t_can_debug;
-	MCParameter *tptr = params;
-	while (tptr != NULL)
-	{
-        // AL-2014-08-20: [[ ArrayElementRefParams ]] Use containers for potential reference parameters
-        MCAutoPointer<MCContainer> t_container = new (nothrow) MCContainer;
-        if (tptr -> evalcontainer(ctxt, **t_container))
-            tptr -> set_argument_container(t_container.Release());
-        else
-        {
-            MCExecValue t_value;
-            tptr -> clear_argument();
-
-            do
-            {
-                if (!(t_success = tptr->eval_ctxt(ctxt, t_value)))
-                    t_can_debug = MCB_error(ctxt, line, pos, EE_STATEMENT_BADPARAM);
-                ctxt.IgnoreLastError();
-            }
-            while (!t_success && t_can_debug && (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors);
-            
-            if (!t_success)
-			{
-                ctxt . LegacyThrow(EE_STATEMENT_BADPARAM);
-                return;
-			}
-
-            tptr->give_exec_argument(t_value);
-		}
-
-		tptr = tptr->getnext();
-	}
-
-    ctxt . SetLineAndPos(line, pos);
-    MCEngineExecDispatch(ctxt, is_function ? HT_FUNCTION : HT_MESSAGE, *t_message, t_target_ptr, params);
     
-    // AL-2014-09-17: [[ Bug 13465 ]] Clear parameters after executing dispatch
-    tptr = params;
-    while (tptr != NULL)
-	{
-        tptr -> clear_argument();
-        tptr = tptr->getnext();
+    /* Attempt to allocate the number of containers needed for the call. */
+    MCAutoPointer<MCContainer[]> t_containers = new MCContainer[container_count];
+    if (!t_containers)
+    {
+        ctxt.LegacyThrow(EE_NO_MEMORY);
+        return;
     }
+    
+	/* If the argument list is successfully evaluated, then do the dispatch. */
+	if (MCKeywordsExecSetupCommandOrFunction(ctxt,
+                                             params,
+                                             *t_containers,
+                                             line,
+                                             pos,
+                                             is_function))
+    {
+        if (!ctxt.HasError())
+        {
+            ctxt.SetLineAndPos(line, pos);
+            MCEngineExecDispatch(ctxt,
+                                 is_function ? HT_FUNCTION : HT_MESSAGE,
+                                 *t_message,
+                                 t_target_ptr,
+                                 params);
+        }
+    }
+    
+    /* Clean up the evaluated argument list */
+    MCKeywordsExecTeardownCommandOrFunction(params);
 }
 
 Parse_stat MCMessage::parse(MCScriptPoint &sp)

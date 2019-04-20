@@ -60,7 +60,7 @@ name of the main module.
 
 References: unload extension (command), create widget (command),
 loadedExtensions (function), result (function),
-LiveCode Builder extension (glossary)
+LiveCode Builder extension (glossary), command (glossary)
 
 Changes:
 The ability to load multiple modules in a single <load extension>

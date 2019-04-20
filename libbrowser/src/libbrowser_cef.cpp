@@ -1291,7 +1291,10 @@ void MCCefBrowserBase::Finalize()
 	// IM-2014-07-21: [[ Bug 12296 ]] Notify client of browser being closed
 	if (m_client)
 		m_client->OnOwnerClosed();
-	
+    
+    if (m_javascript_handlers != nil)
+        MCCStringFree(m_javascript_handlers);
+    
 	m_browser = nil;
 	m_client = nil;
 }

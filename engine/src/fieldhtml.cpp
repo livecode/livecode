@@ -2200,6 +2200,7 @@ MCParagraph *MCField::importhtmltext(MCValueRef p_text)
                                 import_html_parse_paragraph_attrs(t_tag, t_style);
                                 import_html_begin(ctxt, &t_style);
                                 delete t_style . tabs;
+                                delete t_style.tab_alignments;
                                 MCValueRelease(t_style . metadata);
                             }
                         }
