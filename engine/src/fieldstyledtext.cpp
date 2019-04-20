@@ -391,8 +391,10 @@ bool MCField::exportasstyledtext(MCParagraph* p_paragraphs, int32_t p_start_inde
 			t_flags |= kMCFieldExportLines;
 		doexport(t_flags, p_paragraphs, p_start_index, p_finish_index, export_styled_text, &t_context);
 
-		if (MCArrayCopy(t_context . paragraphs_array, r_array))
+		if (MCArrayCopyAndRelease(t_context . paragraphs_array, r_array))
 			return true;
+        
+        MCValueRelease(t_context.paragraphs_array);
 	}
 
 	return false;
