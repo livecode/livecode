@@ -337,9 +337,8 @@ void MCField::resetparagraphs()
 	findex_t si = 0;
 	findex_t ei = 0;
 
-    vector_t<uint32_t> t_lines;
-    t_lines . elements = nil;
-    t_lines . count = 0;
+    MCAutoArray<uint32_t> t_lines;
+    
 	// MW-2005-05-13: [[Fix bug 2766]] We always need to retrieve the hilitedLines
 	//   to prevent phantom selections w.r.t. focused paragraph.
 	if (flags & F_LIST_BEHAVIOR)
@@ -347,13 +346,6 @@ void MCField::resetparagraphs()
 
 	if (MCactivefield == this && focusedparagraph != NULL)
 	{
-		// TS-2005-01-06: Fix for bug 2381
-		//   A) get old hilites lines
-		//   B) clear current hilites line, useless now, but may actually do something
-		//      in the future
-		if (flags & F_LIST_BEHAVIOR)
-            hilitedlines(t_lines);
-        
 		selectedmark(False, si, ei, True);
 		if (flags & F_LIST_BEHAVIOR)
 			sethilitedlines(NULL, 0);
@@ -373,9 +365,9 @@ void MCField::resetparagraphs()
 	// MW-2005-01-28: Correct small integration error, != instead of ==
 	if ((flags & F_LIST_BEHAVIOR) != 0)
 	{
-		if (t_lines . elements != nil)
+		if (t_lines.Ptr() != nil)
         {
-			sethilitedlines(t_lines . elements, t_lines . count, False);
+			sethilitedlines(t_lines.Ptr(), t_lines.Size(), False);
         }
 	}
 	else if (ei != 0)
