@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "variable.h"
 #include "object.h"
+#include "param.h"
 
 #include "globals.h"
 
@@ -1289,6 +1290,217 @@ uint4 MCTry::linecount()
 {
 	return countlines(trystatements) + countlines(catchstatements)
 	       + countlines(finallystatements);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCHandref::MCHandref(MCNameRef inname)
+    : name(inname)
+{
+    handler = nil;
+    params = NULL;
+    resolved = false;
+    global_handler = false;
+    container_count = 0;
+}
+
+MCHandref::~MCHandref()
+{
+    while (params != NULL)
+    {
+        MCParameter *tmp = params;
+        params = params->getnext();
+        delete tmp;
+    }
+}
+
+void MCHandref::parse(void)
+{
+    if (params != nullptr)
+    {
+        container_count = params->count_containers();
+    }
+    
+    if (MCIsGlobalHandler(*name))
+    {
+        global_handler = true;
+        resolved = true;
+    }
+}
+
+void MCHandref::exec(MCExecContext& ctxt, uint2 line, uint2 pos, bool is_function)
+{
+    if (!resolved)
+    {
+        MCKeywordsExecResolveCommandOrFunction(ctxt,
+                                               *name,
+                                               is_function,
+                                               handler);
+        resolved = true;
+    }
+    
+    /* Attempt to allocate the number of containers needed for the call. */
+    MCAutoPointer<MCContainer[]> t_containers = new MCContainer[container_count];
+    if (!t_containers)
+    {
+        ctxt.LegacyThrow(EE_NO_MEMORY);
+        return;
+    }
+    
+    /* If the argument list is successfully evaluated, then do the function
+     * execution. */
+    if (MCKeywordsExecSetupCommandOrFunction(ctxt,
+                                             params,
+                                             *t_containers,
+                                             line,
+                                             pos,
+                                             is_function))
+    {
+        MCKeywordsExecCommandOrFunction(ctxt,
+                                        handler,
+                                        params,
+                                        *name,
+                                        line,
+                                        pos,
+                                        global_handler,
+                                        is_function);
+    }
+    
+    /* Clean up the evaluated argument list */
+    MCKeywordsExecTeardownCommandOrFunction(params);
+}
+
+MCComref::MCComref(MCNameRef n)
+    : command(n)
+{
+}
+
+MCComref::~MCComref(void)
+{
+}
+
+Parse_stat MCComref::parse(MCScriptPoint &sp)
+{
+    initpoint(sp);
+    if (getparams(sp, command.getparams()) != PS_NORMAL)
+    {
+        MCperror->add(PE_STATEMENT_BADPARAMS, sp);
+        return PS_ERROR;
+    }
+    
+    command.parse();
+    
+    return PS_NORMAL;
+}
+
+void MCComref::exec_ctxt(MCExecContext& ctxt)
+{
+    /* Execute the command */
+    
+    command.exec(ctxt, line, pos, false);
+    
+    /* If an error occurred, then we are done */
+    
+    if (ctxt.HasError())
+    {
+        return;
+    }
+    
+    /* Process the result according to the result mode */
+    
+    if (MCresultmode == kMCExecResultModeReturn)
+    {
+        // Do nothing!
+    }
+    else if (MCresultmode == kMCExecResultModeReturnValue)
+    {
+        // Set 'it' to the result and clear the result
+        MCAutoValueRef t_value;
+        if (!MCresult->eval(ctxt, &t_value))
+        {
+            ctxt.Throw();
+            return;
+        }
+        
+        ctxt.SetItToValue(*t_value);
+        ctxt.SetTheResultToEmpty();
+    }
+    else if (MCresultmode == kMCExecResultModeReturnError)
+    {
+        // Set 'it' to empty
+        ctxt.SetItToEmpty();
+        // Leave the result as is but make sure we reset the 'return mode' to default.
+        MCresultmode = kMCExecResultModeReturn;
+    }
+}
+
+MCFuncref::MCFuncref(MCNameRef n)
+    : function(n)
+{
+}
+
+MCFuncref::~MCFuncref(void)
+{
+}
+
+Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
+{
+    initpoint(sp);
+    if (getparams(sp, function.getparams()) != PS_NORMAL)
+    {
+        MCperror->add(PE_FUNCTION_BADPARAMS, sp);
+        return PS_ERROR;
+    }
+    
+    function.parse();
+    
+    return PS_NORMAL;
+}
+
+void MCFuncref::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
+{
+    /* Execute the function */
+    
+    function.exec(ctxt, line, pos, true);
+    
+    /* If an error occurred, then we are done */
+
+    if (ctxt.HasError())
+    {
+        return;
+    }
+    
+    /* Process the result according to the result mode */
+    
+    if (MCresultmode == kMCExecResultModeReturn)
+    {
+        if (MCresult->eval(ctxt, r_value . valueref_value))
+        {
+            r_value . type = kMCExecValueTypeValueRef;
+            return;
+        }
+    }
+    else if (MCresultmode == kMCExecResultModeReturnValue)
+    {
+        // Our return value is MCresult, and 'the result' gets set to empty.
+        if (MCresult->eval(ctxt, r_value . valueref_value))
+        {
+            r_value . type = kMCExecValueTypeValueRef;
+            ctxt.SetTheResultToEmpty();
+            return;
+        }
+    }
+    else if (MCresultmode == kMCExecResultModeReturnError)
+    {
+        // Our return value is empty, and 'the result' remains as it is.
+        MCExecTypeSetValueRef(r_value, MCValueRetain(kMCEmptyString));
+        
+        // Make sure we reset the 'return mode' to default.
+        MCresultmode = kMCExecResultModeReturn;
+        return;
+    }
+    
+    ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

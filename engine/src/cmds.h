@@ -997,7 +997,13 @@ class MCDispatchCmd: public MCStatement
 	MCExpression *message;
 	MCChunk *target;
 	MCParameter *params;
-	bool is_function;
+    struct
+    {
+        /* The container count is the number of containers needed to execute
+         * the command. It is calculated after parsing the node. */
+        unsigned container_count : 16;
+        bool is_function : 1;
+    };
 
 public:
 	MCDispatchCmd(void)
@@ -1006,6 +1012,7 @@ public:
 		target = NULL;
 		params = NULL;
 		is_function = false;
+        container_count = 0;
 	}
 	~MCDispatchCmd(void);
 	

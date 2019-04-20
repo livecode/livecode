@@ -142,17 +142,4 @@ private:
     Parse_stat gettheparam(MCScriptPoint& sp, Boolean single, MCExpression** exp);
 };
 
-class MCFuncref : public MCExpression
-{
-	MCNewAutoNameRef name;
-    MCHandler *handler;
-	MCParameter *params;
-	bool resolved : 1;
-    bool global_handler : 1;
-public:
-	MCFuncref(MCNameRef);
-	virtual ~MCFuncref();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
-};
 #endif

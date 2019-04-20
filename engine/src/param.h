@@ -30,7 +30,6 @@ public:
 	{
 		exp = nil;
 		next = nil;
-		//var = nil;
         container = nil;
 		value . type = kMCExecValueTypeNone;
         value . valueref_value = nil;
@@ -39,8 +38,6 @@ public:
 	~MCParameter(void)
 	{
 		delete exp;
-        // AL-2014-09-17: [[ Bug 13465 ]] Delete container when parameter is deleted
-        delete container;
 		MCExecTypeRelease(value);
 	}
 
@@ -81,6 +78,10 @@ public:
     bool eval_ctxt(MCExecContext& ctxt, MCExecValue &r_value);
     bool evalcontainer(MCExecContext& ctxt, MCContainer& r_container);
 	Parse_stat parse(MCScriptPoint &);
+    
+    /* Count the number of containers which is needed to evaluate the parameter
+     * list. This is the number of expressions which have a root var-ref. */
+    unsigned count_containers(void);
 
 private:
 	// Parameter as syntax (i.e. location of the expression
@@ -93,6 +94,7 @@ private:
 
 	// Parameter as value (i.e. value of the argument when
 	// passed to a function/command).
+    // Note: The container member is not owned by the parameter instance.
     MCContainer *container;
 	MCExecValue value;
 };
