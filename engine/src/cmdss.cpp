@@ -1112,6 +1112,7 @@ MCSave::~MCSave()
 {
 	delete target;
 	delete filename;
+    delete format;
 }
 
 Parse_stat MCSave::parse(MCScriptPoint &sp)
