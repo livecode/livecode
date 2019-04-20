@@ -539,6 +539,8 @@ bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_v
 {
 	void *t_value;
 	
+#if 0
+    
     // MW-2014-03-21: [[ Faster ]] If we are pooling this typecode, and the
     //   pool isn't empty grab the ptr from there.
     if (p_type_code <= kMCValueTypeCodeList && s_value_pools[p_type_code] . count > 0)
@@ -565,6 +567,7 @@ bool __MCValueCreate(MCValueTypeCode p_type_code, size_t p_size, __MCValue*& r_v
         MCMemoryClear(t_value, p_size);
 	}
     else
+#endif
     {
         // The minimum size of a valueref has to be sizeof(MCValuePoolLink).
         // This is to ensure we have enough space to chain in the free list.
@@ -665,6 +668,8 @@ void __MCValueDestroy(__MCValue *self)
 	self -> flags = UINT32_MAX;
 #endif
 
+#if 0
+    
     // MW-2014-03-21: [[ Faster ]] If we are pooling this typecode, and the
     //   pool isn't full, add it to the pool.
     if (t_code <= kMCValueTypeCodeList && s_value_pools[t_code] . count < 32)
@@ -695,6 +700,8 @@ void __MCValueDestroy(__MCValue *self)
 
 		return;
     }
+    
+#endif
 	
 	MCMemoryDelete(self);
 }
