@@ -428,6 +428,20 @@ property showBorder			get mFrameBorder				set setFrameBorder
 metadata showBorder.label is "Show border"
 
 /**
+Syntax: set the showHover of <widget> to {true|false}
+Syntax: get the showHover of <widget>
+
+Summary: Whether the widget has a hover row displayed or not.
+
+Description:
+Use the <showHover> property to show or hide the hover row of the widget 
+object.
+**/
+
+property showHover			get mShowHover				set setShowHover
+metadata showHover.label is "Show hover row"
+
+/**
 Syntax: set the readOnly of <widget> to {true|false}
 Syntax: get the readOnly of <widget>
 
@@ -643,6 +657,7 @@ private variable mHoverIcon as String
 private variable mMouseDownRow as Integer
 
 private variable mFrameBorder as Boolean
+private variable mShowHover as Boolean
 
 private variable mSelectedElement as optional List
 private variable mFoldState as Array
@@ -717,7 +732,8 @@ public handler OnCreate() returns nothing
 	put 0 into mHoverRow
 	put "" into mHoverIcon
 	put 0 into mViewTopPosition
-	put true into mFrameBorder	
+	put true into mFrameBorder
+	put true into mShowHover
 	put true into mVScrollbar
 	initialiseScrollbar()	
 	
@@ -760,6 +776,7 @@ public handler OnSave(out rProperties as Array)
 	put mHiliteNewElement into rProperties["hilite new element"]
 	put mScrollHilitedElementIntoView into rProperties["scroll hilited element into view"]
 	put mTextHeight into rProperties["text height"]
+	put mShowHover into rProperties["show hover row"]
 	put mVScrollbar into rProperties["vertical scrollbar"]
 
 	put mCharsToTrimFromKey into rProperties["chars to trim from key"]
@@ -797,6 +814,10 @@ public handler OnLoad(in pProperties as Array)
 
 	if "text height" is among the keys of pProperties then
 		put pProperties["text height"] into mTextHeight
+	end if
+
+	if "show hover row" is among the keys of pProperties then
+		put pProperties["show hover row"] into mShowHover
 	end if
 
 	if "vertical scrollbar" is among the keys of pProperties then
@@ -856,11 +877,11 @@ public handler OnPaint() returns nothing
 	
 	variable tTopOffset
 	put mViewTopPosition mod mRowHeight into tTopOffset
-	subtract tTopOffset from tTop	
+	subtract tTopOffset from tTop
 	
-	// Iterate from the first data item drawing each row until 
-	// we can't display any more items	
-	repeat with tX from mFirstDataItem up to mDataCount	
+	// Iterate from the first data item drawing each row until
+	// we can't display any more items
+	repeat with tX from mFirstDataItem up to mDataCount
 		if tX is 1 then
 			paintFirstRow(tTop)
 		else
@@ -873,7 +894,7 @@ public handler OnPaint() returns nothing
 				put mDataList[tX] into tElement
 			end if
 			
-			paintDataItem(tElement, tTop, tX)		
+			paintDataItem(tElement, tTop, tX)
 		end if
 		if tTop > mViewHeight then
 			exit repeat
@@ -882,11 +903,13 @@ public handler OnPaint() returns nothing
 	end repeat
 	
 	if mShowSeparator then
-		paintSeparator()	
+		paintSeparator()
 	end if	
-    
-    // Paint the scrollbar
-	paintScrollbar(this canvas)
+
+	// Paint the scrollbar
+	if mVScrollbar then
+		paintScrollbar(this canvas)
+	end if
 	
 	// Draw the frame
 	if mFrameBorder is true then
@@ -920,7 +943,7 @@ private handler paintFirstRow(in pTop as Real)
 	put "" into tStyle
 
 	variable tHover as Boolean
-	put mHoverRow is 1 into tHover
+	put (mHoverRow is 1) and mShowHover into tHover
 		
 	variable tPath as Path	
 	put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
@@ -967,7 +990,7 @@ end handler
 private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as Integer)
 	// Apply any style to this data item
 	variable tHover as Boolean
-	put pRow is mHoverRow into tHover
+	put (pRow is mHoverRow) and mShowHover into tHover
 	
 	variable tAlternate as Boolean
 	if mAlternateRowBackgrounds and pRow mod 2 is 0 then
@@ -2256,6 +2279,13 @@ private handler setFrameBorder(in pFrameBorder as Boolean) returns nothing
 	redraw all
 end handler
 
+private handler setShowHover(in pShowHover as Boolean) returns nothing
+	if pShowHover is not mShowHover then
+		put pShowHover into mShowHover
+		redraw all
+	end if
+end handler
+
 private handler getSelectedElement() returns String
 	variable tElement as String
 	if mSelectedElement is not nothing then
@@ -2578,7 +2608,7 @@ end handler
 // Will be the scrollbar's OnPaint handler
 public handler paintScrollbar(in pCanvas as Canvas)
 	// Draw scrollbar if there is any need
-	if mScrollbarHeight > 0 and mVScrollbar then
+	if mScrollbarHeight > 0 then
 		set the paint of pCanvas to my border paint
 		fill mScrollbarPath on pCanvas	
 	end if
