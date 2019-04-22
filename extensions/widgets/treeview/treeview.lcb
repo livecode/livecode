@@ -778,6 +778,7 @@ public handler OnSave(out rProperties as Array)
 	put mTextHeight into rProperties["text height"]
 	put mShowHover into rProperties["show hover row"]
 	put mVScrollbar into rProperties["vertical scrollbar"]
+	put mAlternateRowBackgrounds into rProperties["alternate row backgrounds"]
 
 	put mCharsToTrimFromKey into rProperties["chars to trim from key"]
 	put mShowSeparator into rProperties["show separator"]
@@ -822,6 +823,10 @@ public handler OnLoad(in pProperties as Array)
 
 	if "vertical scrollbar" is among the keys of pProperties then
 		put pProperties["vertical scrollbar"] into mVScrollbar
+	end if
+
+	if "alternate row backgrounds" is among the keys of pProperties then
+		put pProperties["alternate row backgrounds"] into mAlternateRowBackgrounds
 	end if
 
 	if "chars to trim from key" is among the keys of pProperties then
