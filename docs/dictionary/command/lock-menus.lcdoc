@@ -34,7 +34,7 @@ visible to the user.
 
 References: unlock menus (command), lock screen (command),
 menus (function), property (glossary), command (glossary),
-menu bar (glossary), control (object), lockMenus (property)
+menu bar (glossary), control (glossary), lockMenus (property)
 
 Tags: menus
 

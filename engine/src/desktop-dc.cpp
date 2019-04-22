@@ -135,6 +135,8 @@ Boolean MCScreenDC::open()
 Boolean MCScreenDC::close(Boolean force)
 {
 	MCPlatformReleaseMenu(icon_menu);
+    
+    MCPlatformReleaseWindow(backdrop_window);
 	
 	// COCOA-TODO: Is this still needed?
 	if (ncolors != 0)

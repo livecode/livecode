@@ -93,8 +93,8 @@ remove it from the <cache>.
 > the engine implementation.
 
 > *Note:* When specifying URLs for iOS or Android, you must use the
-> appropriate form that conforms to [RFC
-> 1738](https://tools.ietf.org/html/rfc1738). Ensure that you
+> appropriate form that conforms to 
+> [RFC 1738](https://tools.ietf.org/html/rfc1738). Ensure that you
 > <URLEncode> any username and password fields appropriately for FTP
 > URLs.
 
@@ -116,7 +116,8 @@ application (glossary), standalone application (glossary),
 load (glossary), cache (glossary), command (glossary),
 main stack (glossary), expression (glossary), keyword (glossary), 
 download (glossary), message (glossary), parameter (glossary), 
-handler (glossary), URL (keyword), file (keyword), 
+handler (glossary), Standalone Application Settings (glossary),
+URL (keyword), file (keyword), 
 Internet library (library), library (library), startup (message), 
 openBackground (message), preOpenStack (message), openStack (message), 
 preOpenCard (message), script (property)

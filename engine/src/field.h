@@ -457,7 +457,7 @@ public:
     
 	Exec_stat seltext(findex_t si, findex_t ei, Boolean focus, Boolean update = False);
 	uint2 hilitedline();
-	void hilitedlines(vector_t<uint32_t> &r_lines);
+    void hilitedlines(MCAutoArray<uint32_t>& r_lines);
 	Exec_stat sethilitedlines(const uint32_t *p_lines, uint32_t p_line_count, Boolean forcescroll = True);
 	void hiliteline(int2 x, int2 y);
 

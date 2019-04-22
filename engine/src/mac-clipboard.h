@@ -115,7 +115,7 @@ public:
 	virtual MCDataRef DecodeTransferredHTML(MCDataRef p_html) const;
     
     // Constructor. The NSPasteboard being wrapped is required.
-    MCMacRawClipboard(NSPasteboard* p_pasteboard);
+    MCMacRawClipboard(NSPasteboard* p_pasteboard, bool p_release_globally = false);
     
     // Converts a LiveCode-style RawClipboardData key into an OSX UTI
     static MCStringRef CopyAsUTI(MCStringRef p_key);
@@ -130,6 +130,10 @@ private:
     
     // The array that we are pushing onto the clipboard
     NSMutableArray* m_items;
+    
+    // If true, the NSPasteboard must be released with releaseGlobally rather
+    // than release.
+    bool m_release_globally;
     
     // Indicates whether any changes have been made to the clipboard
     bool m_dirty;

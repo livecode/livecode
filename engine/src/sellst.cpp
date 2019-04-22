@@ -238,7 +238,7 @@ void MCSellist::sort()
     Clean();
     
     MCSelnode *optr = objects;
-	MCAutoArray<MCSortnode> items;
+	MCAutoArrayZeroedNonPod<MCSortnode> items;
 	uint4 nitems = 0;
 	MCCard *cptr = optr->m_ref->getcard();
 	do

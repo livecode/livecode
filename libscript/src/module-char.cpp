@@ -246,28 +246,29 @@ extern "C" MC_DLLEXPORT_DEF void MCCharExecDeleteLastCharOf(MCStringRef& x_targe
 //   end repeat
 // Will result in tChar containing the value it had at the point of end repeat.
 extern "C" MC_DLLEXPORT_DEF bool MCCharRepeatForEachChar(void*& x_iterator, MCStringRef& r_iterand, MCStringRef p_string)
-{
-    MCTextChunkIterator *t_iterator;
-    bool t_first;
-    t_first = false;
+{ 
+    uindex_t t_offset;
+    t_offset = (uindex_t)(uintptr_t)x_iterator;
     
-    if ((uintptr_t)x_iterator == 0)
-    {
-        t_first = true;
-        t_iterator = MCChunkCreateTextChunkIterator(p_string, nil, kMCChunkTypeCharacter, nil, nil, kMCStringOptionCompareExact);
-    }
-    else
-        t_iterator = (MCTextChunkIterator *)x_iterator;
+    uindex_t t_length =
+            MCStringGetLength(p_string);
+    if (t_offset == t_length)
+        return false;
+
+    uindex_t t_next =
+            MCStringGraphemeBreakIteratorAdvance(p_string,
+                                                 t_offset);
+    if (t_next == (uindex_t)-1)
+        t_next = t_length;
     
-    if (t_iterator -> Next())
-        t_iterator -> CopyString(r_iterand);
-    else
+    if (!MCStringCopySubstring(p_string,
+                               MCRangeMake(t_offset, t_next - t_offset),
+                               r_iterand))
     {
-        delete t_iterator;
         return false;
     }
     
-    x_iterator = (void *)(t_iterator);
+    x_iterator = (void *)(uintptr_t)t_next;
     
     return true;
 }

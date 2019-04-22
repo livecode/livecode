@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parentscript.h"
 #include "osspec.h"
 #include "card.h"
+#include "keywords.h"
 
 #include "exec-interface.h"
 
@@ -534,8 +535,8 @@ void MCIdeScriptConfigure::exec_ctxt(MCExecContext &ctxt)
                 MCNewAutoNameRef t_attr_key;
                 MCAutoStringRef t_attr_value;
 
-                MCStringFormat(t_attr_key_string, "%s attributes", s_script_keywords[t_keyword]);
-                MCNameCreate(t_attr_key_string, &t_attr_key);
+                /* UNCHECKED */ MCStringFormat(t_attr_key_string, "%s attributes", s_script_keywords[t_keyword]);
+                /* UNCHECKED */ MCNameCreateAndRelease(t_attr_key_string, &t_attr_key);
 
                 if (ctxt . CopyOptElementAsString(*t_settings, *t_attr_key, false, &t_attr_value))
                 {

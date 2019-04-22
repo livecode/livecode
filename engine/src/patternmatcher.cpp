@@ -127,7 +127,7 @@ bool MCRegexMatcher::match(MCRange p_range)
 
 bool MCRegexMatcher::match(MCExecContext ctxt, MCNameRef p_key, bool p_match_key)
 {
-    MCStringRef t_string;
+    MCAutoStringRef t_string;
     MCAutoStringRef t_normalized_source;
     if (p_match_key)
         t_string = MCNameGetString(p_key);
@@ -137,11 +137,11 @@ bool MCRegexMatcher::match(MCExecContext ctxt, MCNameRef p_key, bool p_match_key
         if (!MCArrayFetchValue(m_array_source, m_options == kMCStringOptionCompareCaseless, p_key, t_element))
             return false;
         
-        if (!ctxt . ConvertToString(t_element, t_string))
+        if (!ctxt . ConvertToString(t_element, &t_string))
             return false;
     }
         
-    MCStringNormalizedCopyNFC(t_string, &t_normalized_source);
+    MCStringNormalizedCopyNFC(*t_string, &t_normalized_source);
     return MCR_exec(m_compiled, *t_normalized_source, MCRangeMake(0, MCStringGetLength(*t_normalized_source)));
 }
 
@@ -299,7 +299,7 @@ bool MCWildcardMatcher::match(MCRange p_source_range)
 
 bool MCWildcardMatcher::match(MCExecContext ctxt, MCNameRef p_key, bool p_match_key)
 {
-    MCStringRef t_string;
+    MCAutoStringRef t_string;
     if (p_match_key)
         t_string = MCNameGetString(p_key);
     else
@@ -307,9 +307,9 @@ bool MCWildcardMatcher::match(MCExecContext ctxt, MCNameRef p_key, bool p_match_
         MCValueRef t_element;
         if (!MCArrayFetchValue(m_array_source, m_options == kMCStringOptionCompareCaseless, p_key, t_element))
             return false;
-        if (!ctxt . ConvertToString(t_element, t_string))
+        if (!ctxt . ConvertToString(t_element, &t_string))
             return false;
     }
     
-    return MCStringWildcardMatch(t_string, MCRangeMake(0, MCStringGetLength(t_string)), m_pattern, m_options);
+    return MCStringWildcardMatch(*t_string, MCRangeMake(0, MCStringGetLength(*t_string)), m_pattern, m_options);
 }

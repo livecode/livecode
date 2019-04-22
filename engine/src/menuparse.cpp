@@ -454,8 +454,8 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuIt
 {
 	uint1 t_mods = 0;
 	unichar_t t_key = 0;
-	MCStringRef t_keyname = nil;
-	t_keyname = MCValueRetain(kMCEmptyString);
+    MCAutoStringRef t_keyname;
+    t_keyname = kMCEmptyString;
 	
 	uindex_t t_tag;
 	uindex_t t_length;
@@ -466,8 +466,7 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuIt
 	{
 		MCStringRef t_tag_str = nil;
 		/* UNCHECKED */ MCStringCopySubstring(p_string, MCRangeMakeMinMax(t_tag + 1, t_length), t_tag_str);
-		MCValueAssign(p_menuitem->tag, t_tag_str);
-		MCValueRelease(t_tag_str);
+		MCValueAssignAndRelease(p_menuitem->tag, t_tag_str);
 		
 		// Don't do any further processing of the string after the '|'
 		t_length = t_tag;
@@ -515,14 +514,13 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuIt
 			t_key = MCStringGetCharAtIndex(p_string, x_offset);
 		else if ((t_length - x_offset) > 1)
 		{
-			MCStringRef t_key_string;
-			MCStringCopySubstring(p_string, MCRangeMakeMinMax(x_offset, t_length), t_key_string);
-			t_key = MCLookupAcceleratorKeysym(t_key_string);
+			MCAutoStringRef t_key_string;
+			MCStringCopySubstring(p_string, MCRangeMakeMinMax(x_offset, t_length), &t_key_string);
+			t_key = MCLookupAcceleratorKeysym(*t_key_string);
 			if (t_key != 0)
-				MCValueAssign(t_keyname, t_key_string);
-			else
+                t_keyname.Reset(*t_key_string);
+            else
 				t_mods = 0;
-			MCValueRelease(t_key_string);
 		}
 		
 		// Ignore shift state for non-letter keys
@@ -531,7 +529,7 @@ void ParseMenuItemAccelerator(MCStringRef p_string, uindex_t &x_offset, MCMenuIt
 				t_mods &= ~MS_SHIFT;
 		p_menuitem->modifiers = t_mods;
 		p_menuitem->accelerator = t_key;
-		MCValueAssign(p_menuitem->accelerator_name, t_keyname);
+		MCValueAssign(p_menuitem->accelerator_name, *t_keyname);
 	}
 }
 	

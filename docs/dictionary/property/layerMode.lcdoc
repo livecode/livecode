@@ -51,32 +51,38 @@ If you specify the effective keyword, getting the <layerMode> returns
 how the engine is actually treating the layer, rather than what you
 requested it to be. There can be a difference for a number of reasons:
 
-1) You are not using a compositor (set using <compositorType>) -
-effective layerMode is set to 'static'. 2) You have a static <layerMode>
+1. You are not using a compositor (set using <compositorType>) -
+effective layerMode is set to 'static'. 
+2. You have a static <layerMode>
 object with a non-copy/blendSrcOver ink set - effective layerMode is set
-to 'dynamic'. 3) You have a scrolling <layerMode> on a non-group or an
+to 'dynamic'. 
+3. You have a scrolling <layerMode> on a non-group or an
 adorned group - effective layerMode is set to 'dynamic'.
 
-Scrolling
+**Scrolling**
+
 The scrolling layerMode is pertinent to groups. It means that the engine
 caches the content of the group unclipped, and then renders the cached
 copies clipped; instead of caching the visible portion of the group.
 This results in fast updates when setting the scroll properties of a
 group. 
 
-Static vs Dynamic
+**Static vs Dynamic**
+
 There are various contexts where setting the <layerMode> can have a big
 impact on the performance of an application, in particular games or
 interfaces with moving/changing elements. In these cases, the
 <layerMode> should be set to 'dynamic'.
 
 A PLATFORM GAME EXAMPLE
+
 Take a platform game as an example. The main character, any animated
 elements and scrolling platform components should all have a <layerMode>
 of 'dynamic'. However, the background image should have a <layerMode> of
 'static'. 
 
 NON-GAME DRAG EXAMPLE
+
 Consider a drag-drop interface where a user can 'pick' something up and
 drop it elsewhere. While the object is being dragged across the stack
 the <layerMode> can be set to 'dynamic' (particularly important if it

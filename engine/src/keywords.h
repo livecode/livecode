@@ -21,6 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define	KEYWORDS_H
 
 #include "statemnt.h"
+#include "express.h"
 
 class MCScriptPoint;
 class MCExpression;
@@ -198,6 +199,50 @@ public:
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual void exec_ctxt(MCExecContext&);
 	virtual uint4 linecount();
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCHandref
+{
+    MCNewAutoNameRef name;
+    MCParameter *params;
+    MCHandler *handler;
+    struct
+    {
+        unsigned container_count : 16;
+        bool resolved : 1;
+        bool global_handler : 1;
+    };
+
+public:
+    MCHandref(MCNameRef name);
+    ~MCHandref(void);
+    
+    MCParameter** getparams(void) { return &params; }
+    
+    void parse(void);
+    void exec(MCExecContext& ctxt, uint2 line, uint2 pos, bool is_function);
+};
+
+class MCComref : public MCStatement
+{
+    MCHandref command;
+public:
+    MCComref(MCNameRef n);
+    virtual ~MCComref();
+    virtual Parse_stat parse(MCScriptPoint &);
+    virtual void exec_ctxt(MCExecContext&);
+};
+
+class MCFuncref : public MCExpression
+{
+    MCHandref function;
+public:
+    MCFuncref(MCNameRef);
+    virtual ~MCFuncref();
+    virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+    void eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

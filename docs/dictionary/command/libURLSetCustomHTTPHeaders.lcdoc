@@ -38,13 +38,13 @@ Whenever LiveCode contacts a web server (with the load <command>, the
 Usually, the <headersList> will include multiple lines. A typical
 <headersList> might look like the following example:
 
-GET /catsdata/coldat.dat HTTP/1.1
-Connection:Close
-User-Agent: My Fancy Browser
-Host:www.cats-training.com
-Accept:image/gif, image/x-xbitmap, image/jpeg, image/png, */*
-Accept-Encoding: gzip
-Accept-Charset: iso-8859-1,*,utf-8
+    GET /catsdata/coldat.dat HTTP/1.1
+    Connection:Close
+    User-Agent: My Fancy Browser
+    Host:www.cats-training.com
+    Accept:image/gif, image/x-xbitmap, image/jpeg, image/png, */*
+    Accept-Encoding: gzip
+    Accept-Charset: iso-8859-1,*,utf-8
 
 The <libURLSetCustomHTTPHeaders> setting takes effect for the next
 <HTTP> transaction. After the transaction, the headers are set back to

@@ -1311,7 +1311,7 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
             MCAutoValueRef t_value;
             MCAutoStringRef t_value_string;
             
-            if (!t_param_ptr->eval(ctxt, &t_value) ||
+            if (!t_param_ptr->eval_argument(ctxt, &t_value) ||
                 !ctxt . ConvertToString(*t_value, &t_value_string) ||
                 !MCListAppend(*t_param_list, *t_value_string))
                 goto cleanup;

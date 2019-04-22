@@ -551,7 +551,7 @@ static void free_ntoa_message_callback_info(MCNToAMessageCallbackInfo *t_info)
 		MCValueRelease(t_info->message);
 		MCValueRelease(t_info->name);
 		MCValueRelease(t_info->list);
-		MCMemoryDelete(t_info);
+		MCMemoryDestroy(t_info);
 	}
 }
 
@@ -600,7 +600,7 @@ bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, M
 	else
 	{
 		MCNToAMessageCallbackInfo *t_info = NULL;
-		t_success = MCMemoryNew(t_info);
+		t_success = MCMemoryCreate(t_info);
 		if (t_success)
 		{
 			t_info->message = MCValueRetain(p_message);
@@ -1472,6 +1472,8 @@ MCSocket::~MCSocket()
 	deletewrites();
 
 	delete rbuffer;
+    
+    delete[] error;
 	
 	// MM-2014-06-13: [[ Bug 12567 ]] Added support for specifying an end host name to verify against.
 	MCValueRelease(endhostname);

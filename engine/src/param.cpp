@@ -90,8 +90,6 @@ void MCParameter::setrect_argument(MCRectangle p_rect)
 
 void MCParameter::clear_argument(void)
 {
-    // AL-2014-09-17: [[ Bug 13465 ]] Delete container when clearing a parameter
-    delete container;
     container = nil;
 	MCExecTypeRelease(value);
 }
@@ -100,37 +98,33 @@ void MCParameter::clear_argument(void)
 
 bool MCParameter::eval(MCExecContext &ctxt, MCValueRef &r_value)
 {
-    if (value . type != kMCExecValueTypeNone)
+    if (exp != nullptr)
     {
-        if (MCExecTypeIsValueRef(value . type))
-            return MCValueCopy(value . valueref_value, r_value);
-        else
+        if (!ctxt . EvalOptionalExprAsValueRef(exp, (MCValueRef)kMCEmptyString, EE_PARAM_BADEXP, r_value))
         {
-            MCExecValue t_value;
-            MCExecTypeCopy(value, t_value);
-            MCExecTypeConvertToValueRefAndReleaseAlways(ctxt, t_value . type, &t_value, r_value);
-            return true;
+            return false;
         }
     }
     else
-        return ctxt . EvalOptionalExprAsValueRef(exp, (MCValueRef)kMCEmptyString, EE_PARAM_BADEXP, r_value);
+    {
+        r_value = MCValueRetain(kMCEmptyString);
+    }
+    return true;
 }
 
 bool MCParameter::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 {
-    if (value . type != kMCExecValueTypeNone)
-        MCExecTypeCopy(value, r_value);
-    else
-    {        
-        if (exp != nil)
+    if (exp != nil)
+    {
+        if (!ctxt . EvaluateExpression(exp, EE_PARAM_BADEXP, r_value))
         {
-            if (!ctxt . EvaluateExpression(exp, EE_PARAM_BADEXP, r_value))
-                return false;
+            return false;
         }
-        else
-            MCExecTypeSetValueRef(r_value, MCValueRetain(kMCEmptyString));
     }
-    
+    else
+    {
+        MCExecTypeSetValueRef(r_value, MCValueRetain(kMCEmptyString));
+    }
     return true;
 }
 
@@ -179,6 +173,27 @@ bool MCParameter::eval_argument_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
 MCContainer *MCParameter::eval_argument_container(void)
 {
 	return container;
+}
+
+unsigned MCParameter::count_containers(void)
+{
+    /* Loop through the parameter list (starting at this node) and count the
+     * number of parameters with expressions which have a root variable - these
+     * require containers when being passed to handlers. */
+    unsigned t_count = 0;
+    for(MCParameter *t_param = this; t_param != nullptr; t_param = t_param->next)
+    {
+        if (t_param->exp == nullptr)
+        {
+            continue;
+        }
+        
+        if (t_param->exp->getrootvarref() != nullptr)
+        {
+            t_count += 1;
+        }
+    }
+    return t_count;
 }
 
 /////////
