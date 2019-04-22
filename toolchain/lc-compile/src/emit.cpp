@@ -441,6 +441,9 @@ static struct { MCScriptForeignPrimitiveType type; const char *ctype; } s_primit
     DEFINE_PRIMITIVE_TYPE_MAPPING(CDouble, double)
     DEFINE_PRIMITIVE_TYPE_MAPPING(SInt, int32_t)
     DEFINE_PRIMITIVE_TYPE_MAPPING(UInt, uint32_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(NaturalUInt, natural_uint_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(NaturalSInt, natural_sint_t)
+    DEFINE_PRIMITIVE_TYPE_MAPPING(NaturalFloat, natural_float_t)
 };
 
 #undef DEFINE_PRIMITIVE_TYPE_MAPPING
@@ -584,7 +587,16 @@ static bool EmitEmittedBuiltins(void)
 
 static const char *kOutputCDefinitions =
     "#include <stdint.h>\n"
-    "#include <stddef.h>\n"
+    "#include <stddef.h>\n\n"
+    "#if UINTPTR_MAX == 0xffffffff\n"
+    "typedef uint32_t natural_uint_t;\n"
+    "typedef int32_t natural_sint_t;\n"
+    "typedef float natural_float_t;\n"
+    "#elif UINTPTR_MAX == 0xffffffffffffffff\n"
+    "typedef uint64_t natural_uint_t;\n"
+    "typedef int64_t natural_sint_t;\n"
+    "typedef double natural_float_t;\n"
+    "#endif\n\n"
     "typedef void (*__builtin_shim_type)(void*, void**);\n"
     "struct __builtin_module_info\n"
     "{\n"
