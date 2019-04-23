@@ -43,7 +43,8 @@ the <stack> is restored to the value it had immediately before the
 
 When a <stack> is full screen, all <decorations> are removed, however
 the <decorations> property still reports the <decorations> that the
-<stack> had prior to being made full screen. The <operty)ions.
+<stack> had prior to being made full screen. The decorations are
+restored when a stack is made non-full screen.
 
 Description:
 Use the <fullscreen> property to change a <stack|stack's> size to make

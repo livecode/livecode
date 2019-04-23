@@ -20,8 +20,8 @@ Example:
 select fifth line of field "Address Info"
 
 Description:
-Use the <fifth> <keyword> in an <object reference> or <chunk
-expression>. 
+Use the <fifth> <keyword> in an <object reference> or 
+<chunk expression>. 
 
 The <fifth> <keyword> can be used to specify any <object(glossary)>
 whose <number> <property> is 5. It can also be used to designate the

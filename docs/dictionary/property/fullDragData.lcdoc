@@ -7,7 +7,7 @@ Syntax: set the fullDragData[<key>] to <data>
 Syntax: set the fullDragData to empty
 
 Summary:
-provides access to the contents of the <drag-and-drop clipboard>.
+Provides access to the contents of the <drag-and-drop> <clipboard>.
 
 Introduced: 8.0
 
@@ -64,7 +64,8 @@ will cause the rest to be automatically generated and added.
 If you require lower-level access to the drag-and-drop clipboard, see
 the <rawDragData> <property>.
 
-References: dragData (property), rawDragData (property)
+References: dragData (property), rawDragData (property), 
+clipboard (glossary), drag and drop (glossary)
 
 Tags: ui, drag-and-drop
 

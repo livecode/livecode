@@ -80,7 +80,7 @@ The fontNames (printer) form was introduced in version 2.0.
 Changes:
 The fontNames () form was introduced to iOS in version 4.5.3.
 
-References: revFontLoad (command), function (control structure),
+References: function (control structure),
 fontStyles (function), font (glossary), return (glossary), line (keyword)
 
 Tags: ui
