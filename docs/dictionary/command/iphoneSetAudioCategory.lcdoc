@@ -21,7 +21,7 @@ iphoneSetAudioCategory "play and record"
 
 Parameters:
 category (enum):
-The audio category to use. One of:
+The audio category to use.
 
 -   "ambient": Audio from other applications can mix into the sound of
     the running application. Audio is silenced by locking the screen or

@@ -51,7 +51,8 @@ not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
 References: QuickTime VR (glossary), message (glossary),
-nodeChanged (message), QTDebugStr (message), hotspots (property)
+nodeChanged (message), QTDebugStr (message), hotspots (property),
+dontUseQT (property), dontUseQTEffects (property)
 
 Tags: multimedia
 
