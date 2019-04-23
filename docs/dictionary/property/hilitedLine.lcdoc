@@ -46,7 +46,7 @@ integer (glossary), list field (glossary), chunk expression (glossary),
 field (keyword), line (keyword), lines (keyword), selected (property),
 listBehavior (property), toggleHilites (property),
 threeDHilite (property), noncontiguousHilites (property),
-multipleLines (property)
+multipleHilites (property)
 
 Tags: ui
 

@@ -37,19 +37,19 @@ and left edges (reversing the normal effect), when the <button(keyword)>
 is <highlight|highlighted>.
 
 If the <lookAndFeel> <property> is "Macintosh", the <hiliteBorder>
-<property> has no effect on <button(keyword)> styles other than <radio
-button|radio buttons> and <checkbox|checkboxes>.
+<property> has no effect on <button(keyword)> styles other than 
+<radio button|radio buttons> and <checkbox|checkboxes>.
 
 If the button's <threeD> <property> is false, the <hiliteBorder>
 <property> has no effect.
 
 References: hilite (command), property (glossary), highlight (glossary),
-style (glossary), topColor (glossary), appearance (glossary),
+appearance (glossary),
 checkbox (glossary), radio button (glossary), effective (keyword),
 button (keyword), button (object), hilite (property),
 topPattern (property), bottomColor (property), topColor (property),
 armed (property), bottomPattern (property), lookAndFeel (property),
-threeD (property)
+threeD (property), topColor (property)
 
 Tags: ui
 

@@ -24,8 +24,9 @@ Use the <hand> constant to set the cursor to a pointing hand shape.
 
 The following two statements are equivalent:
 
-set the cursor to hand
-set the cursor to 8
+    set the cursor to hand
+    
+    set the cursor to 28
 
 However, the first is easier to read and understand in LiveCode.
 

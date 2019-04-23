@@ -73,7 +73,8 @@ References: disable (command), answer effect (command), show (command),
 hide menubar (command), visual effect (command), object (glossary), 
 command (glossary), property (glossary), black (keyword), stack (object), 
 showPict (property), imageSource (property), visible (property), 
-showInvisibles (property)
+showInvisibles (property), dontUseQT (property), 
+dontUseQTEffects (property)
 
 Tags: ui
 
