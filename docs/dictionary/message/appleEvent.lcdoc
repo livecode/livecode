@@ -47,9 +47,10 @@ or one that you want to handle specially.
 Use the request appleEvent <command> to obtain the data associated with
 an <Apple event>.
 
-For more information about Apple events, see Apple Computer's technical
-documentation, Inside Macintosh: Interapplication Communication, located
-at http://developer.apple.com/documentation/mac/IAC/IAC-2.html.
+For more information about Apple events, refer to the section entitled
+"Apple Events Sent by the Mac OS" in the technical documentation 
+located on [Apple's website]
+(https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ScriptableCocoaApplications/SApps_handle_AEs/SAppsHandleAEs.html#//apple_ref/doc/uid/20001239-1117769)
 
 References: send to program (command), flushEvents (function),
 application (glossary), current card (glossary), Apple Event (glossary),

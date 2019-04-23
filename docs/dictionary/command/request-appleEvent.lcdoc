@@ -70,9 +70,10 @@ specify which pieces you want to get.
   data. 
 
 
-For more information about Apple events, see Apple Computer's technical
-documentation, Inside Macintosh: Interapplication Communication, located
-at http://developer.apple.com/techpubs/mac/IAC/IAC-2.html.
+For more information about Apple events, refer to the section entitled 
+"Apple Events Sent by the Mac OS" in the technical documentation section 
+located on [Apple's website]
+(https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ScriptableCocoaApplications/SApps_handle_AEs/SAppsHandleAEs.html#//apple_ref/doc/uid/20001239-1117769).
 
 References: send to program (command), handler (glossary),
 Apple Event (glossary), variable (glossary), command (glossary),
