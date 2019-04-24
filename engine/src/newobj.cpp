@@ -164,7 +164,9 @@ MCStatement *MCN_new_statement(int2 which)
 		return new MCLocalVariable;
 	case S_LOCK:
 		return new MCLock;
-	case S_MARK:
+    case S_LOG:
+        return new MCLogCmd;
+    case S_MARK:
 		return new MCMarkCommand;
 	case S_MODAL:
 		return new MCModal;

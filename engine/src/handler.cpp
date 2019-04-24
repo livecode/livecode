@@ -169,8 +169,9 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	
 	const LT *te;
 	// MW-2010-01-08: [[Bug 7792]] Check whether the handler name is a reserved function identifier
+    // special case log command is a permitted handler name
 	if (t_type != ST_ID ||
-			sp.lookup(SP_COMMAND, te) != PS_NO_MATCH ||
+			(sp.lookup(SP_COMMAND, te) != PS_NO_MATCH && te -> which != S_LOG) ||
 			(sp.lookup(SP_FACTOR, te) != PS_NO_MATCH &&
 			te -> type == TT_FUNCTION))
 	{

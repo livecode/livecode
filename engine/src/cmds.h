@@ -1020,6 +1020,26 @@ public:
     virtual void exec_ctxt(MCExecContext &ctxt);
 };
 
+class MCLogCmd: public MCStatement
+{
+    MCParameter *params;
+    struct
+    {
+        unsigned container_count : 16;
+    };
+    
+public:
+    MCLogCmd(void)
+    {
+        params = nullptr;
+        container_count = 0;
+    }
+    ~MCLogCmd(void);
+    
+    virtual Parse_stat parse(MCScriptPoint& sp);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+};
+
 class MCFocus : public MCStatement
 {
 	MCChunk *object;
