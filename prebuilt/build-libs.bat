@@ -114,7 +114,12 @@ IF %ARCH%==x86 (
 	SET ARCH_STRING=amd64
 )
 
-SET VSCONFIGTOOL="%ProgramFiles(x86)%\Microsoft Visual Studio %TOOL%.0\VC\vcvarsall.bat"
+IF %TOOL%==15 (
+	REM Look for build tools within VS 2017 folder
+	SET VSCONFIGTOOL="%ProgramFiles(x86)%\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvarsall.bat"
+) ELSE (
+	SET VSCONFIGTOOL="%ProgramFiles(x86)%\Microsoft Visual Studio %TOOL%.0\VC\vcvarsall.bat"
+)
 
 REM Ensure the desired vsvarsall.bat file exists for the chosen options
 IF NOT EXIST %VSCONFIGTOOL% (
