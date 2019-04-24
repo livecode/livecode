@@ -97,6 +97,7 @@ extern MCExecContext *MCexecutioncontexts[MAX_CONTEXTS];
 extern uint2 MCnexecutioncontexts;
 extern uint2 MCdebugcontext;
 extern Boolean MCmessagemessages;
+extern MCNameRef MClogmessage;
 
 struct MCExecValue;
 

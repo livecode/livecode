@@ -1,0 +1,47 @@
+Name: logMessage
+
+Type: property
+
+Syntax: set the logMessage to <handlerName>
+
+Summary:
+The name of the handler that is called by the <log> command.
+
+Introduced: 9.5
+
+OS: mac, windows, linux, ios, android, html5
+
+Platforms: desktop, server, mobile
+
+Example:
+on preOpenStack
+   -- uBuildMode property set before building standalone
+   if the uBuildMode of this stack is "release" then
+      set the logMessage to empty
+   end if
+   
+   loadResources
+end preOpenStack
+
+command loadResources
+   log "loading resources"
+end loadResources
+
+on log pInfo
+   -- unhandled put will go to system logs
+   put pInfo
+end log
+
+Value:
+The <logMessage> is the name of the handler called by the <log> command. The
+default <logMessage> is `log`. If set to empty then the <log> command does not
+invoke any handler or evaluate parameters, therefore, allowing for many logs to
+be added to scripts for development and an easy low-cost method to turn the
+logging off for a release build. The <logMessage> may be set to any handler name,
+however, if the handler is not in the message path then use of the <log> command
+will throw a `can't find handler` error.
+
+References: log (command), put (command), msgChanged (message)
+
+Tags: debugging
+

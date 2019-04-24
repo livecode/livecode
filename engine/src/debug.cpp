@@ -67,6 +67,7 @@ MCExecContext *MCexecutioncontexts[MAX_CONTEXTS];
 uint2 MCnexecutioncontexts = 0;
 uint2 MCdebugcontext = MAXUINT2;
 Boolean MCmessagemessages = False;
+MCNameRef MClogmessage;
 
 ////////////////////////////////////////////////////////////////////////////////
 

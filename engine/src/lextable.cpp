@@ -1173,6 +1173,7 @@ const LT factor_table[] =
         {"lockupdates", TT_PROPERTY, P_LOCK_UPDATES},
         {"log10", TT_FUNCTION, F_LOG10},
         {"log2", TT_FUNCTION, F_LOG2},
+        {"logmessage", TT_PROPERTY, P_LOG_MESSAGE},
         {"long", TT_PROPERTY, P_LONG},
         {"longfilepath", TT_FUNCTION, F_LONG_FILE_PATH},
         {"longwindowtitles", TT_PROPERTY, P_LONG_WINDOW_TITLES},
