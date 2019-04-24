@@ -1,0 +1,18 @@
+#!
+
+set the logMessage to $0
+log $1
+quit 0
+
+command log pValue
+    write "Error: this should not be called" & return to stderr
+    quit 1
+end log
+
+private command logPublic pValue
+    write pValue & return to stdout
+end logPublic
+
+private command logPrivate pValue
+    write pValue & return to stdout
+end logPrivate
