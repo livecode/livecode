@@ -24,6 +24,7 @@ case $(uname -m) in
 esac
 
 if [ -z "${XCODEBUILD}" ] ; then
+	export XCODEBUILD="/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild"
 	XCODE_DEVELOPER="/Applications/Xcode.app/Contents/Developer"
 else
 	# XCODEBUILD points to $XCODE_APP/Contents/Developer/usr/bin/xcodebuild
