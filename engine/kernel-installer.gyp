@@ -38,7 +38,7 @@
 			[
 				'kernel.gyp:kernel',
 				
-				'../thirdparty/libz/libz.gyp:libz',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 			],
 			
 			'includes':

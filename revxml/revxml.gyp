@@ -32,7 +32,7 @@
                 '../libexternal/libexternal.gyp:libExternal-symbol-exports',
 				'../thirdparty/libxml/libxml.gyp:libxml',
 				'../thirdparty/libxslt/libxslt.gyp:libxslt',
-				'../thirdparty/libz/libz.gyp:libz',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 			],
 			
 			'include_dirs':
@@ -82,7 +82,7 @@
                 '../libexternal/libexternal.gyp:libExternal-symbol-exports',
 				'../thirdparty/libxml/libxml.gyp:libxml',
 				'../thirdparty/libxslt/libxslt.gyp:libxslt',
-				'../thirdparty/libz/libz.gyp:libz',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 			],
 			
 			'include_dirs':

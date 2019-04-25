@@ -57,11 +57,7 @@
 				'../prebuilt/libcurl.gyp:libcurl',
 				'../prebuilt/libopenssl.gyp:libopenssl',
 				
-				'../thirdparty/libgif/libgif.gyp:libgif',
-				'../thirdparty/libjpeg/libjpeg.gyp:libjpeg',
-				'../thirdparty/libpcre/libpcre.gyp:libpcre',
-				'../thirdparty/libpng/libpng.gyp:libpng',
-				'../thirdparty/libz/libz.gyp:libz',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 				
 				'engine-common.gyp:quicktime_stubs',
 				

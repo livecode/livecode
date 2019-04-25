@@ -14,8 +14,8 @@
 			
 			'dependencies':
 			[
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 				'../libfoundation/libfoundation.gyp:libFoundation',
-				'../thirdparty/libskia/libskia.gyp:libskia',
 			],
 			
 			'include_dirs':
@@ -48,21 +48,6 @@
 				'src/drawing.cpp',
 			],
 			
-			'conditions':
-			[
-				[
-					'OS in ("emscripten", "android")',
-					{
-						'dependencies':
-						[
-							'../prebuilt/libicu.gyp:libicu',
-							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
-							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
-						],
-					},
-				],
-			],
-
 			'target_conditions':
 			[
 				[
