@@ -89,4 +89,33 @@ Context object.
 public handler ApplicationContext() returns JObject
 	return _JNI_GetEngineContext(_JNI_GetAndroidEngine())
 end handler
+
+__safe foreign handler _JNI_CreateContextThemeWrapper(in pContext as JObject, in pThemeId as JInt) returns JObject \
+	binds to "java:android.view.ContextThemeWrapper>new(Landroid/content/Context;I)"
+	
+__safe foreign handler _JNI_DefaultDeviceTheme() returns JInt \
+	binds to "java:android.R$style>get.Theme_DeviceDefault()I!static"
+	
+/**
+Summary: Get a Context wrapper with the default device theme
+
+Example:
+	__safe foreign handler _JNI_CreateButton(in pContext as JObject) returns JObject \
+		binds to "java:android.widget.Button>new(Landroid/content/Context;)?ui"
+
+	handler NativeButtonViewDefaultTheme() returns JObject
+		return _JNI_CreateButton(DefaultDeviceThemeContext())
+	end handler
+
+Description:
+Use the <DefaultDeviceThemeContext> handler to fetch a Context object
+that wraps the application context, but with the default device theme.
+
+This is useful when creating widgets that should match the default theme
+of whatever device the app is being run on.
+*/
+public handler DefaultDeviceThemeContext() returns JObject
+	return _JNI_CreateContextThemeWrapper(ApplicationContext(), \
+		_JNI_DefaultDeviceTheme())
+end handler
 end module
