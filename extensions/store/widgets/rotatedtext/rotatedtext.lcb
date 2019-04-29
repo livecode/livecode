@@ -1,0 +1,152 @@
+/**
+A rotated text control. A rotated text control displays text rotated to a given number of degrees. O degrees being unrotated.
+
+Name: mouseUp
+Type: message
+Syntax: on mouseUp
+
+Summary:
+The <mouseUp> message is sent when the widget is clicked.
+
+Name: foregroundColor
+Type: property
+
+Syntax: set the foregroundColor of <widget> to <pColor>
+Syntax: get the foregroundColor of <widget>
+
+Summary: Sets the text color of the widget
+
+Description:
+Use the <foregroundColor> property to control the text color of the widget.
+**/
+widget com.livecode.widget.rotatedtext
+
+use com.livecode.canvas
+use com.livecode.widget
+use com.livecode.engine
+use com.livecode.library.widgetutils
+
+metadata title is "Rotated Text"
+metadata author is "LiveCode"
+metadata version is "1.0.0"
+metadata svgicon is "m 56.934996,65.591746 -1.943969,1.943969 4.797801,4.797801 -0.723507,0.723507 -4.797801,-4.7978 -1.943968,1.943967 -0.643117,-0.643117 4.611444,-4.611444 z m 6.5,-0.5 -3.007304,3.007304 q 0.376371,0.376371 0.771011,0.544459 0.390986,0.164432 0.767356,0.146161 0.365407,-0.01462 0.712544,-0.186358 0.350791,-0.175395 0.665042,-0.489646 0.416564,-0.416564 0.67235,-1.001215 0.255786,-0.591961 0.274055,-0.93179 l 0.03654,-0.03654 0.749086,0.749086 q -0.200974,0.4933 -0.464067,0.953713 -0.263091,0.460414 -0.661386,0.858708 -1.015834,1.015834 -2.133981,1.037757 -1.121802,0.01827 -2.133982,-0.993908 -1.001216,-1.001217 -1.045064,-2.133981 -0.04019,-1.136417 0.8514,-2.028011 0.82582,-0.825821 1.753955,-0.789282 0.93179,0.03289 1.81973,0.920828 z m -1.194882,0.14251 q -0.54448,-0.537125 -1.11084,-0.56273 -0.562726,-0.02923 -1.110838,0.51888 -0.551765,0.551766 -0.55542,1.205844 2e-6,0.650427 0.43849,1.176614 z m 7.4,-2.6 -0.866015,0.866015 -2.725939,-0.409255 0.401946,2.733248 -0.800242,0.800241 -0.442143,-3.628495 -3.624843,-0.467721 0.866017,-0.866017 2.693053,0.390988 -0.387331,-2.69671 0.803896,-0.803895 0.405605,3.613879 z m 3.2,-2.8 q -0.142507,0.244826 -0.33983,0.507917 -0.193665,0.259441 -0.372715,0.438491 -0.624845,0.624845 -1.286232,0.613884 -0.661389,-0.01096 -1.403165,-0.75274 l -2.170521,-2.170521 -0.464068,0.464068 -0.577344,-0.577344 0.464068,-0.464068 -1.172958,-1.172958 0.686965,-0.686965 1.172958,1.172958 1.417782,-1.417782 0.577344,0.577344 -1.417782,1.417782 1.859923,1.859924 q 0.321559,0.321559 0.518871,0.489653 0.19366,0.164442 0.43849,0.233863 0.226553,0.06577 0.434835,-0.0037 0.208283,-0.07673 0.496955,-0.365405 0.168088,-0.168087 0.303287,-0.398294 0.131547,-0.233865 0.17905,-0.347138 l 0.03654,-0.03654 z"
+
+private variable mRotation as Real
+private variable mContent as String
+private variable mFormattedWidth as Real
+private variable mFormattedHeight as Real
+
+/**
+Syntax: set the rotation of <widget> to <pDegrees>
+Syntax: get the rotation of <widget>
+
+Summary: The number of degrees the text displayed in the widget is rotated by.
+
+Description:
+Use the <rotation> property to set the amount the text displayed in the widget is rotated by. The default is 0 degrees which is unrotated, horizontal text. The etxt is rotated in a clockwise direction.
+**/
+property "rotation" get mRotation set setRotation
+metadata rotation.label is "Rotation"
+metadata rotation.editor is "com.livecode.pi.number"
+metadata rotation.default is "0"
+metadata rotation.step is "1"
+metadata rotation.min is "0"
+metadata rotation.max is "359"
+
+/**
+Syntax: set the content of <widget> to <pText>
+Syntax: get the content of <widget>
+
+Summary: The text to be displayed in the widget.
+
+Description:
+Use the <content> property to set the text that is displayed in the widgtet. The default text is "Default text".
+**/
+property "content" get mContent set setContent
+metadata content.editor is "com.livecode.pi.string"
+metadata content.default is "Default text"
+metadata content.label is "Content"
+--metadata content.user_visible is "false"
+
+metadata foregroundColor.editor is "com.livecode.pi.color"
+metadata foregroundColor.default is ""
+metadata foregroundColor.section is "Colors"
+metadata foregroundColor.label is "Text fill"
+
+/**
+Syntax: get the formattedWidth of <widget>
+
+Summary: Reports the width needed by the widget to display the full, rotated text.
+
+Description:
+Use the <formattedWidth> property to find the amount of space needed by the widget to display its full contents without scrolling.
+**/
+property "formattedWidth" get mFormattedWidth
+metadata formattedWidth.user_visible is "false"
+
+/**
+Syntax: get the formattedHeight of <widget>
+
+Summary: Reports the height needed by the widget to display the full, rotated text.
+
+Description:
+Use the <formattedHeight> property to find the amount of space needed by the widget to display its full contents without scrolling.
+**/
+property "formattedHeight" get mFormattedHeight
+metadata formattedHeight.user_visible is "false"
+
+public handler OnCreate()
+   put "Default text" into mContent
+   put 0 into mRotation
+end handler
+
+public handler OnPaint()
+   variable tHeight as Real
+   variable tWidth as Real
+   put my width into tWidth
+   put my height into tHeight
+
+  set the font of this canvas to my font
+  set the paint of this canvas to my foreground paint
+
+  rotate this canvas by mRotation
+
+  variable tRectangle as Rectangle
+  variable tPath as Path
+  put rectangle path of rectangle [0,0,tWidth,tHeight] into tPath
+  rotate tPath by (mRotation * -1)
+  put the bounding box of tPath into tRectangle
+  fill text mContent at center of tRectangle on this canvas
+
+  variable tBounds as Rectangle
+  put the bounds of text mContent on this canvas into tBounds
+  put the width of tBounds into mFormattedWidth
+  put the height of tBounds into mFormattedHeight
+end handler
+
+public handler OnSave(out rProperties as Array)
+	put the empty array into rProperties
+	put mContent into rProperties["content"]
+	put mRotation into rProperties["rotation"]
+end handler
+
+public handler OnLoad(in pProperties as Array)
+	put pProperties["content"] into mContent
+	put pProperties["rotation"] into mRotation
+end handler
+
+public handler setRotation(in pRotation as Number) returns nothing
+	put pRotation into mRotation
+	redraw all
+end handler
+
+public handler setContent(in pText as String) returns nothing
+	put pText into mContent
+	redraw all
+end handler
+
+public handler OnMouseUp()
+   post "mouseUp"
+end handler
+
+end widget

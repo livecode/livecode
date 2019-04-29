@@ -41,7 +41,7 @@ private function _TestScriptForInclusion
    return textDecode(url("binfile:" & tExternalTest), "utf-8")
 end _TestScriptForInclusion
 
-on TestStandaloneInclusions
+on TestStandaloneExtensionInclusions
    local tDir
    set the itemdelimiter to slash
    set the defaultfolder to item 1 to -2 of the filename of me
@@ -54,7 +54,7 @@ on TestStandaloneInclusions
    end repeat
    
    revDeleteFolder tDir
-end TestStandaloneInclusions
+end TestStandaloneExtensionInclusions
 
 private command _TestBuildStandaloneWithWidget pDir, pWidget
    local tStackName, tStackID
@@ -73,9 +73,28 @@ private command _TestBuildStandaloneWithWidget pDir, pWidget
    
    set the script of tStackId to tScript
    
-   set the cWidgetKind of tStackID to pWidget
-   set the cRevStandaloneSettings["extensions"] of tStackID to pWidget
+   set the cWidgetKind of tStackID to pWidget  
    
+   local tExtensions
+   put pWidget into tExtensions
+   
+   -- Work around bug 21153
+   local tFile, tSource, tRegex, tComposed
+   put revIDEExtensionProperty(pWidget, "source_file") into tFile
+   put revIDEExtensionProperty(pWidget, "install_path") & slash \
+      before tFile
+   put revIDEUTF8FileContents(tFile) into tSource
+   put ".*a new widget *" & quote & "([^" & quote & "]+)" & quote & ".*" into tRegex
+   if matchText(tSource, tRegex) then 
+      repeat for each line tLine in tSource
+         if matchText(tLine, tRegex, tComposed) then
+         	put return & tComposed after tExtensions
+         end if
+      end repeat
+   end if
+   
+   set the cRevStandaloneSettings["extensions"] of tStackID to tExtensions
+      
    local tDesc
    put "standalone with" && pWidget && "startup" into tDesc
 

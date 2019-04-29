@@ -15,13 +15,16 @@
 		{
 			'target_name': 'check',
 			'type': 'none',
-			'dependencies': [ 'cpptest-run-all', ],
+			'dependencies':
+			[
+				'cpptest-run-all',
+			],
 		},
 
 		{
 			'target_name': 'LiveCode-all',
 			'type': 'none',
-			
+
 			'dependencies':
 			[
 				# Engines
