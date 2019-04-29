@@ -15,7 +15,7 @@ command toolsBuilderRun pPlatform, pEdition, pVersion
    -- If on windows or linux, we can't do anything macosxy due to lack of lipo/strip :o(
    local tEngineFolders
 
-   get "windows linux-x86 linux-x86_64 linux-armv6hf macosx ios android-armeabi-v7a android-arm64-v8a android-x86 android-x86_64 emscripten"
+   get "win-x86 win-x86_64 linux-x86 linux-x86_64 linux-armv6hf macosx ios android-armeabi-v7a android-arm64-v8a android-x86 android-x86_64 emscripten"
       
    repeat for each word tPlatform in it
       builderFetchEngine pVersion, tPlatform
@@ -112,9 +112,6 @@ private command toolsBuilderFilterExternals pFolder, pPlatform
       end repeat
    end if
 
-   -- remove windows 64 bit builds only required for filemaker
-   get shell("rm -fv *x86_64.dll")
-   
    -- If the directory contains no code any more, remove it
    put the files & return & the folders into tFiles
    filter lines of tFiles with regex pattern "^.*\.(so|dylib|bundle|dll|lcext)$"
@@ -195,7 +192,8 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureSource tPackager, "linux-x86", pEngineFolders["linux-x86"]
    packageCompilerConfigureSource tPackager, "linux-x86_64", pEngineFolders["linux-x86_64"]
    packageCompilerConfigureSource tPackager, "linux-armv6-hf", pEngineFolders["linux-armv6hf"]
-   packageCompilerConfigureSource tPackager, "windows", pEngineFolders["windows"]
+   packageCompilerConfigureSource tPackager, "win-x86", pEngineFolders["win-x86"]
+   packageCompilerConfigureSource tPackager, "win-x86_64", pEngineFolders["win-x86_64"]
    packageCompilerConfigureSource tPackager, "ios", pEngineFolders["ios"]
    packageCompilerConfigureSource tPackager, "android-armeabi-v7a", pEngineFolders["android-armeabi-v7a"]
    packageCompilerConfigureSource tPackager, "android-arm64-v8a", pEngineFolders["android-arm64-v8a"]
@@ -223,6 +221,8 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    end if
    if pPlatform begins with "linux" then
       packageCompilerConfigureVariable tPackager, "TargetPlatform", "linux"
+   else if pPlatform begins with "win" then
+      packageCompilerConfigureVariable tPackager, "TargetPlatform", "windows"
    else
       packageCompilerConfigureVariable tPackager, "TargetPlatform", pPlatform
    end if
@@ -231,11 +231,11 @@ private command toolsBuilderMakePackage pVersion, pEdition, pPlatform, pEngineFo
    packageCompilerConfigureVariable tPackager, "EscapedVersionTag", tVersionEscaped
    packageCompilerConfigureVariable tPackager, "ProductBranch", char 1 to 3 of pVersion
    packageCompilerConfigureVariable tPackager, "TargetArchitectures", "i386"
-   if pPlatform is "linux-x86" then
+   if pPlatform ends with "-x86" then
       packageCompilerConfigureVariable tPackager, "TargetArchitecture", "x86"
-   else if pPlatform is "linux-x86_64" then
+   else if pPlatform ends with "-x86_64" then
       packageCompilerConfigureVariable tPackager, "TargetArchitecture", "x86_64"
-   else if pPlatform is "linux-armv6hf" then
+   else if pPlatform ends with "-armv6hf" then
       packageCompilerConfigureVariable tPackager, "TargetArchitecture", "armv6-hf"
    end if
    
@@ -423,7 +423,8 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
    put return & "insert script of stack" && quote & "InstallerUtilities" & quote && "into back" after tParams["startup_script"]
    
    switch pPlatform
-      case "windows"
+      case "win-x86"
+      case "win-x86_64"
          -- Process the manifest appropriately
          local tManifestFile
          get windowsManifest()
@@ -434,7 +435,7 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          put tManifestFile into tParams["manifest"]
          
          -- First we deploy the installer unsigned
-         put abstractPinFile(builderInstallerEngine("windows")) into tParams["engine"]
+         put abstractPinFile(builderInstallerEngine(pPlatform)) into tParams["engine"]
          put tInstallerStackfile into tParams["stackfile"] 
          put pPackageFile into tParams["payload"]
          put tOutputFileStub & ".unsigned.exe" into tParams["output"]
@@ -938,8 +939,10 @@ function getInstallerFilenameStub pVersion, pPlatform, pEdition
    replace "." with "_" in pVersion
    if pPlatform is "macosx" then
       put "Mac" into pPlatform
-   else if pPlatform is "windows" then
-      put "Windows" into pPlatform
+   else if pPlatform is "win-x86" then
+      put "Windows-x86" into pPlatform
+   else if pPlatform is "win-x86_64" then
+      put "Windows-x86_64" into pPlatform
    else if pPlatform begins with "linux" then
       put "Linux" into pPlatform
    end if
@@ -956,8 +959,10 @@ function getDmgFilenameStub pVersion, pPlatform, pEdition
    replace "." with "_" in pVersion
    if pPlatform is "macosx" then
       put "Mac" into pPlatform
-   else if pPlatform is "windows" then
-      put "Windows" into pPlatform
+   else if pPlatform is "win-x86" then
+      put "Windows-x86" into pPlatform
+   else if pPlatform is "win-x86_64" then
+      put "Windows-x86_64" into pPlatform
    else if pPlatform is "linux" or pPlatform is "linux-x64" or pPlatform is "linux-armv6hf" then
       put "Linux" into pPlatform
    end if

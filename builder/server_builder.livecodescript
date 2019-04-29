@@ -36,7 +36,7 @@ command serverBuilderRun pPlatform, pEdition
    -- Clean up any existing output file
    delete file tOutputFile
    
-   if pPlatform is "windows" then
+   if pPlatform begins with "win-" then
       repeat for each word tExternal in "revdb revzip revxml dbsqlite dbmysql dbpostgresql dbodbc"
          get "server-" & tExternal & ".dll"
          if there is not a file (tEngineFolder & slash & it) then
@@ -61,7 +61,7 @@ command serverBuilderRun pPlatform, pEdition
       end if
       
       local tExeExtension, tOutExeExtension
-      if pPlatform is "windows" then
+      if pPlatform begins with "win-" then
          put ".exe" into tExeExtension
          put ".exe" into tOutExeExtension
          --else if pPlatform is "linux" then
@@ -73,7 +73,7 @@ command serverBuilderRun pPlatform, pEdition
       end if
       
       local tLibExtension
-      if pPlatform is "windows" then
+      if pPlatform begins with "win-" then
          put ".dll" into tLibExtension
       else if pPlatform is "macosx" then
          put ".dylib" into tLibExtension
@@ -173,8 +173,10 @@ function getZipFilenameStub pVersion, pPlatform, pEdition
    replace "." with "_" in pVersion
    if pPlatform is "macosx" then
       put "Mac" into pPlatform
-   else if pPlatform is "windows" then
-      put "Windows" into pPlatform
+   else if pPlatform is "win-x86" then
+      put "Windows-x86" into pPlatform
+   else if pPlatform is "win-x86_64" then
+      put "Windows-x86_64" into pPlatform
    else if pPlatform is "linux-x86" then
       put "Linux" into pPlatform
    else if pPlatform is "linux-x86_64" then
