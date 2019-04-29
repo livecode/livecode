@@ -42,6 +42,12 @@ installer LiveCode
 			include Externals
 	with TargetFolder as [[ToolsFolder]]/Runtime/Windows/x86-32 do
 		set TargetPlatform to Windows
+		set TargetArchitecture to x86
+		include Runtime
+		include Externals
+	with TargetFolder as [[ToolsFolder]]/Runtime/Windows/x86-64 do
+		set TargetPlatform to Windows
+		set TargetArchitecture to x86_64
 		include Runtime
 		include Externals
 	with TargetFolder as [[ToolsFolder]]/Runtime/Linux/x86-32 do
@@ -492,10 +498,10 @@ component Toolchain.MacOSX
 
 component Toolchain.Windows
 	into [[ToolsFolder]]/Toolchain place
-		executable windows:lc-compile.exe as lc-compile.exe
-		executable windows:lc-run.exe as lc-run.exe
-		executable windows:lc-compile-ffi-java.exe as lc-compile-ffi-java.exe
-		rfolder windows:modules
+		executable win-[[TargetArchitecture]]:lc-compile.exe as lc-compile.exe
+		executable win-[[TargetArchitecture]]:lc-run.exe as lc-run.exe
+		executable win-[[TargetArchitecture]]:lc-compile-ffi-java.exe as lc-compile-ffi-java.exe
+		rfolder win-[[TargetArchitecture]]:modules
 
 component Toolchain.Linux
 	into [[ToolsFolder]]/Toolchain place
@@ -520,13 +526,13 @@ component Mobile.Linux
 
 component Engine.Windows
 	into [[TargetFolder]] place
-		executable windows:LiveCode[[EditionTagUpper]].exe as [[ProductName]].exe
-		executable windows:revpdfprinter.dll
-		executable windows:revsecurity.dll
+		executable win-[[TargetArchitecture]]:LiveCode[[EditionTagUpper]].exe as [[ProductName]].exe
+		executable win-[[TargetArchitecture]]:revpdfprinter.dll
+		executable win-[[TargetArchitecture]]:revsecurity.dll
 
 component Mobile.Windows
 	into "[[ToolsFolder]]/Externals" place
-		executable windows:revandroid.dll
+		executable win-[[TargetArchitecture]]:revandroid.dll
 
 //////////
 
@@ -571,13 +577,13 @@ component Runtime.Linux
 
 component Runtime.Windows
 	into [[TargetFolder]] place
-		executable windows:standalone[[BaseEditionTagLower]].exe as Standalone
-		file "windows:w32-manifest-template.xml"
-		file "windows:w32-manifest-template-dpiaware.xml"
-		file "windows:w32-manifest-template-trustinfo.xml"
+		executable win-[[TargetArchitecture]]:standalone[[BaseEditionTagLower]].exe as Standalone
+		file "win-[[TargetArchitecture]]:w32-manifest-template.xml"
+		file "win-[[TargetArchitecture]]:w32-manifest-template-dpiaware.xml"
+		file "win-[[TargetArchitecture]]:w32-manifest-template-trustinfo.xml"
 	into [[TargetFolder]]/Support place
-		executable windows:revpdfprinter.dll
-		executable windows:revsecurity.dll
+		executable win-[[TargetArchitecture]]:revpdfprinter.dll
+		executable win-[[TargetArchitecture]]:revsecurity.dll
 	into "[[TargetFolder]]/Support/Sample Icons" place
 		file "ide:Resources/Sample Icons/genericapp.ico"
 		file "ide:Resources/Sample Icons/genericdoc.ico"
@@ -812,10 +818,10 @@ component Externals.Linux
 
 component Externals.Windows
 	into [[TargetFolder]]/Externals place
-		executable windows:revspeech.dll
-		executable windows:revxml.dll
-		executable windows:revbrowser.dll
-		executable windows:revzip.dll
+		executable win-[[TargetArchitecture]]:revspeech.dll
+		executable win-[[TargetArchitecture]]:revxml.dll
+		executable win-[[TargetArchitecture]]:revbrowser.dll
+		executable win-[[TargetArchitecture]]:revzip.dll
 	declare external "Speech" using revspeech.dll
 	declare external "XML" using revxml.dll
 	declare external "Browser" using revbrowser.dll
@@ -856,26 +862,26 @@ component Externals.CEF.Linux
 
 component Externals.CEF.Windows
 	into [[TargetFolder]]/Externals/CEF place
-		executable windows:libbrowser-cefprocess.exe
-		executable windows:revbrowser-cefprocess.exe
-		executable windows:Externals/CEF/libcef.dll
-		executable windows:Externals/CEF/d3dcompiler_43.dll
-		executable windows:Externals/CEF/d3dcompiler_47.dll
-		executable windows:Externals/CEF/libEGL.dll
-		executable windows:Externals/CEF/libGLESv2.dll
-		executable windows:Externals/CEF/chrome_elf.dll
-		rfolder windows:Externals/CEF/locales
-		file windows:Externals/CEF/cef.pak
-		file windows:Externals/CEF/cef_100_percent.pak
-		file windows:Externals/CEF/cef_200_percent.pak
-		file windows:Externals/CEF/cef_extensions.pak
-		file windows:Externals/CEF/icudtl.dat
-		file windows:Externals/CEF/natives_blob.bin
-		file windows:Externals/CEF/snapshot_blob.bin
-		file windows:Externals/CEF/v8_context_snapshot.bin
+		executable win-[[TargetArchitecture]]:libbrowser-cefprocess.exe
+		executable win-[[TargetArchitecture]]:revbrowser-cefprocess.exe
+		executable win-[[TargetArchitecture]]:Externals/CEF/libcef.dll
+		executable win-[[TargetArchitecture]]:Externals/CEF/d3dcompiler_43.dll
+		executable win-[[TargetArchitecture]]:Externals/CEF/d3dcompiler_47.dll
+		executable win-[[TargetArchitecture]]:Externals/CEF/libEGL.dll
+		executable win-[[TargetArchitecture]]:Externals/CEF/libGLESv2.dll
+		executable win-[[TargetArchitecture]]:Externals/CEF/chrome_elf.dll
+		rfolder win-[[TargetArchitecture]]:Externals/CEF/locales
+		file win-[[TargetArchitecture]]:Externals/CEF/cef.pak
+		file win-[[TargetArchitecture]]:Externals/CEF/cef_100_percent.pak
+		file win-[[TargetArchitecture]]:Externals/CEF/cef_200_percent.pak
+		file win-[[TargetArchitecture]]:Externals/CEF/cef_extensions.pak
+		file win-[[TargetArchitecture]]:Externals/CEF/icudtl.dat
+		file win-[[TargetArchitecture]]:Externals/CEF/natives_blob.bin
+		file win-[[TargetArchitecture]]:Externals/CEF/snapshot_blob.bin
+		file win-[[TargetArchitecture]]:Externals/CEF/v8_context_snapshot.bin
 	into [[TargetFolder]]/Externals/CEF/swiftshader place
-		executable windows:Externals/CEF/swiftshader/libEGL.dll
-		executable windows:Externals/CEF/swiftshader/libGLESv2.dll
+		executable win-[[TargetArchitecture]]:Externals/CEF/swiftshader/libEGL.dll
+		executable win-[[TargetArchitecture]]:Externals/CEF/swiftshader/libGLESv2.dll
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -897,12 +903,12 @@ component Databases.Linux
 
 component Databases.Windows
 	into "[[TargetFolder]]/Externals" place
-		executable windows:revdb.dll
+		executable win-[[TargetArchitecture]]:revdb.dll
 	into "[[TargetFolder]]/Externals/Database Drivers" place
-		executable windows:dbmysql.dll
-		executable windows:dbodbc.dll
-		executable windows:dbpostgresql.dll
-		executable windows:dbsqlite.dll
+		executable win-[[TargetArchitecture]]:dbmysql.dll
+		executable win-[[TargetArchitecture]]:dbodbc.dll
+		executable win-[[TargetArchitecture]]:dbpostgresql.dll
+		executable win-[[TargetArchitecture]]:dbsqlite.dll
 	declare external "Database" using revdb.dll
 	declare dbdriver "MySQL" using dbmysql.dll
 	declare dbdriver "ODBC" using dbodbc.dll
@@ -977,7 +983,9 @@ component TimeZone
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder ios:iphoneos12.1/packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
-		rfolder windows:packaged_extensions/com.livecode.library.timezone/code
+		rfolder win-x86:packaged_extensions/com.livecode.library.timezone/code
+	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
+		rfolder win-x86_64:packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
 		rfolder linux-x86_64:packaged_extensions/com.livecode.library.timezone/code
 	into [[ToolsFolder]]/Extensions/com.livecode.library.timezone place
