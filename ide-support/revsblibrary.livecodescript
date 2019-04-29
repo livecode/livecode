@@ -709,7 +709,7 @@ function revFolderNameMakeLegal pName
 end revFolderNameMakeLegal
 
 // List of all desktop target platforms + architecture
-constant kDesktopTargets = "Windows,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
+constant kDesktopTargets = "Windows,Windows x86-64,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
 function revSBDesktopTargets
    return kDesktopTargets
 end revSBDesktopTargets
@@ -724,13 +724,15 @@ function revSBTargetToPlatform pTarget
       return "MacOSX"
    else if pTarget begins with "Linux" then
       return "Linux"
+   else if pTarget begins with "Windows" then
+      return "Windows"
    else
       return pTarget
    end if
 end revSBTargetToPlatform
 
 -- item 1 of the architectures should be the default architecture
-constant kWindowsArchitectures = "x86-32"
+constant kWindowsArchitectures = "x86-32,x86-64"
 constant kMacOSXArchitectures = "x86-32,x86-64"
 constant kLinuxArchitectures =  "x86-32,x86-64,armv6-hf"
 constant kAndroidArchitectures =  "armv7,arm64,x86,x86_64"
@@ -1017,6 +1019,11 @@ function revEngineCheck pEngine
             return there is a directory (tPath & "/Mac OS X/x86-32/Standalone.app")
          case "Windows"
             if there is a file (tPath & "/Windows/x86-32/Standalone") then
+               return true
+            end if
+            break
+         case "Windows x86-64"
+            if there is a file (tPath & "/Windows/x86-64/Standalone") then
                return true
             end if
             break
@@ -3005,6 +3012,9 @@ function revSBEnginePath pPlatform
             break
          case "Windows"
             return tRuntimePath & "/Windows/x86-32/Standalone"
+            break
+         case "Windows x86-64"
+            return tRuntimePath & "/Windows/x86-64/Standalone"
             break
          case "Linux"
             return tRuntimePath & "/Linux/x86-32/Standalone"
