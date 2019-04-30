@@ -61,13 +61,21 @@
 		{
 			'target_name': 'libicu',
 			'type': 'none',
-
-			'toolsets': ['host','target'],
-
+			
+			'toolsets': ['host', 'target'],
+			
 			'dependencies':
 			[
 				'fetch.gyp:fetch',
+				'libicu_include',
+				'libicu_link',
 			],
+		},
+		{
+			'target_name': 'libicu_include',
+			'type': 'none',
+
+			'toolsets': ['host','target'],
 
 			# Needs to be all dependents as used by the HarfBuzz public headers
 			'all_dependent_settings':
@@ -100,7 +108,13 @@
 					],
 				],
 			},
-			
+		},
+		{
+			'target_name': 'libicu_link',
+			'type': 'none',
+
+			'toolsets': ['host','target'],
+
 			'link_settings':
 			{	
 				'target_conditions':
