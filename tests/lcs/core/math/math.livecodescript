@@ -97,12 +97,16 @@ repeat with i = 1 to 10
 end repeat
 
 end TestMathArrayPlusArray
-on TestMath3
 
+on TestAnnuity
+	TestAssert "test annuity formula", annuity(0.02, 25) is ( 1 - ( 1 + 0.02 ) ^ ( - 25 ) ) / 0.02
+	TestAssert "test annuity zero rate", annuity(0, 25) is 25
+end TestAnnuity
 
-TestAssert "test", annuity(0.02, 25) is ( 1 - ( 1 + 0.02 ) ^ ( - 25 ) ) / 0.02
+on TestCompound
+	TestAssert "test compound formula", compound(0.02, 25) is (1 + 0.02) ^ 25
+end TestCompound
 
-end TestMath3
 on TestMath4
 
 
@@ -131,21 +135,6 @@ TestAssert "test", atan2(-1,  0) is -pi / 2
 TestAssert "test", atan2(-1,  1) is -pi / 4
 
 end TestMath5
-on TestMath6
-
-
-TestAssert "test", average() is 0
-TestAssert "test", average(1.23) is 1.23
-TestAssert "test", average("1, 2, 3, 4, 5") is 3
-TestAssert "test", average(1, 2, 3, 4, 5) is 3
-
-local tArray
-repeat with i = 1 to 5
-	put i into tArray[i]
-end repeat
-TestAssert "test", average(tArray) is 3
-
-end TestMath6
 
 on TestMath7
 
@@ -730,21 +719,7 @@ repeat with i = 1 to 10 step 0.1
 end repeat
 
 end TestMath31
-on TestMathStdDev
 
-
-TestAssert "test", stddev() is 0
-TestAssert "test", stddev("1, 2, 3") is 1
-TestAssert "test", stddev(1,2,3) is 1
-TestAssert "test", stddev(0.5,1,1.5) is 0.5
-
-local tArray
-repeat with i = 1 to 5
-	put 6 - i into tArray[i]
-end repeat
-TestAssert "test", stddev(tArray) is stddev(1,2,3,4,5)
-
-end TestMathStdDev
 on TestMathNumberMinusNumber
 
 

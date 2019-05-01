@@ -222,6 +222,12 @@ function TestBuildErrorMap pErrorFile, pErrorPrefix, pZerothError
          if tCode is empty then 
             throw "no error code found for" && tError
          end if
+         if tError begins with (pErrorPrefix & "_UNUSED_") then
+            if tError is not (pErrorPrefix & "_UNUSED_" & tCode) then
+               throw "unused error name" && tError && "does not match code" \
+                     && tCode && "change to" && pErrorPrefix & "_UNUSED_" & tCode
+            end if
+         end if
          if tErrorMap[tCode] is not empty then
             throw "duplicate error code" && tCode && "found for" && tError && \
                "change to" && the number of elements of tErrorMap + 1
@@ -244,19 +250,19 @@ private command __TestEnsureExecErrorMap
    if sExecErrorMap is not empty then
       exit __TestEnsureExecErrorMap
    end if
-   	
+
    put TestBuildErrorMap("executionerrors.h", "EE", "UNDEFINED") \
    	   into sExecErrorMap
 end __TestEnsureExecErrorMap
 
-private function __TestErrorMatches pError, pCode
+function TestErrorMatches pError, pCode
 	__TestEnsureExecErrorMap
-	
+
 	local tErrorNumber
 	put format("%04d", item 1 of line 1 of pError) into tErrorNumber
-	
+
 	return sExecErrorMap[tErrorNumber] is pCode
-end __TestErrorMatches
+end TestErrorMatches
 
 ----------------------------------------------------------------
 -- Unit test library functions
@@ -316,7 +322,7 @@ function _TestHandlerThrows pHandler, pTarget, pErrorCodes, pParam
    local tSuccess
    put true into tSuccess
    repeat for each item tErrorCode in pErrorCodes
-      put tSuccess and __TestErrorMatches(tError, tErrorCode) into tSuccess
+      put tSuccess and TestErrorMatches(tError, tErrorCode) into tSuccess
       delete the first line of tError
    end repeat
    return tSuccess
@@ -351,7 +357,7 @@ end ErrorDialog
 
 on TestAssertErrorDialog pDescription, pErrorCode
 	wait for messages
-	TestAssert pDescription, __TestErrorMatches(sError, pErrorCode)
+	TestAssert pDescription, TestErrorMatches(sError, pErrorCode)
 	put empty into sError
 end TestAssertErrorDialog
 
