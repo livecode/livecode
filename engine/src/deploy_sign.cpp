@@ -627,51 +627,45 @@ static bool MCDeployBuildSpcIndirectDataContent(BIO *p_hash, SpcIndirectDataCont
 	return t_success;
 }
 
+constexpr uint32_t kSecurityEntryOffset32 = 152;
+constexpr uint32_t kSecurityEntryOffset64 = 168;
+
 // This method checks to see if the input file is a valid Windows EXE (well, as
 // valid as we need it to be). It then returns the offset to the PE header if
 // successful. Additionally, we return the offset of the certificate entry, or
 // the length of the file (if no current cert).
-static bool MCDeploySignCheckWindowsExecutable(MCDeployFileRef p_input, uint32_t& r_pe_offset, uint32_t& r_cert_offset)
+static bool MCDeploySignCheckWindowsExecutable(MCDeployFileRef p_input, uint32_t& r_pe_offset, uint32_t& r_cert_offset, MCDeployArchitecture &r_architecture)
 {
 	// First get the length of the input file
 	uint32_t t_length;
 	if (!MCDeployFileMeasure(p_input, t_length))
 		return false;
 
-	// Now check the first two bytes - these should be MZ
-	char t_buffer[4];
-	if (!MCDeployFileReadAt(p_input, t_buffer, 2, 0) ||
-		!MCMemoryEqual(t_buffer, "MZ", 2))
-		return MCDeployThrow(kMCDeployErrorWindowsBadDOSSignature);
-
-	// Now read in the offset to the pe header - this resides at
-	// byte offset 60 (member e_lfanew in IMAGE_DOS_HEADER).
 	uint32_t t_offset;
-	if (t_length < 64 ||
-		!MCDeployFileReadAt(p_input, &t_offset, 4, 60))
-		return MCDeployThrow(kMCDeployErrorWindowsBadDOSHeader);
+	if (!MCDeployWindowsPEHeaderOffset(p_input, t_offset))
+		return false;
 
-	// Swap from non-network to host byte order
-	MCDeployByteSwap32(false, t_offset);
+	MCDeployArchitecture t_arch;
+	if (!MCDeployWindowsArchitecture(p_input, t_offset, t_arch))
+		return false;
 
-	// Check the NT header is big enough - here 160 is the minimum size of the
-	// NT header we need. This is:
-	//   4 byte signature
-	//   20 byte file header
-	//   28 byte standard header
-	//   68 byte optional header
-	//   40 byte data directory (i.e. up to and including SECURITY entry).
-	if (t_length < t_offset + 160)
-		return MCDeployThrow(kMCDeployErrorWindowsNoNTHeader);
+	uint32_t t_security_offset = t_offset;
+	if (t_arch == kMCDeployArchitecture_I386)
+	{
+		t_security_offset += kSecurityEntryOffset32;
+	}
+	else
+	{
+		t_security_offset += kSecurityEntryOffset64;
+	}
 
-	// Now make sure the NT Signature is correct and read in the existing cert
-	// fields. Note that the offset here is that of the 5th data directory entry
-	// (4 + 20 + 28 + 64 + 5 * 8).
+	// Now read in the existing cert fields. Note that the offset here is
+	// that of the 5th data directory entry
 	uint32_t t_cert_section[2];
-	if (!MCDeployFileReadAt(p_input, t_buffer, 4, t_offset) ||
-		!MCMemoryEqual(t_buffer, "PE\0\0", 4) ||
-		!MCDeployFileReadAt(p_input, t_cert_section, 2 * sizeof(uint32_t), t_offset + 152))
+	if (!MCDeployFileReadAt(p_input, t_cert_section, 2 * sizeof(uint32_t), t_security_offset))
+	{
 		return MCDeployThrow(kMCDeployErrorWindowsBadNTSignature);
+	}
 
 	MCDeployByteSwap32(false, t_cert_section[0]);
 	MCDeployByteSwap32(false, t_cert_section[1]);
@@ -687,6 +681,7 @@ static bool MCDeploySignCheckWindowsExecutable(MCDeployFileRef p_input, uint32_t
 		r_cert_offset = t_length;
 
 	r_pe_offset = t_offset;
+	r_architecture = t_arch;
 
 	return true;
 }
@@ -720,7 +715,7 @@ static bool MCDeploySignCopyFileAt(BIO *p_output, MCDeployFileRef p_input, uint3
 
 // This method reconstructs the output executable from the input executable
 // while computing the hash of the critical parts of the file.
-static bool MCDeploySignHashWindowsExecutable(MCDeployFileRef p_input, BIO *p_output, uint32_t p_pe_offset, uint32_t p_cert_offset, BIO*& r_hash)
+static bool MCDeploySignHashWindowsExecutable(MCDeployFileRef p_input, BIO *p_output, uint32_t p_pe_offset, uint32_t p_cert_offset, MCDeployArchitecture p_architecture, BIO*& r_hash)
 {
 	bool t_success;
 	t_success = true;
@@ -742,8 +737,9 @@ static bool MCDeploySignHashWindowsExecutable(MCDeployFileRef p_input, BIO *p_ou
 	// the input executable as we go.
 
 	// The first part of the output file is everything up to the start of the
-	// 'CheckSum' field of the IMAGE_OPTIONAL_HEADER32 structure. This is at
-	// offset 88 in said structure. This part is part of the hash.
+	// 'CheckSum' field of the IMAGE_OPTIONAL_HEADER structure. This is at
+	// offset 88 in both IMAGE_OPTIONAL_HEADER32 and IMAGE_OPTIONAL_HEADER64.
+	// This part is part of the hash.
 	if (t_success)
 		t_success = MCDeploySignCopyFileAt(t_hash, p_input, 0, p_pe_offset + 88);
 
@@ -757,20 +753,30 @@ static bool MCDeploySignHashWindowsExecutable(MCDeployFileRef p_input, BIO *p_ou
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadWrite);
 	}
 
+	uint32_t t_security_offset = p_pe_offset;
+	if (p_architecture == kMCDeployArchitecture_I386)
+	{
+		t_security_offset += kSecurityEntryOffset32;
+	}
+	else
+	{
+		t_security_offset += kSecurityEntryOffset64;
+	}
+
 	// Next is the section of the header after the CheckSum field and up to
-	// the 'Security' data directory entry. This entry is at offset 152.
+	// the 'Security' data directory entry.
 	if (t_success)
-		t_success = MCDeploySignCopyFileAt(t_hash, p_input, p_pe_offset + 92, 60);
+		t_success = MCDeploySignCopyFileAt(t_hash, p_input, p_pe_offset + 92, t_security_offset - (p_pe_offset + 92));
 
 	// Now write out the (current) value of the Security data directory entry,
 	// but not into the hash.
 	if (t_success)
-		t_success = MCDeploySignCopyFileAt(p_output, p_input, p_pe_offset + 152, 8);
+		t_success = MCDeploySignCopyFileAt(p_output, p_input, t_security_offset, 8);
 
 	// After the Security data directory, everything up to the cert offset is
 	// hashed.
 	if (t_success)
-		t_success = MCDeploySignCopyFileAt(t_hash, p_input, p_pe_offset + 160, p_cert_offset - (p_pe_offset + 160));
+		t_success = MCDeploySignCopyFileAt(t_hash, p_input, t_security_offset + 8, p_cert_offset - (t_security_offset + 8));
 
 	// Finally we round the output up to the nearest 8 bytes.
 	if (t_success && (p_cert_offset % 8 != 0))
@@ -1047,6 +1053,8 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	return t_success;
 }
 
+static bool s_objects_created = false;
+
 bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 {
 	bool t_success;
@@ -1094,13 +1102,14 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	// Next we check the input file, and compute the hash, writing out the new
 	// version of the executable as we go.
 	uint32_t t_pe_offset, t_cert_offset;
+	MCDeployArchitecture t_arch;
 	if (t_success)
-		t_success = MCDeploySignCheckWindowsExecutable(t_input, t_pe_offset, t_cert_offset);
+		t_success = MCDeploySignCheckWindowsExecutable(t_input, t_pe_offset, t_cert_offset, t_arch);
 
 	BIO *t_hash;
 	t_hash = nil;
 	if (t_success)
-		t_success = MCDeploySignHashWindowsExecutable(t_input, t_output, t_pe_offset, t_cert_offset, t_hash);
+		t_success = MCDeploySignHashWindowsExecutable(t_input, t_output, t_pe_offset, t_cert_offset, t_arch, t_hash);
 
 	// Next we create a PKCS#7 object ready for filling with the stuff we need for
 	// Authenticode.
@@ -1145,12 +1154,18 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 
 	// The various ASN.1 structures we are going to use require a number of ObjectIDs.
 	// We register them all here, to save having to check the return value of OBJ_txt2obj.
-	if (t_success)
+	if (t_success && !s_objects_created)
+	{
 		if (!OBJ_create(SPC_INDIRECT_DATA_OBJID, SPC_INDIRECT_DATA_OBJID, SPC_INDIRECT_DATA_OBJID) ||
 			!OBJ_create(SPC_PE_IMAGE_DATA_OBJID, SPC_PE_IMAGE_DATA_OBJID, SPC_PE_IMAGE_DATA_OBJID) ||
 			!OBJ_create(SPC_STATEMENT_TYPE_OBJID, SPC_STATEMENT_TYPE_OBJID, SPC_STATEMENT_TYPE_OBJID) ||
 			!OBJ_create(SPC_SP_OPUS_INFO_OBJID, SPC_SP_OPUS_INFO_OBJID, SPC_SP_OPUS_INFO_OBJID))
+		{
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadSignature);
+		}
+		
+		s_objects_created = true;
+	}
 
 	// Authenticode signatures require a single SignerInfo structure to be present.
 	// To create this we add a signature for the certificate we just located.
@@ -1305,6 +1320,16 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 	// ... And update the SECURITY table entry in the PE header appropraitely.
 	if (t_success)
 	{
+		uint32_t t_security_offset = t_pe_offset;
+		if (t_arch == kMCDeployArchitecture_I386)
+		{
+			t_security_offset += kSecurityEntryOffset32;
+		}
+		else
+		{
+			t_security_offset += kSecurityEntryOffset64;
+		}
+
 		uint32_t t_entry[2];
 
 		// First entry is the offset of the cert, making sure it is padded to 8
@@ -1315,7 +1340,7 @@ bool MCDeploySignWindows(const MCDeploySignParameters& p_params)
 		t_entry[1] = 8 + t_signature_size + (t_signature_size % 8 != 0 ? (8 - (t_signature_size % 8)) : 0);
 
 		MCDeployByteSwapRecord(false, "ll", t_entry, sizeof(t_entry));
-		if (BIO_seek(t_output, t_pe_offset + 152) == -1 ||
+		if (BIO_seek(t_output, t_security_offset) == -1 ||
 			BIO_write(t_output, t_entry, sizeof(t_entry)) != sizeof(t_entry))
 			t_success = MCDeployThrowOpenSSL(kMCDeployErrorBadWrite);
 	}

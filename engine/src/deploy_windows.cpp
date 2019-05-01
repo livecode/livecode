@@ -31,16 +31,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "deploy.h"
 
-// Define the two platforms for which we build Windows binaries
-enum MCWindowsDeployPlatform {
-	Windows_x64,
-	Windows_x32
-};
-
 constexpr uint32_t kAddressToPEAddress = 60;
 constexpr uint32_t kPEAddressSize = 4;
 constexpr uint32_t kMagicOffset = 0x18;
-constexpr uint16_t kMagicSize = 2;
+constexpr uint16_t kHeaderMagic32 = 0x10b;
+constexpr uint16_t kHeaderMagic64 = 0x20b;
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -2069,38 +2064,72 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	return t_success ? ES_NORMAL : ES_ERROR;
 }
 
-bool MCDeployToWindowsExtractPlatform(MCDeployParameters const &p_params, MCWindowsDeployPlatform &r_platform)
+bool MCDeployWindowsPEHeaderOffset(MCDeployFileRef p_file, uint32_t &r_pe_offset)
+{
+	// Now check the first two bytes - these should be MZ
+	char t_buffer[4];
+	if (!MCDeployFileReadAt(p_file, t_buffer, 2, 0) ||
+		!MCMemoryEqual(t_buffer, "MZ", 2))
+	{
+		return MCDeployThrow(kMCDeployErrorWindowsBadDOSSignature);
+	}
+
+	// Now read in the offset to the pe header - this resides at
+	// byte offset 60 (member e_lfanew in IMAGE_DOS_HEADER).
+	uint32_t t_offset;
+	if (!MCDeployFileReadAt(p_file, &t_offset, kPEAddressSize, kAddressToPEAddress))
+	{
+		return MCDeployThrow(kMCDeployErrorWindowsBadDOSHeader);
+	}
+
+	// Swap from non-network to host byte order
+	MCDeployByteSwap32(false, t_offset);
+	r_pe_offset = t_offset;
+
+	return true;
+}
+
+// Do some basic validation on the NT header and return the file architecture
+bool MCDeployWindowsArchitecture(MCDeployFileRef p_file, uint32_t p_pe_offset, MCDeployArchitecture &r_platform)
 {
 	bool t_success;
 	t_success = true;
 
-	// AB-2018-12-18: [[ Win64 ]] Identify the engine type from the PE header
-	MCDeployFileRef t_engine;
-	t_engine = nullptr;
-	if (t_success && !MCDeployFileOpen(p_params.engine, kMCOpenFileModeRead, t_engine))
-		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
+	uint32_t t_length;
+	if (!MCDeployFileMeasure(p_file, t_length))
+		return false;
 
-	char t_ident[kAddressToPEAddress + kPEAddressSize];
-	if (t_success && !MCDeployFileRead(t_engine, t_ident, kAddressToPEAddress + kPEAddressSize))
-		t_success = MCDeployThrow(kMCDeployErrorLinuxNoHeader);
-	
-	uint32_t *t_header_offset = reinterpret_cast<uint32_t *>(&t_ident[kAddressToPEAddress]);
-	/*
-		The address of the magic is
-		1.) The offset of the PE header in th file
-		2.) The offset to the magic number : 0x18
-	*/
-	uint32_t t_magic_address = *t_header_offset + kMagicOffset;
-	char t_magic[kMagicSize];
-
-	if (t_success && !MCDeployFileReadAt(t_engine, t_magic, kMagicSize, t_magic_address))
+	// Confirm NT Signature at offset 
+	char t_buffer[4];
+	if (t_success && (!MCDeployFileReadAt(p_file, t_buffer, 4, p_pe_offset) ||
+		!MCMemoryEqual(t_buffer, "PE\0\0", 4)))
 	{
-		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
+		t_success = MCDeployThrow(kMCDeployErrorWindowsNoNTHeader);
 	}
 
-	uint16_t *t_magic_number = reinterpret_cast<uint16_t *>(t_magic);
-	
-	r_platform = *t_magic_number == 0x10b ? MCWindowsDeployPlatform::Windows_x32 : MCWindowsDeployPlatform::Windows_x64;
+	uint16_t t_magic;
+	if (t_success && !MCDeployFileReadAt(p_file, &t_magic, sizeof(uint16_t), p_pe_offset + kMagicOffset))
+	{
+		t_success = MCDeployThrow(kMCDeployErrorWindowsNoNTHeader);
+	}
+
+	if (t_success)
+	{
+		swap_uint16(t_magic);
+
+		switch (t_magic)
+		{
+		case kHeaderMagic32:
+			r_platform = kMCDeployArchitecture_I386;
+			break;
+		case kHeaderMagic64:
+			r_platform = kMCDeployArchitecture_X86_64;
+			break;
+		default:
+			t_success = MCDeployThrow(kMCDeployErrorWindowsNoNTHeader);
+			break;
+		}
+	}
 
 	return t_success;
 }
@@ -2108,22 +2137,45 @@ bool MCDeployToWindowsExtractPlatform(MCDeployParameters const &p_params, MCWind
 Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 {
 	bool t_success = true;
-	MCWindowsDeployPlatform t_platform;
-	if (!MCDeployToWindowsExtractPlatform(p_params, t_platform))
+	
+	MCDeployFileRef t_engine;
+	t_engine = nullptr;
+	if (t_success && !MCDeployFileOpen(p_params.engine, kMCOpenFileModeRead, t_engine))
 	{
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
 	}
-	switch(t_platform)
+
+	uint32_t t_pe_offset;
+	if (t_success)
 	{
-		case Windows_x32: {
+		t_success = MCDeployWindowsPEHeaderOffset(t_engine, t_pe_offset);
+	}
+
+	MCDeployArchitecture t_arch;
+	if (t_success)
+	{
+		t_success = MCDeployWindowsArchitecture(t_engine, t_pe_offset, t_arch);
+	}
+
+	if (t_engine != nullptr)
+	{
+		MCDeployFileClose(t_engine);
+	}
+
+	if (t_success)
+	{
+		switch (t_arch)
+		{
+		case kMCDeployArchitecture_I386: {
 			return MCDeployToWindows<MCWindowsPE32Traits>(p_params);
 		}
-		case Windows_x64:{
+		case kMCDeployArchitecture_X86_64: {
 			return MCDeployToWindows<MCWindowsPE64Traits>(p_params);
 		}
-		default: {
-			MCDeployThrow(kMCDeployErrorWindowsUnkownPlatform);
-			return ES_ERROR;
+		default:
+			MCUnreachableReturn(ES_ERROR)
 		}
 	}
+
+	return ES_ERROR;
 }

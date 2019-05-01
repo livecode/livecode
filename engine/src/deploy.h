@@ -427,7 +427,6 @@ enum MCDeployError
 	kMCDeployErrorWindowsBadDocIcon,
 	kMCDeployErrorWindowsBadManifest,
 	kMCDeployErrorWindowsBadSecuritySection,
-	kMCDeployErrorWindowsUnkownPlatform,
 
 	kMCDeployErrorLinuxNoHeader,
 	kMCDeployErrorLinuxBadHeaderMagic,
@@ -535,6 +534,11 @@ void MCDeployByteSwapRecord(bool p_to_network, const char *p_format, void *p_dat
 bool MCDeployWriteCapsule(const MCDeployParameters& p_params, MCDeployFileRef p_output, uint32_t& x_offset);
 bool MCDeployWriteProject(const MCDeployParameters& p_params, bool p_to_network, MCDeployFileRef p_output, uint32_t p_output_offset, uint32_t& r_project_size);
 bool MCDeployWritePayload(const MCDeployParameters& p_params, bool p_to_network, MCDeployFileRef p_output, uint32_t p_output_offset, uint32_t& r_payload_size);
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCDeployWindowsPEHeaderOffset(MCDeployFileRef p_file, uint32_t &r_pe_offset);
+bool MCDeployWindowsArchitecture(MCDeployFileRef p_file, uint32_t p_pe_offset, MCDeployArchitecture &r_platform);
 
 ////////////////////////////////////////////////////////////////////////////////
 
