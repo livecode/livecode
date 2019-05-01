@@ -47,8 +47,8 @@ enum Exec_errors
 	// {EE-0006} acos: error in source expression
 	EE_ACOS_BADSOURCE,
 	
-	// {EE-0007} acos: domain error
-	EE_ACOS_DOMAIN,
+	// {EE-0007} numeric: domain error
+	EE_MATH_DOMAIN,
 	
 	// {EE-0008} add: error in matrix operation
 	EE_ADD_BADARRAY,
@@ -107,8 +107,8 @@ enum Exec_errors
 	// {EE-0026} asin: error in source expression
 	EE_ASIN_BADSOURCE,
 	
-	// {EE-0027} asin: domain error
-	EE_ASIN_DOMAIN,
+	// {EE-0027} UNUSED
+	EE_UNUSED_0027,
 	
 	// {EE-0028} ask: error in question expression
 	EE_ASK_BADQUESTION,
@@ -125,14 +125,14 @@ enum Exec_errors
 	// {EE-0032} atan2: error in second expression
 	EE_ATAN2_BADS2,
 	
-	// {EE-0033} atan2: domain error
-	EE_ATAN2_DOMAIN,
+	// {EE-0033} UNUSED
+	EE_UNUSED_0033,
 	
 	// {EE-0034} atan: error in source expression
 	EE_ATAN_BADSOURCE,
 	
-	// {EE-0035} atan: domain error
-	EE_ATAN_DOMAIN,
+	// {EE-0035} UNUSED
+	EE_UNUSED_0035,
 	
 	// {EE-0036} average: error in source expression
 	EE_AVERAGE_BADSOURCE,
@@ -416,8 +416,8 @@ enum Exec_errors
 	// {EE-0129} cos: error in source expression
 	EE_COS_BADSOURCE,
 	
-	// {EE-0130} cos: domain error
-	EE_COS_DOMAIN,
+	// {EE-0130} UNUSED
+	EE_UNUSED_0130,
 	
 	// {EE-0131} create: error in bad parent or background expression
 	EE_CREATE_BADBGORCARD,
@@ -482,11 +482,11 @@ enum Exec_errors
 	// {EE-0151} divide: can't divide scalar by array
 	EE_DIVIDE_MISMATCH,
 	
-	// {EE-0152} divide: range error (overflow)
-	EE_DIVIDE_RANGE,
+	// {EE-0152} numeric: range error (overflow)
+	EE_MATH_RANGE,
 	
-	// {EE-0153} divide: divide by zero
-	EE_DIVIDE_ZERO,
+	// {EE-0153} numeric: divide by zero
+	EE_MATH_ZERO,
 	
 	// {EE-0154} Operators div: error in matrix operation
 	EE_DIV_BADARRAY,
@@ -500,11 +500,11 @@ enum Exec_errors
 	// {EE-0157} Operators div: can't divide scalar by matrix
 	EE_DIV_MISMATCH,
 	
-	// {EE-0158} Operators div: range error (overflow)
-	EE_DIV_RANGE,
+	// {EE-0158} UNUSED
+	EE_UNUSED_0158,
 	
-	// {EE-0159} Operators div: divide by zero
-	EE_DIV_ZERO,
+	// {EE-0159} UNUSED
+	EE_UNUSED_0159,
 	
 	// {EE-0160} do: aborted
 	EE_DO_ABORT,
@@ -575,20 +575,20 @@ enum Exec_errors
 	// {EE-0182} exp10: error in source expression
 	EE_EXP10_BADSOURCE,
 	
-	// {EE-0183} exp10: domain error
-	EE_EXP10_DOMAIN,
+	// {EE-0183} UNUSED
+	EE_UNUSED_0183,
 	
 	// {EE-0184} exp1: error in source expression
 	EE_EXP1_BADSOURCE,
 	
-	// {EE-0185} exp1: domain error
-	EE_EXP1_DOMAIN,
+	// {EE-0185} UNUSED
+	EE_UNUSED_0185,
 	
 	// {EE-0186} exp2: error in source expression
 	EE_EXP2_BADSOURCE,
 	
-	// {EE-0187} exp2: domain error
-	EE_EXP2_DOMAIN,
+	// {EE-0187} UNUSED
+	EE_UNUSED_0187,
 	
 	// {EE-0188} export: error in file (or mask file) name expression
 	EE_EXPORT_BADNAME,
@@ -614,8 +614,8 @@ enum Exec_errors
 	// {EE-0195} exp: error in source expression
 	EE_EXP_BADSOURCE,
 	
-	// {EE-0196} exp: domain error
-	EE_EXP_DOMAIN,
+	// {EE-0196} UNUSED
+	EE_UNUSED_0196,
 	
 	// {EE-0197} extents: error in variable expression
 	EE_EXTENTS_BADSOURCE,
@@ -881,14 +881,14 @@ enum Exec_errors
 	// {EE-0284} ln1: error in source expression
 	EE_LN1_BADSOURCE,
 	
-	// {EE-0285} ln1: domain error
-	EE_LN1_DOMAIN,
+	// {EE-0285} UNUSED
+	EE_UNUSED_0285,
 	
 	// {EE-0286} ln: error in source expression
 	EE_LN_BADSOURCE,
 	
-	// {EE-0287} ln: domain error
-	EE_LN_DOMAIN,
+	// {EE-0287} UNUSED
+	EE_UNUSED_0287,
 	
 	// {EE-0288} load: error in url expression
 	EE_LOAD_BADURLEXP,
@@ -902,14 +902,14 @@ enum Exec_errors
 	// {EE-0291} log10: error in source expression
 	EE_LOG10_BADSOURCE,
 	
-	// {EE-0292} log10: domain error
-	EE_LOG10_DOMAIN,
+	// {EE-0292} UNUSED
+	EE_UNUSED_0292,
 	
 	// {EE-0293} log2: error in source expression
 	EE_LOG2_BADSOURCE,
 	
-	// {EE-0294} log2: domain error
-	EE_LOG2_DOMAIN,
+	// {EE-0294} UNUSED
+	EE_UNUSED_0294,
 	
 	// {EE-0295} longFilePath: error in file expression
 	EE_LONGFILEPATH_BADSOURCE,
@@ -971,8 +971,8 @@ enum Exec_errors
 	// {EE-0314} Operators -: range error (overflow) in array operation
 	EE_MINUS_MISMATCH,
 	
-	// {EE-0315} Operators -: range error (overflow)
-	EE_MINUS_RANGE,
+	// {EE-0315} UNUSED
+	EE_UNUSED_0315,
 	
 	// {EE-0316} min: error in source expression
 	EE_MIN_BADSOURCE,
@@ -989,11 +989,11 @@ enum Exec_errors
 	// {EE-0320} Operators mod: can't divide scalar by matrix
 	EE_MOD_MISMATCH,
 	
-	// {EE-0321} Operators mod: range error (overflow)
-	EE_MOD_RANGE,
+	// {EE-0321} UNUSED
+	EE_UNUSED_0321,
 	
-	// {EE-0322} Operators mod: divide by zero
-	EE_MOD_ZERO,
+	// {EE-0322} UNUSED
+	EE_UNUSED_0322,
 	
 	// {EE-0323} mouse: error in source expression
 	EE_MOUSE_BADSOURCE,
@@ -1037,8 +1037,8 @@ enum Exec_errors
 	// {EE-0336} multiply: can't multiply scalar by array
 	EE_MULTIPLY_MISMATCH,
 	
-	// {EE-0337} multiply: range error (overflow)
-	EE_MULTIPLY_RANGE,
+	// {EE-0337} UNUSED
+	EE_UNUSED_0337,
 	
 	// {EE-0338} Operators <>: error in operands
 	EE_NOTEQUAL_OPS,
@@ -1160,11 +1160,11 @@ enum Exec_errors
 	// {EE-0377} Operators /: can't divide scalar by matrix
 	EE_OVER_MISMATCH,
 	
-	// {EE-0378} Operators /: range error (overflow)
-	EE_OVER_RANGE,
+	// {EE-0378} UNUSED
+	EE_UNUSED_0378,
 	
-	// {EE-0379} Operators /: divide by zero
-	EE_OVER_ZERO,
+	// {EE-0379} UNUSED
+	EE_UNUSED_0379,
 	
 	// {EE-0380} param: error in expression
 	EE_PARAM_BADEXP,
@@ -1214,8 +1214,8 @@ enum Exec_errors
 	// {EE-0395} Operators +: error in right operand
 	EE_PLUS_BADRIGHT,
 	
-	// {EE-0396} Operators +: range error (overflow)
-	EE_PLUS_RANGE,
+	// {EE-0396} UNUSED
+	EE_UNUSED_0396,
 	
 	// {EE-0397} pop: can't set destination
 	EE_POP_CANTSET,
@@ -1232,8 +1232,8 @@ enum Exec_errors
 	// {EE-0401} pow: error in right operand
 	EE_POW_BADRIGHT,
 	
-	// {EE-0402} pow: range error (overflow)
-	EE_POW_RANGE,
+	// {EE-0402} UNUSED
+	EE_UNUSED_0402,
 	
 	// {EE-0403} print: can't get 'from' or 'to' coordinates
 	EE_PRINT_CANTGETCOORD,
@@ -1673,8 +1673,8 @@ enum Exec_errors
 	// {EE-0548} sin: error in source expression
 	EE_SIN_BADSOURCE,
 	
-	// {EE-0549} sin: domain error
-	EE_SIN_DOMAIN,
+	// {EE-0549} UNUSED
+	EE_UNUSED_0549,
 	
 	// {EE-0550} sort: can't find object to sort
 	EE_SORT_BADTARGET,
@@ -1691,8 +1691,8 @@ enum Exec_errors
 	// {EE-0554} sqrt: error in source expression
 	EE_SQRT_BADSOURCE,
 	
-	// {EE-0555} sqrt: domain error
-	EE_SQRT_DOMAIN,
+	// {EE-0555} UNUSED
+	EE_UNUSED_0555,
 	
 	// {EE-0556} Stack: bad decoration
 	EE_STACK_BADDECORATION,
@@ -1793,8 +1793,8 @@ enum Exec_errors
 	// {EE-0588} textHeightSum: can't find object
 	EE_TAN_BADSOURCE,
 	
-	// {EE-0589} tan: error in source expression
-	EE_TAN_DOMAIN,
+	// {EE-0589} UNUSED
+	EE_UNUSED_0589,
 	
 	// {EE-0590} tan: domain error
 	EE_TEXT_HEIGHT_SUM_NOOBJECT,
@@ -1814,8 +1814,8 @@ enum Exec_errors
 	// {EE-0595} Operators *: error in right operand
 	EE_TIMES_BADRIGHT,
 	
-	// {EE-0596} Operators *: range error (overflow)
-	EE_TIMES_RANGE,
+	// {EE-0596} UNUSED
+	EE_UNUSED_0596,
 	
 	// {EE-0597} toLower: error in source expression
 	EE_TOLOWER_BADSOURCE,
@@ -1964,11 +1964,11 @@ enum Exec_errors
 	// {EE-0645} wrap: type mismatch
 	EE_WRAP_MISMATCH,
 	
-	// {EE-0646} wrap: overflow
-	EE_WRAP_RANGE,
+	// {EE-0646} UNUSED
+	EE_UNUSED_0646,
 	
-	// {EE-0647} wrap: division by zero
-	EE_WRAP_ZERO,
+	// {EE-0647} UNUSED
+	EE_UNUSED_0647,
 	
 	// {EE-0648} begins/ends with: illegal type for right operand
 	EE_BEGINSENDS_BADRIGHT,

@@ -187,8 +187,7 @@ extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
 //extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
 extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCValueRef &r_output);
-extern void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
-	                       real8 tn, real8 oldn, MCSortnode *titems);
+
 // MW-2013-07-01: [[ Bug 10975 ]] This method returns true if the given string could be a url
 //   (as used by MCU_geturl, to determine whether to try and fetch via libUrl).
 extern bool MCU_couldbeurl(MCStringRef potential_url);
