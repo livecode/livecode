@@ -2562,8 +2562,7 @@ void MCCard::erasefocus(MCObject *p_object)
 
 MCObjptr *MCCard::newcontrol(MCControl *cptr, Boolean needredraw)
 {
-	if (opened)
-		cptr->setparent(this);
+	cptr->setparent(this);
 
 	MCObjptr *newptr = new (nothrow) MCObjptr;
 	newptr->setparent(this);
