@@ -441,7 +441,6 @@ on TestLoadExternal pExternal
    put specialfolderpath("engine") into tEnginePath
 
    local tBinariesPath, tExtension
-   set the itemdelimiter to slash
    switch the platform
       case "MacOS"
          put "bundle" into tExtension
