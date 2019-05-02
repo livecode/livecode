@@ -119,18 +119,19 @@ object's hiliteColor was empty, the setting of the global hiliteColor
 property was used instead.
 
 References: global (command), group (command), object (glossary),
-selection (glossary), backgroundPattern (glossary), property (glossary),
-select (glossary), tabbed button (glossary), highlight (glossary),
-menuMode (glossary), backgroundColor (glossary), object type (glossary),
-style (glossary), color reference (glossary), integer (glossary),
-color palette (glossary), button menu (glossary), keyword (glossary),
-hexadecimal (glossary), EPS (glossary), owner (glossary),
-lookAndFeel (glossary), markerDrawn (glossary), effective (keyword),
+selection (glossary), property (glossary), select (glossary), 
+tabbed button (glossary), highlight (glossary), object type (glossary), 
+color reference (glossary), integer (glossary), color palette (glossary), 
+button menu (glossary), keyword (glossary), hexadecimal (glossary), 
+EPS (glossary), owner (glossary), effective (keyword),
 field (keyword), button (keyword), menu (keyword), card (keyword),
 player (keyword), scrollbar (keyword), graphic (keyword), image (keyword),
 button (object), image (object), field (object), stack (object),
 graphic (object), hiliteFill (property), topColor (property),
-armFill (property), markerLineSize (property)
+armFill (property), markerLineSize (property), 
+backgroundPattern (property), menuMode (property), 
+backgroundColor (property), style (property), lookAndFeel (property),
+markerDrawn (property)
 
 Tags: ui
 

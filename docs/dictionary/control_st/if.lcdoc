@@ -133,7 +133,8 @@ a <switch> <control structure> instead.
 >*Note:* The <if> <control structure> is implemented internally as a
 > <command> and appears in the <commandNames>.
 
-References: switch (control structure), commandNames (function),
+References: repeat (control structure), switch (control structure), 
+try (control structure), commandNames (function),
 statement (glossary), command (glossary), evaluate (glossary),
 execute (glossary), control structure (glossary), then (keyword),
 else (keyword), else if (keyword), end if (keyword), word (keyword)

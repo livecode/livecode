@@ -46,7 +46,7 @@ Description:
 <targetFolder>, with one file per line.  If no <targetFolder> is
 specified, list the files in the <current folder>.
 
-The list only includes folders at the top level of the <target folder>.
+The list only includes folders at the top level of the <targetFolder>.
 The <folders> <function> does not recursively enter and examine
 folders deeper in the filesystem.  To examine the contents of a
 <subfolder|subfolders>, either pass its path as the <targetFolder>, or

@@ -728,7 +728,8 @@ bool __MCArrayIsEqualTo(__MCArray *self, __MCArray *other_self)
 			return false;
 
 		// Otherwise, they are only equal if the values are the same.
-		if (t_contents -> key_values[i] . value != t_other_contents -> key_values[t_slot] . value)
+		if (!MCValueIsEqualTo((MCValueRef)t_contents -> key_values[i] . value,
+                              (MCValueRef)t_other_contents -> key_values[t_slot] . value))
 			return false;
 
 		// We've compared one more key, so used count goes down.

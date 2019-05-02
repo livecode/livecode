@@ -40,9 +40,9 @@ Handle the <menuPick> <message> to do something when the user chooses a
 >*Note:* If the specification of a menu or submenu includes a tag, that
 > tag will replace the menu label in the <pChosenItem> parameter
 
-The <menuPick> <message> is sent when the user clicks a tab in a <tabbed
-button>, when the user chooses a <menu item> from the <menu> associated
-with a <button(keyword)>, or when a <button(object)|button's>
+The <menuPick> <message> is sent when the user clicks a tab in a 
+<tabbed button>, when the user chooses a <menu item> from the <menu> 
+associated with a <button(keyword)>, or when a <button(object)|button's>
 <menuHistory> <property> is set by a <handler>.
 
 The <menuPick> <message> is sent every time a <menu item> is chosen,

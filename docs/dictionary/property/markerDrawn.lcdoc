@@ -32,20 +32,21 @@ Irregular polygon graphics can be drawn with a marker at each vertex,
 whose shape is defined by the markerPoints <property>. The <markerDrawn>
 <property> specifies whether these markers are visible or not.
 
-The borderPattern and <borderColor> <properties> determine the
+The <borderPattern> and <borderColor> <properties> determine the
 appearance of the markers' interior. The <hilitePattern> and
 <hiliteColor> determine the appearance of the borders.
 
 If the style <property> of the <graphic> is not polygon or curve, the
-setting of its markerPattern <property> has no effect.
+setting of its <hilitePattern> <property> has no effect.
 
-If the markerPoints <property> is empty, the setting of the
+If the <markerPoints> <property> is empty, the setting of the
 <markerDrawn> <property> has no effect.
 
 References: vertex (glossary), property (glossary), polygon (keyword),
 graphic (keyword), graphic (object), borderColor (property),
-hilitePattern (property), properties (property), hiliteColor (property),
-markerFilled (property), markerLineSize (property)
+borderPattern (property), hilitePattern (property), properties (property), 
+hiliteColor (property), markerFilled (property), markerLineSize (property),
+markerPoints (property)
 
 Tags: ui
 

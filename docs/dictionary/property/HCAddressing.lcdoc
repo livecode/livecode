@@ -32,9 +32,9 @@ When you open a HyperCard stack and convert it to a LiveCode stack, the
 new stack's <HCAddressing> <property> is set to true.
 
 If the <HCAddressing> <property> is set to true,
-<expression|expressions> in the <stack's> <script|scripts> that refer to
-<field|fields> without specifying <card> or <background> are assumed to
-refer to <grouped control|grouped controls>, and
+<expression|expressions> in the <stack|stack's> <script|scripts> that 
+refer to <field|fields> without specifying <card> or <background> are 
+assumed to refer to <grouped control|grouped controls>, and
 <expression|expressions> that refer to other control types are assumed
 to refer to <card control|card controls>. For example, the number of
 fields reports the number of grouped fields, while button 5 refers to

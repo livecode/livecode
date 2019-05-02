@@ -24,8 +24,8 @@ if gRevProfileReadOnly is false then switchToLargeFonts
 Description:
 Set the <gRevProfileReadOnly> <variable> to false when configuring a
 <property profile|profile>, so that changes you make to an
-<object|object's> <properties> are saved in the current <property
-profile|profile>. 
+<object|object's> <properties> are saved in the current 
+<property profile|profile>. 
 
 Each object can have one or more profiles, which include settings for
 each property in the object's properties <property>. The

@@ -553,6 +553,8 @@ void MCMacOSXPrinter::SetProperties(bool p_include_output)
 		t_page_width = ceil(t_width);
 		t_page_height = ceil(t_height);
 
+        if (m_paper != nullptr)
+            PMRelease(m_paper);
         m_paper = t_pm_paper;
         PMRetain(t_pm_paper);
 	}

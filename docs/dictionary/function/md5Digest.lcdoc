@@ -34,7 +34,7 @@ Compute a message digest of <message> using the MD5 cryptographic
 hash function.
 
 > *Warning:* Serious flaws have been found in the MD5 hash algorithm
-> that make in unsuitable to use for security-critical purposes.
+> that make it unsuitable to use for security-critical purposes.
 > Unless you need backwards compatibility with existing systems, use
 > one of the other algorithms available with the <messageDigest> <function>
 

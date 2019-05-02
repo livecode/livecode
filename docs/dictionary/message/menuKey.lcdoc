@@ -23,11 +23,11 @@ Description:
 Handle the <menuKey> message to perform an action when the menu key is
 pressed. 
 
-The <menuKey> message is sent to the current card of the <default stack>
+The <menuKey> message is sent to the current card of the <defaultStack>
 when the hardware menu button is pressed.
 
 References: backKey (message), searchKey (message),
-default stack (property)
+defaultStack (property)
 
 Tags: ui
 

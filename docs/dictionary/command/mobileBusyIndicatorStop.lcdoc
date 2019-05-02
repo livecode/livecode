@@ -25,8 +25,7 @@ busy indicator from the screen.
 
 The <mobileBusyIndicatorStop> command does not do anything if a busy
 indicator is not running. You can start an activity indicator by calling
-<mobileBusyIndicatorStart.> 
+<mobileBusyIndicatorStart>. 
 
-References: mobileBusyIndicatorStart. (command),
-mobileBusyIndicatorStart (command)
+References: mobileBusyIndicatorStart (command)
 

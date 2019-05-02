@@ -22,15 +22,15 @@ notification:
 
 Description:
 Use the <mobileCancelLocalNotification> <command> to cancel a particular
-Local Notification with the operating system from within a <stack on iOS
-or Android>.
+Local Notification with the operating system from within a <stack> on iOS
+or Android.
 
 This command cancels a Local Notification with the iOS or Android
 operating sytem.
 
 References: mobileCreateLocalNotification (command),
 mobileCancelAllLocalNotifications (command), command (glossary),
-stack on iOS or Android (object)
+stack (object)
 
 Tags: networking
 

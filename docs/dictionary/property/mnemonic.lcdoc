@@ -31,7 +31,7 @@ clicking a button on <Windows|Windows systems>.
 The <mnemonic> is any number between 1 and the number of <characters> in
 the <button(object)|button's> name. The <character> at that position is
 underlined, and pressing the <Alt key> with that <character> sends a
-<mouseUp> message to the <button(keyword)>. If the <number> is zero, the
+<mouseUp> message to the <button(keyword)>. If the number is zero, the
 <button(keyword)> does not have an <Alt key> equivalent.
 
 This property has no effect on Mac OS or Unix systems.
