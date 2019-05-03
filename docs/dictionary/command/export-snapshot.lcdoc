@@ -146,8 +146,9 @@ snapshot to specified dimensions, was added in version 6.0.
 References: export (command), import snapshot (command), select (command),
 screenRect (function), PPM (glossary), command (glossary),
 container (glossary), PBM (glossary), alpha channel (glossary),
-file (keyword), image (keyword), cursor (property), rectangle (property),
-windowID (property), object reference (glossary)
+file (keyword), image (keyword), cursor (property), 
+defaultFolder (property), rectangle (property), windowID (property), 
+object reference (glossary)
 
 Tags: file system, multimedia
 

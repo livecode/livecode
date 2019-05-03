@@ -49,8 +49,8 @@ ways to the same <button(object)>. When any of them changes, all of them
 change. 
 
 References: hilite (command), group (command), property (glossary),
-highlight (glossary), hilitedButtonID (glossary), radio button (glossary),
-radioBehavior (glossary), button (keyword), button (object),
+highlight (glossary), radio button (glossary),
+button (keyword), button (object),
 family (property), hilite (property), hilitedButtonID (property),
 name (property), hilitedButton (property), autoHilite (property),
 radioBehavior (property)

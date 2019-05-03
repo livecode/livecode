@@ -108,16 +108,15 @@ the color specified by <hiliteColor>.
 References: global (command), group (command), stacks (function),
 object (glossary), owner (glossary), current stack (glossary),
 tabbed button (glossary), property (glossary), highlight (glossary),
-width (glossary), button menu (glossary), Windows (glossary),
-height (glossary), backgroundPattern (glossary), lookAndFeel (glossary),
-menuMode (glossary), backgroundColor (glossary), select (glossary),
+button menu (glossary), Windows (glossary), select (glossary),
 Mac OS (glossary), Unix (glossary), object type (glossary),
 selection (glossary), EPS (glossary), field (keyword), image (keyword),
 button (keyword), menu (keyword), card (keyword), graphic (keyword),
 scrollbar (keyword), control (keyword), player (keyword), button (object),
-stack (object), control (object), bottomPattern (property),
+stack (object), bottomPattern (property),
 hiliteFill (property), pixels (property), hiliteColor (property),
-markerLineSize (property)
+markerLineSize (property), height (property), backgroundPattern (property),
+lookAndFeel (property), menuMode (property), backgroundColor (property)
 
 Tags: ui
 

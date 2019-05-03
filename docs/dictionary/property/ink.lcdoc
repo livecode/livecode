@@ -27,8 +27,8 @@ inkmode:
 the name of the ink
 
 Value (enum):
-The <ink> of an <object(glossary)> is a <string> designating one of 48
-<transfer mode|transfer modes>.By default, the <ink> of newly created
+The <ink> of an <object(glossary)> is a <string> designating one of 25
+<transfer mode|transfer modes>. By default, the <ink> of newly created
 <object|objects> is "srcCopy"
 
 

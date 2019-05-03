@@ -35,9 +35,8 @@ The <hiliteFill> <property> affects only the background of a
 change. 
 
 References: property (glossary), highlight (glossary),
-hilitePattern (glossary), hiliteColor (glossary), button (keyword),
-button (object), hilitePattern (property), hilite (property),
-hiliteColor (property)
+button (keyword), button (object), hilitePattern (property), 
+hilite (property), hiliteColor (property)
 
 Tags: ui
 

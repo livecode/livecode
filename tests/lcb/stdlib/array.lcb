@@ -26,4 +26,18 @@ public handler TestSubscriptPrecedence()
 	test "subscript (_ ends with)" when tArray["bar"] ends with "o"
 end handler
 
+public handler TestIsAmongTheElementsOf()
+	/* Non-const variants of in element searches are required to ensure
+	 * it isn't just pointer equality which is occurring (LCB uniques all 
+	 * constants so the same constant has the same pointer). */
+
+	variable tArray
+	put {"a": "x", "b": 1, "c": true, "d": { "e": [2] } } into tArray
+	test "element is among the elements of" when "x" is among the elements of tArray
+	test "element is among the elements of (non-const)" when ("x" & "") is among the elements of tArray
+	test "array element is among the elements of" when { "e": [2] } is among the elements of tArray
+	test "array element is among the elements of (non-const)" when { "e": [1 + 1] } is among the elements of tArray
+	test "array element is not among the elements of" when not { "e": [1] } is among the elements of tArray
+end handler
+
 end module

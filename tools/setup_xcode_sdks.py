@@ -80,8 +80,11 @@ def xcode_paths(base_dir):
                 return_list.append(entry + "/" + l1_entry)
     return return_list
 
-def target_xcode(base_dir):
-    return "{}/{}".format(base_dir, "Xcode.app")
+def target_xcode(base_dir, beta):
+    if beta:
+        return "{}/{}".format(base_dir, "Xcode-beta.app")
+    else:
+        return "{}/{}".format(base_dir, "Xcode.app")
 
 class SDKInstaller(object):
     def __init__(self, base_dir):
@@ -98,8 +101,8 @@ class SDKInstaller(object):
             print("not ok - " + message)
             self._success = False
 
-    def install(self, platform, versions):
-        target = target_xcode(self._base_dir)
+    def install(self, platform, versions, beta):
+        target = target_xcode(self._base_dir, beta)
         self._install_sdks(target, platform, versions)
         self._set_sdk_minversion(target, platform, versions)
 
@@ -200,9 +203,12 @@ if __name__ == "__main__":
         installer = CachingSDKInstaller(".", "./XcodeSDKs")
     else:
         installer = SDKInstaller(".")
-    installer.install("iPhoneOS", iphoneos_versions)
-    installer.install("iPhoneSimulator", iphonesimulator_versions)
-    installer.install("MacOSX", macosx_versions)
+
+    beta = "--beta" in sys.argv
+
+    installer.install("iPhoneOS", iphoneos_versions, beta)
+    installer.install("iPhoneSimulator", iphonesimulator_versions, beta)
+    installer.install("MacOSX", macosx_versions, beta)
 
     if not installer.is_successful():
         print("ERROR: Some SDKs couldn't be installed")

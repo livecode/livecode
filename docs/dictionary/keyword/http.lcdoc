@@ -32,13 +32,15 @@ If an error occurs during transfer of the data, the error is placed in
 the result <function>. The first <word> returned by the <result>
 <function> is "error", followed (where appropriate) by the text of the
 error message returned by the HTTP <server>, including the server
-response code. >*Important:* If there is an error downloading an <http>
+response code. 
+>*Important:* If there is an error downloading an <http>
 <URL(keyword)>, the <URL(keyword)> <container> does not necessarily
 <evaluate> to empty. Most <HTTP> <server|servers> send an error page
 when the file is not found or another error occurs, and the URL
 <container> will evaluate to the contents of this page. Before using the
 data in a URL <container>, check the <result> to make sure it is empty
 and there was no error. 
+
 >*Important:* If a <blocking> operation
 involving a <URL(keyword)> (using the <put> <command> to <upload> a
 <URL(keyword)>, the <post> <command>, the <delete URL> <command>, or a
@@ -95,9 +97,7 @@ Here are some examples of valid <http> <URL(glossary)|URLs>:
     put "name" into userName
     put "jdoe@example.com" into userPassword
     put "http://" & userName & ":" & URLEncode(userPassword) \
-
-    & "@www.example.net/index.html" into fileURLToGet
-
+          & "@www.example.net/index.html" into fileURLToGet
     get URL fileURLToGet
 
 
@@ -131,16 +131,14 @@ concludes. If the user clicks the button again while the download is
 still going on, the handler simply beeps:
 
     on mouseUp
-
-    global gDownloadInProgress
-    if gDownloadInProgress then
-        beep
-        exit mouseUp
-    end if
-    put true into gDownloadInProgress -- about to start
-    put URL (field "Page to get") into field "Command Result"
-    put false into gDownloadInProgress -- finished
-    
+        global gDownloadInProgress
+        if gDownloadInProgress then
+            beep
+            exit mouseUp
+        end if
+        put true into gDownloadInProgress -- about to start
+        put URL (field "Page to get") into field "Command Result"
+        put false into gDownloadInProgress -- finished
     end mouseUp
 
 

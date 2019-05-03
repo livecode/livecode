@@ -51,13 +51,13 @@ the <hilitePattern>, if the <button(object)|button's> <hiliteFill>
 <property> is true).
 
 References: hilite (command), property (glossary),
-hiliteBorder (glossary), highlight (glossary), topPattern (glossary),
-style (glossary), threeD (glossary), checkbox (glossary),
-hilitePattern (glossary), hiliteFill (glossary), topColor (glossary),
-radio button (glossary), bottomColor (glossary), button (keyword),
-button (object), showHilite (property), hilitedIcon (property),
-hiliteFill (property), hilitedButtonName (property),
-hiliteColor (property), hiliteBorder (property), bottomPattern (property)
+highlight (glossary), checkbox (glossary),
+hilitePattern (glossary), radio button (glossary), button (keyword),
+button (object), bottomColor (property), showHilite (property), 
+hiliteBorder (property), hilitedIcon (property), hiliteFill (property), 
+hilitedButtonName (property), hiliteColor (property), 
+hiliteBorder (property), bottomPattern (property), style (property), 
+threeD (property), topColor (property), topPattern (property)
 
 Tags: ui
 

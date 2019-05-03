@@ -35,29 +35,26 @@ resources of all resource types.
 
 Returns (enum):
 The <getResources> <function> <return|returns> a list of
-<resource|resources>, one per <line>. Each <line> consists of four
-<items> :
+<resource|resources>, one per <line>. Each <line> consists of 
+the following items <items> :
+ - the resource ID
+ - the resource name
+ - the resource size in bytes
+ - the 4-character resource type
+ - one or more resource flag characters. The possible resource flags
+   are as follows:
+     - S       System heap
+     - U       Purgeable
+     - L       Locked
+     - P       Protected
+     - R       Preload
+     - C       Compressed resource
 
-        - the resource ID
-        - the resource name
-        - the resource size in bytes
-
-S       System heap
-U       Purgeable
-L       Locked
-P       Protected
-R       Preload
-C       Compressed resource
 If a flag is set to true, its character is included in the last item. If
 the flag is set to false, its character is not included. If none of
 these flags is set for a resource, the last item of that resource's line
 is empty. If the file does not contain any resources, the <getResources>
 <function> <return|returns> empty
-
--   the 4: character resource type
--   one or more resource flag characters. The possible resource flags
-    are as follows:
-
 
 The result:
 If the <filePath> does not exist, the <result> is set to

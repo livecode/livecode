@@ -87,6 +87,7 @@ XPM (glossary), PGM (glossary), XWD (glossary), audio clip (glossary),
 PPM (glossary), XBM (glossary), PNG (glossary), stack file (glossary),
 Windows (glossary), AVI (glossary), file (keyword), image (keyword),
 paint (keyword), EPS (object), stack (object), defaultStack (property),
+dontUseQT (property), dontUseQTEffects (property),
 filename (property), JPEGQuality (property),
 paintCompression (property)
 

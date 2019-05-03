@@ -64,6 +64,6 @@ References: mobileSetLocationHistoryLimit (command),
 mobileStopTrackingSensor (command), mobileStartTrackingSensor (command),
 mobileGetLocationHistory (function), mobileSensorAvailable (function),
 mobileSensorReading (function),
-mobileLocationAuthorizationStatus (function), array (function),
+mobileLocationAuthorizationStatus (function), array (glossary),
 function (glossary), locationChanged (message), trackingError (message)
 

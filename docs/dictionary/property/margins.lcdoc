@@ -51,16 +51,16 @@ top, left, bottom, and right margins are set to each one respectively:
 * item 4 is equal to the bottomMargin
 
 
-If the lookAndFeel is set to "Motif", <control(object)|controls> require
+If the lookAndFeel is set to "Motif", <control|controls> require
 two <pixels> of margin space for the border that shows when the
-<control(keyword)> is <active (focused)(glossary)>. To avoid interfering
-with this border on <Unix|Unix systems>, set the <margins> <property> of
-<group(glossary)|groups> to at least 2 if the <group(command)> contains
-<control(object)|controls> whose <traversalOn> <property> is set to
-true. 
+<control> is <active control|active (focused)>. To 
+avoid interfering with this border on <Unix|Unix systems>, set the 
+<margins> <property> of <group(glossary)|groups> to at least 2 if the 
+<group(command)> contains <control|controls> whose <traversalOn> 
+<property> is set to true. 
 
->*Important:*  The <margins> of an <object(glossary)> include the 2-
-> <pixel> space required for the focus border, even if the <lookAndFeel>
+>*Important:*  The <margins> of an <object(glossary)> include the 
+> 2-<pixel> space required for the focus border, even if the <lookAndFeel>
 > is not "Motif". This means that 2 is the smallest usable margin,
 > rather than zero. For example, if the <margins> of a <field(keyword)>
 > is set to zero, a few <pixels> at the edge of the

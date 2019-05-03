@@ -52,9 +52,9 @@ being used on. On Windows XP, <Mac OS> and <OS X|OS X systems>, the
 
 The "Appearance Manager" option can be used only on Windows XP, Mac OS
 and OS X systems. If you set the <lookAndFeel> to "Appearance Manager"
-on a <Unix> <system>, it is reset to "Motif". Similarly, tf you set the
+on a <Unix> <system>, it is reset to "Motif". Similarly, if you set the
 <lookAndFeel> to "Appearance Manager" on a pre-Windows XP <system>, it
-is reset to "Wondows 95".
+is reset to "Windows 95".
 
 On Mac OS systems, the native Appearance Manager drawing routines are
 much slower than the emulated Platinum routines. Setting the

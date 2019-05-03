@@ -32,9 +32,9 @@ Use the <grab> <command> within a <mouseDown> <handler> to drag an
 it. 
 
 You can only grab a control when the mouse pointer is within the
-control's rectangle at the time the mouse is clicked. If the <mouse
-pointer> is outside the <control> when the <grab> <command> is
-<execute|executed>, nothing happens.
+control's rectangle at the time the mouse is clicked. If the 
+<mouse pointer> is outside the <control> when the <grab> <command> 
+is <execute|executed>, nothing happens.
 
 Although the <grab> <command> returns to the calling handler
 immediately, the target control will remain grabbed until the user

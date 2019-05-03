@@ -24,9 +24,11 @@ windows) or an arrow (anywhere else). This tool is used to draw the
 penColor onto an <image>.
 
 If you try to paint with the pencil on a card that has no images, an
-image the size of the card is created to hold the painting. If the
-current card already has one or more images, painting outside the image
-has no effect.
+image the size of the card is temporarily created to hold the painting
+that will disppear after changing card; an image must first be created 
+in order to keep a painting. 
+If the current card already has one or more images, painting outside the 
+image has no effect.
 
 References: choose (command), keyword (glossary), paint tool (glossary),
 image (keyword), penColor (property)

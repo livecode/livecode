@@ -6,8 +6,8 @@ Type: glossary
 
 Description:
 A word that is part of the <LiveCode> language, but is not a built-in
-<command>, <function>, <property>, or <message> name, a <control
-structure>, <operator>, or <object(glossary)> type.
+<command>, <function>, <property>, or <message> name, a 
+<control structure>, <operator>, or <object(glossary)> type.
 
 References: property (glossary), LiveCode (glossary), operator (glossary),
 message (glossary), control structure (glossary), function (glossary),
