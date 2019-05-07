@@ -855,54 +855,58 @@ static bool __MCUnicodeMapString(MCUnicodeProperty p_property, MCLocaleRef p_loc
     return true;
 }
 
+bool MCUnicodeLowercase(MCLocaleRef p_locale,
+                        const unichar_t *p_in, uindex_t p_in_length,
+                        unichar_t *&r_out, uindex_t &r_out_length)
+{
+    MCUnicodeProperty t_property;
+    if (p_locale == nullptr)
+    {
+        t_property = kMCUnicodePropertySimpleLowercaseMapping;
+    }
+    else
+    {
+        t_property = kMCUnicodePropertyLowercaseMapping;
+    }
+    
+    return __MCUnicodeMapString(t_property,
+                              p_locale, p_in, p_in_length, r_out, r_out_length);
+}
+
 bool MCUnicodeUppercase(MCLocaleRef p_locale,
                         const unichar_t *p_in, uindex_t p_in_length,
                         unichar_t *&r_out, uindex_t &r_out_length)
 {
-    // Do the casing using icu::UnicodeString. Note that a locale is required.
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_input(p_in, p_in_length);
-    t_input.toUpper(MCLocaleGetICULocale(p_locale));
+    MCUnicodeProperty t_property;
+    if (p_locale == nullptr)
+    {
+        t_property = kMCUnicodePropertySimpleUppercaseMapping;
+    }
+    else
+    {
+        t_property = kMCUnicodePropertyUppercaseMapping;
+    }
     
-    // Allocate the output buffer
-    MCAutoArray<unichar_t> t_buffer;
-    if (!t_buffer.New(t_input.length()))
-        return false;
-    
-    // Extract the converted characters
-    t_input.extract(t_buffer.Ptr(), t_buffer.Size(), t_error);
-    if (U_FAILURE(t_error))
-        return false;
-    
-    // Done
-    t_buffer.Take(r_out, r_out_length);
-    return true;
+    return __MCUnicodeMapString(t_property,
+                              p_locale, p_in, p_in_length, r_out, r_out_length);
 }
 
 bool MCUnicodeTitlecase(MCLocaleRef p_locale,
                         const unichar_t *p_in, uindex_t p_in_length,
                         unichar_t *&r_out, uindex_t &r_out_length)
 {
-    // The ICU UnicodeString class is convenient for case transformations
-    UErrorCode t_error = U_ZERO_ERROR;
-    icu::UnicodeString t_input(p_in, p_in_length);
+    MCUnicodeProperty t_property;
+    if (p_locale == nullptr)
+    {
+        t_property = kMCUnicodePropertySimpleTitlecaseMapping;
+    }
+    else
+    {
+        t_property = kMCUnicodePropertyTitlecaseMapping;
+    }
     
-    // By supplying no specific break iterator, the default is used
-    t_input.toTitle(NULL, MCLocaleGetICULocale(p_locale));
-    
-    // Allocate the output buffer
-    MCAutoArray<unichar_t> t_buffer;
-    if (!t_buffer.New(t_input.length()))
-        return false;
-    
-    // Extract the converted characters
-    t_input.extract(t_buffer.Ptr(), t_buffer.Size(), t_error);
-    if (U_FAILURE(t_error))
-        return false;
-    
-    // Done
-    t_buffer.Take(r_out, r_out_length);
-    return true;
+    return __MCUnicodeMapString(t_property,
+                              p_locale, p_in, p_in_length, r_out, r_out_length);
 }
 
 static void __MCUnicodeSimpleCaseFold(icu::UnicodeString& p_string)
