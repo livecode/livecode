@@ -63,6 +63,8 @@ on TestToUpper
   TestAssert "upper of lowercase", toUpper("xy") is "XY"
   TestAssert "upper of uppercase", toUpper("XY") is "XY"
   TestAssert "upper of mixedcase", toUpper("xY") is "XY"
+
+  TestAssert "upper of unicode simple case mapping", toUpper("ßǆ") is not "SSǄ"
 end TestToUpper
 
 on TestToLower
@@ -70,6 +72,8 @@ on TestToLower
   TestAssert "lower of lowercase", toLower("xy") is "xy"
   TestAssert "lower of uppercase", toLower("XY") is "xy"
   TestAssert "lower of mixedcase", toLower("xY") is "xy"
+
+  TestAssert "lower of unicode simple case mapping", toLower("ßǄ") is "ßǆ"
 end TestToLower
 
 on TestBeginsWith
