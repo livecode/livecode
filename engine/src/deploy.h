@@ -537,4 +537,9 @@ bool MCDeployWritePayload(const MCDeployParameters& p_params, bool p_to_network,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCDeployWindowsPEHeaderOffset(MCDeployFileRef p_file, uint32_t &r_pe_offset);
+bool MCDeployWindowsArchitecture(MCDeployFileRef p_file, uint32_t p_pe_offset, MCDeployArchitecture &r_platform);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif

@@ -13,7 +13,7 @@ REM When calling configure.bat from the command line, BUILD_EDITION is not defin
 IF NOT DEFINED BUILD_EDITION SET BUILD_EDITION="community"
 
 REM Target architecture currently defaults to 32-bit x86
-IF NOT DEFINED TARGET_ARCH SET TARGET_ARCH=x86
+IF NOT DEFINED TARGET_ARCH SET TARGET_ARCH=x64
 
 REM Make sure TARGET_ARCH is always x86 or x86_64
 

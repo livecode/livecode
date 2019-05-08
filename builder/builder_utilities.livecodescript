@@ -133,7 +133,13 @@ function builderPlatform
          end if
          throw "Unknown Linux architecture:" && the processor
       case "win32"
-         return "windows"
+         if the processor is "x86" then
+            return "win-x86"
+         end if
+         if the processor is "x86_64" then
+            return "win-x86_64"
+         end if
+         throw "Unknown Windows architecture:" && the processor
       case "macos"
          return "macosx"
       case "iphone"
@@ -153,8 +159,10 @@ command builderFetchEngine pVersion, pPlatform
    end if
    if sEngineDir is not empty then
       switch pPlatform
-         case "windows"
+         case "win-x86"
             return sEngineDir & slash & "win-x86-bin"
+         case "win-x86_64"
+            return sEngineDir & slash & "win-x86_64-bin"
          case "linux-x86"
             return sEngineDir & slash & "linux-x86-bin"
          case "linux-x86_64"
@@ -183,7 +191,8 @@ command builderFetchEngine pVersion, pPlatform
    end if
    local tPlatform
    switch pPlatform
-      case "windows"
+      case "win-x86"
+      case "win-x86_64"
          get "windows/release"
          break
       case "linux-x86"
@@ -453,7 +462,8 @@ function builderInstallerEngine pPlatform
    put the result into tEngineFolder
    
    switch pPlatform
-      case "windows"
+      case "win-x86"
+      case "win-x86_64"
          return tEngineFolder & slash & "installer.exe"
       case "linux-x86"
          return tEngineFolder & slash & "installer"

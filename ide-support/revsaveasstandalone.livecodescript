@@ -436,10 +436,15 @@ private function revStandalonePlatformDetails pTarget
          put "x86-32" into tDetailsA["architecture"]
          break
       case "Windows"
-         put "Windows/x86-32" into tArchFolder
+         if pTarget is "Windows" then
+            put "Windows/x86-32" into tArchFolder
+            put "x86-32" into tDetailsA["architecture"]
+         else if pTarget is "Windows x86-64" then
+            put "Windows/x86-64" into tArchFolder
+            put "x86-64" into tDetailsA["architecture"]
+         end if
          put ".dll" into tDetailsA["loadable_extension"]
          put "Windows" into tDetailsA["platform"]
-         put "x86-32" into tDetailsA["architecture"]
          break
       case "Linux"
          if pTarget is "Linux" then
@@ -774,13 +779,16 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
       -- Ensure standalone settings script local is reset when building for subsequent targets
       put tStandaloneSettingsA into sStandaloneSettingsA
       
-      local tArch
+      local tArch, tRuntimeDir
       if word 2 of tTarget is among the items of "x64,x86-64,x86_64" then
          put "x86_64" into tArch
+         put "x86-64" into tRuntimeDir
       else if word 2 of tTarget is not empty then
          put word 2 of tTarget into tArch
+         put word 2 of tTarget into tRuntimeDir
       else
          put "x86" into tArch
+         put "x86-32" into tRuntimeDir
       end if
       revStandalonePreBuild pStack, pFolder, "windows", tArch, tStackName, tStackFileList
       if the result is not empty then 
@@ -849,7 +857,7 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
       put empty into tManifestData
       put false into tManifestNeeded
       
-      put revEnvironmentRuntimePath() &  "/Windows/x86-32/w32-manifest-template.xml" into tManifestPath
+      put revEnvironmentRuntimePath() &  "/Windows/" & tRuntimeDir & "/w32-manifest-template.xml" into tManifestPath
       if there is not a file tManifestPath then
          revStandaloneAddWarning "Windows, manifest template not found: " & quote & tManifestPath & quote
       else
@@ -863,7 +871,7 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
       
       if sStandaloneSettingsA["Windows,uacExecutionLevel"] is not empty and sStandaloneSettingsA["Windows,uacExecutionLevel"] is not "default" then
          local tManifestTrustInfoPath
-         put revEnvironmentRuntimePath() & "/Windows/x86-32/w32-manifest-template-trustinfo.xml" into tManifestTrustInfoPath
+         put revEnvironmentRuntimePath() & "/Windows/" & tRuntimeDir & "/w32-manifest-template-trustinfo.xml" into tManifestTrustInfoPath
          
          if there is not a file tManifestTrustInfoPath then
             revStandaloneAddWarning "Windows, manifest trustinfo template not found: " & quote & tManifestTrustInfoPath & quote
@@ -879,7 +887,7 @@ command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalo
       // IM-2014-08-15: [[ Bug 13118 ]] Pull in dpiAware section if set.
       if sStandaloneSettingsA["Windows,usePixelScaling"] is empty or sStandaloneSettingsA["Windows,usePixelScaling"] is true then
          local tManifestApplicationPath
-         put revEnvironmentRuntimePath() & "/Windows/x86-32/w32-manifest-template-dpiaware.xml" into tManifestApplicationPath
+         put revEnvironmentRuntimePath() & "/Windows/" & tRuntimeDir & "/w32-manifest-template-dpiaware.xml" into tManifestApplicationPath
          
          if there is not a file tManifestApplicationPath then
             revStandaloneAddWarning "Windows, manifest dpiaware template not found: " & quote & tManifestApplicationPath & quote
@@ -2202,7 +2210,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
    set the itemdel to slash
    put item 1 to -2 of pStandalonePath into tCurrentLocation
    switch
-      case pPlatform = "Windows"
+      case pPlatform begins with "Windows"
          put (item 1 to -2 of tExternalPath) & "/CEF" into tCEFResources
          put tCurrentLocation & slash & "Externals/CEF" into tCEFDest
          

@@ -44,8 +44,10 @@ on startup
          if it is "linux" then
             put true into tPlatforms["linux-x86"]
             put true into tPlatforms["linux-x86_64"]
+         else if it is "win" then
+            put true into tPlatforms["win-x86"]
+            put true into tPlatforms["win-x86_64"]
          else
-            if it begins with "win" then get "windows"
             if it is "mac" then get "macosx"
             put true into tPlatforms[it]
          end if
