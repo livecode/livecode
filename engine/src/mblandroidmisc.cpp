@@ -702,9 +702,33 @@ bool MCSystemGetReachabilityTarget(MCStringRef& r_target)
     return false;
 }
 
+static int32_t MCMiscGetAndroidReturnKeyTypeFromMCExecEnum(MCMiscKeyboardReturnKey p_type)
+{
+    switch(p_type)
+    {
+        case kMCMiscKeyboardReturnKeyGo:
+            return 0x2; // IME_ACTION_GO
+        case kMCMiscKeyboardReturnKeyNext:
+            return 0x5; // IME_ACTION_NEXT
+        case kMCMiscKeyboardReturnKeySearch:
+            return 0x3; // IME_ACTION_SEARCH
+        case kMCMiscKeyboardReturnKeySend:
+            return 0x4; // IME_ACTION_SEND
+        case kMCMiscKeyboardReturnKeyDone:
+            return 0x6; // IME_ACTION_DONE
+        case kMCMiscKeyboardReturnKeyDefault:
+            return 0x40000000 | 0x6; // IME_FLAG_NO_ENTER_ACTION | IME_ACTION_DONE
+        default:
+            return 0x0; // IME_ACTION_UNSPECIFIED
+    }
+}
+
 bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
 {
-    return false;
+    int32_t t_type = MCMiscGetAndroidReturnKeyTypeFromMCExecEnum(static_cast<MCMiscKeyboardReturnKey>(p_type));
+    MCAndroidEngineRemoteCall("setKeyboardReturnKey", "vi", nullptr, t_type);
+    
+    return true;
 }
 
 // SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef

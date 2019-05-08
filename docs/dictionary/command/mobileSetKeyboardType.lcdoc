@@ -44,6 +44,6 @@ The keyboard type setting takes affect the next time the keyboard is
 shown. It does not affect the current keyboard, if it is being
 displayed. 
 
-References: iphoneSetKeyboardReturnKey (command),
+References: mobileSetKeyboardReturnKey (command),
 keyboardDeactivated (message), keyboardActivated (message)
 
