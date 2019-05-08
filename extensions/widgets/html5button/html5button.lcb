@@ -25,6 +25,7 @@ use com.livecode.emscripten
 use com.livecode.widget
 use com.livecode.canvas
 use com.livecode.engine
+use com.livecode.library.widgetutils
 
 metadata version is "1.0.0"
 metadata author is "LiveCode"
@@ -125,53 +126,6 @@ private handler OnJSClick(pEvent as JSObject) returns nothing
 	post "mouseUp"
 end handler
 
-private handler expandRectangle(in pRect as Rectangle, in pExp as Number) returns Rectangle
-	return rectangle [ the left of pRect - pExp, the top of pRect - pExp, the right of pRect + pExp, the bottom of pRect + pExp]
-end handler
-
-constant kBorderWidth is 5
-private handler paintPlaceholderLabel(in pCanvas as Canvas, in pBounds as Rectangle, \
-    in pLabel as String, in pFont as optional Font, in pColor as optional Color)
-    save state of pCanvas
-
-	// Draw the border
-	variable tFillPaint as Paint
-	variable tStrokePaint as Paint
-	put solid paint with color [0.875, 0.875, 0.875] into tFillPaint
-	put solid paint with color [0.75, 0.75, 0.75] into tStrokePaint
-
-	set the paint of pCanvas to tFillPaint
-	fill rectangle path of pBounds on this canvas
-	set the paint of this canvas to tStrokePaint
-	set the stroke width of this canvas to kBorderWidth
-	set the join style of this canvas to "bevel"
-	stroke rectangle path of expandRectangle(pBounds, -kBorderWidth / 2) on this canvas
-
-	// Draw the control name
-	put solid paint with color [1, 1, 1] into tFillPaint
-
-    if pFont is nothing then
-       put font "Arial" at size 14 into pFont
-    end if
-    
-    if pColor is nothing then
-       put color [0.25, 0.25, 0.25] into pColor
-    end if
-	put solid paint with pColor into tStrokePaint
-	
-	variable tTextBounds as Rectangle
-	put the image bounds of text pLabel on pCanvas into tTextBounds
-
-	translate pCanvas by [ the width of pBounds / 2, the height of pBounds / 2]
-	translate pCanvas by [ -(the width of tTextBounds / 2), the height of tTextBounds / 2]
-	set the paint of pCanvas to tFillPaint
-	fill rounded rectangle path of expandRectangle(tTextBounds, kBorderWidth) with radius 5 on pCanvas
-	set the paint of pCanvas to tStrokePaint
-	fill text pLabel at point [0, 0] on pCanvas
-	
-	restore state of pCanvas
-end handler
-
 public handler OnPaint()
     if IsHTML5() then
         return
@@ -184,7 +138,8 @@ public handler OnPaint()
         put mLabel into tLabel
     end if
     
-    paintPlaceholderLabel(this canvas, my bounds, tLabel, my font, color [0,0,0])
+    paintPlaceholderImage(this canvas, my bounds, \
+    	placeholderIcon("emscripten"), tLabel, my font, nothing)
 end handler
 
 public handler SetLabel(in pLabel as String)
