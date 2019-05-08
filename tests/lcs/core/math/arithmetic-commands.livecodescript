@@ -19,11 +19,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ----------
 
 private function MapError pError, pSrcErr, pDstErr
-   if item 1 of pError is pSrcErr then
+   if TestErrorMatches(pError, pSrcErr) then
       return "src"
    end if
 
-   if item 1 of pError is pDstErr then
+   if TestErrorMatches(pError, pDstErr) then
       return "dst"
    end if
 
@@ -32,8 +32,8 @@ end MapError
 
 ----------
 
-constant kAddSrcError = 10
-constant kAddDstError = 9
+constant kAddSrcError = "EE_ADD_BADSOURCE"
+constant kAddDstError = "EE_ADD_BADDEST"
 
 private function DoAdd pSrc, pDst
    try
@@ -53,8 +53,8 @@ end TestAdd
 
 ----------
 
-constant kSubtractSrcError = 579
-constant kSubtractDstError = 578
+constant kSubtractSrcError = "EE_SUBTRACT_BADSOURCE"
+constant kSubtractDstError = "EE_SUBTRACT_BADDEST"
 
 private function DoSubtract pSrc, pDst
    try
@@ -74,8 +74,8 @@ end TestSubtract
 
 ----------
 
-constant kMultiplySrcError = 334
-constant kMultiplyDstError = 333
+constant kMultiplySrcError = "EE_MULTIPLY_BADSOURCE"
+constant kMultiplyDstError = "EE_MULTIPLY_BADDEST"
 
 private function DoMultiply pSrc, pDst
    try
@@ -95,8 +95,8 @@ end TestMultiply
 
 ----------
 
-constant kDivideSrcError = 149
-constant kDivideDstError = 148
+constant kDivideSrcError = "EE_DIVIDE_BADSOURCE"
+constant kDivideDstError = "EE_DIVIDE_BADDEST"
 
 private function DoDivide pSrc, pDst
    try

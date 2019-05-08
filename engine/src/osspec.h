@@ -164,6 +164,7 @@ extern bool MCS_changeprocesstype(bool to_foreground);
 
 extern bool MCS_isinteractiveconsole(int);
 extern bool MCS_isnan(double p_value);
+extern bool MCS_isfinite(double p_number);
 
 extern bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error);
 

@@ -147,289 +147,411 @@ void MCMathEvalCeil(MCExecContext& ctxt, real64_t p_number, real64_t& r_result)
 
 //////////
 
+static bool MCMathCheckBinaryResult(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t p_result)
+{
+    // If the result is finite, we're fine
+    if (MCS_isfinite(p_result))
+    {
+        return true;
+    }
+    
+    // Otherwise, if any of the inputs were not finite, we just allow
+    // whatever result was obtained to flow through
+    if (!MCS_isfinite(p_left) || !MCS_isfinite(p_right))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+static bool MCMathCheckUnaryResult(MCExecContext& ctxt, real64_t p_operand, real64_t p_result)
+{
+    // If the result is finite, we're fine
+    if (MCS_isfinite(p_result))
+    {
+        return true;
+    }
+    
+    // Otherwise, if the input not finite, we just allow whatever result was
+    // obtained to flow through
+    if (!MCS_isfinite(p_operand))
+    {
+        return true;
+    }
+    
+    return false;
+}
+
+static bool MCMathCheckNaryResult(MCExecContext& ctxt, real64_t* p_values, uindex_t p_count, real64_t p_result)
+{
+    // If the result is finite, we're fine
+    if (MCS_isfinite(p_result))
+    {
+        return true;
+    }
+    
+    // Otherwise, if any inputs are not finite, we just allow whatever result was
+    // obtained to flow through
+    for (uindex_t i = 0; i < p_count; i++)
+    {
+        if (!MCS_isfinite(p_values[i]))
+        {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+static void MCMathThrowFloatingPointException(MCExecContext& ctxt, real64_t p_result)
+{
+    if (MCS_isnan(p_result))
+    {
+        ctxt.LegacyThrow(EE_MATH_DOMAIN);
+    }
+    else
+    {
+        ctxt.LegacyThrow(EE_MATH_RANGE);
+    }
+}
+
+template <real64_t (*Func)(real64_t)>
+void MCMathEvalCheckedUnaryFunction(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
+{
+    real64_t t_result = Func(p_in);
+    if (!MCMathCheckUnaryResult(ctxt, p_in, t_result))
+    {
+        MCMathThrowFloatingPointException(ctxt, t_result);
+        return;
+    }
+    r_result = t_result;
+}
+
+template <real64_t (*Func)(real64_t), bool (*CheckDivideByZero)(real64_t)>
+void MCMathEvalCheckedUnaryFunction(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
+{
+    real64_t t_result = Func(p_in);
+    if (!MCMathCheckUnaryResult(ctxt, p_in, t_result))
+    {
+        if (CheckDivideByZero(p_in))
+        {
+            ctxt.LegacyThrow(EE_MATH_ZERO);
+        }
+        else
+        {
+            MCMathThrowFloatingPointException(ctxt, t_result);
+        }
+    }
+    r_result = t_result;
+}
+
+template <real64_t (*Func)(real64_t, real64_t)>
+void MCMathEvalCheckedBinaryFunction(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
+{
+    real64_t t_result = Func(p_left, p_right);
+    if (!MCMathCheckBinaryResult(ctxt, p_left, p_right, t_result))
+    {
+        MCMathThrowFloatingPointException(ctxt, t_result);
+        return;
+    }
+    r_result = t_result;
+}
+
+template <real64_t (*Func)(real64_t, real64_t), bool (*CheckDivideByZero)(real64_t, real64_t)>
+void MCMathEvalCheckedBinaryFunction(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
+{
+    real64_t t_result = Func(p_left, p_right);
+    if (!MCMathCheckBinaryResult(ctxt, p_left, p_right, t_result))
+    {
+        if (CheckDivideByZero(p_left, p_right))
+        {
+            ctxt.LegacyThrow(EE_MATH_ZERO);
+        }
+        else
+        {
+            MCMathThrowFloatingPointException(ctxt, t_result);
+        }
+        return;
+    }
+    r_result = t_result;
+}
+
+template <real64_t (*Func)(real64_t*, uindex_t)>
+void MCMathEvalCheckedNaryFunction(MCExecContext& ctxt, real64_t* p_values, uindex_t p_count, real64_t& r_result)
+{
+    if (p_count == 0)
+    {
+        r_result = 0.0;
+        return;
+    }
+    
+    real64_t t_result = Func(p_values, p_count);
+    if (!MCMathCheckNaryResult(ctxt, p_values, p_count, t_result))
+    {
+        MCMathThrowFloatingPointException(ctxt, t_result);
+        return;
+    }
+    r_result = t_result;
+}
+
 void MCMathEvalAcos(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	if (p_in < -1.0 || p_in > 1.0)
-	{
-		ctxt.LegacyThrow(EE_ACOS_DOMAIN);
-		return;
-	}
-
-	r_result = acos(p_in);
+    MCMathEvalCheckedUnaryFunction<acos>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalAsin(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	if (p_in < -1.0 || p_in > 1.0)
-	{
-		ctxt.LegacyThrow(EE_ASIN_DOMAIN);
-		return;
-	}
-
-	r_result = asin(p_in);
+    MCMathEvalCheckedUnaryFunction<asin>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalAtan(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	r_result = atan(p_in);
+	MCMathEvalCheckedUnaryFunction<atan>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalAtan2(MCExecContext& ctxt, real64_t p_y, real64_t p_x, real64_t& r_result)
 {
-	r_result = atan2(p_y, p_x);
+	MCMathEvalCheckedBinaryFunction<atan2>(ctxt, p_y, p_x, r_result);
 }
 
 void MCMathEvalCos(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	r_result = cos(p_in);
+	MCMathEvalCheckedUnaryFunction<cos>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalSin(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	r_result = sin(p_in);
+	MCMathEvalCheckedUnaryFunction<sin>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalTan(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	r_result = tan(p_in);
+	MCMathEvalCheckedUnaryFunction<tan>(ctxt, p_in, r_result);
 }
 
 //////////
 
 void MCMathEvalExp(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = exp(p_in);
-	if (MCS_geterrno() != 0 || MCS_isnan(r_result))
-	{
-		ctxt.LegacyThrow(EE_EXP_DOMAIN);
-		MCS_seterrno(0);
-	}
+    MCMathEvalCheckedUnaryFunction<exp>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalExp1(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = exp(p_in) - 1.0;
-	if (MCS_geterrno() != 0 || MCS_isnan(r_result))
-	{
-		ctxt.LegacyThrow(EE_EXP1_DOMAIN);
-		MCS_seterrno(0);
-	}
+    MCMathEvalCheckedUnaryFunction<expm1>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalExp2(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = pow(2.0, p_in);
-	if (MCS_geterrno() != 0 || MCS_isnan(r_result))
-	{
-		ctxt.LegacyThrow(EE_EXP2_DOMAIN);
-		MCS_seterrno(0);
-	}
+    MCMathEvalCheckedUnaryFunction<exp2>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalExp10(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = pow(10.0, p_in);
-	if (MCS_geterrno() != 0 || MCS_isnan(r_result))
-	{
-		ctxt.LegacyThrow(EE_EXP10_DOMAIN);
-		MCS_seterrno(0);
-	}
+    MCMathEvalCheckedBinaryFunction<pow>(ctxt, 10.0, p_in, r_result);
 }
 
 //////////
 
+static bool mc_log_check_divide_by_zero(real64_t p_in)
+{
+    return (p_in == 0);
+}
+
+static bool mc_log1_check_divide_by_zero(real64_t p_in)
+{
+    return (p_in == -1);
+}
+
+static real64_t mc_log2(real64_t p_in)
+{
+#ifdef TARGET_SUBPLATFORM_ANDROID
+    return (log(p_in) / log(2.0));
+#else
+    return log2(p_in);
+#endif
+}
+
+
 void MCMathEvalLn(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = log(p_in);
-	if (MCS_geterrno() != 0 || MCS_isnan(r_result))
-	{
-		ctxt.LegacyThrow(EE_LN_DOMAIN);
-		MCS_seterrno(0);
-	}
+    MCMathEvalCheckedUnaryFunction<log,mc_log_check_divide_by_zero>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalLn1(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = log(p_in + 1.0);
-	if (MCS_geterrno() != 0 || MCS_isnan(r_result))
-	{
-		ctxt.LegacyThrow(EE_LN1_DOMAIN);
-		MCS_seterrno(0);
-	}
+    MCMathEvalCheckedUnaryFunction<log1p,mc_log1_check_divide_by_zero>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalLog2(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = log(p_in) / log(2.0);
-	if (MCS_geterrno() != 0 || MCS_isnan(r_result))
-	{
-		ctxt.LegacyThrow(EE_LOG2_DOMAIN);
-		MCS_seterrno(0);
-	}
+    MCMathEvalCheckedUnaryFunction<mc_log2,mc_log_check_divide_by_zero>(ctxt, p_in, r_result);
 }
 
 void MCMathEvalLog10(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = log10(p_in);
-	if (MCS_geterrno() != 0 || MCS_isnan(r_result))
-	{
-		ctxt.LegacyThrow(EE_LOG10_DOMAIN);
-		MCS_seterrno(0);
-	}
+    MCMathEvalCheckedUnaryFunction<log10,mc_log_check_divide_by_zero>(ctxt, p_in, r_result);
 }
 
 //////////
 
 void MCMathEvalSqrt(MCExecContext& ctxt, real64_t p_in, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = sqrt(p_in);
-	if (MCS_geterrno() != 0 || MCS_isnan(r_result))
-	{
-		ctxt.LegacyThrow(EE_SQRT_DOMAIN);
-		MCS_seterrno(0);
-	}
+    MCMathEvalCheckedUnaryFunction<sqrt>(ctxt, p_in, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static real64_t mc_annuity(real64_t p_rate, real64_t p_periods)
+{
+    if (p_rate == 0)
+        return p_periods;
+    return (1.0 - pow(1.0 + p_rate, -p_periods)) / p_rate;
+}
+
+static bool mc_annuity_check_divide_by_zero(real64_t p_rate, real64_t p_periods)
+{
+    return (p_rate == -1 && p_periods > 0);
+}
+
+static real64_t mc_compound(real64_t p_rate, real64_t p_periods)
+{
+    return pow(1.0 + p_rate, p_periods);
+}
+
+static bool mc_compound_check_divide_by_zero(real64_t p_rate, real64_t p_periods)
+{
+    return (p_rate == -1 && p_periods < 0);
+}
+
 void MCMathEvalAnnuity(MCExecContext& ctxt, real64_t p_rate, real64_t p_periods, real64_t& r_result)
 {
-	r_result = (1.0 - pow(1.0 + p_rate, -p_periods)) / p_rate;
+	MCMathEvalCheckedBinaryFunction<mc_annuity,mc_annuity_check_divide_by_zero>(ctxt, p_rate, p_periods, r_result);
 }
 
 void MCMathEvalCompound(MCExecContext& ctxt, real64_t p_rate, real64_t p_periods, real64_t& r_result)
 {
-	r_result = pow(1.0 + p_rate, p_periods);
+	MCMathEvalCheckedBinaryFunction<mc_compound,mc_compound_check_divide_by_zero>(ctxt, p_rate, p_periods, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMathEvalArithmeticMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+static real64_t mc_arithmetic_mean(real64_t *p_values, uindex_t p_count)
 {
-	if (p_count == 0)
-	{
-		r_result = 0;
-		return;
-	}
+    real64_t t_total = 0.0;
+    for (uindex_t i = 0; i < p_count; i++)
+    {
+        t_total += p_values[i];
+    }
+    return t_total / p_count;
+}
 
-	real64_t t_total = 0.0;
-	for (uindex_t i = 0; i < p_count; i++)
-		t_total += p_values[i];
+static real64_t mc_geometric_mean(real64_t *p_values, uindex_t p_count)
+{
+    real64_t t_result = 1.0;
+    real64_t t_exponent = 1.0 / p_count;
+    for (uindex_t i = 0; i < p_count; i++)
+    {
+        t_result *= pow(p_values[i], t_exponent);
+    }
+    
+    return t_result;
+}
 
-	r_result = t_total / p_count;
+static real64_t mc_harmonic_mean(real64_t *p_values, uindex_t p_count)
+{
+    real64_t t_total = 0.0;
+    for (uindex_t i = 0; i < p_count; i++)
+    {
+        t_total += 1 / p_values[i];
+    }
+    return p_count / t_total;
 }
 
 int cmp_real64_t(const void* a, const void* b)
 {
-	real64_t t_a, t_b;
-	t_a = *(real64_t*)a;
-	t_b = *(real64_t*)b;
-	return (t_a > t_b) - (t_a < t_b);
+    real64_t t_a, t_b;
+    t_a = *(real64_t*)a;
+    t_b = *(real64_t*)b;
+    return (t_a > t_b) - (t_a < t_b);
 }
 
-void MCMathEvalMedian(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+static real64_t mc_median(real64_t *p_values, uindex_t p_count)
 {
-	if (p_count == 0)
-	{
-		r_result = 0;
-		return;
-	}
-
-	qsort((void*)p_values, p_count, sizeof(real64_t), cmp_real64_t);
-	uindex_t t_index = p_count / 2;
-	if (p_count & 1) // odd
-		r_result = p_values[t_index];
-	else // even, return avg of two nearest-to-centre values
-		r_result = (p_values[t_index - 1] + p_values[t_index]) / 2.0;
+    qsort((void*)p_values, p_count, sizeof(real64_t), cmp_real64_t);
+    uindex_t t_index = p_count / 2;
+    if (p_count & 1) // odd
+        return p_values[t_index];
+    else // even, return avg of two nearest-to-centre values
+        return (p_values[t_index - 1] + p_values[t_index]) / 2.0;
 }
 
-void MCMathEvalMin(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+static real64_t mc_min(real64_t *p_values, uindex_t p_count)
 {
-	if (p_count == 0)
-	{
-		r_result = 0.0;
-		return;
-	}
-
-	r_result = p_values[0];
-	for (uindex_t i = 1; i < p_count; i++)
-	{
-		if (p_values[i] < r_result)
-			r_result = p_values[i];
-	}
+    real64_t t_result = p_values[0];
+    for (uindex_t i = 1; i < p_count; i++)
+    {
+        if (p_values[i] < t_result)
+            t_result = p_values[i];
+    }
+    return t_result;
 }
 
-void MCMathEvalMax(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+static real64_t mc_max(real64_t *p_values, uindex_t p_count)
 {
-	if (p_count == 0)
-	{
-		r_result = 0.0;
-		return;
-	}
-
-	r_result = p_values[0];
-	for (uindex_t i = 1; i < p_count; i++)
-	{
-		if (p_values[i] > r_result)
-			r_result = p_values[i];
-	}
+    real64_t t_result = p_values[0];
+    for (uindex_t i = 1; i < p_count; i++)
+    {
+        if (p_values[i] > t_result)
+            t_result = p_values[i];
+    }
+    return t_result;
 }
 
-// IM-2012-08-16: Note: this computes the sample standard deviation rather than
-// the population standard deviation, hence the division by n - 1 rather than n.
-void MCMathEvalSampleStdDev(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+static real64_t mc_sum(real64_t *p_values, uindex_t p_count)
 {
-    MCMathEvaluateStatsFunction(ctxt, F_SMP_STD_DEV, p_values, p_count, r_result);
+    real64_t t_total = 0.0;
+    for (uindex_t i = 0; i < p_count; i++)
+        t_total += p_values[i];
+    
+    return t_total;
 }
 
-void MCMathEvalSum(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+void MCMathEvalArithmeticMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
 {
-	real64_t t_total = 0.0;
-	for (uindex_t i = 0; i < p_count; i++)
-		t_total += p_values[i];
-
-	r_result = t_total;
-}
-
-void MCMathEvalAverageDeviation(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
-{
-    MCMathEvaluateStatsFunction(ctxt, F_AVG_DEV, p_values, p_count, r_result);
+    MCMathEvalCheckedNaryFunction<mc_arithmetic_mean>(ctxt, p_values, p_count, r_result);
 }
 
 void MCMathEvalGeometricMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
 {
-    MCMathEvaluateStatsFunction(ctxt, F_GEO_MEAN, p_values, p_count, r_result);
+    MCMathEvalCheckedNaryFunction<mc_geometric_mean>(ctxt, p_values, p_count, r_result);
 }
 
 void MCMathEvalHarmonicMean(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
 {
-    MCMathEvaluateStatsFunction(ctxt, F_HAR_MEAN, p_values, p_count, r_result);
+    MCMathEvalCheckedNaryFunction<mc_harmonic_mean>(ctxt, p_values, p_count, r_result);
 }
 
-void MCMathEvalPopulationStdDev(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+void MCMathEvalMedian(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
 {
-    MCMathEvaluateStatsFunction(ctxt, F_POP_STD_DEV, p_values, p_count, r_result);
+    MCMathEvalCheckedNaryFunction<mc_median>(ctxt, p_values, p_count, r_result);
 }
 
-void MCMathEvalPopulationVariance(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+void MCMathEvalMin(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
 {
-    MCMathEvaluateStatsFunction(ctxt, F_POP_VARIANCE, p_values, p_count, r_result);
+    MCMathEvalCheckedNaryFunction<mc_min>(ctxt, p_values, p_count, r_result);
 }
 
-void MCMathEvalSampleVariance(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+void MCMathEvalMax(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
 {
-    MCMathEvaluateStatsFunction(ctxt, F_SMP_VARIANCE, p_values, p_count, r_result);
+    MCMathEvalCheckedNaryFunction<mc_max>(ctxt, p_values, p_count, r_result);
 }
 
+void MCMathEvalSum(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+{
+    MCMathEvalCheckedNaryFunction<mc_sum>(ctxt, p_values, p_count, r_result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -471,141 +593,90 @@ void MCMathEvalBitwiseXor(MCExecContext& ctxt, uinteger_t p_left, uinteger_t p_r
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMathEvalDiv(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
+static real64_t mc_div(real64_t p_left, real64_t p_right)
 {
-	MCS_seterrno(0);
-	if (p_right == 0.0)
-	{
-		ctxt.LegacyThrow(EE_DIV_ZERO);
-		return;
-	}
-
-	r_result = p_left / p_right;
-
-	if (r_result == MCinfinity || MCS_geterrno() != 0)
-	{
-		MCS_seterrno(0);
-		ctxt.LegacyThrow(EE_DIV_RANGE);
-		return;
-	}
-
-	if (r_result < 0.0)
-		r_result = ceil(r_result);
-	else
-		r_result = floor(r_result);
+    real64_t t_result = p_left / p_right;
+    if (t_result < 0.0)
+        return ceil(t_result);
+    else
+        return floor(t_result);
 }
 
-void MCMathEvalSubtract(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
+static bool mc_mod_check_divide_by_zero(real64_t p_left, real64_t p_right)
 {
-	MCS_seterrno(0);
-	r_result = p_left - p_right;
+    return (p_right == 0);
+}
 
-	if (MCS_geterrno() != 0)
-	{
-		MCS_seterrno(0);
-		ctxt.LegacyThrow(EE_MINUS_RANGE);
-		return;
-	}
+static bool mc_over_check_divide_by_zero(real64_t p_left, real64_t p_right)
+{
+    return (p_right == 0);
+}
+
+void MCMathEvalDiv(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
+{
+    MCMathEvalCheckedBinaryFunction<mc_div,mc_over_check_divide_by_zero>(ctxt, p_left, p_right, r_result);
 }
 
 void MCMathEvalMod(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
 {
-	if (p_right == 0.0)
-	{
-		ctxt.LegacyThrow(EE_MOD_ZERO);
-		return;
-	}
-
-	MCS_seterrno(0);
-	r_result = p_left / p_right;
-
-	if (MCS_geterrno() != 0)
-	{
-		MCS_seterrno(0);
-		ctxt.LegacyThrow(EE_MOD_RANGE);
-		return;
-	}
-
-	r_result = fmod(p_left, p_right);
+    MCMathEvalCheckedBinaryFunction<fmod,mc_mod_check_divide_by_zero>(ctxt, p_left, p_right, r_result);
 }
 
 void MCMathEvalWrap(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
 {
-	if (p_right == 0.0)
-	{
-		ctxt.LegacyThrow(EE_WRAP_ZERO);
-		return;
-	}
+    MCMathEvalCheckedBinaryFunction<MCU_fwrap,mc_mod_check_divide_by_zero>(ctxt, p_left, p_right, r_result);
+}
 
-	MCS_seterrno(0);
-	r_result = p_left / p_right;
+////////////////////////////////////////////////////////////////////////////////
 
-	if (MCS_geterrno() != 0)
-	{
-		MCS_seterrno(0);
-		ctxt.LegacyThrow(EE_WRAP_RANGE);
-		return;
-	}
+static real64_t mc_minus(real64_t p_left, real64_t p_right)
+{
+    return p_left - p_right;
+}
 
-	r_result = MCU_fwrap(p_left, p_right);
+static real64_t mc_over(real64_t p_left, real64_t p_right)
+{
+    return p_left / p_right;
+}
+
+static real64_t mc_plus(real64_t p_left, real64_t p_right)
+{
+    return p_left + p_right;
+}
+
+static real64_t mc_multiply(real64_t p_left, real64_t p_right)
+{
+    return p_left * p_right;
+}
+
+static bool mc_pow_check_divide_by_zero(real64_t p_left, real64_t p_right)
+{
+    return (p_left == 0 && p_right < 0);
+}
+
+void MCMathEvalSubtract(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
+{
+    MCMathEvalCheckedBinaryFunction<mc_minus>(ctxt, p_left, p_right, r_result);
 }
 
 void MCMathEvalOver(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
 {
-	if (p_right == 0.0)
-	{
-		ctxt.LegacyThrow(EE_OVER_ZERO);
-		return;
-	}
-
-	MCS_seterrno(0);
-	r_result = p_left / p_right;
-
-	if (MCS_geterrno() != 0)
-	{
-		MCS_seterrno(0);
-		ctxt.LegacyThrow(EE_OVER_RANGE);
-		return;
-	}
+    MCMathEvalCheckedBinaryFunction<mc_over,mc_over_check_divide_by_zero>(ctxt, p_left, p_right, r_result);
 }
 
 void MCMathEvalAdd(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = p_left + p_right;
-
-	if (MCS_geterrno() != 0)
-	{
-		MCS_seterrno(0);
-		ctxt.LegacyThrow(EE_PLUS_RANGE);
-		return;
-	}
+    MCMathEvalCheckedBinaryFunction<mc_plus>(ctxt, p_left, p_right, r_result);
 }
 
 void MCMathEvalMultiply(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = p_left * p_right;
-
-	if (r_result == MCinfinity || MCS_geterrno() != 0)
-	{
-		MCS_seterrno(0);
-		ctxt.LegacyThrow(EE_MULTIPLY_RANGE);
-		return;
-	}
+    MCMathEvalCheckedBinaryFunction<mc_multiply>(ctxt, p_left, p_right, r_result);
 }
 
 void MCMathEvalPower(MCExecContext& ctxt, real64_t p_left, real64_t p_right, real64_t& r_result)
 {
-	MCS_seterrno(0);
-	r_result = pow(p_left, p_right);
-
-	if (r_result == MCinfinity || MCS_geterrno() != 0)
-	{
-		MCS_seterrno(0);
-		ctxt.LegacyThrow(EE_POW_RANGE);
-		return;
-	}
+    MCMathEvalCheckedBinaryFunction<pow, mc_pow_check_divide_by_zero>(ctxt, p_left, p_right, r_result);
 }
 
 //////////
@@ -899,52 +970,110 @@ void MCMathSetRandomSeed(MCExecContext& ctxt, integer_t p_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMathEvaluateStatsFunction(MCExecContext& ctxt, Functions p_func, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+static real64_t MCMathEvaluateStatsFunction(Functions p_func, real64_t *p_values, uindex_t p_count)
 {
-	r_result = 0.0;
-	if (p_count == 0)
-	{
-		return;
-	}
+    if ((p_func == F_SMP_STD_DEV || p_func == F_SMP_VARIANCE)
+        && p_count == 1)
+    {
+        return 0;
+    }
     
-    real64_t t_mean;
-	MCMathEvalArithmeticMean(ctxt, p_values, p_count, t_mean);
-	if (ctxt.HasError())
-		return;
+    real64_t t_mean = mc_arithmetic_mean(p_values, p_count);
     
-    // TODO - move action of MCU_dofunc here
     real64_t t_result = 0.0;
     for (uindex_t i = 0; i < p_count; i++)
-        MCU_dofunc(p_func, i, t_result, p_values[i], p_func == F_GEO_MEAN ? p_count : t_mean, nil);
+    {
+        real64_t t_value = p_values[i] - t_mean;
+        switch (p_func)
+        {
+                // JS-2013-06-19: [[ StatsFunctions ]] Support for 'averageDeviation'
+            case F_AVG_DEV:
+                // IM-2014-02-28: [[ Bug 11778 ]] Make sure we're using the floating-point version of 'abs'
+                t_result += fabs(t_value);
+                break;
+                // JS-2013-06-19: [[ StatsFunctions ]] Support for 'populationStdDev', 'populationVariance', 'sampleStdDev' (was stdDev), 'sampleVariance'
+            case F_POP_STD_DEV:
+            case F_POP_VARIANCE:
+            case F_SMP_STD_DEV:
+            case F_SMP_VARIANCE:
+                t_result += t_value * t_value;
+                break;
+            default:
+                MCUnreachableReturn(0.0);
+                break;
+        }
+    }
     
     switch (p_func)
-	{
+    {
             // JS-2013-06-19: [[ StatsFunctions ]] Support for averageDeviation
-		case F_AVG_DEV:
-			t_result /= p_count;
-			break;
-            // JS-2013-06-19: [[ StatsFunctions ]] Support for harmonicMean
-		case F_HAR_MEAN:
-			t_result = p_count/t_result;
-			break;
-            // JS-2013-06-19: [[ StatsFunctions ]] Support for populationStandardDeviation
-		case F_POP_STD_DEV:
-			t_result = sqrt(t_result/p_count);
-			break;
-            // JS-2013-06-19: [[ StatsFunctions ]] Support for populationVariance
-		case F_POP_VARIANCE:
+        case F_AVG_DEV:
             t_result /= p_count;
-			break;
+            break;
+            // JS-2013-06-19: [[ StatsFunctions ]] Support for populationStandardDeviation
+        case F_POP_STD_DEV:
+            t_result = sqrt(t_result/p_count);
+            break;
+            // JS-2013-06-19: [[ StatsFunctions ]] Support for populationVariance
+        case F_POP_VARIANCE:
+            t_result /= p_count;
+            break;
             // JS-2013-06-19: [[ StatsFunctions ]] Support for sampleStandardDeviation (was stdDev)
-		case F_SMP_STD_DEV:
-			t_result = sqrt(t_result/(p_count - 1));
-			break;
+        case F_SMP_STD_DEV:
+            t_result = sqrt(t_result/(p_count - 1));
+            break;
             // JS-2013-06-19: [[ StatsFunctions ]] Support for sampleVariance
-		case F_SMP_VARIANCE:
-			t_result /= p_count - 1;
-			break;
-		default:
-			break;
+        case F_SMP_VARIANCE:
+            t_result /= p_count - 1;
+            break;
+        default:
+            MCUnreachableReturn(0.0);
+            break;
+    }
+    return t_result;
+}
+
+template <Functions Function>
+void MCMathEvalCheckedStatsFunction(MCExecContext& ctxt, real64_t* p_values, uindex_t p_count, real64_t& r_result)
+{
+    if (p_count == 0)
+    {
+        r_result = 0.0;
+        return;
+    }
+    
+    real64_t t_result = MCMathEvaluateStatsFunction(Function, p_values, p_count);
+    if (!MCMathCheckNaryResult(ctxt, p_values, p_count, t_result))
+    {
+        MCMathThrowFloatingPointException(ctxt, t_result);
+        return;
     }
     r_result = t_result;
+}
+
+// IM-2012-08-16: Note: this computes the sample standard deviation rather than
+// the population standard deviation, hence the division by n - 1 rather than n.
+void MCMathEvalSampleStdDev(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+{
+    MCMathEvalCheckedStatsFunction<F_SMP_STD_DEV>(ctxt, p_values, p_count, r_result);
+}
+
+void MCMathEvalAverageDeviation(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+{
+    MCMathEvalCheckedStatsFunction<F_AVG_DEV>(ctxt, p_values, p_count, r_result);
+}
+
+void MCMathEvalPopulationStdDev(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+{
+    MCMathEvalCheckedStatsFunction<F_POP_STD_DEV>(ctxt, p_values, p_count, r_result);
+}
+
+void MCMathEvalPopulationVariance(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+{
+    MCMathEvalCheckedStatsFunction<F_POP_VARIANCE>(ctxt, p_values, p_count, r_result);
+}
+
+void MCMathEvalSampleVariance(MCExecContext& ctxt, real64_t *p_values, uindex_t p_count, real64_t& r_result)
+{
+    MCMathEvalCheckedStatsFunction<F_SMP_VARIANCE>(ctxt, p_values, p_count, r_result);
 }

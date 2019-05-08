@@ -48,9 +48,12 @@ The arc cosine of <number> is an angle whose cosine is equal to
 
     end acosInDegrees
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
 
 References: pi (constant), function (control structure), cos (function),
-return (glossary), degree (glossary), inverse (keyword)
+return (glossary), degree (glossary), inverse (keyword), math operation (glossary)
 
 Tags: math
 

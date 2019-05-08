@@ -38,9 +38,13 @@ complement the <standardDeviation> <function>. The population standard
 deviation is a measure of how widely distributed the numbers in the
 <numbersList> are.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 References: function (control structure), median (function),
 standardDeviation (function), sum (function), averageDeviation (function),
-average (function), return (glossary)
+average (function), return (glossary), math operation (glossary)
 
 Tags: math
 

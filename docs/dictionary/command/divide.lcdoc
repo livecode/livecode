@@ -67,13 +67,15 @@ the <array>.
 If the <container> or an <element(keyword)> of the <arrayContainer> is
 empty, the <divide> <command> treats its contents as zero.
 
-Attempting to divide by zero causes an execution error.
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
 
 References: multiply (command), format (function), value (function),
 property (glossary), element (glossary), container (glossary),
 expression (glossary), array (glossary), evaluate (glossary),
 command (glossary), field (keyword), element (keyword), button (keyword),
-/ (operator), numberFormat (property)
+/ (operator), numberFormat (property), math operation (glossary)
 
 Tags: math
 

@@ -2185,61 +2185,6 @@ void MCU_cleaninserted()
 		;
 }
 
-void MCU_dofunc(Functions func, uint4 nparams, real8 &n,
-                real8 tn, real8 oldn, MCSortnode *titems)
-{
-	real8 tp;
-	switch (func)
-	{
-    // JS-2013-06-19: [[ StatsFunctions ]] Support for 'arithmeticMean' (was average)
-    case F_ARI_MEAN:
-        n += tn;
-        break;
-	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'averageDeviation'
-	case F_AVG_DEV:
-		tn = tn - oldn;
-		// IM-2014-02-28: [[ Bug 11778 ]] Make sure we're using the floating-point version of 'abs'
-		n += fabs(tn);
-		break;
-	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'geometricMean'
-	case F_GEO_MEAN:
-		if (nparams == 0)
-			n = 1;
-		tp = 1 / oldn;
-		n *= pow(tn, tp);
-		break;
-	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'harmonicMean'
-	case F_HAR_MEAN:
-		n += 1/tn;
-		break;
-	case F_MAX:
-		if (nparams++ == 0 || tn > n)
-			n = tn;
-		break;
-	case F_MIN:
-		if (nparams++ == 0 || tn < n)
-			n = tn;
-		break;
-	case F_SUM:
-		n += tn;
-		break;
-	case F_MEDIAN:
-        /* UNCHECKED */ MCNumberCreateWithReal(tn, titems[nparams].nvalue);
-		break;
-	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'populationStdDev', 'populationVariance', 'sampleStdDev' (was stdDev), 'sampleVariance'
-	case F_POP_STD_DEV:
-	case F_POP_VARIANCE:
-	case F_SMP_STD_DEV:
-	case F_SMP_VARIANCE:
-		tn = tn - oldn;
-		n += tn * tn;
-		break;
-	case  F_UNDEFINED:
-	default:
-		break;
-	}
-}
-
 // MW-2013-06-25: [[ Bug 10983 ]] This function returns true if the given string
 //   could be a url. It checks for strings of the form:
 //     <letter> (<letter> | <digit> | '+' | '.' | '-')+ ':' <char>+

@@ -58,7 +58,9 @@ trunc(dividend/divisor).
 If dividend can be divided evenly into <divisor>, the <expression>
 dividend div divisor is equal to dividend/divisor.
 
-Attempting to divide by zero causes an execution error.
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
 
 Changes:
 The option to divide arrays was introduced in version 1.1. In previous
@@ -66,7 +68,7 @@ versions, only single numbers could be used with the div operator.
 
 References: operator (glossary), array (glossary), element (glossary),
 return (glossary), expression (glossary), integer (keyword),
-element (keyword), / (operator)
+element (keyword), / (operator), math operation (glossary)
 
 Tags: math
 

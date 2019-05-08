@@ -36,10 +36,14 @@ in a list of numbers.
 The population variance is a measure of how widely distributed the
 numbers in the <numbersList> are.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 References: function (control structure), populationVariance (function),
 averageDeviation (function), variance (function), average (function),
 median (function), populationStandardDeviation (function), sum (function),
-standardDeviation (function), return (glossary)
+standardDeviation (function), return (glossary), math operation (glossary)
 
 Tags: math
 

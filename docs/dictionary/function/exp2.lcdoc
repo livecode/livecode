@@ -33,7 +33,12 @@ Use the <exp2> function to obtain a power of 2.
 
 The expression exp2(number) is equal to 2^number.
 
-References: exp (function), binary (glossary), return (glossary)
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
+References: exp (function), binary (glossary), return (glossary),
+math operation (glossary)
 
 Tags: math
 

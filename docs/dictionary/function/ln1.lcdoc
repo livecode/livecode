@@ -37,8 +37,13 @@ raised to obtain the <number>.
 
 The transcendental number e appears in many mathematical formulas.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 References: function (control structure), ln (function), log10 (function),
-log2 (function), exp1 (function), return (glossary), ^ (operator)
+log2 (function), exp1 (function), return (glossary), ^ (operator),
+math operation (glossary)
 
 Tags: math
 

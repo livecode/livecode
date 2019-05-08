@@ -63,17 +63,18 @@ number of <element(glossary)|elements> and the same dimension, and each
 If an element of an array is empty, the </> <operator> treats its 
 contents as zero.
 
-> *Important:* Attempting to divide by zero causes an execution error.
-
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
 
 Changes:
 The option to divide arrays was introduced in version 1.1. In previous
 versions, only single numbers could be used with the / operator.
 
 References: divide (command), operator (glossary), array (glossary),
-command (glossary), element (glossary), element (keyword), 
-div (operator), precedence (glossary), 
-mod (operator), * (operator), wrap (operator)
+command (glossary), element (glossary), element (keyword),
+div (operator), precedence (glossary),
+mod (operator), * (operator), wrap (operator), math operation (glossary)
 
 Tags: math
 

@@ -73,11 +73,15 @@ empty, the <subtract> <command> treats its contents as zero.
 If <container> is a <field> or <button>, the <format> of the sum is
 determined by the <numberFormat> <property>.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 References: multiply (command), format (function), value (function),
 property (glossary), element (glossary), container (glossary),
 expression (glossary), array (glossary), evaluate (glossary),
 command (glossary), field (keyword), element (keyword), button (keyword),
-- (operator), numberFormat (property)
+- (operator), numberFormat (property), math operation (glossary)
 
 Tags: math
 

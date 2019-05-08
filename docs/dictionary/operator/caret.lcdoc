@@ -44,8 +44,12 @@ If the <exponent> is a fraction, with 1 as the numerator, the <^>
 if the <exponent> is 1/4, the <operation> yields the 4th root of the
 <number>, and so on.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 References: ln1 (function), exp (function), sqrt (function),
-operator (glossary), operation (glossary)
+operator (glossary), operation (glossary), math operation (glossary)
 
 Tags: math
 

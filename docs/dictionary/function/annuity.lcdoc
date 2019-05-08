@@ -55,8 +55,12 @@ For example, if the loan is for $2500 at an interest rate of 2% per
 month and is to be repaid in a year, the monthly payment is
 2500/annuity(.02,12) or $236.40.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 References: function (control structure), compound (function),
-value (function), return (glossary)
+value (function), return (glossary), math operation (glossary)
 
 Tags: math
 

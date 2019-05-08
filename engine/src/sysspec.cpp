@@ -1816,11 +1816,12 @@ bool MCS_isinteractiveconsole(int p_fd)
 
 bool MCS_isnan(double p_number)
 {
-#ifdef _WIN32
-    return (_isnan(p_number) != 0);
-#else
-    return (isnan(p_number) != 0);
-#endif
+    return isnan(p_number);
+}
+
+bool MCS_isfinite(double p_number)
+{
+    return isfinite(p_number);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

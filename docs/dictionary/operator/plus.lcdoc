@@ -58,13 +58,17 @@ number of <element(glossary)|elements> and the same dimension, and each
 If an element of one array is empty, the <+> <operator> treats its
 contents as zero.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 Changes:
 The option to add arrays was introduced in version 1.1. In previous
 versions, only single numbers could be used with the + operator.
 
 References: union (command), sum (function), operator (glossary),
 array (glossary), command (glossary), element (glossary),
-element (keyword), - (operator), () (operator)
+element (keyword), - (operator), () (operator), math operation (glossary)
 
 Tags: math
 
