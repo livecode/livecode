@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "chunk.h"
 #include "funcs.h"
 #include "operator.h"
-#include "constant.h"
 #include "literal.h"
 #include "newobj.h"
 #include "mcerror.h"
@@ -1310,33 +1309,80 @@ Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 	return PS_NO_MATCH;
 }
 
-bool MCScriptPoint::lookupconstantvalue(const char *& r_value)
+bool MCScriptPoint::lookupconstantintable(int& r_position)
 {
-	uint2 high = constant_table_size;
-	uint2 low = 0;
-	int4 cond;
+    int high = constant_table_size;
+    int low = 0;
+    int cond;
     
     MCAutoStringRefAsCString t_token;
     t_token . Lock(gettoken_stringref());
     const char *token_cstring = *t_token;
-	while (low < high)
-	{
-		uint2 mid = low + ((high - low) >> 1);
-		cond = MCU_strncasecmp(token_cstring, constant_table[mid].token, token.getlength());
-		if (cond == 0)
-			cond -= constant_table[mid].token[token.getlength()];
-		if (cond < 0)
-			high = mid;
-		else
-			if (cond > 0)
-				low = mid + 1;
-			else
-			{
-                r_value = constant_table[mid] . svalue;
-				return true;
-			}
-	}
-	return false;
+    while (low < high)
+    {
+        int mid = low + ((high - low) >> 1);
+        cond = MCU_strncasecmp(token_cstring, constant_table[mid].token, token.getlength());
+        if (cond == 0)
+        {
+            cond -= constant_table[mid].token[token.getlength()];
+        }
+        
+        if (cond < 0)
+        {
+            high = mid;
+        }
+        else
+        {
+            if (cond > 0)
+            {
+                low = mid + 1;
+            }
+            else
+            {
+                r_position = mid;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool MCScriptPoint::constantnameconvertstoconstantvalue()
+{
+    int t_position;
+    if (!lookupconstantintable(t_position))
+        return false;
+    
+    switch (constant_table[t_position].type)
+    {
+        case kCValueTypeString:
+        {
+            MCNewAutoNameRef t_constant_value;
+            MCNameCreateWithNativeChars((const char_t *)constant_table[t_position].string,
+                                        strlen(constant_table[t_position].string),
+                                        &t_constant_value);
+
+            return MCNameIsEqualTo(gettoken_nameref(), *t_constant_value, kMCCompareExact);
+        }
+        case kCValueTypeInfinity:
+        case kCValueTypeTrue:
+        case kCValueTypeFalse:
+        {
+            MCNewAutoNameRef t_constant_token;
+            MCNameCreateWithNativeChars((const char_t *)constant_table[t_position].token,
+                                        strlen(constant_table[t_position].token),
+                                        &t_constant_token);
+
+            return MCNameIsEqualTo(gettoken_nameref(), *t_constant_token, kMCCompareExact);
+        }
+        case kCValueTypeReal:
+        case kCValueTypeInteger:
+        case kCValueTypeEmpty:
+        case kCValueTypeNull:
+            return false;
+        default:
+            MCUnreachableReturn(false);
+    }
 }
 
 Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
@@ -1347,47 +1393,54 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
 	if (gethandler() != NULL
 	        && gethandler()->findconstant(gettoken_nameref(), dest) == PS_NORMAL)
 		return PS_NORMAL;
-	uint2 high = constant_table_size;
-	uint2 low = 0;
-	int4 cond;
+
+    int t_position;
+    if (!lookupconstantintable(t_position))
+        return PS_NO_MATCH;
     
-    MCAutoStringRefAsCString t_token;
-    t_token . Lock(gettoken_stringref());
-    const char *token_cstring = *t_token;
+    MCValueRef t_constant_value = nullptr;
+    switch (constant_table[t_position].type)
+    {
+        case kCValueTypeReal:
+            /* UNCHECKED */ MCNumberCreateWithReal(constant_table[t_position].real,
+                                                   (MCNumberRef&)t_constant_value);
+            break;
+        case kCValueTypeInteger:
+            /* UNCHECKED */ MCNumberCreateWithInteger(constant_table[t_position].integer,
+                                                      (MCNumberRef&)t_constant_value);
+            break;
+        case kCValueTypeString:
+            /* UNCHECKED */ MCNameCreateWithNativeChars((const char_t *)constant_table[t_position].string,
+                                                        strlen(constant_table[t_position].string),
+                                                        (MCNameRef&)t_constant_value);
+            break;
+        case kCValueTypeNull:
+            // Create a nameref that contains an explicit nul character
+            /* UNCHECKED */ MCNameCreateWithNativeChars((const char_t *)'\0',
+                                                        1,
+                                                        (MCNameRef&)t_constant_value);
+            break;
+        case kCValueTypeEmpty:
+            t_constant_value = MCValueRetain(kMCEmptyString);
+            break;
+        case kCValueTypeTrue:
+            t_constant_value = MCValueRetain(kMCTrue);
+            break;
+        case kCValueTypeFalse:
+            t_constant_value = MCValueRetain(kMCFalse);
+            break;
+        case kCValueTypeInfinity:
+            /* UNCHECKED */ MCNumberCreateWithReal(MCinfinity,
+                                                   (MCNumberRef&)t_constant_value);
+            break;
+        default:
+            MCUnreachableReturn(PS_NO_MATCH);
+    }
+    MCAutoValueRef t_unique_value;
+    /* UNCHECKED */ MCValueInterAndRelease(t_constant_value, &t_unique_value);
+    *dest = new (nothrow) MCLiteral(*t_unique_value);
     
-	while (low < high)
-	{
-		uint2 mid = low + ((high - low) >> 1);
-		cond = MCU_strncasecmp(token_cstring, constant_table[mid].token, token.getlength());
-		if (cond == 0)
-			cond -= constant_table[mid].token[token.getlength()];
-		if (cond < 0)
-			high = mid;
-		else
-			if (cond > 0)
-				low = mid + 1;
-			else
-			{
-				if (token.getlength() == 4 && MCU_strncasecmp(token_cstring, "null", 4) == 0)
-				{
-					// Create a stringref that contains an explicit nul character
-                    MCAutoStringRef t_nul_string;
-                    /* UNCHECKED */ MCStringCreateWithBytes((const byte_t*)"", 1, kMCStringEncodingASCII, false, &t_nul_string);
-                    
-                    *dest = new (nothrow) MCConstant(*t_nul_string, BAD_NUMERIC);
-				}
-                else if (token.getlength() == 5 && MCU_strncasecmp(token_cstring, "empty", 5) == 0)
-                {
-                    // Uses the kMCNull as a StringRef - that's what is expected from 'empty'
-                    *dest = new (nothrow) MCConstant(kMCEmptyString, BAD_NUMERIC);
-                }
-				else
-					*dest = new (nothrow) MCConstant(MCSTR(constant_table[mid].svalue),
-					                       constant_table[mid].nvalue);
-				return PS_NORMAL;
-			}
-	}
-	return PS_NO_MATCH;
+    return PS_NORMAL;
 }
 
 Parse_stat MCScriptPoint::skip_token(Script_point table,

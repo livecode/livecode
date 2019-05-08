@@ -89,7 +89,6 @@
 			'src/cmdsm.cpp',
 			'src/cmdsp.cpp',
 			'src/cmdss.cpp',
-			'src/constant.cpp',
 			'src/date.cpp',
 			'src/express.cpp',
 			'src/external.cpp',
