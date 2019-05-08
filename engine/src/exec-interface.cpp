@@ -2722,9 +2722,25 @@ void MCInterfaceExecPopupWidget(MCExecContext &ctxt, MCNameRef p_kind, MCPoint *
 	
 	MCPoint t_at;
 	if (p_at != nil)
-		t_at = *p_at;
+    {
+        if (!MCtargetptr)
+        {
+            ctxt . LegacyThrow(EE_SUBWINDOW_NOSTACK);
+            return;
+        }
+        
+		t_at = MCtargetptr->getstack()->stacktogloballoc(*p_at);
+    }
 	else
-		t_at = MCPointMake(MCmousex, MCmousey);
+    {
+        if (!MCmousestackptr)
+        {
+            ctxt . LegacyThrow(EE_SUBWINDOW_NOSTACK);
+            return;
+        }
+        
+		t_at = MCmousestackptr->stacktogloballoc(MCPointMake(MCmousex, MCmousey));
+    }
 	
 	MCAutoValueRef t_result;
 	if (!MCWidgetPopupAtLocationWithProperties(p_kind, t_at, p_properties, &t_result) || MCValueIsEmpty(*t_result))
