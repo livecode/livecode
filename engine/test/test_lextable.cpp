@@ -25,7 +25,7 @@ TEST(lextable, constant_table)
 // Checks that the entries of constant_table are in alphabetical order.
 //
 {
-	extern const Cvalue constant_table[];
+    extern const Cvalue *constant_table;
 	extern const uint4 constant_table_size;
 
 	ASSERT_GE(constant_table_size, (unsigned)1);
