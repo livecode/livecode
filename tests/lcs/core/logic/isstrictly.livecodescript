@@ -45,24 +45,38 @@ on TestStrictlyNothing
 end TestStrictlyNothing
 
 on TestStrictlyBoolean
+   __TestIsStrictly true, "a boolean"
+   __TestIsStrictly false, "a boolean"
    __TestIsStrictly true and true, "a boolean"
    __TestIsStrictly false and true, "a boolean"
 end TestStrictlyBoolean
 
 on TestStrictlyInteger
    __TestIsStrictly the number of items in "_", "an integer"
+   __TestIsStrictly zero, "an integer"
+   __TestIsStrictly one, "an integer"
+   __TestIsStrictly two, "an integer"
+   __TestIsStrictly three, "an integer"
+   __TestIsStrictly four, "an integer"
+   __TestIsStrictly five, "an integer"
+   __TestIsStrictly six, "an integer"
+   __TestIsStrictly seven, "an integer"
+   __TestIsStrictly eight, "an integer"
+   __TestIsStrictly nine, "an integer"
+   __TestIsStrictly ten, "an integer"
 end TestStrictlyInteger
 
 on TestStrictlyReal
-   __TestIsStrictly infinity + 0.0, "a real"
+   __TestIsStrictly infinity, "a real"
+   __TestIsStrictly pi, "a real"
 end TestStrictlyReal
 
 on TestStrictlyString
    __TestIsStrictly "nothing", "a string"
    __TestIsStrictly 1, "a string"
    __TestIsStrictly 1.0, "a string"
-   __TestIsStrictly infinity, "a string"
-   __TestIsStrictly true, "a string"
+   __TestIsStrictly null, "a string"
+   __TestIsStrictly empty, "a string"
 end TestStrictlyString
 
 on TestStrictlyBinaryString
