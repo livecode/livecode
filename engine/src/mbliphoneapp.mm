@@ -25,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <unistd.h>
 
 #include "mbliphoneview.h"
+#include "graphics_util.h"
 
 #include "mblnotification.h"
 #import <sys/utsname.h>
@@ -272,7 +273,9 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     {
         MCmajorosversion += [[t_sys_version_array objectAtIndex:2] intValue];
     }
-
+    
+    m_keyboard_display = kMCIPhoneKeyboardDisplayModeOver;
+    
 	// We are done (successfully) so return ourselves.
 	return self;
 }
@@ -821,12 +824,82 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 
     // MM-2012-02-26: [[ Bug 10677 ]] Keyboard dimensions do not take into account orientation.
     //  We want height here, so assume the keyboard is always wider than it is taller and take the min of the two.
-	MCIPhoneHandleKeyboardWillActivate(MCMin(t_size . height, t_size . width));
+    CGFloat t_height = MCMin(t_size . height, t_size . width);
+    MCIPhoneHandleKeyboardWillActivate(t_height);
+    
+    if (m_keyboard_display == kMCIPhoneKeyboardDisplayModePan)
+    {
+        MCObject *t_object = nullptr;
+        if (MCactivefield.IsValid())
+        {
+            t_object = MCactivefield;
+        }
+        
+        if (t_object == nullptr)
+        {
+            t_object = MCdefaultstackptr->getcard()->getkfocused();
+        }
+        
+        CGRect t_focused_rect;
+        if (t_object != nullptr)
+        {
+            MCRectangle t_object_rect = t_object -> getrect();
+            MCGAffineTransform t_transform = t_object->getstack()->getroottransform();
+            
+            MCRectangle t_transformed_object_rect =
+                    MCRectangleGetTransformedBounds(t_object_rect, t_transform);
+            t_focused_rect = MCRectangleToCGRect(t_transformed_object_rect);
+        }
+        else
+        {
+            UIView *t_responder = [[m_main_controller rootView] com_runrev_livecode_findFirstResponder];
+            if (t_responder == nil)
+            {
+                return;
+            }
+            
+            t_focused_rect = t_responder.frame;
+        }
+        
+        UIView* t_view = [m_main_controller rootView];
+        CGRect t_frame = t_view.frame;
+        
+        CGFloat t_pan = t_frame.size.height - t_height - (t_focused_rect.origin.y + t_focused_rect.size.height);
+        
+        // if the focused rect is high we don't want to pan the top of it out of view
+        if (t_pan < -t_focused_rect.origin.y)
+        {
+            t_pan = -t_focused_rect.origin.y;
+        }
+        
+        if (t_pan > 0)
+        {
+            // no need to pan
+            return;
+        }
+        
+        [UIView beginAnimations: @"panrootviewup" context: nil];
+        [UIView setAnimationBeginsFromCurrentState: YES];
+        [UIView setAnimationDuration: 0.2f];
+        t_frame.origin.y = t_pan;
+        t_view.frame = t_frame;
+        [UIView commitAnimations];
+    }
 }
 
 - (void)keyboardWillDeactivate:(NSNotification *)notification
 {
 	MCIPhoneHandleKeyboardWillDeactivate();
+    
+    UIView* t_view = [m_main_controller rootView];
+    if (t_view.frame.origin.y != 0)
+    {
+        [UIView beginAnimations: @"panrootviewdown" context: nil];
+        [UIView setAnimationBeginsFromCurrentState: YES];
+        [UIView setAnimationDuration: 0.2f];
+        t_view.frame = CGRectOffset(t_view.frame, 0, -t_view.frame.origin.y);
+        [UIView commitAnimations];
+    }
 }
 
 - (void)keyboardDidActivate:(NSNotification *)notification
@@ -1005,6 +1078,10 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	[[[m_main_controller rootView] textView] setReturnKeyType: p_new_type];
 }
 
+- (void)configureKeyboardDisplay: (MCIPhoneKeyboardDisplayMode)p_mode
+{
+    m_keyboard_display = p_mode;
+}
 //////////
 
 - (uint32_t)allowedOrientations
@@ -1978,6 +2055,11 @@ UIKeyboardType MCIPhoneGetKeyboardType(void)
 void MCIPhoneSetReturnKeyType(UIReturnKeyType p_type)
 {
 	[[MCIPhoneApplication sharedApplication] configureReturnKeyType: p_type];
+}
+
+void MCIPhoneSetKeyboardDisplay(MCIPhoneKeyboardDisplayMode p_mode)
+{
+    [[MCIPhoneApplication sharedApplication] configureKeyboardDisplay: p_mode];
 }
 
 void MCIPhoneActivateKeyboard(void)

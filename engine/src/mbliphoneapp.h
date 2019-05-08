@@ -67,6 +67,12 @@ enum MCIPhoneApplicationStatus
 	kMCIPhoneApplicationStatusShutdown,
 };
 
+enum MCIPhoneKeyboardDisplayMode
+{
+    kMCIPhoneKeyboardDisplayModeOver,
+    kMCIPhoneKeyboardDisplayModePan,
+};
+
 @interface MCIPhoneApplication : NSObject <UIApplicationDelegate>
 {
 	// The actual application object (remember this object is only a delegate!).
@@ -132,6 +138,8 @@ enum MCIPhoneApplicationStatus
     bool m_pending_launch_url;
     // We need to know if the application is active before we can send a message
     bool m_did_become_active;
+
+    MCIPhoneKeyboardDisplayMode m_keyboard_display;
 }
 
 //////////
@@ -227,6 +235,8 @@ enum MCIPhoneApplicationStatus
 - (void)configureKeyboardType: (UIKeyboardType)newKeyboardType;
 // Configure the type of return key.
 - (void)configureReturnKeyType: (UIReturnKeyType)newReturnKeyType;
+// Configure the keyboard display.
+- (void)configureKeyboardDisplay: (MCIPhoneKeyboardDisplayMode)p_mode;
 
 // Get the set of allowed orientations.
 - (uint32_t)allowedOrientations;
@@ -393,6 +403,7 @@ void MCIPhoneSwitchViewToOpenGL(void);
 UIKeyboardType MCIPhoneGetKeyboardType(void);
 void MCIPhoneSetKeyboardType(UIKeyboardType type);
 void MCIPhoneSetReturnKeyType(UIReturnKeyType type);
+void MCIPhoneSetKeyboardDisplay(MCIPhoneKeyboardDisplayMode p_mode);
 UIInterfaceOrientation MCIPhoneGetOrientation(void);
 bool MCIPhoneIsEmbedded(void);
 void MCIPhoneBreakWait(void);

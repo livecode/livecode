@@ -654,6 +654,12 @@ bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
     return true;
 }
 
+bool MCSystemSetKeyboardDisplay(intenum_t p_type)
+{
+    MCIPhoneSetKeyboardDisplay((MCIPhoneKeyboardDisplayMode)p_type);
+    return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // SN-2014-12-11: [[ Merge-6.7.1-rc-4 ]]
 bool MCSystemGetIsVoiceOverRunning(bool &r_is_vo_running)

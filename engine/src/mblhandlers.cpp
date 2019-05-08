@@ -3057,6 +3057,62 @@ Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters
     return ES_ERROR;
 }
 
+static const char *s_keyboard_display_names[] =
+{
+    "over", "pan", nil
+};
+
+
+Exec_stat MCHandleSetKeyboardDisplay(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    ctxt.SetTheResultToEmpty();
+    
+    MCAutoStringRef t_mode_string;
+    if (!MCParseParameters(p_parameters, "x", &(&t_mode_string)))
+    {
+        return ES_ERROR;
+    }
+    
+    bool t_success = true;
+    
+    intenum_t t_mode = 0;
+    for (uint32_t i = 0; s_keyboard_display_names[i] != nil; i++)
+    {
+        if (MCStringIsEqualToCString(*t_mode_string, s_keyboard_display_names[i], kMCCompareCaseless))
+        {
+            t_mode = i;
+            break;
+        }
+    }
+    
+    MCMiscExecSetKeyboardDisplay(ctxt, t_mode);
+    
+    if (!ctxt.HasError())
+    {
+        return ES_NORMAL;
+    }
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleGetKeyboardDisplay(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    ctxt.SetTheResultToEmpty();
+    
+    intenum_t t_mode;
+    MCMiscExecGetKeyboardDisplay(ctxt, t_mode);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToStaticCString(s_keyboard_display_names[t_mode]);
+        return ES_NORMAL;
+    }
+    
+    return ES_ERROR;
+}
+
 Exec_stat MCHandlePreferredLanguages(void *context, MCParameter* p_parameters)
 {
     MCExecContext ctxt(nil, nil, nil);
@@ -4782,6 +4838,9 @@ static const MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobileIsNFCEnabled", MCHandleIsNFCEnabled, nil},
 	{false, "mobileEnableNFCDispatch", MCHandleEnableNFCDispatch, nil},
 	{false, "mobileDisableNFCDispatch", MCHandleDisableNFCDispatch, nil},
+    
+    {false, "mobileSetKeyboardDisplay", MCHandleSetKeyboardDisplay, nil},
+    {false, "mobileGetKeyboardDisplay", MCHandleGetKeyboardDisplay, nil},
     
 	{nil, nil, nil}    
 };

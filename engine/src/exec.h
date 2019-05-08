@@ -4019,6 +4019,8 @@ void MCMiscExecHideStatusBar(MCExecContext& ctxt);
 
 void MCMiscSetKeyboardType(MCExecContext& ctxt, intenum_t p_keyboard_type);
 void MCMiscSetKeyboardReturnKey(MCExecContext& ctxt, intenum_t p_keyboard_return_key);
+void MCMiscExecSetKeyboardDisplay(MCExecContext& ctxt, intenum_t p_mode);
+void MCMiscExecGetKeyboardDisplay(MCExecContext& ctxt, intenum_t& r_mode);
 
 void MCMiscGetPreferredLanguages(MCExecContext& ctxt, MCStringRef& r_preferred_languages);
 void MCMiscGetCurrentLocale(MCExecContext& ctxt, MCStringRef& r_current_locale);

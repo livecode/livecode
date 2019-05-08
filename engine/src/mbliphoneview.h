@@ -31,6 +31,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static inline CGRect MCRectangleToCGRect(const MCRectangle &p_rect)
+{
+    return CGRectMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 @interface MCIPhoneRootView : UIView <UITextViewDelegate>
 {
 	// MW-2012-03-05: [[ ViewStack ]] The stack which is currently being displayed.
