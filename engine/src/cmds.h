@@ -1744,7 +1744,7 @@ class MCGo : public MCStatement
 	MCExpression *window;
 	Window_mode mode;
 	Boolean marked;
-	Boolean visible;
+	MCInterfaceExecGoVisibility visibility_type;
 	Boolean thisstack;
 	
 	MCChunk *widget;
@@ -1757,7 +1757,7 @@ public:
 		window(nil),
 		mode(WM_LAST),
         marked(False),
-        visible(True),
+        visibility_type(kMCInterfaceExecGoVisibilityImplicit),
         thisstack(False),
 		widget(nil),
         direction(CT_BACKWARD)

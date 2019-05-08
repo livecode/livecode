@@ -55,14 +55,19 @@ on TestGoCardUnquotedName
 end TestGoCardUnquotedName
 
 local sStackFileName
-command _TestCreateStack pBinary
+command _TestCreateStack pBinary, pVisible
    local tStack
    put "stackToGo" into tStack
    
    if pBinary then
       create stack tStack
+      set the visible of stack tStack to pVisible
    else
       create script only stack tStack
+      if pVisible then
+         put "on preOpenStack" & return & "set the visible of me to" && pVisible & return & "end preOpenStack" into tScript
+         set the script of stack tStack to tScript
+      end if
    end if
    
    put the tempname into sStackFileName
@@ -78,7 +83,7 @@ end _TestCleanupStack
 command _TestGoStackUrl pWhich
    TestSkipIfNot "write"
    local tStack
-   _TestCreateStack pWhich is "binary"
+   _TestCreateStack pWhich is "binary", true
    put it into tStack
    go url ("file:" & sStackFileName)
    TestDiagnostic the result
@@ -117,3 +122,75 @@ on TestGoToCard
 	TestAssert "openCard sent to opened card", the cOpened of card 1
 	TestAssert "closeCard sent to closed card", the cClosed of card 2
 end TestGoToCard
+
+on _TestGoInvisibleVisibleStack pMode, pWhich, pVisible
+   TestSkipIfNot "write"
+   local tStack
+   _TestCreateStack pWhich is "binary", pVisible is "visible"
+   put it into tStack
+   do "go" && pMode && "stack sStackFilename"
+   TestDiagnostic the result
+   if pMode is empty then
+      put pVisible into pExpectedVisibility
+   else if pMode is "invisible" and pWhich is "script only" and pVisible is "visible" then
+      --a special case:
+      --a visible script only stack will be visible even if go invisible
+      --is used because the stack becomes visible by a "set the visible..."
+      --line in preOpenStack or openStack. So the setting of the visibility
+      --by the engine will be overridden when the stack is opened
+      put "visible" into pExpectedVisibility
+   else
+      put pMode into pExpectedVisibility
+   end if
+   TestAssert "go" && pMode && "on a" && pVisible && pWhich && "stack opened", there is a stack tStack
+   TestAssert "go" && pMode && "on a" && pVisible && pWhich && "stack is" && pExpectedVisibility, the visible of stack tStack is (pExpectedVisibility is "visible")
+   _TestCleanupStack
+end _TestGoInvisibleVisibleStack
+
+on TestGoVisibleOnVisibleBinary
+   _TestGoInvisibleVisibleStack "visible", "binary", "visible"
+end TestGoVisibleOnVisibleBinary
+
+on TestGoVisibleOnInvisibleBinary
+   _TestGoInvisibleVisibleStack "visible", "binary", "invisible"
+end TestGoVisibleOnInvisibleBinary
+
+on TestGoVisibleOnVisibleScriptOnly
+   _TestGoInvisibleVisibleStack "visible", "script only", "visible"
+end TestGoVisibleOnVisibleScriptOnly
+
+on TestGoVisibleOnInvisibleScriptOnly
+   _TestGoInvisibleVisibleStack "visible", "script only", "invisible"
+end TestGoVisibleOnInvisibleScriptOnly
+
+on TestGoInvisibleOnVisibleBinary
+   _TestGoInvisibleVisibleStack "invisible", "binary", "visible"
+end TestGoInvisibleOnVisibleBinary
+
+on TestGoInvisibleOnInvisibleBinary
+   _TestGoInvisibleVisibleStack "invisible", "binary", "invisible"
+end TestGoInvisibleOnInvisibleBinary
+
+on TestGoInvisibleOnVisibleScriptOnly
+   _TestGoInvisibleVisibleStack "invisible", "script only", "visible"
+end TestGoInvisibleOnVisibleScriptOnly
+
+on TestGoInvisibleOnInvisibleScriptOnly
+   _TestGoInvisibleVisibleStack "invisible", "script only", "invisible"
+end TestGoInvisibleOnInvisibleScriptOnly
+
+on TestGoRegularOnVisibleBinary
+   _TestGoInvisibleVisibleStack "", "binary", "visible"
+end TestGoRegularOnVisibleBinary
+
+on TestGoRegularOnInvisibleBinary
+   _TestGoInvisibleVisibleStack "", "binary", "invisible"
+end TestGoRegularOnInvisibleBinary
+
+on TestGoRegularOnVisibleScriptOnly
+   _TestGoInvisibleVisibleStack "", "script only", "visible"
+end TestGoRegularOnVisibleScriptOnly
+
+on TestGoRegularOnInvisibleScriptOnly
+   _TestGoInvisibleVisibleStack "", "script only", "invisible"
+end TestGoRegularOnInvisibleScriptOnly
