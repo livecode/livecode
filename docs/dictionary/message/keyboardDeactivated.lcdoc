@@ -25,6 +25,6 @@ display layout to take account of the restricted screen area that
 becomes available when the keyboard is hidden.
 
 References: mobileSetKeyboardType (command),
-iphoneSetKeyboardReturnKey (command), current card (glossary),
+mobileSetKeyboardReturnKey (command), current card (glossary),
 keyboardActivated (message)
 

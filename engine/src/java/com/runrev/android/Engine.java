@@ -113,6 +113,8 @@ public class Engine extends View implements EngineApi
 	private boolean m_text_editor_visible;
 	private int m_text_editor_mode;
 
+    private int m_default_ime_action;
+    
     private SensorModule m_sensor_module;
     private DialogModule m_dialog_module;
     private NetworkModule m_network_module;
@@ -165,6 +167,8 @@ public class Engine extends View implements EngineApi
 		m_text_editor_mode = 1;
 		m_text_editor_visible = false;
 
+        m_default_ime_action = EditorInfo.IME_FLAG_NO_ENTER_ACTION | EditorInfo.IME_ACTION_DONE;
+        
         // initialise modules
         m_sensor_module = new SensorModule(this);
         m_dialog_module = new DialogModule(this);
@@ -583,13 +587,19 @@ public class Engine extends View implements EngineApi
 				updateComposingText(text);
 				return super.setComposingText(text, newCursorPosition);
 			}
+            @Override
+            public boolean performEditorAction (int editorAction)
+            {
+                handleKey(0, 10);
+                return true;
+            }
         };
         
 		int t_type = getInputType(false);
 		
         outAttrs.actionLabel = null;
 		outAttrs.inputType = t_type;
-        outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_ENTER_ACTION | EditorInfo.IME_ACTION_DONE;
+        outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | m_default_ime_action;
         
         return t_connection;
     }
@@ -677,6 +687,11 @@ public class Engine extends View implements EngineApi
 		else
 			hideKeyboard();
 	}
+    
+    public void setKeyboardReturnKey(int p_ime_action)
+    {
+        m_default_ime_action = p_ime_action;
+    }
 	
 	public void setTextInputMode(int p_mode)
 	{
