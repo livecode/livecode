@@ -16,6 +16,23 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+private function StringEqualToInf pNumber, pNegative
+    local tInfPlusJunk
+    put "inf plus some junk" into tInfPlusJunk
+    if pNegative then
+        put "-" before tInfPlusJunk
+    end if
+    return offset(pNumber, tInfPlusJunk) is 1
+end StringEqualToInf
+
+command TestInfinityString
+    TestAssert "inf is not padded when converted to string", \
+            StringEqualToInf("inf"+0, false)
+
+    TestAssert "-inf is not padded when converted to string", \
+            StringEqualToInf("-inf"+0, true)
+end TestInfinityString
+
 private command _TestBinaryOperator pLeft, pRight, pOperator, pExpected
     local tResult, tExpr
     switch pOperator

@@ -624,8 +624,16 @@ uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
 	}
 	if (n < 0.0 && n >= -MC_EPSILON)
 		n = 0.0;
-	sprintf(d, "%0*.*f", fw, trailing, n);
-	MCU_strip(d, trailing, force);
+    
+    if (MCS_isfinite(n))
+    {
+        sprintf(d, "%0*.*f", fw, trailing, n);
+        MCU_strip(d, trailing, force);
+    }
+    else
+    {
+        sprintf(d, "%f", n);
+    }
 	
 	// 2007-09-11: [[ Bug 5321 ]] If the first character is '-', we must check
 	//   to see if the value is actually '0', and if it is remove the '-'.
