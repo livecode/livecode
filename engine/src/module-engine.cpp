@@ -265,7 +265,7 @@ bool MCEngineEvalObjectOfScriptObject(MCScriptObjectRef p_object, MCObject *&r_o
 	return true;
 }
 
-MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id)
+MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_set, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id)
 {
 	Properties t_prop;
 	t_prop = parse_property_name(p_property);
@@ -274,11 +274,14 @@ MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_proper
 	
 	if (t_prop == P_CUSTOM)
 	{
-		MCNewAutoNameRef t_propset_name, t_propset_key;
-		t_propset_name = p_object -> getdefaultpropsetname();
-		if (!MCNameCreate(p_property, &t_propset_key))
+		MCNewAutoNameRef t_set_name, t_prop_name;
+		if (MCStringIsEmpty(p_set))
+			t_set_name = p_object -> getdefaultpropsetname();
+		else if (!MCNameCreate(p_set, &t_set_name))
 			return nil;
-		p_object -> getcustomprop(ctxt, *t_propset_name, *t_propset_key, nil, t_value);
+		if (!MCNameCreate(p_property, &t_prop_name))
+			return nil;
+		p_object -> getcustomprop(ctxt, *t_set_name, *t_prop_name, nil, t_value);
 	}
 	else
 		p_object -> getprop(ctxt, p_part_id, t_prop, nil, False, t_value);
@@ -299,7 +302,7 @@ MCValueRef MCEngineGetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_proper
 	return t_value_ref;
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef& r_value)
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecGetPropertyOfSetOfScriptObject(MCStringRef p_property, MCStringRef p_set, MCScriptObjectRef p_object, MCValueRef& r_value)
 {
     if (!MCEngineEnsureScriptObjectAccessIsAllowed())
     {
@@ -316,11 +319,16 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineExecGetPropertyOfScriptObject(MCStringR
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
 
     // AL-2015-07-24: [[ Bug 15630 ]] Syntax binding dictates value returned as out parameter rather than directly
-	r_value = MCEngineGetPropertyOfObject(ctxt, p_property, t_object, t_part_id);
+	r_value = MCEngineGetPropertyOfObject(ctxt, p_set, p_property, t_object, t_part_id);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecGetPropertyOfScriptObject(MCStringRef p_property, MCScriptObjectRef p_object, MCValueRef& r_value)
+{
+	MCEngineExecGetPropertyOfSetOfScriptObject(p_property, kMCEmptyString, p_object, r_value);
 }
 
 // IM-2015-02-23: [[ WidgetPopup ]] Factored-out function for setting the named property of an object to a value.
-void MCEngineSetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id, MCValueRef p_value)
+void MCEngineSetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_set, MCStringRef p_property, MCObject *p_object, uint32_t p_part_id, MCValueRef p_value)
 {
     MCValueRef t_value_copy;
     t_value_copy = MCValueRetain(p_value);
@@ -341,14 +349,20 @@ void MCEngineSetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MC
     
     if (t_prop == P_CUSTOM)
     {
-        MCNewAutoNameRef t_propset_name, t_propset_key;
-		t_propset_name = p_object -> getdefaultpropsetname();
-        if (!MCNameCreate(p_property, &t_propset_key))
-        {
-            MCValueRelease(t_value_copy);
-            return;
-        }
-		p_object -> setcustomprop(ctxt, *t_propset_name, *t_propset_key, nil, t_value);
+		MCNewAutoNameRef t_set_name, t_prop_name;
+		if (MCStringIsEmpty(p_set))
+			t_set_name = p_object -> getdefaultpropsetname();
+		else if (!MCNameCreate(p_set, &t_set_name))
+		{
+			MCValueRelease(t_value_copy);
+			return;
+		}
+		if (!MCNameCreate(p_property, &t_prop_name))
+		{
+			MCValueRelease(t_value_copy);
+			return;
+		}
+		p_object -> setcustomprop(ctxt, *t_set_name, *t_prop_name, nil, t_value);
     }
     else
 		p_object -> setprop(ctxt, p_part_id, t_prop, nil, False, t_value);
@@ -360,21 +374,26 @@ void MCEngineSetPropertyOfObject(MCExecContext &ctxt, MCStringRef p_property, MC
     }
 }
 
-extern "C" MC_DLLEXPORT_DEF void MCEngineExecSetPropertyOfScriptObject(MCValueRef p_value, MCStringRef p_property, MCScriptObjectRef p_object)
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecSetPropertyOfSetOfScriptObject(MCValueRef p_value, MCStringRef p_property, MCStringRef p_set, MCScriptObjectRef p_object)
 {
-    if (!MCEngineEnsureScriptObjectAccessIsAllowed())
-    {
-        return;
-    }
-    
+	if (!MCEngineEnsureScriptObjectAccessIsAllowed())
+	{
+		return;
+	}
+	
 	MCObject *t_object;
 	uint32_t t_part_id;
 	if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
 		return;
 	
-    MCExecContext ctxt(MCdefaultstackptr, nil, nil);
+	MCExecContext ctxt(MCdefaultstackptr, nil, nil);
 
-	MCEngineSetPropertyOfObject(ctxt, p_property, t_object, t_part_id, p_value);
+	MCEngineSetPropertyOfObject(ctxt, p_set, p_property, t_object, t_part_id, p_value);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCEngineExecSetPropertyOfScriptObject(MCValueRef p_value, MCStringRef p_property, MCScriptObjectRef p_object)
+{
+	MCEngineExecSetPropertyOfSetOfScriptObject(p_value, p_property, kMCEmptyString, p_object);
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineEvalOwnerOfScriptObject(MCScriptObjectRef p_object, MCScriptObjectRef &r_owner)
@@ -566,9 +585,7 @@ void MCEngineDoPostToObjectWithArguments(MCStringRef p_message, MCObject *p_obje
     
     MCExecContext ctxt(MCdefaultstackptr, nil, nil);
     MCParameter *t_params;
-    MCValueRef t_result;
     t_params = nil;
-    t_result = nil;
     
     if (!MCEngineConvertToScriptParameters(ctxt, p_arguments, t_params))
         return;

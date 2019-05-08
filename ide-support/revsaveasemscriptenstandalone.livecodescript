@@ -334,9 +334,7 @@ private function getPreparedStackAsData pStackFile, pBuildFolder
          put true into tCleanTempFile
          
          -- Clear standalone settings
-         if not revEnvironmentEditionProperty("open_source_required") then
-            set the customProperties["cRevStandaloneSettings"] of tStack to empty
-         else
+         if revEnvironmentEditionProperty("open_source_required") then
             -- For Community edition deployment to retain everything
             -- but the deployment password (which isn't relevant to
             -- Community edition anyway).  Keeping the deployment
