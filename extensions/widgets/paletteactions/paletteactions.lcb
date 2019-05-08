@@ -700,8 +700,15 @@ private handler drawActions()
         put element tActionIndex of mActionRects into tRect
 
         variable tMode as String
+        variable tEnabled as optional Boolean
+        // tAction["enabled"] could be a string or boolean
+        if tAction["enabled"] is a boolean then
+            put tAction["enabled"] into tEnabled
+        else
+            put tAction["enabled"] parsed as boolean into tEnabled
+        end if
 
-        if tAction["enabled"] parsed as boolean is false then
+        if tEnabled is not nothing and not tEnabled then
             put "disabled" into tMode
         else if mHoverIndex is tActionIndex and mHoverTab is "action" then
             put "hover nav" into tMode
@@ -986,7 +993,15 @@ private handler menuItemToString(in pMenuItem as Array, in pLevel as Integer) re
 	end repeat
 
 	if "checked" is among the keys of pMenuItem then
-		if pMenuItem["checked"] parsed as boolean then
+        variable tChecked as optional Boolean
+        // pMenuItem["checked"] could be a string or boolean
+        if pMenuItem["checked"] is a boolean then
+            put pMenuItem["checked"] into tChecked
+        else
+            put pMenuItem["checked"] parsed as boolean into tChecked
+        end if
+
+		if tChecked is not nothing and tChecked then
 			put "!c" before tMenuString
 		else
 			put "!n" before tMenuString
