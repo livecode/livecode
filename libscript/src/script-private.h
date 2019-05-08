@@ -18,6 +18,7 @@
 #define __MC_SCRIPT_PRIVATE__
 
 #include <stdlib.h>
+#include "libscript/script.h"
 
 // Win32 doesn't have the "__func__" macro
 #ifdef _WIN32
@@ -324,64 +325,6 @@ struct MCScriptSyntaxDefinition: public MCScriptDefinition
     // The list of methods.
     MCScriptSyntaxMethod *methods;
     uindex_t method_count;
-};
-
-enum MCJavaCallType {
-    MCJavaCallTypeInstance,
-    MCJavaCallTypeStatic,
-    MCJavaCallTypeNonVirtual,
-    MCJavaCallTypeConstructor,
-    MCJavaCallTypeInterfaceProxy,
-    MCJavaCallTypeGetter,
-    MCJavaCallTypeSetter,
-    MCJavaCallTypeStaticGetter,
-    MCJavaCallTypeStaticSetter,
-    
-    /* This value is used to indicate that the call type was not known - it is
-     * only used internally in libscript. */
-    MCJavaCallTypeUnknown = -1,
-};
-
-/* MCScriptForeignHandlerLanguage describes the type of foreign handler which
- * has been bound - based on language. */
-enum MCScriptForeignHandlerLanguage
-{
-    /* The handler has not yet been bound, or failed to bind */
-    kMCScriptForeignHandlerLanguageUnknown,
-    
-    /* The handler should be called using libffi */
-    kMCScriptForeignHandlerLanguageC,
-    
-    /* The handler has a lc-compile generated shim, so can be called directly */
-    kMCScriptForeignHandlerLanguageBuiltinC,
-    
-    /* The handler should be called using objc_msgSend */
-    kMCScriptForeignHandlerLanguageObjC,
-    
-    /* The handler should be called using the JNI */
-    kMCScriptForeignHandlerLanguageJava,
-};
-
-/* MCScriptThreadAffinity describes which thread a foreign handler should be
- * executed on. This applies to Android and iOS, where a handler can either be
- * run on the default (engine) thread, or the UI (main) thread. */
-enum MCScriptThreadAffinity
-{
-    kMCScriptThreadAffinityDefault,
-    kMCScriptThreadAffinityUI,
-};
-
-/* MCScriptForeignHandlerObjcCallType describes how to call the objective-c
- * method. */
-enum MCScriptForeignHandlerObjcCallType
-{
-    /* Call the method using method_invoke on the instance (on the default
-     * thread) */
-    kMCScriptForeignHandlerObjcCallTypeInstanceMethod,
-    
-    /* Call the method using method_invoke on the class instance (on the default
-     * thread) */
-    kMCScriptForeignHandlerObjcCallTypeClassMethod,
 };
 
 struct MCScriptForeignHandlerDefinition: public MCScriptCommonHandlerDefinition
@@ -950,30 +893,6 @@ MCScriptBytecodeDecodeSignedArgument(uindex_t p_original_value)
 		t_value = -(signed)(p_original_value >> 1);
 	return t_value;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-// Compiled modules are serialized to disk in the following format:
-//
-//   byte       magic[0] = 'L'
-//   byte       magic[1] = 'C'
-//   byte    	version[0]
-//   byte       version[1]
-//   <pickle of module struct>
-
-// The module version will be incremented for every public release of the libscript
-// which occurs in which the module binary format changes.
-//
-// We will only aim to support module formats which have been released as final and
-// stable.
-//
-// The following constants keep track of, and should be updated to reflect the meaning
-// of each module version.
-
-#define kMCScriptModuleVersion_8_0_0_DP_1 0
-#define kMCScriptModuleVersion_8_1_0_DP_2 1
-#define kMCScriptModuleVersion_9_0_0_DP_4 2
-#define kMCScriptCurrentModuleVersion kMCScriptModuleVersion_9_0_0_DP_4
 
 ////////////////////////////////////////////////////////////////////////////////
 

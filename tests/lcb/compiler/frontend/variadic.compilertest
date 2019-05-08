@@ -17,7 +17,7 @@
 %% Variadic parameter must be the last in the parameter list
 %TEST VariadicLastInForeignHandler
 module compiler_test
-foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+foreign handler TestVariadic(in pA as any, ...) returns nothing binds to "dummy"
 end module
 %EXPECT PASS
 %SUCCESS
@@ -26,7 +26,7 @@ end module
 %% Variadic parameter must be the last in the parameter list
 %TEST VariadicNotLastInForeignHandler
 module compiler_test
-foreign handler TestVariadic(in pA as any, %{BEFORE_VARIADIC}..., in pB as any) returns nothing binds to ""
+foreign handler TestVariadic(in pA as any, %{BEFORE_VARIADIC}..., in pB as any) returns nothing binds to "dummy"
 end module
 %EXPECT PASS
 %ERROR "Variadic parameter must be the last" AT BEFORE_VARIADIC
@@ -45,7 +45,7 @@ end module
 %% Variadic arguments must be an explicitly-typed variable
 %TEST VariadicNotAllowedImplicitlyTypedArgument
 module compiler_test
-__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to "dummy"
 handler CallVariadic()
 	TestVariadic("pA", %{BEFORE_IMPLICIT_ARG}1)
 end handler
@@ -57,7 +57,7 @@ end module
 %% Variadic arguments can be local variables
 %TEST VariadicArgumentModuleLocal
 module compiler_test
-__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to "dummy"
 handler CallVariadic()
 	variable tVar as Integer
 	TestVariadic("pA", tVar)
@@ -71,7 +71,7 @@ end module
 %TEST VariadicArgumentModuleLocal
 module compiler_test
 private variable mVar as Integer
-__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to "dummy"
 handler CallVariadic()
 	TestVariadic("pA", mVar)
 end handler
@@ -83,7 +83,7 @@ end module
 %% Variadic arguments can be parameter variables
 %TEST VariadicArgumentParameterVariable
 module compiler_test
-__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to "dummy"
 handler CallVariadic(in pVar as Integer)
 	TestVariadic("pA", pVar)
 end handler
@@ -95,7 +95,7 @@ end module
 %% You can have 0 to any number of variadic arguments
 %TEST VariadicParametersAnyCount
 module compiler_test
-__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to ""
+__safe foreign handler TestVariadic(in pA as any, ...) returns nothing binds to "dummy"
 handler CallVariadic()
 	TestVariadic("pA")
 
