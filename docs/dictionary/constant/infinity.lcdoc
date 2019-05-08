@@ -1,0 +1,22 @@
+Name: infinity
+
+Type: constant
+
+Syntax: infinity
+
+Summary:
+The floating point value representing positive infinity
+
+Example:
+put 1 + infinity -- "inf"
+
+Description:
+Use <infinity> to access the floating point value representing positive <infinity>.
+
+>*Note:* When infinity is used as an input value in a
+> <math operation>, the operation will not throw an execution
+> error regardless of the result of the operation.
+
+References: math operation (glossary)
+
+Tags: math
