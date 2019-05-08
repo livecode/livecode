@@ -41,14 +41,19 @@ delimited values for <permissionList> are:
   * doalternate - use of the 'do ... as ...' alternate language
     execution feature
   * external - loading externals 
-
+  * extension - loading extensions from file or data. Extensions included when
+  building a standalone are not restricted.
 
 Once <securityPermissions> is set, the security permissions can only be
 reduced and not increased.
 
+Changes:
+In version 9.5 the extension category was added to restrict loading of
+extensions.
+
 References: launch (command), empty (constant), files (function),
 property (glossary), application (glossary), web server (glossary),
-securityCategories (property), secureMode (property)
+securityCategories (property), secureMode (property), load extension (command)
 
 Tags: file system
 

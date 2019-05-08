@@ -225,6 +225,12 @@ void MCEngineAddExtensionsFromModulesArray(MCAutoScriptModuleRefArray& p_modules
 
 void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_data, MCStringRef p_resource_path)
 {
+    if (!MCSecureModeCanAccessExtension())
+    {
+        ctxt . SetTheResultToStaticCString("no permission to load module");
+        return;
+    }
+    
     MCAutoScriptModuleRefArray t_modules;
     if (!MCScriptCreateModulesFromData(p_extension_data, t_modules))
     {

@@ -133,6 +133,11 @@ bool MCSecureModeCanAccessExternal(void)
 	return ((MCsecuremode & MC_SECUREMODE_EXTERNAL) == 0);
 }
 
+bool MCSecureModeCanAccessExtension(void)
+{
+    return ((MCsecuremode & MC_SECUREMODE_EXTENSION) == 0);
+}
+
 bool MCSecureModeCheckPrivacy(uint2 line, uint2 pos)
 {
 	if ((MCsecuremode & MC_SECUREMODE_PRIVACY) == 0)
