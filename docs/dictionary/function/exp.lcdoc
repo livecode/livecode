@@ -33,9 +33,13 @@ Use the <exp> function to obtain a power of e, e^ <number>.
 
 The transcendental number e appears in many mathematical formulas.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 References: sqrt (function), exp10 (function), ln (function),
 exp2 (function), baseConvert (function), exp1 (function),
-return (glossary), ^ (operator)
+return (glossary), ^ (operator), math operation (glossary)
 
 Tags: math
 

@@ -55,7 +55,9 @@ contents as zero.
 If <number> can be divided evenly into <divisor>, the <expression>
 number mod divisor is zero.
 
-Attempting to divide by zero causes an execution error.
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
 
 Changes:
 The option to divide arrays was introduced in version 1.1. In previous
@@ -63,7 +65,7 @@ versions, only single numbers could be used with the mod operator.
 
 References: operator (glossary), remainder (glossary), array (glossary),
 element (glossary), expression (glossary), element (keyword),
-/ (operator)
+/ (operator), math operation (glossary)
 
 Tags: math
 

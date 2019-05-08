@@ -40,6 +40,10 @@ The <sum> <function> is equivalent to the following
 
 If the <numbersList> is empty, the <sum> <function> returns zero.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 Changes:
 The ability to use an array was introduced in version 1.1. In previous
 versions, only lists of numbers could be used with the sum function.
@@ -47,4 +51,4 @@ versions, only lists of numbers could be used with the sum function.
 References: add (command), group (command), function (control structure),
 standardDeviation (function), min (function), max (function),
 extents (function), statement (glossary), return (glossary),
-value (glossary), + (operator)
+value (glossary), + (operator), math operation (glossary)

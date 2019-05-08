@@ -39,9 +39,13 @@ takes the two middle values and averages them to produce the median.
 If the list consists of fewer than three numbers, or if the numbers are
 evenly distributed, the <median> is equal to the <average>.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 References: function (control structure), average (function),
 standardDeviation (function), value (function), return (glossary),
-value (glossary)
+value (glossary), math operation (glossary)
 
 Tags: math
 

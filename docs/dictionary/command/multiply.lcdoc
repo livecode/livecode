@@ -64,17 +64,21 @@ corresponding <element(keyword)> of the <array>.
 If the <container> or an <element(keyword)> of the <arrayContainer> is
 empty, the <multiply> <command> treats its contents as zero.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 Changes:
 The multiply arrayContainer form was introduced in version 1.1. In
 previous versions, only single numbers could be used with the multiply
-command. 
+command.
 
 References: add (command), divide (command), subtract (command),
 format (function), value (function), matrixMultiply (function),
 property (glossary), element (glossary), container (glossary),
 expression (glossary), array (glossary), evaluate (glossary),
 command (glossary), field (keyword), element (keyword), button (keyword),
-* (operator), numberFormat (property)
+* (operator), numberFormat (property), math operation (glossary)
 
 Tags: math
 

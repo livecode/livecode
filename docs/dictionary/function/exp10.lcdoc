@@ -37,8 +37,12 @@ If <number> is a positive <integer>, exp10(number) is a 1 followed by
 <number> zeros. If <number> is a <negative> <integer>, exp10(number) is
 a decimal point followed by <number>-1 zeros and a one.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 References: exp (function), negative (glossary), return (glossary),
-integer (keyword)
+integer (keyword), math operation (glossary)
 
 Tags: math
 

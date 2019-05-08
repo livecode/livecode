@@ -80,12 +80,16 @@ empty, the <add> <command> treats its contents as zero.
 If <container> is a <field> or <button>, the <format> of the sum is
 determined by the <numberFormat> <property>.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 References: combine (command), multiply (command), split (command),
 union (command), sum (function), value (function), array (glossary),
 command (glossary), container (glossary), element (glossary),
 evaluate (glossary), expression (glossary), format (glossary),
 property (glossary), element (keyword), button (object), field (object),
-numberFormat (property)
+numberFormat (property), math operation (glossary)
 
 Tags: math
 

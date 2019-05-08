@@ -46,6 +46,10 @@ The <average> <function> can also be written like this:
 
 If the <numbersList> is empty, the <average> <function> returns zero.
 
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
+
 Changes:
 The ability to use an array was introduced in version 1.1. In previous
 versions, only lists of numbers could be used with the average function.
@@ -54,7 +58,7 @@ References: function (control structure), min (function),
 geometricMean (function), statRound (function), harmonicMean (function),
 variance (function), round (function), value (function), max (function),
 median (function), standardDeviation (function), return (glossary),
-value (glossary)
+value (glossary), math operation (glossary)
 
 Tags: math
 

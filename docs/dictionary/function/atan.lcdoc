@@ -44,11 +44,15 @@ Use the <atan> <function> to find the arc tangent of a number.
 
 The arc tangent of <number> is an angle whose tangent is equal to
 <number>. In other words, <atan> is an <inverse> of the <tan>
-<function>. 
+<function>.
+
+If a math operation on finite inputs produces a non-finite output, an
+execution error is thrown. See <math operation|math operations> for more
+information.
 
 References: pi (constant), function (control structure), tan (function),
 radian (glossary), custom function (glossary), return (glossary),
-degree (glossary), inverse (keyword)
+degree (glossary), inverse (keyword), math operation (glossary)
 
 Tags: math
 
