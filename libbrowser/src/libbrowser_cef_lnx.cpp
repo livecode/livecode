@@ -43,6 +43,9 @@ public:
 
 	virtual bool PlatformGetAuthCredentials(bool p_is_proxy, const CefString &p_url, const CefString &p_realm, MCCefAuthScheme p_auth_scheme, CefString &r_user, CefString &r_password);
 
+	virtual bool PlatformGetAllowUserInteraction(bool &r_allow_interaction);
+	virtual bool PlatformSetAllowUserInteraction(bool p_allow_interaction);
+
 private:
 	Display *m_display;
 	Window m_parent_window;
@@ -185,6 +188,20 @@ bool MCCefLinuxBrowser::PlatformGetWindowID(int32_t &r_id)
 }
 
 bool MCCefLinuxBrowser::PlatformGetAuthCredentials(bool p_is_proxy, const CefString &p_url, const CefString &p_realm, MCCefAuthScheme p_auth_scheme, CefString &r_user, CefString &r_password)
+{
+	/* TODO - implement */
+	return false;
+}
+
+
+bool MCCefLinuxBrowser::PlatformGetAllowUserInteraction(bool &r_value)
+{
+	/* TODO - implement */
+	r_value = true;
+	return false;
+}
+
+bool MCCefLinuxBrowser::PlatformSetAllowUserInteraction(bool p_value)
 {
 	/* TODO - implement */
 	return false;

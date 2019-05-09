@@ -61,6 +61,11 @@ protected:
 	bool GetJavaScriptHandlers(char *&r_handlers);
 	bool SetJavaScriptHandlers(const char *p_handlers);
 	
+	bool GetIsSecure(bool& r_value);
+
+	bool GetAllowUserInteraction(bool& r_value);
+	bool SetAllowUserInteraction(bool p_value);
+
 	// Browser-specific actions
 	bool ExecReload();
 	bool ExecStop();

@@ -169,6 +169,8 @@ class LibBrowserWebView extends WebView
 	private String m_js_handlers = "";
 	private List<String> m_js_handler_list = null;
 
+	private boolean m_allow_user_interaction = true;
+
 	public LibBrowserWebView(Context p_context)
 	{
 		super(p_context);
@@ -231,7 +233,7 @@ class LibBrowserWebView extends WebView
 						}
 						break;
 				}
-				return false;
+				return !m_allow_user_interaction;
 			}
 		});
 	
@@ -352,6 +354,13 @@ class LibBrowserWebView extends WebView
 			
 			public void onGeolocationPermissionsShowPrompt( String origin,  GeolocationPermissions.Callback callback) {
 				showRequestAccessDialog(origin, callback, "Location Access", origin + " would like to use your Current Location", "Allow", "Don't Allow");
+			}
+
+			@Override
+			public void onProgressChanged(WebView p_view, int p_progress)
+			{
+				doProgressChanged(p_view.getUrl(), p_progress);
+				wakeEngineThread();
 			}
 			
 		};
@@ -504,6 +513,21 @@ class LibBrowserWebView extends WebView
 	{
 		getSettings().setUserAgentString(p_useragent);
 	}
+
+	public boolean getIsSecure()
+	{
+		return getCertificate() != null;
+	}
+
+	public boolean getAllowUserInteraction()
+	{
+		return m_allow_user_interaction;
+	}
+
+	public void setAllowUserInteraction(boolean p_value)
+	{
+		m_allow_user_interaction = p_value;
+	}
 	
 	/* ACTIONS */
 
@@ -651,4 +675,5 @@ class LibBrowserWebView extends WebView
 	public native void doFinishedLoading(String url);
 	public native void doLoadingError(String url, String error);
 	public native void doUnsupportedScheme(String url);
+	public native void doProgressChanged(String url, int progress);
 }

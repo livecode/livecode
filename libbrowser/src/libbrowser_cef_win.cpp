@@ -63,6 +63,9 @@ public:
 
 	virtual bool PlatformGetAuthCredentials(bool p_is_proxy, const CefString &p_url, const CefString &p_realm, MCCefAuthScheme p_auth_scheme, CefString &r_user, CefString &r_password);
 
+	virtual bool PlatformGetAllowUserInteraction(bool &r_allow_interaction);
+	virtual bool PlatformSetAllowUserInteraction(bool p_allow_interaction);
+
 private:
 	bool CreateMessageWindow();
 	bool DestroyMessageWindow();
@@ -198,6 +201,25 @@ bool MCCefWin32Browser::PlatformGetWindowID(int32_t &r_id)
 	r_id = (int32_t) m_parent_window;
 
 	return true;
+}
+
+bool MCCefWin32Browser::PlatformGetAllowUserInteraction(bool &r_value)
+{
+	HWND t_handle;
+	if (!GetHWND(t_handle))
+		return false;
+
+	r_value = IsWindowEnabled(t_handle) == TRUE;
+	return true;
+}
+
+bool MCCefWin32Browser::PlatformSetAllowUserInteraction(bool p_value)
+{
+	HWND t_handle;
+	if (!GetHWND(t_handle))
+		return false;
+
+	return EnableWindow(t_handle, (p_value) ? TRUE : FALSE) == TRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

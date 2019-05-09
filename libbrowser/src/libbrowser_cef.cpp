@@ -1697,6 +1697,39 @@ bool MCCefBrowserBase::GetImage(void*& r_data, int& r_length)
 	return false;
 }
 
+bool MCCefBrowserBase::GetIsSecure(void)
+{
+	CefRefPtr<CefBrowser> t_browser = GetCefBrowser();
+	if (t_browser == nil)
+		return false;
+
+	CefRefPtr<CefBrowserHost> t_host = t_browser->GetHost();
+	if (t_host == nil)
+		return false;
+
+	CefRefPtr<CefNavigationEntry> t_navigation_entry = t_host->GetVisibleNavigationEntry();
+	if (t_navigation_entry == nil)
+		return false;
+
+	CefRefPtr<CefSSLStatus> t_ssl_status = t_navigation_entry->GetSSLStatus();
+	if (t_ssl_status == nil)
+		return false;
+
+	return t_ssl_status->IsSecureConnection();
+}
+
+bool MCCefBrowserBase::GetAllowUserInteraction(void)
+{
+	bool t_value;
+	/* UNCHECKED */ PlatformGetAllowUserInteraction(t_value);
+	return t_value;
+}
+
+void MCCefBrowserBase::SetAllowUserInteraction(bool p_value)
+{
+	/* UNCHECKED */ PlatformSetAllowUserInteraction(p_value);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Browser Actions
@@ -1874,7 +1907,15 @@ bool MCCefBrowserBase::GetBoolProperty(MCBrowserProperty p_property, bool &r_val
 		case kMCBrowserHorizontalScrollbarEnabled:
 			r_value = GetHorizontalScrollbarEnabled();
 			return true;
-			
+
+		case kMCBrowserIsSecure:
+			r_value = GetIsSecure();
+			return true;
+
+		case kMCBrowserAllowUserInteraction:
+			r_value = GetAllowUserInteraction();
+			return true;
+
 		default:
 			break;
 	}
@@ -1901,7 +1942,11 @@ bool MCCefBrowserBase::SetBoolProperty(MCBrowserProperty p_property, bool p_valu
 		case kMCBrowserHorizontalScrollbarEnabled:
 			SetHorizontalScrollbarEnabled(p_value);
 			return true;
-			
+
+		case kMCBrowserAllowUserInteraction:
+			SetAllowUserInteraction(p_value);
+			return true;
+
 		default:
 			break;
 	}

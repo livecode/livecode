@@ -59,6 +59,13 @@ public:
 	virtual void OnJavaScriptCall(MCBrowser *p_browser, const char *p_handler, MCBrowserListRef p_params) = 0;
 };
 
+// Progress update handler
+class MCBrowserProgressHandler : public MCBrowserRefCounted
+{
+public:
+	virtual void OnProgressChanged(MCBrowser *p_browser, const char *p_url, uint32_t p_progress) = 0;
+};
+
 // Properties
 enum MCBrowserProperty
 {
@@ -68,6 +75,8 @@ enum MCBrowserProperty
 	kMCBrowserHorizontalScrollbarEnabled,
 	kMCBrowserAllowNewWindows,
 	kMCBrowserEnableContextMenu,
+	kMCBrowserAllowUserInteraction,
+	kMCBrowserIsSecure,
 	
 	// String properties
 	kMCBrowserURL,
@@ -88,7 +97,8 @@ class MCBrowser : public MCBrowserRefCounted
 public:
 	virtual void SetEventHandler(MCBrowserEventHandler *p_handler) = 0;
 	virtual void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler) = 0;
-	
+	virtual void SetProgressHandler(MCBrowserProgressHandler *p_handler) = 0;
+
 	virtual void *GetNativeLayer() = 0;
 	
 	virtual bool GetRect(MCBrowserRect &r_rect) = 0;
@@ -277,9 +287,11 @@ enum MCBrowserRequestState
 
 typedef void (*MCBrowserRequestCallback)(void *p_context, MCBrowserRef p_browser, MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_in_frame, const char *p_url, const char *p_error);
 typedef void (*MCBrowserJavaScriptCallback)(void *p_context, MCBrowserRef p_browser, const char *p_handler, MCBrowserListRef p_params);
+typedef void (*MCBrowserProgressCallback)(void *p_context, MCBrowserRef p_browser, const char *p_url, uint32_t p_progress);
 
 MC_BROWSER_DLLEXPORT bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback p_callback, void *p_context);
 MC_BROWSER_DLLEXPORT bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCallback p_callback, void *p_context);
+MC_BROWSER_DLLEXPORT bool MCBrowserSetProgressHandler(MCBrowserRef p_browser, MCBrowserProgressCallback p_callback, void *p_context);
 
 }
 

@@ -19,9 +19,11 @@
 
 #include "libbrowser_internal.h"
 
+@class MCWebView;
 @class MCWebViewFrameLoadDelegate;
 @class MCWebViewPolicyDelegate;
 @class MCWebUIDelegate;
+@class MCWebViewProgressDelegate;
 
 class MCWebViewBrowser : public MCBrowserBase
 {
@@ -65,7 +67,12 @@ protected:
 	
 	bool GetJavaScriptHandlers(char *&r_handlers);
 	bool SetJavaScriptHandlers(const char *p_handlers);
-	
+
+	bool GetIsSecure(bool& r_value);
+
+	bool GetAllowUserInteraction(bool& r_value);
+	bool SetAllowUserInteraction(bool p_value);
+
 	// Browser-specific actions
 	bool ExecReload();
 	bool ExecStop();
@@ -78,12 +85,15 @@ private:
 	bool GetView(WebView *&r_view);
 	
 	bool SyncJavaScriptHandlers(NSArray *p_handlers);
+
+	bool FrameIsSecure(WebFrame *p_frame);
 	
-	WebView *m_view;
+	MCWebView *m_view;
 	MCWebViewFrameLoadDelegate *m_delegate;
 	MCWebViewPolicyDelegate *m_policy_delegate;
 	MCWebUIDelegate *m_ui_delegate;
-	
+	MCWebViewProgressDelegate *m_progress_delegate;
+
 	char *m_js_handlers;
 	NSArray *m_js_handler_list;
 };

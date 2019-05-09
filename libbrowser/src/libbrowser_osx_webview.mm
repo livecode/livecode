@@ -337,6 +337,24 @@ bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_object, MCBr
 
 ////////////////////////////////////////////////////////////////////////////////
 
+@interface MCWebView : WebView
+@property bool allowInteraction;
+@end
+
+@implementation MCWebView
+
+- (NSView *) hitTest: (NSPoint) p_point
+{
+	if ([self allowInteraction])
+		return [super hitTest: p_point];
+	else
+		return nil;
+}
+
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
 @interface MCWebViewFrameLoadDelegate : NSObject
 {
 	MCWebViewBrowser *m_instance;
@@ -385,6 +403,22 @@ bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_object, MCBr
 
 @end
 
+@interface MCWebViewProgressDelegate : NSObject
+{
+	MCWebViewBrowser *m_instance;
+	WebView *m_view;
+	char *m_request_url;
+}
+
+- (id) initWithInstance: (MCWebViewBrowser *) instance view: (WebView *) view;
+- (void) dealloc;
+
+- (void) progressStarted: (NSNotification *) notification;
+- (void) progressChanged: (NSNotification *) notification;
+- (void) progressEnded: (NSNotification *) notification;
+
+@end
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline void MCBrowserRunBlockOnMainFiber(void (^p_block)(void))
@@ -400,7 +434,8 @@ MCWebViewBrowser::MCWebViewBrowser(void)
 	m_delegate = nil;
 	m_policy_delegate = nil;
 	m_ui_delegate = nil;
-	
+	m_progress_delegate = nil;
+
 	m_js_handlers = nil;
 	m_js_handler_list =nil;
 }
@@ -430,6 +465,9 @@ MCWebViewBrowser::~MCWebViewBrowser(void)
         
 		if (m_js_handler_list != nil)
 			[m_js_handler_list release];
+
+		if (m_progress_delegate != nil)
+			[m_progress_delegate release];
 	});
 }
 
@@ -458,6 +496,57 @@ bool MCWebViewBrowser::GetUrl(char *&r_url)
 	});
 	
 	return t_success;
+}
+
+bool MCWebViewBrowser::FrameIsSecure(WebFrame *p_frame)
+{
+	WebDataSource *t_source = [p_frame dataSource];
+	if (t_source == nil || [t_source isLoading])
+		return false;
+
+	NSString *t_scheme = [[[t_source request] URL] scheme];
+	if (![t_scheme isEqualToString: @"https"] && ![t_scheme isEqualToString: @"about"])
+		return false;
+
+	for (WebResource *t_resource in [t_source subresources])
+	{
+		if (![[[t_resource URL] scheme] isEqualToString: @"https"])
+			return false;
+	}
+
+	for (WebFrame *t_child_frame in [p_frame childFrames])
+	{
+		if (!FrameIsSecure(t_child_frame))
+			return false;
+	}
+
+	return true;
+}
+
+bool MCWebViewBrowser::GetIsSecure(bool &r_value)
+{
+	WebView *t_view;
+	if (!GetView(t_view))
+		return false;
+
+	MCBrowserRunBlockOnMainFiber(^{
+		if ([t_view mainFrameURL] != nil && [t_view mainFrame] != nil)
+			r_value = FrameIsSecure([t_view mainFrame]);
+	});
+
+	return true;
+}
+
+bool MCWebViewBrowser::GetAllowUserInteraction(bool &r_value)
+{
+	r_value = [m_view allowInteraction];
+	return true;
+}
+
+bool MCWebViewBrowser::SetAllowUserInteraction(bool p_value)
+{
+	[m_view setAllowInteraction: p_value];
+	return true;
 }
 
 //bool MCWebViewBrowser::SetVerticalScrollbarEnabled(bool p_value)
@@ -727,6 +816,9 @@ bool MCWebViewBrowser::SetBoolProperty(MCBrowserProperty p_property, bool p_valu
 		//case kMCBrowserHorizontalScrollbarEnabled:
 		//	return SetHorizontalScrollbarEnabled(p_value);
 			
+		case kMCBrowserAllowUserInteraction:
+			return SetAllowUserInteraction(p_value);
+
 		default:
 			break;
 	}
@@ -744,6 +836,12 @@ bool MCWebViewBrowser::GetBoolProperty(MCBrowserProperty p_property, bool &r_val
 		//case kMCBrowserHorizontalScrollbarEnabled:
 		//	return GetHorizontalScrollbarEnabled(r_value);
 			
+		case kMCBrowserIsSecure:
+			return GetIsSecure(r_value);
+
+		case kMCBrowserAllowUserInteraction:
+			return GetAllowUserInteraction(r_value);
+
 		default:
 			break;
 	}
@@ -960,8 +1058,8 @@ bool MCWebViewBrowser::Init(void)
 	t_success = true;
 	
 	MCBrowserRunBlockOnMainFiber(^{
-		WebView *t_view;
-		t_view = [[WebView alloc] initWithFrame: NSMakeRect(0, 0, 0, 0)];
+		MCWebView *t_view;
+		t_view = [[MCWebView alloc] initWithFrame: NSMakeRect(0, 0, 0, 0)];
 		t_success = t_view != nil;
 		
 		if (t_success)
@@ -981,13 +1079,20 @@ bool MCWebViewBrowser::Init(void)
 			m_ui_delegate = [[MCWebUIDelegate alloc] init];
 			t_success = m_ui_delegate != nil;
 		}
-		
+
+		if (t_success)
+		{
+			m_progress_delegate = [[MCWebViewProgressDelegate alloc] initWithInstance: this view: t_view];
+			t_success = m_progress_delegate != nil;
+		}
+
 		if (t_success)
 		{
 			[t_view setHidden: YES];
 			[t_view setFrameLoadDelegate: m_delegate];
 			[t_view setPolicyDelegate: m_policy_delegate];
 			[t_view setUIDelegate: m_ui_delegate];
+			[t_view setAllowInteraction: true];
 			m_view = t_view;
 		}
 		else if (t_view != nil)
@@ -1260,6 +1365,97 @@ bool MCWebViewBrowser::Init(void)
     }
     
     [t_pool release];
+}
+
+@end
+
+@implementation MCWebViewProgressDelegate
+
+- (id) initWithInstance: (MCWebViewBrowser *) p_instance view: (WebView *) p_view
+{
+	self = [super init];
+	if (self == nil)
+		return nil;
+
+	[[NSNotificationCenter defaultCenter] addObserver: self
+											 selector: @selector(progressStarted:)
+												 name: WebViewProgressStartedNotification
+											   object: m_view];
+	[[NSNotificationCenter defaultCenter] addObserver: self
+											 selector: @selector(progressChanged:)
+												 name: WebViewProgressEstimateChangedNotification
+											   object: m_view];
+	[[NSNotificationCenter defaultCenter] addObserver: self
+											 selector: @selector(progressEnded:)
+												 name: WebViewProgressFinishedNotification
+											   object: m_view];
+
+	m_instance = p_instance;
+	m_instance->Retain();
+	m_view = [p_view retain];
+	m_request_url = nil;
+
+	return self;
+}
+
+- (void) dealloc
+{
+	[[NSNotificationCenter defaultCenter] removeObserver: self
+													name: WebViewProgressStartedNotification
+												  object: m_view];
+	[[NSNotificationCenter defaultCenter] removeObserver: self
+													name: WebViewProgressEstimateChangedNotification
+												  object: m_view];
+	[[NSNotificationCenter defaultCenter] removeObserver: self
+													name: WebViewProgressFinishedNotification
+												  object: m_view];
+
+	if (m_instance != nil)
+		m_instance->Release();
+	if (m_view != nil)
+		[m_view release];
+	if (m_request_url != nil)
+		MCCStringFree(m_request_url);
+
+	[super dealloc];
+}
+
+- (void) progressStarted: (NSNotification *) p_notification
+{
+	if (m_request_url != nil)
+		MCCStringFree(m_request_url);
+
+	__block bool t_success = true;
+	MCBrowserRunBlockOnMainFiber(^{
+		t_success = MCCStringClone([[m_view mainFrameURL] cStringUsingEncoding: NSUTF8StringEncoding], m_request_url);
+	});
+
+	if (t_success)
+		[self progressUpdate];
+}
+
+- (void) progressChanged: (NSNotification *) p_notification
+{
+	if ([m_view estimatedProgress] != 0)
+		[self progressUpdate];
+}
+
+- (void) progressEnded: (NSNotification *) p_notification
+{
+	if ([m_view estimatedProgress] != 0)
+		[self progressUpdate];
+
+	if (m_request_url != nil)
+	{
+		MCCStringFree(m_request_url);
+		m_request_url = nil;
+	}
+}
+
+- (void) progressUpdate
+{
+	if (m_request_url != nil)
+		m_instance->OnProgressChanged(m_request_url, [m_view estimatedProgress] * 100);
 }
 
 @end

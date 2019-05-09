@@ -186,6 +186,23 @@ The <browserUnhandledLoadRequest> message is sent to the widget's script
 object when the browser is unable to load a URL, typically due to an 
 unrecognised URL scheme. The <pUrl> parameter contains the URL of the 
 unhandled request.
+
+
+Name: browserProgressChanged
+Type: message
+Syntax: browserProgressChanged <pUrl>, <pProgress>
+
+Summary: Sent when the load progress of the current document changes.
+
+Parameters:
+pUrl (string): The URL of the loading document.
+pProgress (number): The percentage of the document loaded.
+
+Description:
+The <browserProgressChanged> message is sent to the widget's script
+object when a the loading progress of the current document changes. The <pUrl>
+parameter contains the URL of the loading document. The <pProgress> parameter
+contains the percentage (between 0 and 100) of the document loaded.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -340,6 +357,52 @@ metadata hScrollbar.default is "false"
 metadata hScrollbar.label is "Horizontal scrollbar"
 
 /**
+Name: allowUserInteraction
+Type: property
+
+Syntax:
+set the allowUserInteraction of <widget> to <allowInteraction>
+get the allowUserInteraction of <widget>
+
+Summary: Controls whether the browser responds to user interaction.
+
+Value (boolean):
+`true` if the browser should respond to user interaction;
+`false` otherwise.
+
+Description:
+Use the <allowUserInteraction> property to control if the browser should respond
+to user interaction.
+*/
+property allowUserInteraction get getAllowUserInteraction set setAllowUserInteraction
+metadata allowUserInteraction is "com.livecode.pi.boolean"
+metadata allowUserInteraction.default is "true"
+metadata allowUserInteraction.label is "Allow user interaction"
+
+/**
+Name: isSecure
+Type: property
+
+Syntax:
+get the isSecure of <widget>
+
+Summary: Indicates if all resources in the current document have been loaded
+through securely encrypted connections.
+
+Value (boolean):
+`true` if all resources in the current document have been loaded through
+securely encrypted connections;
+`false` otherwise.
+
+Description:
+Use the <isSecure> property to determine if all resources in the current
+document have been loaded through securely encrypted connections. If the current
+document is still loading, this will return false
+*/
+property isSecure get getIsSecure
+metadata isSecure.user_visible is "false"
+
+/**
 Name: userAgent
 Type: property
 
@@ -433,7 +496,7 @@ variable mScriptObject as ScriptObject
 
 --------------------------------------------------------------------------------
 
-constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers"]
+constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers", "allowUserInteraction", "isSecure"]
 
 --------------------------------------------------------------------------------
 
@@ -491,6 +554,7 @@ private unsafe handler InitBrowserView()
 
 	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
+	MCBrowserSetProgressHandler(mBrowser, OnProgressCallback, nothing)
 
 	applyProperties(mProperties)
 end handler
@@ -596,6 +660,10 @@ private handler OnJavaScriptCallback(in pContext as optional Pointer, in pBrowse
 		throw "error converting javascript callback parameters"
 	end if
 	post pHandler to mScriptObject with tList
+end handler
+
+private handler OnProgressCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pProgress as UInt32) returns nothing
+	post "browserProgressChanged" to mScriptObject with [pUrl, pProgress]
 end handler
 
 ----------
@@ -716,6 +784,22 @@ end handler
 
 private handler setHScrollbar(in pHScrollbar as Boolean)
 	setProperty("horizontalScrollbarEnabled", pHScrollbar)
+end handler
+
+--
+
+private handler getAllowUserInteraction() returns Boolean
+	return getProperty("allowUserInteraction")
+end handler
+
+private handler setAllowUserInteraction(in pAllowUserInteraction as Boolean)
+	setProperty("allowUserInteraction", pAllowUserInteraction)
+end handler
+
+--
+
+private handler getIsSecure() returns Boolean
+	return getProperty("isSecure")
 end handler
 
 ----------

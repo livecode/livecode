@@ -32,13 +32,15 @@ class MCBrowserBase : public MCBrowser
 public:
     MCBrowserBase(void);
     virtual ~MCBrowserBase(void);
-	
+
 	void SetEventHandler(MCBrowserEventHandler *p_handler);
 	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);
+	void SetProgressHandler(MCBrowserProgressHandler *p_handler);
 
 	MCBrowserEventHandler *GetEventHandler(void);
 	MCBrowserJavaScriptHandler *GetJavaScriptHandler(void);
-	
+	MCBrowserProgressHandler *GetProgressHandler(void);
+
 	virtual void OnNavigationBegin(bool p_in_frame, const char *p_url);
 	virtual void OnNavigationComplete(bool p_in_frame, const char *p_url);
 	virtual void OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error);
@@ -49,7 +51,9 @@ public:
 	virtual void OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url);
 	
 	virtual void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
-	
+
+	virtual void OnProgressChanged(const char *p_url, uint32_t p_progress);
+
 	static bool BrowserListAdd(MCBrowser *p_browser);
 	static void BrowserListRemove(MCBrowser *p_browser);
 	static bool BrowserListIterate(MCBrowserIterateCallback p_callback, void *p_context);
@@ -66,6 +70,7 @@ private:
 	
 	MCBrowserEventHandler *m_event_handler;
 	MCBrowserJavaScriptHandler *m_javascript_handler;
+	MCBrowserProgressHandler *m_progress_handler;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
