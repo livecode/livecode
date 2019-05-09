@@ -33,15 +33,18 @@ private command __TestIsStrictly pValue, pExpected, pExpectResult
    end repeat
 end __TestIsStrictly
 
-function __GenerateNothing
-   local tNothing
-   put param(1) into tNothing
-   return tNothing
-end __GenerateNothing
+private command _TestParams pA, pB, pC
+  __TestIsStrictly "nothing", pB
+  __TestIsStrictly "nothing", param(4)
+end _TestParams
 
 on TestStrictlyNothing
-  -- FIXME can't currently generate nothing values in LCS
-  -- __TestIsStrictly __GenerateNothing(), "nothing"
+   __TestIsStrictly nothing, "nothing"
+
+   local tVar
+   __TestIsStrictly tVar, "nothing"
+
+   _TestParams 1, , 2
 end TestStrictlyNothing
 
 on TestStrictlyBoolean
@@ -72,7 +75,6 @@ on TestStrictlyReal
 end TestStrictlyReal
 
 on TestStrictlyString
-   __TestIsStrictly "nothing", "a string"
    __TestIsStrictly 1, "a string"
    __TestIsStrictly 1.0, "a string"
    __TestIsStrictly null, "a string"
