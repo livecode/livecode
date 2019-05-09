@@ -36,6 +36,7 @@ typedef enum {
     kCValueTypeEmpty,
     kCValueTypeTrue,
     kCValueTypeFalse,
+    kCValueTypeNothing,
     kCValueTypeInfinity
 } CvalueType;
 

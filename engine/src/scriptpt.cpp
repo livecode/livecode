@@ -1429,6 +1429,9 @@ Parse_stat MCScriptPoint::lookupconstant(MCExpression **dest)
         case kCValueTypeFalse:
             t_constant_value = MCValueRetain(kMCFalse);
             break;
+        case kCValueTypeNothing:
+            t_constant_value = MCValueRetain(kMCNull);
+            break;
         case kCValueTypeInfinity:
             /* UNCHECKED */ MCNumberCreateWithReal(MCinfinity,
                                                    (MCNumberRef&)t_constant_value);

@@ -215,6 +215,7 @@ const Cvalue constant_table[] =
     {"linefeed", kCValueTypeString, {.string="\n"}},
     {"nine", kCValueTypeInteger, {.integer=9}},
     {"none", kCValueTypeInteger, {.integer=0}},
+    {"nothing", kCValueTypeNothing, {0}},
     {"null", kCValueTypeNull, {0}},
     {"one", kCValueTypeInteger, {.integer=1}},
     {"pi", kCValueTypeReal, {.real=3.14159265358979323846}},
