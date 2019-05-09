@@ -362,6 +362,7 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RO_PROPERTY(P_EXECUTION_CONTEXTS, String, Debugging, ExecutionContexts)
 	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
 	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
+    DEFINE_RW_PROPERTY(P_LOG_MESSAGE, String, Debugging, LogMessage)
 
     DEFINE_RW_ARRAY_PROPERTY(P_CLIPBOARD_DATA, Any, Pasteboard, ClipboardData)
     DEFINE_RW_ARRAY_PROPERTY(P_DRAG_DATA, Any, Pasteboard, DragData)
@@ -860,6 +861,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_EXECUTION_CONTEXTS:
 	case P_MESSAGE_MESSAGES:
 	case P_WATCHED_VARIABLES:
+    case P_LOG_MESSAGE:
 	case P_ALLOW_INLINE_INPUT:
 	case P_ACCEPT_DROP:
 	case P_ALLOWABLE_DRAG_ACTIONS:

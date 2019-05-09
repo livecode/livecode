@@ -616,18 +616,21 @@ on TestRepeat pDesc, pHandler, pTarget, pTimeOut, pParamsArray
 	end if
 end TestRepeat
 
-on TestRunStack pOptions, pStackFilePath
+command TestRunStack pOptions, pStackFilePath, pArgs
 	local tEnginePath
 	set the itemDelimiter to ":"
 	put item 2 of the address into tEnginePath
 
 	local tCommand
-	put format("\"%s\" %s \"%s\"", tEnginePath, pOptions, pStackFilePath) into tCommand
+	put format("\"%s\" %s \"%s\" %s", tEnginePath, pOptions, pStackFilePath, pArgs) into tCommand
 
 	local tOutput
 	put shell(tCommand) into tOutput
-
-	return the result
+   if the result is not empty then
+      return the result for error
+   else
+      return tOutput for value
+   end if
 end TestRunStack
 
 function TestIsInStandalone
