@@ -1,0 +1,24 @@
+Name: nothing
+
+Type: constant
+
+Syntax: nothing
+
+Summary:
+The (unique) value representing the notion of no value.
+
+Example:
+put nothing is strictly nothing -- true
+
+Description:
+The constant <nothing> is a unique value which is used to represent the
+absence of any other value. It behaves the same as <empty> in all
+contexts except when tested using the <is strictly> <nothing> operator
+which will only be <true> for the <nothing> constant.
+
+Variables which have no explicit initializer are set to <nothing>, as
+are explicit handler parameters which have no corresponding argument
+when called.
+
+References:
+is strictly (operator), true (constant)

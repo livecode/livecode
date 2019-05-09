@@ -568,14 +568,14 @@ integer_t MCHandler::getnparams(void)
 	return npassedparams;
 }
 
-// MW-2007-07-03: [[ Bug 3174 ]] - Non-declared parameters accessed via 'param' should
+// MW-2007-07-03: [[ Bug 3714 ]] - Non-declared parameters accessed via 'param' should
 //   be considered to be both empty and 0 as they are akin to undeclared variables.
 MCValueRef MCHandler::getparam(uindex_t p_index)
 {
     if (p_index == 0)
         return name;
     else if (p_index > nparams)
-        return kMCEmptyString;
+        return kMCNull;
     else
         return params[p_index - 1]->get_valueref();
 }

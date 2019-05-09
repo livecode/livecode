@@ -1,0 +1,149 @@
+%% Copyright (C) 2019 LiveCode Ltd.
+%%
+%% This file is part of LiveCode.
+%%
+%% LiveCode is free software; you can redistribute it and/or modify it under
+%% the terms of the GNU General Public License v3 as published by the Free
+%% Software Foundation.
+%%
+%% LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+%% WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+%% for more details.
+%%
+%% You should have received a copy of the GNU General Public License
+%% along with LiveCode.  If not see <http://www.gnu.org/licenses/>.
+
+%% infinity constant is okay as uql assignment
+%TEST UnquotedLiteralConstantInfinity
+on compiler_test
+    local tInfinity = infinity
+end compiler_test
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% true and false constants are okay for uql assignment
+%TEST UnquotedLiteralConstantBoolean
+on compiler_test
+    local tTrue = true
+    local tFalse = false
+end compiler_test
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% string constants are okay for uql assignment if their
+%% constant value is equal to their name
+%TEST UnquotedLiteralConstantConverts
+on compiler_test
+    local tDown = down
+    local tUp = up
+    local tRight = right
+    local tLeft = left
+    local tDone = done
+end compiler_test
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%% constants whose name values do not convert as the constant's
+%% type to their value are only okay for uql assignment if
+%% explicit variables is false
+%TEST UnquotedLiteralConstantDoesntConvertNonExplicit
+%SET explicitvariables false
+    // Real constant
+    local tPi = pi
+    // Integer constant
+    local tOne = one
+    // String constant
+    local tEOF = eof
+    // Special-case value constants
+    local tNull = null
+    local tEmpty = empty
+end compiler_test
+%EXPECT PASS
+%SUCCESS
+%ENDTEST
+
+%TEST UnquotedLiteralRealConstantDoesntConvertExplicit
+%SET explicitvariables true
+on compiler_test
+    local tPi = pi%{UQL}
+end compiler_test
+%EXPECT PASS
+%ERROR PE_LOCAL_BADINIT AT UQL
+%ENDTEST
+
+%TEST UnquotedLiteralIntegerConstantDoesntConvertExplicit
+%SET explicitvariables true
+on compiler_test
+    constant tOne = one%{UQL}
+end compiler_test
+%EXPECT PASS
+%ERROR PE_CONSTANT_BADINIT AT UQL
+%ENDTEST
+
+%TEST UnquotedLiteralStringConstantDoesntConvertExplicit
+%SET explicitvariables true
+on compiler_test
+    local tEOF = eof%{UQL}
+end compiler_test
+%EXPECT PASS
+%ERROR PE_LOCAL_BADINIT AT UQL
+%ENDTEST
+
+%TEST UnquotedLiteralNullDoesntConvertExplicit
+%SET explicitvariables true
+on compiler_test
+    constant tNull = null%{UQL}
+end compiler_test
+%EXPECT PASS
+%ERROR PE_CONSTANT_BADINIT AT UQL
+%ENDTEST
+
+%TEST UnquotedLiteralEmptyDoesntConvertExplicit
+%SET explicitvariables true
+on compiler_test
+    local tEmpty = empty%{UQL}
+end compiler_test
+%EXPECT PASS
+%ERROR PE_LOCAL_BADINIT AT UQL
+%ENDTEST
+
+%% infinity constant as uql assignment is case sensitive
+%TEST UnquotedLiteralConstantInfinityCase
+on compiler_test
+    local tInfinity = InFiNiTy%{UQL_CASE}
+end compiler_test
+%EXPECT PASS
+%ERROR PE_LOCAL_BADINIT AT UQL_CASE
+%ENDTEST
+
+%% true constant as uql assignment is case sensitive
+%TEST UnquotedLiteralConstantTrueCase
+on compiler_test
+    local tInfinity = TrUe%{UQL_CASE}
+end compiler_test
+%EXPECT PASS
+%ERROR PE_LOCAL_BADINIT AT UQL_CASE
+%ENDTEST
+
+%% false constant as uql assignment is case sensitive
+%TEST UnquotedLiteralConstantFalseCase
+on compiler_test
+    local tFalse = FaLsE%{UQL_CASE}
+end compiler_test
+%EXPECT PASS
+%ERROR PE_LOCAL_BADINIT AT UQL_CASE
+%ENDTEST
+
+%% string constants with constant value is equal to
+%% their name as uql assigment is case sensitive
+%TEST UnquotedLiteralConstantConvertsCase
+on compiler_test
+    local tDown = dOwN%{UQL_CASE}
+end compiler_test
+%EXPECT PASS
+%ERROR PE_LOCAL_BADINIT AT UQL_CASE
+%ENDTEST
