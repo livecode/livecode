@@ -1594,12 +1594,12 @@ void MCCard::relayercontrol(MCControl *p_source, MCControl *p_target)
 		t_target_ptr = nil;
 
 	// Get the previous / next ptrs.
-	MCObjptr *t_previous, *t_next;
-	t_previous = t_source_ptr -> prev() != objptrs ? t_source_ptr -> prev() : nil;
-	t_next = t_source_ptr -> next() != objptrs ? t_source_ptr -> next() : nil;
+	MCControl *t_previous, *t_next;
+	t_previous = MCControlPreviousByLayer(p_source);
+	t_next = MCControlNextByLayer(p_source);
 
 	// If the source control already precedes the target then we are done.
-	if (t_next == t_target_ptr)
+	if (t_next == p_target)
 		return;
 
 	// Otherwise, remove the layer.
@@ -1616,7 +1616,7 @@ void MCCard::relayercontrol(MCControl *p_source, MCControl *p_target)
 	}
 	else
 		t_source_ptr -> appendto(objptrs);
-	layer_added(p_source, t_source_ptr -> prev() != objptrs ? t_source_ptr -> prev() : nil, t_source_ptr -> next() != objptrs ? t_source_ptr -> next() : nil);
+	layer_added(p_source, MCControlPreviousByLayer(p_source), MCControlNextByLayer(p_source));
 }
 
 void MCCard::relayercontrol_remove(MCControl *p_control)
@@ -1624,9 +1624,9 @@ void MCCard::relayercontrol_remove(MCControl *p_control)
 	MCObjptr *t_control_ptr;
 	t_control_ptr = getobjptrforcontrol(p_control);
 	
-	MCObjptr *t_previous, *t_next;
-	t_previous = t_control_ptr -> prev() != objptrs ? t_control_ptr -> prev() : nil;
-	t_next = t_control_ptr -> next() != objptrs ? t_control_ptr -> next() : nil;
+	MCControl *t_previous, *t_next;
+	t_previous = MCControlPreviousByLayer(p_control);
+	t_next = MCControlNextByLayer(p_control);
 	
 	// Remove the control from the card's objptr list.
 	t_control_ptr -> remove(objptrs);
@@ -1668,7 +1668,7 @@ void MCCard::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 	}
 	else
 		t_control_ptr -> appendto(objptrs);
-	layer_added(p_control, t_control_ptr -> prev() != objptrs ? t_control_ptr -> prev() : nil, t_control_ptr -> next() != objptrs ? t_control_ptr -> next() : nil);
+	layer_added(p_control, MCControlPreviousByLayer(p_control), MCControlNextByLayer(p_control));
 }
 
 Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
@@ -1799,9 +1799,7 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
                 t_insert_iter->append(newptr);
         }
 
-        layer_added(optr,
-                    (newptr->prev() != objptrs->prev()) ? newptr->prev() : nil,
-                    (newptr->next() != objptrs)         ? newptr->next() : nil);
+		layer_added(optr, MCControlPreviousByLayer(optr), MCControlNextByLayer(optr));
 	}
 
 	if (oldparent == this)
@@ -2491,7 +2489,6 @@ Boolean MCCard::removecontrol(MCControl *cptr, Boolean needredraw, Boolean cf)
 	t_stack = getstack();
 
 	MCObjptr *optr = objptrs;
-	MCObjptr *t_previous_optr = nil;
 	do
 	{
 		if (optr->getref() == cptr)
@@ -2502,17 +2499,16 @@ Boolean MCCard::removecontrol(MCControl *cptr, Boolean needredraw, Boolean cf)
 				removedcontrol = optr;
 
 			// MW-2011-08-19: [[ Layers ]] Compute the next objptr, or nil if we are at the end.
-			MCObjptr *t_next_optr;
-			t_next_optr = optr -> next();
-			if (t_next_optr == objptrs)
-				t_next_optr = nil;
+			MCControl *t_previous, *t_next;
+			t_previous = MCControlPreviousByLayer(optr->getref());
+			t_next = MCControlNextByLayer(optr->getref());
 
 			// Remove the control from the card and close it.
 			optr->remove(objptrs);
 			delete optr;
             
             // MW-2011-08-19: [[ Layers ]] Notify the stack that a layer has been removed.
-            layer_removed(cptr, t_previous_optr, t_next_optr);
+            layer_removed(cptr, t_previous, t_next);
             
 			if (opened)
 			{
@@ -2522,7 +2518,6 @@ Boolean MCCard::removecontrol(MCControl *cptr, Boolean needredraw, Boolean cf)
 
 			return True;
 		}
-		t_previous_optr = optr;
 		optr = optr->next();
 	}
 	while (optr != objptrs);
@@ -2571,7 +2566,7 @@ MCObjptr *MCCard::newcontrol(MCControl *cptr, Boolean needredraw)
 	newptr->appendto(objptrs);
 
 	// MW-2011-08-19: [[ Layers ]] Notify the stack that a layer may have ben inserted.
-	layer_added(cptr, objptrs != newptr ? newptr -> prev() : nil, nil);
+	layer_added(cptr, MCControlPreviousByLayer(cptr), MCControlNextByLayer(cptr));
 
 	if (opened)
 		cptr->open();

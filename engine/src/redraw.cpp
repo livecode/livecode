@@ -753,7 +753,7 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p_next)
+void MCCard::layer_added(MCControl *p_control, MCControl *p_previous, MCControl *p_next)
 {
 	MCTileCacheRef t_tilecache;
 	t_tilecache = getstack() -> view_gettilecache();
@@ -781,18 +781,22 @@ void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p
 		if (p_previous == nil || p_next == nil)
 			return;
 
+		// skip previous container layers
+		while (p_previous != nil && p_previous->layer_iscontainer())
+			p_previous = MCControlPreviousByLayer(p_previous);
+
 		// If the previous (layer below) objptr has no id, then there is nothing to do
 		// also. This will only occur if only new layers have been added above,
 		// or if no rendering has been done yet.
 		uint32_t t_before_layer_id;
-		t_before_layer_id = p_previous -> getref() -> layer_getid();
+		t_before_layer_id = p_previous -> layer_getid();
 		if (t_before_layer_id == 0)
 			return;
 
 		// MW-2013-06-21: [[ Bug 10974 ]] If the previous layer is a sprite then this layer
 		//   will change the lower limit of the scenery layers above, thus there is
 		//   nothing to do.
-		if (p_previous -> getref() -> layer_issprite())
+		if (p_previous -> layer_issprite())
 			return;
 		
 		// Now insert the scenery.
@@ -806,11 +810,12 @@ void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p
 		// the layer to be treated 'as one' with that layer until a redraw is done.
 		// This means that any subsequent updates to the rect of the new layer will
 		// appropriately flush the tiles in the cache.
-		p_control -> layer_setid(t_before_layer_id);
+		if (!p_control->layer_iscontainer())
+			p_control -> layer_setid(t_before_layer_id);
 	}
 }
 
-void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p_next)
+void MCCard::layer_removed(MCControl *p_control, MCControl *p_previous, MCControl *p_next)
 {
 	MCTileCacheRef t_tilecache;
 	t_tilecache = getstack() -> view_gettilecache();
@@ -852,6 +857,13 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		//   don't try and reuse a dead scenery layer.
 		p_control -> layer_resetattrs();
 		
+		// skip previous container layers
+		while (p_previous != nil && p_previous->layer_iscontainer())
+			p_previous = MCControlPreviousByLayer(p_previous);
+		
+		// skip next container layers
+		while (p_next != nil && p_next->layer_iscontainer())
+			p_next = MCControlNextByLayer(p_next);
 		// If there is no previous or next control we have no tweaks to ids
 		// to perform.
 		if (p_previous == nil || p_next == nil)
@@ -862,7 +874,7 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		// layer has a different id than us, make sure all previous layers
 		// with the same id match it.
 		uint32_t t_before_layer_id;
-		t_before_layer_id = p_previous -> getref() -> layer_getid();
+		t_before_layer_id = p_previous -> layer_getid();
 
 		// The layer below us has the same id so there's nothing to do, we are
 		// removing a 'new' layer before its been redrawn.
@@ -872,20 +884,19 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		// MW-2013-06-21: [[ Bug 10974 ]] If the layer below is a sprite, then removing
 		//   this layer will increase the lower limit of the scenery stack above
 		//   thus there is nothing to do.
-		if (p_previous -> getref() -> layer_issprite())
+		if (p_previous -> layer_issprite())
 			return;
 
 		// The layer below us has a different id, so this is an existing layer
 		// and thus we must ensure all layers above us now use the id of the
 		// layer below.
-		MCObjptr *t_objptr;
-		t_objptr = p_next;
-		while(t_objptr != p_previous &&
-              !t_objptr->getref()->layer_issprite() &&
-              t_objptr -> getref() -> layer_getid() == p_control -> layer_getid())
+		while(p_next != nil &&
+				!p_next->layer_issprite() &&
+				p_next->layer_getid() == p_control->layer_getid())
 		{
-			t_objptr -> getref() -> layer_setid(t_before_layer_id);
-			t_objptr = t_objptr -> next();
+			if (!p_next->layer_iscontainer())
+				p_next->layer_setid(t_before_layer_id);
+			p_next = MCControlNextByLayer(p_next);
 		}
 	}
 }
@@ -1470,4 +1481,95 @@ void MCRedrawDoUpdateScreen(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+MCControl *MCControlTopChildByLayer(MCControl *p_control)
+{
+	if (p_control->gettype() == CT_GROUP)
+	{
+		MCControl *t_controls = static_cast<MCGroup*>(p_control)->getcontrols();
+
+		if (t_controls != nil)
+			return MCControlTopChildByLayer(t_controls->prev());
+	}
+
+	return p_control;
+}
+
+MCControl *MCControlPreviousByLayer(MCControl *p_control)
+{
+	MCObject *t_parent = nil;
+	t_parent = p_control->getparent();
+	
+	if (t_parent == nil || t_parent->gettype() == CT_STACK)
+		return nil;
+	
+	if (t_parent->gettype() == CT_GROUP)
+	{
+		MCControl *t_controls = static_cast<MCGroup*>(t_parent)->getcontrols();
+
+		if (t_controls == p_control)
+			return static_cast<MCControl*>(t_parent);
+		else
+			return MCControlTopChildByLayer(p_control->prev());
+	}
+	else if (t_parent->gettype() == CT_CARD)
+	{
+		MCObjptr *t_object = static_cast<MCCard*>(t_parent)->getobjptrforcontrol(p_control);
+		if (t_object == nil)
+			return nil; // object not on card
+		
+		// check if first object on card
+		if (t_object == static_cast<MCCard*>(t_parent)->getobjptrs())
+			return nil;
+		
+		return MCControlTopChildByLayer(static_cast<MCControl*>(t_object->prev()->getref()));
+	}
+	else
+	{
+		// control not in group or on card
+		return nil;
+	}
+}
+
+MCControl *MCControlNextByLayer(MCControl *p_control)
+{
+	if (p_control->gettype() == CT_GROUP)
+	{
+		MCControl *t_controls = static_cast<MCGroup*>(p_control)->getcontrols();
+		if (t_controls != nil)
+			return t_controls;
+	}
+	
+	MCControl *t_child = p_control;
+	MCObject *t_parent = t_child->getparent();
+	
+	while (true)
+	{
+		if (t_parent == nil || t_parent->gettype() == CT_STACK)
+			return nil;
+		
+		if (t_parent->gettype() == CT_GROUP)
+		{
+			MCControl *t_controls = static_cast<MCGroup*>(t_parent)->getcontrols();
+			if (t_controls->prev() != t_child)
+				return t_child->next();
+		}
+		else if (t_parent->gettype() == CT_CARD)
+		{
+			MCObjptr *t_obj = static_cast<MCCard*>(t_parent)->getobjptrforcontrol(t_child);
+			if (t_obj == nil)
+				return nil; // object no longer on card
+			
+			MCObjptr *t_next = t_obj->next();
+			// check for wrap-around
+			if (t_next == static_cast<MCCard*>(t_parent)->getobjptrs())
+				return nil;
+			else
+				return static_cast<MCControl*>(t_next->getref());
+		}
+		
+		t_child = static_cast<MCControl*>(t_parent);
+		t_parent = t_child->getparent();
+	}
+}
 

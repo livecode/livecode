@@ -234,9 +234,9 @@ public:
 	// MW-2011-08-19: [[ Layers ]] Dirty the given rect of the viewport.
 	void layer_dirtyrect(const MCRectangle& dirty_rect);
 	// MW-2011-08-19: [[ Layers ]] A layer has been added to the card.
-	void layer_added(MCControl *control, MCObjptr *previous, MCObjptr *next);
+	void layer_added(MCControl *control, MCControl *previous, MCControl *next);
 	// MW-2011-08-19: [[ Layers ]] A layer has been removed from the card.
-	void layer_removed(MCControl *control, MCObjptr *previous, MCObjptr *next);
+	void layer_removed(MCControl *control, MCControl *previous, MCControl *next);
 	// MW-2011-08-19: [[ Layers ]] The viewport displayed in the stack has changed.
 	void layer_setviewport(int32_t x, int32_t y, int32_t width, int32_t height);
 
@@ -353,5 +353,13 @@ public:
     virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
     virtual void SetTheme(MCExecContext& ctxt, intenum_t p_theme);
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+// navigate controls by layer
+MCControl *MCControlPreviousByLayer(MCControl *p_control);
+MCControl *MCControlNextByLayer(MCControl *p_control);
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif
