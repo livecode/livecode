@@ -1,0 +1,9 @@
+library com.livecode.lcs_tests.core.security.extension
+
+use com.livecode.engine
+
+public handler TestCoreSecurityExtension() returns String
+	return "Foo"
+end handler
+
+end library

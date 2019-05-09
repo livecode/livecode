@@ -1,0 +1,1 @@
+# Add `extension` as a category to the `securityPermissions` property to restrict the `load extension` command

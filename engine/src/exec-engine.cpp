@@ -102,6 +102,7 @@ static MCExecSetTypeElementInfo _kMCEngineSecurityCategoriesElementInfo[] =
 	{ "applescript", kMCSecureModeTypeApplescriptBit },
 	{ "doalternate", kMCSecureModeTypeDoalternateBit },
 	{ "external", kMCSecureModeTypeExternalBit },
+    { "extension", kMCSecureModeTypeExtensionBit },
 };
 
 static MCExecSetTypeInfo _kMCEngineSecurityCategoriesTypeInfo =

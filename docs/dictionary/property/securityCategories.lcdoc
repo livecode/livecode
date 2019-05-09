@@ -31,10 +31,15 @@ supported security categories. Returned values are:
   * doalternate - use of the 'do ... as ...' alternate language
     execution feature
   * external - loading externals
+  * extension - loading extensions from file or data. Extensions included when
+  building a standalone are not restricted.
 
+Changes:
+In version 9.5 the extension category was added to restrict loading of
+extensions.
 
 References: launch (command), property (glossary),
-securityPermissions (property), secureMode (property)
+securityPermissions (property), secureMode (property), load extension (command)
 
 Tags: file system
 

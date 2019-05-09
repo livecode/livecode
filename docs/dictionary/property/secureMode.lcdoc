@@ -41,9 +41,16 @@ The application cannot access remote files with the URL <keyword>. The
 If the application is started from a Unix or Windows command line, this
 property can be set to true on startup by using the -f option.
 
+The application also can not use the <load extension> command to load an extension
+from a file or data.
+
 >*Important:*  Once the <secureMode> <property> is set to true, it
 > cannot be set back to false. To change it back to true, you must quit
 > and restart the <application>.
+
+Changes:
+In version 9.5 the loading of extensions was added to the secureMode
+restrictions.
 
 References: write to file (command), open file (command), put (command),
 launch (command), open process (command), read from file (command),
@@ -53,7 +60,7 @@ queryRegistry (function), property (glossary), stack file (glossary),
 Windows (glossary), web server (glossary), keyword (glossary),
 registry (glossary), function (glossary), command (glossary),
 application (glossary), file (keyword), securityPermissions (property),
-securityCategories (property)
+securityCategories (property), load extension (command)
 
 Tags: file system
 
