@@ -40,6 +40,10 @@ A string specifying the mode of the object.
 -   scrolling: Applies to groups only and is used where the group
     contains contents to scroll. The group must be unadorned or the
     layerMode is set to 'dynamic' (no borders, no scrollbars).
+-   container: Applies to groups only and is used where the group
+    is intended only to organise or restrict the visible area of
+    its contents. The group must be unadorned or the
+    layerMode is set to 'dynamic' (no borders, no scrollbars).
 
 
 Description:
@@ -58,6 +62,8 @@ object with a non-copy/blendSrcOver ink set - effective layerMode is set
 to 'dynamic'. 
 3. You have a scrolling <layerMode> on a non-group or an
 adorned group - effective layerMode is set to 'dynamic'.
+4. You have a container <layerMode> on a non-group or an
+adorned or opaque group - effective layerMode is set to 'static'.
 
 **Scrolling**
 
@@ -66,6 +72,16 @@ caches the content of the group unclipped, and then renders the cached
 copies clipped; instead of caching the visible portion of the group.
 This results in fast updates when setting the scroll properties of a
 group. 
+
+**Container**
+The container layerMode is pertinent to groups. When a group has its
+layerMode set to 'container', and all its ancestor groups (if any) have
+their layerMode set to 'container', the engine ignores the group for the
+purposes of accelerated rendering, allowing objects within the group to
+have 'static', 'dynamic' or 'scrolling' layerModes; e.g. an image with
+'dynamic' layerMode inside a group will behave the same as if it were a
+top-level object with 'dynamic' layerMode *except* it will be clipped by
+the rect of its owning group.
 
 **Static vs Dynamic**
 
