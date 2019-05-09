@@ -358,7 +358,7 @@ MCValueRef MCVariable::getvalueref(MCSpan<MCNameRef> p_path, bool p_case_sensiti
             MCArrayFetchValueOnPath(value . arrayref_value, p_case_sensitive, p_path, t_value))
 		return t_value;
 
-	return kMCEmptyString;
+	return kMCNull;
 }
 
 bool MCVariable::copyasexecvalue(MCExecValue& r_value)

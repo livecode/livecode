@@ -3153,7 +3153,7 @@ void MCEngineEvalIsNotStrictlyAnArray(MCExecContext& ctxt, MCValueRef value, boo
 
 void MCEngineEvalCommandName(MCExecContext& ctxt, MCStringRef& r_result);
 void MCEngineEvalCommandArguments(MCExecContext& ctxt, MCArrayRef& r_result);
-void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCStringRef& r_result);
+void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCValueRef& r_result);
 void MCEngineGetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef& r_mapping);
 void MCEngineSetRevLibraryMappingByKey(MCExecContext& ctxt, MCNameRef p_library, MCStringRef p_mapping);
 

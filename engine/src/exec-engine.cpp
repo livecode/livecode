@@ -2056,7 +2056,7 @@ void MCEngineEvalCommandArguments(MCExecContext& ctxt, MCArrayRef& r_result)
     r_result = MCValueRetain(MCcommandarguments);
 }
 
-void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCStringRef& r_result)
+void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index, MCValueRef& r_result)
 {
     if (t_index == 0)
     {
@@ -2064,10 +2064,10 @@ void MCEngineEvalCommandArgumentAtIndex(MCExecContext& ctxt, uinteger_t t_index,
         return;
     }
     
-    MCStringRef t_result = nullptr;
-    // If the index > argument count then we return empty
-    if (!MCArrayFetchValueAtIndex(MCcommandarguments, t_index, (MCValueRef&)t_result))
-        t_result = kMCEmptyString;
+    MCValueRef t_result = nullptr;
+    // If the index > argument count then we return nothing
+    if (!MCArrayFetchValueAtIndex(MCcommandarguments, t_index, t_result))
+        t_result = kMCNull;
 
     r_result = MCValueRetain(t_result);
 }

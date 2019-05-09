@@ -446,8 +446,8 @@ void MCCommandArguments::eval_ctxt(MCExecContext& ctxt, MCExecValue& r_value)
         if (!ctxt . EvalExprAsUInt(*argument_index, EE_COMMANDARGUMENTS_BADPARAM, t_index))
             return;
 
-        MCEngineEvalCommandArgumentAtIndex(ctxt, t_index, r_value . stringref_value);
-        r_value.type = kMCExecValueTypeStringRef;
+        MCEngineEvalCommandArgumentAtIndex(ctxt, t_index, r_value . valueref_value);
+        r_value.type = kMCExecValueTypeValueRef;
     }
 }
 
