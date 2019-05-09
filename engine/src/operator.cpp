@@ -271,45 +271,54 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
         {
             if (sp.skip_token(SP_VALIDATION, TT_UNDEFINED, TT_UNDEFINED) != PS_NORMAL)
             {
-	            MCperror -> add(PE_ISSTRICTLY_NOAN, sp);
-                return PS_ERROR;
-            }
-            
-            if (sp.skip_token(SP_SORT, TT_UNDEFINED, ST_BINARY) == PS_NORMAL)
-            {
-                if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRING) != PS_NORMAL)
-                {
-                    MCperror -> add(PE_ISSTRICTLY_NOSTRING, sp);
-                    return PS_ERROR;
-                }
-                
-                valid = IV_BINARY_STRING;
-            }
-            else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_NOTHING) == PS_NORMAL)
                 valid = IV_UNDEFINED;
-            else if (sp . skip_token(SP_VALIDATION, TT_UNDEFINED, IV_LOGICAL) == PS_NORMAL)
-                valid = IV_LOGICAL;
-            else if (sp . skip_token(SP_VALIDATION, TT_UNDEFINED, IV_ARRAY) == PS_NORMAL)
-                valid = IV_ARRAY;
-            else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRING) == PS_NORMAL)
-                valid = IV_STRING;
-            else if (sp . skip_token(SP_VALIDATION, TT_UNDEFINED, IV_INTEGER) == PS_NORMAL)
-                valid = IV_INTEGER;
-            else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_REAL) == PS_NORMAL)
-                valid = IV_REAL;
+                
+                if (form != IT_NOT)
+                    form = IT_STRICTLY_EQUAL;
+                else
+                    form = IT_NOT_STRICTLY_EQUAL;
+            }
             else
             {
-                MCperror -> add(PE_ISSTRICTLY_NOTYPE, sp);
-                return PS_ERROR;
+                if (sp.skip_token(SP_SORT, TT_UNDEFINED, ST_BINARY) == PS_NORMAL)
+                {
+                    if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRING) != PS_NORMAL)
+                    {
+                        MCperror -> add(PE_ISSTRICTLY_NOSTRING, sp);
+                        return PS_ERROR;
+                    }
+                    
+                    valid = IV_BINARY_STRING;
+                }
+                else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_NOTHING) == PS_NORMAL)
+                    valid = IV_UNDEFINED;
+                else if (sp . skip_token(SP_VALIDATION, TT_UNDEFINED, IV_LOGICAL) == PS_NORMAL)
+                    valid = IV_LOGICAL;
+                else if (sp . skip_token(SP_VALIDATION, TT_UNDEFINED, IV_ARRAY) == PS_NORMAL)
+                    valid = IV_ARRAY;
+                else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRING) == PS_NORMAL)
+                    valid = IV_STRING;
+                else if (sp . skip_token(SP_VALIDATION, TT_UNDEFINED, IV_INTEGER) == PS_NORMAL)
+                    valid = IV_INTEGER;
+                else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_REAL) == PS_NORMAL)
+                    valid = IV_REAL;
+                else
+                {
+                    MCperror -> add(PE_ISSTRICTLY_NOTYPE, sp);
+                    return PS_ERROR;
+                }
             }
         }
-            
-        if (form != IT_NOT)
-            form = IT_STRICTLY;
-        else
-            form = IT_NOT_STRICTLY;
         
-        return PS_BREAK;
+        if (form != IT_STRICTLY_EQUAL && form != IT_NOT_STRICTLY_EQUAL)
+        {
+            if (form != IT_NOT)
+                form = IT_STRICTLY;
+            else
+                form = IT_NOT_STRICTLY;
+            
+            return PS_BREAK;
+        }
     }
 	if (sp.next(type) != PS_NORMAL)
 	{
@@ -832,6 +841,23 @@ void MCIs::eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value)
                 MCGraphicsEvalIsWithin(ctxt, t_point, t_rectangle, t_result);
             else
                 MCGraphicsEvalIsNotWithin(ctxt, t_point, t_rectangle, t_result);
+        }
+        break;
+    case IT_STRICTLY_EQUAL:
+    case IT_NOT_STRICTLY_EQUAL:
+        {
+            MCAutoValueRef t_left, t_right;
+
+            if (!ctxt . EvalExprAsValueRef(left, EE_IS_BADLEFT, &t_left))
+                return;
+            
+            if (!ctxt . EvalExprAsValueRef(right, EE_IS_BADRIGHT, &t_right))
+                return;
+            
+            if (form == IT_STRICTLY_EQUAL)
+                MCLogicEvalIsStrictlyEqualTo(ctxt, *t_left, *t_right, t_result);
+            else
+                MCLogicEvalIsNotStrictlyEqualTo(ctxt, *t_left, *t_right, t_result);
         }
         break;
     default:

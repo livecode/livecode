@@ -682,6 +682,8 @@ enum Is_type {
     IT_NOT_AMONG_THE_FULL_DRAGBOARD_DATA,
     IT_STRICTLY,
     IT_NOT_STRICTLY,
+    IT_STRICTLY_EQUAL,
+    IT_NOT_STRICTLY_EQUAL,
 };
 
 enum Is_validation {

@@ -75,3 +75,14 @@ on TestStrictlyArray
 
    __TestIsStrictly tVal, "an array"
 end TestStrictlyArray
+
+on TestStrictlyEquals
+   TestAssert "is strictly string", "test" is strictly "test"
+   TestAssert "is strictly string case sensitive", "test" is not strictly "Test"
+   TestAssert "is strictly numeric strings", 1 is not strictly 1.0
+   TestAssert "is strictly numeric", (1 + 0) is strictly (1.0 + 0)
+   TestAssert "is strictly boolean", (1 is 1) is strictly (1 is 1)
+   TestAssert "is strictly unicode equivalence NFC/NFD", numToCodepoint(0x00e9) is not strictly numToCodepoint(0x0065)&numToCodepoint(0x0301)
+   TestAssert "is strictly unicode equivalence NFC/NFC", numToCodepoint(0x00e9) is strictly normalizeText(numToCodepoint(0x0065)&numToCodepoint(0x0301),"NFC")
+   TestAssert "is strictly name is string", "0" is strictly (0 & "")
+end TestStrictlyEquals

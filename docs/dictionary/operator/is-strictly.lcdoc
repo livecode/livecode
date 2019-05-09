@@ -2,10 +2,10 @@ Name: is strictly
 
 Type: operator
 
-Syntax: <value> is strictly { nothing | a boolean | an integer | a real | a string | a binary string | an array }
+Syntax: <value> is strictly { nothing | a boolean | an integer | a real | a string | a binary string | an array | <otherValue> }
 
 Summary:
-Evaluates to true if the actual type of <value> is the specified type.
+Evaluates to true if the actual <value> is the specified type or value.
 
 Introduced: 8.0
 
@@ -23,17 +23,30 @@ Example:
 (100 is 100) is strictly a boolean -- evaluates to true
 
 Example:
+"test" is strictly "TEST" -- evaluates to false
+
+Example:
+1 is strictly 1.0 -- evaluates to false
+
+Example:
+1 + 0 is strictly 1.0 + 0 -- evaluates to true
+
+Example:
 the compress of "Hello World!" is strictly a binary string -- evaluates to true
 
 Parameters:
 value:
-The expression which will be tested for its type.
+The expression which will be tested for its type or value.
+
+otherValue:
+The expression which will be compared for its value.
 
 Description:
 Use the <is strictly> operator to determine the true type of a
-value. The true type of a value is the representation which the engine
-is currently holding for it, without performing any implicit type
-coercion. The true type of a value can be one of the following:
+value or if it is strictly equal to another value. The true type of a value is
+the representation which the engine is currently holding for it, without
+performing any implicit type coercion. The true type of a value can be one of
+the following:
 
 * nothing: no value, typically seen as <empty>
 * boolean: either true or false, typically seen as the result of a
@@ -44,12 +57,22 @@ coercion. The true type of a value can be one of the following:
 * binary string: a sequence of bytes
 * array: an associative array
 
-
 The <is strictly> operator differs from <is a> in that it does not
 perform any type coercion. For example, `x is an integer` would return
 true if `x` is truly an integer or if it is a string which can be parsed
 as an integer; whereas `x is strictly an integer` only returns true if
 `x` is currently an integer (and not a string).
+
+When comparing to another value the values are considered to be equal if they
+are the same type and have exactly the same value:
+
+* strings and binary strings must have the same byte values
+* unicode strings are not normalized prior to the comparison
+* numeric strings are compared as strings
+
+Changes:
+Comparison to another value to determine strict value equivalence was added in
+LiveCode 9.5
 
 References: is not strictly (operator), is a (operator),
 is not a (operator)

@@ -233,6 +233,42 @@ void MCLogicEvalIsNotEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef 
 	ctxt . Throw();
 }
 
+static bool MCLogicIsStrictlyEqualTo(MCValueRef p_left, MCValueRef p_right)
+{
+    /* Take into account names */
+    MCValueTypeCode t_left_code, t_right_code;
+    t_left_code = MCValueGetTypeCode(p_left);
+    t_right_code = MCValueGetTypeCode(p_right);
+    
+    if (t_left_code != t_right_code)
+    {
+        if (t_left_code == kMCValueTypeCodeName)
+        {
+            p_left = MCNameGetString((MCNameRef)p_left);
+        }
+        else if (t_right_code == kMCValueTypeCodeName)
+        {
+            p_right = MCNameGetString((MCNameRef)p_right);
+        }
+        else
+        {
+            return false;
+        }
+    }
+    
+    return MCValueIsEqualTo(p_left, p_right);
+}
+
+void MCLogicEvalIsStrictlyEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef p_right, bool& r_result)
+{
+    r_result = MCLogicIsStrictlyEqualTo(p_left, p_right);
+}
+
+void MCLogicEvalIsNotStrictlyEqualTo(MCExecContext& ctxt, MCValueRef p_left, MCValueRef p_right, bool& r_result)
+{
+    r_result = !MCLogicIsStrictlyEqualTo(p_left, p_right);
+}
+
 void MCLogicEvalIsGreaterThan(MCExecContext& ctxt, MCValueRef p_left, MCValueRef p_right, bool& r_result)
 {
 	compare_t t_order;
