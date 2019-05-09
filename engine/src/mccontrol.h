@@ -257,7 +257,9 @@ public:
 	// MW-2011-09-21: [[ Layers ]] Returns whether the layer is a sprite or not.
 	bool layer_issprite(void) { return m_layer_is_sprite; }
 	// MW-2011-09-21: [[ Layers ]] Returns whether the layer is scrolling or not.
-	bool layer_isscrolling(void) { return m_layer_mode == kMCLayerModeHintScrolling; }
+    bool layer_isscrolling(void) { return m_layer_mode == kMCLayerModeHintScrolling; }
+    // MW-2011-09-21: [[ Layers ]] Returns whether the layer is a container or not.
+    bool layer_iscontainer(void) { return m_layer_mode == kMCLayerModeHintContainer; }
 	// MW-2011-09-21: [[ Layers ]] Returns whether the layer is opaque or not.
 	bool layer_isopaque(void) { return m_layer_is_opaque; }
 

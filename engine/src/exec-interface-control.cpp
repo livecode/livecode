@@ -321,14 +321,6 @@ void MCControl::SetLayerMode(MCExecContext& ctxt, intenum_t p_mode)
 
 	MCLayerModeHint t_mode = (MCLayerModeHint)p_mode;
 
-#if !NOT_YET_IMPLEMENTED
-	if (t_mode == kMCLayerModeHintContainer)
-	{
-		ctxt . LegacyThrow(EE_CONTROL_BADLAYERMODE);
-		return;
-	}
-#endif
-
 	// If the layer mode hint has changed, update and mark the attrs
 	// for recompute. If the hint hasn't changed, then there's no need
 	// to redraw.

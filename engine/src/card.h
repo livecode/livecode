@@ -241,7 +241,9 @@ public:
 	void layer_setviewport(int32_t x, int32_t y, int32_t width, int32_t height);
 
 	// MW-2011-08-26: [[ TileCache ]] Render all layers into the stack's tilecache.
-	void render(void);
+    void render(void);
+    void render_control(MCTileCacheRef p_tiler, MCControl *p_control, const MCRectangle& p_visible_rect, const MCGAffineTransform& p_transform, bool p_parent_is_container);
+    void render_control_reset_ids(MCControl *p_control);
 
 	// IM-2013-09-13: [[ RefactorGraphics ]] add tilecache_ prefix to render methods to make their purpose clearer
 	// MW-2011-09-23: [[ TileCache ]] Render the card's bg layer.
