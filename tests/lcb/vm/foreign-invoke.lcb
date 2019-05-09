@@ -40,18 +40,19 @@ public handler TestForeignInvoke_Varargs()
       variable tLongLong as SInt64
       variable tFloat as CFloat
       variable tDouble as CDouble
+      variable tNothing as optional Pointer
       put 1000 into tInt
       put 1000000000 into tLong
       put tLong * 1000000 into tLongLong
       put 3.5 into tFloat
       put 7.5 into tDouble
-      sprintf(tOutputBuffer, "%d %ld %lld %.1f %.1lf", tInt, tLong, tLongLong, tFloat, tDouble)
+      sprintf(tOutputBuffer, "%d %ld %lld %.1f %.1lf %p", tInt, tLong, tLongLong, tFloat, tDouble, tNothing)
       MCStringCreateWithCString(tOutputBuffer, tString2)
 
       free(tOutputBuffer)
    end unsafe
    test "sprintf works with no variadic arguments" when tString1 is "no formats"
-   test "sprintf works with variadic arguments" when tString2 is "1000 1000000000 1000000000000000 3.5 7.5"
+   test "sprintf works with variadic arguments" when tString2 is "1000 1000000000 1000000000000000 3.5 7.5 0x0"
 end handler
 
 --------
