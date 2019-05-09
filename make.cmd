@@ -33,8 +33,12 @@ if /I "%BUILD_PLATFORM%"=="win-x86" (
 if not defined VSINSTALLDIR set VSINSTALLDIR=%ProgramFilesBase%\Microsoft Visual Studio\2017\BuildTools\
 call "%VSINSTALLDIR%VC\Auxiliary\Build\vcvarsall.bat" %VSCMD_ARG_TGT_ARCH%
 
-@if "%1" NEQ "" set MSBUILD_TARGET_ARG=/t:%1
+@if "%1" NEQ "" (
+	set MSBUILD_TARGET_ARG=/t:%1
+) else (
+	set MSBUILD_TARGET_ARG=/t:default
+)
 
-msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /m:1 %BUILD_TARGET_ARG% /p:Configuration=%BUILDTYPE% /p:Platform=%MSBUILD_PLATFORM%
+msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /m:1 %MSBUILD_TARGET_ARG% /p:Configuration=%BUILDTYPE% /p:Platform=%MSBUILD_PLATFORM%
 
 @exit %ERRORLEVEL%
