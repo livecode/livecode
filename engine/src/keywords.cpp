@@ -212,9 +212,7 @@ Parse_stat MCLocaltoken::parse(MCScriptPoint &sp)
                 {
                     // If the unquoted literal is a recognised constant and the constant's value
                     // is identical (case-sensitively) to the value, it is fine to make it a literal.
-                    const char *t_value;
-                    if (sp . lookupconstantvalue(t_value) &&
-                        MCStringIsEqualToCString(sp . gettoken_stringref(), t_value, kMCStringOptionCompareExact))
+                    if (sp . constantnameconvertstoconstantvalue())
                         type = ST_LIT;
                 }
                 

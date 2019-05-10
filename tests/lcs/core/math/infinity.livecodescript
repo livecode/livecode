@@ -91,65 +91,65 @@ private command _TestBinaryOperator pLeft, pRight, pOperator, pExpected
 end _TestBinaryOperator
 
 on TestInfinityBinaryOperators
-    _TestBinaryOperator "inf", 1, "plus", "inf"
-    _TestBinaryOperator "-inf", 1, "plus", "-inf"
+    _TestBinaryOperator infinity, 1, "plus", infinity
+    _TestBinaryOperator -infinity, 1, "plus", -infinity
 
-    _TestBinaryOperator "inf", 1, "minus", "inf"
-    _TestBinaryOperator "-inf", 1, "minus", "-inf"
-    _TestBinaryOperator 1, "inf", "minus", "-inf"
-    _TestBinaryOperator 1, "-inf", "minus", "inf"
+    _TestBinaryOperator infinity, 1, "minus", infinity
+    _TestBinaryOperator -infinity, 1, "minus", -infinity
+    _TestBinaryOperator 1, infinity, "minus", -infinity
+    _TestBinaryOperator 1, -infinity, "minus", infinity
 
-    _TestBinaryOperator "inf", 2, "times", "inf"
-    _TestBinaryOperator "-inf", 2, "times", "-inf"
+    _TestBinaryOperator infinity, 2, "times", infinity
+    _TestBinaryOperator -infinity, 2, "times", -infinity
 
-    _TestBinaryOperator "inf", 2, "over", "inf"
-    _TestBinaryOperator "-inf", 2, "over", "-inf"
-    _TestBinaryOperator 2, "inf", "over", 0
-    _TestBinaryOperator 2, "-inf", "over", 0
+    _TestBinaryOperator infinity, 2, "over", infinity
+    _TestBinaryOperator -infinity, 2, "over", -infinity
+    _TestBinaryOperator 2, infinity, "over", 0
+    _TestBinaryOperator 2, -infinity, "over", 0
 
-    _TestBinaryOperator "inf", 2, "to the power of", "inf"
-    _TestBinaryOperator "-inf", 2, "to the power of", "inf"
-    _TestBinaryOperator "-inf", 3, "to the power of", "-inf"
-    _TestBinaryOperator 2, "inf", "to the power of", "inf"
-    _TestBinaryOperator 2, "-inf", "to the power of", 0
+    _TestBinaryOperator infinity, 2, "to the power of", infinity
+    _TestBinaryOperator -infinity, 2, "to the power of", infinity
+    _TestBinaryOperator -infinity, 3, "to the power of", -infinity
+    _TestBinaryOperator 2, infinity, "to the power of", infinity
+    _TestBinaryOperator 2, -infinity, "to the power of", 0
 
-    _TestBinaryOperator "inf", 1, "added to", "inf"
-    _TestBinaryOperator "-inf", 1, "added to", "-inf"
-    _TestBinaryOperator 1, "inf", "added to", "inf"
-    _TestBinaryOperator 1, "-inf", "added to", "-inf"
+    _TestBinaryOperator infinity, 1, "added to", infinity
+    _TestBinaryOperator -infinity, 1, "added to", -infinity
+    _TestBinaryOperator 1, infinity, "added to", infinity
+    _TestBinaryOperator 1, -infinity, "added to", -infinity
 
-    _TestBinaryOperator 1, "inf", "subtracted from", "inf"
-    _TestBinaryOperator 1, "-inf", "subtracted from", "-inf"
-    _TestBinaryOperator "inf", 1, "subtracted from", "-inf"
-    _TestBinaryOperator "-inf", 1, "subtracted from", "inf"
+    _TestBinaryOperator 1, infinity, "subtracted from", infinity
+    _TestBinaryOperator 1, -infinity, "subtracted from", -infinity
+    _TestBinaryOperator infinity, 1, "subtracted from", -infinity
+    _TestBinaryOperator -infinity, 1, "subtracted from", infinity
 
-    _TestBinaryOperator "inf", 2, "multiplied by", "inf"
-    _TestBinaryOperator "-inf", 2, "multiplied by", "-inf"
-    _TestBinaryOperator 2, "inf", "multiplied by", "inf"
-    _TestBinaryOperator 2, "-inf", "multiplied by", "-inf"
+    _TestBinaryOperator infinity, 2, "multiplied by", infinity
+    _TestBinaryOperator -infinity, 2, "multiplied by", -infinity
+    _TestBinaryOperator 2, infinity, "multiplied by", infinity
+    _TestBinaryOperator 2, -infinity, "multiplied by", -infinity
 
-    _TestBinaryOperator "inf", 2, "divided by", "inf"
-    _TestBinaryOperator "-inf", 2, "divided by", "-inf"
-    _TestBinaryOperator 2, "inf", "divided by", 0
-    _TestBinaryOperator 2, "-inf", "divided by", 0
+    _TestBinaryOperator infinity, 2, "divided by", infinity
+    _TestBinaryOperator -infinity, 2, "divided by", -infinity
+    _TestBinaryOperator 2, infinity, "divided by", 0
+    _TestBinaryOperator 2, -infinity, "divided by", 0
 
-    _TestBinaryOperator "inf", 2, "div", "inf"
-    _TestBinaryOperator "-inf", 2, "div", "-inf"
-    _TestBinaryOperator 2, "inf", "div", 0
-    _TestBinaryOperator 2, "-inf", "div", 0
+    _TestBinaryOperator infinity, 2, "div", infinity
+    _TestBinaryOperator -infinity, 2, "div", -infinity
+    _TestBinaryOperator 2, infinity, "div", 0
+    _TestBinaryOperator 2, -infinity, "div", 0
 
-    _TestBinaryOperator 2, "inf", "mod", 2
-    _TestBinaryOperator 2, "-inf", "mod", 2
+    _TestBinaryOperator 2, infinity, "mod", 2
+    _TestBinaryOperator 2, -infinity, "mod", 2
 
-    _TestBinaryOperator 2, "inf", "wrap", 2
-    _TestBinaryOperator 2, "-inf", "wrap", 2
+    _TestBinaryOperator 2, infinity, "wrap", 2
+    _TestBinaryOperator 2, -infinity, "wrap", 2
 
-    _TestBinaryOperator 1, "inf", "atan2", 0
-    _TestBinaryOperator "inf", 1, "atan2", pi/2
-    _TestBinaryOperator "inf", "inf", "atan2", pi/4
-    _TestBinaryOperator 1, "-inf", "atan2", pi
-    _TestBinaryOperator "-inf", 1, "atan2", -pi/2
-    _TestBinaryOperator "-inf", "-inf", "atan2", -3*pi/4
+    _TestBinaryOperator 1, infinity, "atan2", 0
+    _TestBinaryOperator infinity, 1, "atan2", pi/2
+    _TestBinaryOperator infinity, infinity, "atan2", pi/4
+    _TestBinaryOperator 1, -infinity, "atan2", pi
+    _TestBinaryOperator -infinity, 1, "atan2", -pi/2
+    _TestBinaryOperator -infinity, -infinity, "atan2", -3*pi/4
 end TestInfinityBinaryOperators
 
 private command _TestUnaryOperator pOperator, pOperand, pExpected
@@ -161,42 +161,42 @@ private command _TestUnaryOperator pOperator, pOperand, pExpected
 end _TestUnaryOperator
 
 on TestInfinityUnaryOperators
-    _TestUnaryOperator "atan", "inf", pi/2
-    _TestUnaryOperator "atan", "-inf", -pi/2
+    _TestUnaryOperator "atan", infinity, pi/2
+    _TestUnaryOperator "atan", -infinity, -pi/2
 
-    _TestUnaryOperator "exp", "inf", "inf"
-    _TestUnaryOperator "exp", "-inf", 0
-    _TestUnaryOperator "exp1", "inf", "inf"
-    _TestUnaryOperator "exp1", "-inf", -1
-    _TestUnaryOperator "exp2", "inf", "inf"
-    _TestUnaryOperator "exp2", "-inf", 0
-    _TestUnaryOperator "exp10", "inf", "inf"
-    _TestUnaryOperator "exp10", "-inf", 0
+    _TestUnaryOperator "exp", infinity, infinity
+    _TestUnaryOperator "exp", -infinity, 0
+    _TestUnaryOperator "exp1", infinity, infinity
+    _TestUnaryOperator "exp1", -infinity, -1
+    _TestUnaryOperator "exp2", infinity, infinity
+    _TestUnaryOperator "exp2", -infinity, 0
+    _TestUnaryOperator "exp10", infinity, infinity
+    _TestUnaryOperator "exp10", -infinity, 0
 
-    _TestUnaryOperator "ln", "inf", "inf"
-    _TestUnaryOperator "ln1", "inf", "inf"
-    _TestUnaryOperator "log2", "inf", "inf"
-    _TestUnaryOperator "log10", "inf", "inf"
+    _TestUnaryOperator "ln", infinity, infinity
+    _TestUnaryOperator "ln1", infinity, infinity
+    _TestUnaryOperator "log2", infinity, infinity
+    _TestUnaryOperator "log10", infinity, infinity
 
-    _TestUnaryOperator "sqrt", "inf", "inf"
+    _TestUnaryOperator "sqrt", infinity, infinity
 end TestInfinityUnaryOperators
 
 on TestInfinityNaryOperators
     repeat for each item tItem in "sum,min,max,avg,median"
-        _TestUnaryOperator tItem, "inf", "inf"
+        _TestUnaryOperator tItem, infinity, infinity
         if the platform is "win32" then
             TestSkip tItem & "(-inf) is -inf", "Bug 22038"
         else
-            _TestUnaryOperator tItem, "-inf", "-inf"
+            _TestUnaryOperator tItem, -infinity, -infinity
         end if
     end repeat
 
-    _TestBinaryOperator 2, "inf", "min", 2
-    _TestBinaryOperator 2, "-inf", "min", "-inf"
+    _TestBinaryOperator 2, infinity, "min", 2
+    _TestBinaryOperator 2, -infinity, "min", -infinity
 
-    _TestBinaryOperator 2, "inf", "max", "inf"
-    _TestBinaryOperator 2, "-inf", "max", 2
+    _TestBinaryOperator 2, infinity, "max", infinity
+    _TestBinaryOperator 2, -infinity, "max", 2
 
-    TestAssert "Result of median(2,inf,inf) is inf", median(2,"inf","inf") is "inf"
-    TestAssert "Result of median(2,-inf,-inf) is -inf", median(2,"-inf","-inf") is "-inf"
+    TestAssert "Result of median(2,inf,inf) is inf", median(2,infinity,infinity) is infinity
+    TestAssert "Result of median(2,-inf,-inf) is -inf", median(2,-infinity,-infinity) is -infinity
 end TestInfinityNaryOperators
