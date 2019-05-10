@@ -2,9 +2,9 @@ Name: filter
 
 Type: command
 
-Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} [wildcard pattern] <wildcardPattern> [into <targetContainer>]
+Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} [wildcard] [pattern] <wildcardPattern> [into <targetContainer>]
 
-Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} regex pattern <regexPattern> [into <targetContainer>]
+Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} regex [pattern] <regexPattern> [into <targetContainer>]
 
 Summary:
 Filters each line, item, key or element in a source container or expression,

@@ -883,12 +883,6 @@ MCFilter::~MCFilter()
 // JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new filter syntax.
 Parse_stat MCFilter::parse(MCScriptPoint &sp)
 {
-	// Syntax :
-	//   filter [ { lines | items | keys | elements } of ] <container_or_exp>
-	//          { with | without | [ not ] matching }
-	//          [ { wildcard | regex } [ pattern ] ] <pattern>
-	//          [ into <container> ]
-	//
 	Parse_errors t_error;
 	t_error = PE_UNDEFINED;
     
