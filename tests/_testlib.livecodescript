@@ -130,7 +130,7 @@ private function _TestGetBuildFolder
          return tPath
       end if
       delete item -1 of tPath
-   end repeat	
+   end repeat
 end _TestGetBuildFolder
 
 private function _TestGetBuiltExtensionsFolder
@@ -140,7 +140,7 @@ end _TestGetBuiltExtensionsFolder
 private command _TestLoadExtension pFolder, pPath
    local tCodeFolder
    put pFolder & "/code" into tCodeFolder
-   
+
    if there is a folder tCodeFolder then
       local tCodeFolders
       put folders(tCodeFolder) into tCodeFolders
@@ -155,7 +155,7 @@ private command _TestLoadExtension pFolder, pPath
             filter tCodeFolders with "*-"& toLower(the platform) & "*"
             break
       end switch
-      
+
       local tFilteredCodeFolders
       filter tCodeFolders with the processor & "-*" into tFilteredCodeFolders
       split tFilteredCodeFolders by return as set
@@ -168,13 +168,13 @@ private command _TestLoadExtension pFolder, pPath
          split tUniveralFilteredCodeFolders by return as set
          union tFilteredCodeFolders with tUniveralFilteredCodeFolders
       end if
-      
+
       repeat for each key tFolder in tFilteredCodeFolders
          local tLibraries
          put files(tCodeFolder & "/" & tFolder) & return & \
                folders(tCodeFolder & "/" & tFolder) into tLibraries
          filter tLibraries without ".*"
-         
+
          if tLibraries is not empty then
             set the itemDelimiter to "."
             repeat for each line tLibrary in tLibraries
@@ -199,27 +199,27 @@ function TestBuildErrorMap pErrorFile, pErrorPrefix, pZerothError
    local tSourceFile
    put TestGetEngineRepositoryPath() & slash & "engine/src/" & \
       pErrorFile into tSourceFile
-   
+
    local tSource
    put textDecode(url("binfile:" & tSourceFile), "utf-8") into tSource
-   
+
    local tErrorMap, tCode
    repeat for each line tLine in tSource
       if tLine is empty then next repeat
-      if word 1 of tLine begins with pErrorPrefix & "_" & pZerothError then 
+      if word 1 of tLine begins with pErrorPrefix & "_" & pZerothError then
          next repeat
       end if
-      
+
       if tCode is empty and \
             matchText(tLine, ".*\/\/ \{" & pErrorPrefix & "-([0-9]{4})\}.*", tCode) then
          next repeat
       end if
-      
+
       local tError
       put item 1 of (word 1 of tLine) into tError
-      if tError begins with pErrorPrefix & "_" or \ 
+      if tError begins with pErrorPrefix & "_" or \
             tError begins with "NOTUSED__" & pErrorPrefix & "_" then
-         if tCode is empty then 
+         if tCode is empty then
             throw "no error code found for" && tError
          end if
          if tError begins with (pErrorPrefix & "_UNUSED_") then
@@ -347,7 +347,7 @@ on TestAssertDoesNotThrow pDescription, pHandler, pTarget, pParam
   catch tError
   end try
 
-  TestAssert pDescription, tError is empty 
+  TestAssert pDescription, tError is empty
 end TestAssertDoesNotThrow
 
 local sError
@@ -387,7 +387,7 @@ on TestLoadExtension pName
    if pName is among the lines of the loadedExtensions then
       return empty
    end if
-   
+
    set the itemdelimiter to "."
    local tExtensionUnzipFolder
    put pName into tExtensionUnzipFolder
@@ -442,11 +442,17 @@ on TestLoadExternal pExternal
 
    local tBinariesPath, tExtension
    set the itemdelimiter to slash
-   if the platform is "MacOS" then
-      put "bundle" into tExtension
-   else if the platform is "linux" then
-      put "so" into tExtension
-   end if
+   switch the platform
+      case "MacOS"
+         put "bundle" into tExtension
+         break
+      case "Linux"
+         put "so" into tExtension
+         break
+      case "Win32"
+         put "dll" into tExtension
+         break
+   end switch
 
    put TestGetBinariesPath() into tBinariesPath
 
@@ -459,12 +465,12 @@ on TestLoadExternal pExternal
       write "Cannot load external" && pExternal & return to stderr
       quit 1
    end if
-   
+
    -- Ensure drivers can be found
    if pExternal is "revdb" then
       revSetDatabaseDriverPath tBinariesPath
    end if
-end TestLoadExternal 
+end TestLoadExternal
 
 private function __GetCaller
    local tLineNum
@@ -497,7 +503,7 @@ on TestLoadAuxiliaryExtension pName, pResourceFolder
       load extension from data url ("binfile:" & tBytecodeFile) \
             with resource path pResourceFolder
    end if
-   
+
    if the result is not empty then
       throw "Failed to load auxiliary extension:" && \
             the result && tBytecodeFile
@@ -510,15 +516,15 @@ function TestGetBuiltBytecodeFile pName
    set the itemDelimiter to slash
    put item 1 to -2 of the effective filename of \
          __StackOfObject(__GetCaller()) into tBasePath
-         
+
    local tTestsOffset
    set the wholematches to true
    put itemOffset("tests", tBasePath) into tTestsOffset
    put item tTestsOffset + 1 to -1 of tBasePath into tExtraPath
    put item 1 to tTestsOffset - 1 of tBasePath into tBasePath
-   
+
    local tModuleFile
-   put tBasePath & "/" & kTestsBuildPath & tExtraPath & slash & \ 
+   put tBasePath & "/" & kTestsBuildPath & tExtraPath & slash & \
       pName & ".lcm" into tModuleFile
    return tModuleFile
 end TestGetBuiltBytecodeFile
@@ -619,7 +625,7 @@ end TestRepeat
 command TestRunStack pOptions, pStackFilePath, pArgs
 	local tEnginePath
 	set the itemDelimiter to ":"
-	put item 2 of the address into tEnginePath
+	put item 2 to -1 of the address into tEnginePath
 
 	local tCommand
 	put format("\"%s\" %s \"%s\" %s", tEnginePath, pOptions, pStackFilePath, pArgs) into tCommand
@@ -704,7 +710,7 @@ private function __MeetsRequirements pRequirement, pOptions
          if TestIsInStandalone() then
             return false
          end if
-         
+
          if "revpdfprinter" is among the items of pOptions \
          	and the environment is "server" then
          	return false
@@ -714,10 +720,10 @@ private function __MeetsRequirements pRequirement, pOptions
          if not __MeetsRequirements("external", "revdb") then
             return false
          end if
-         if "odbc" is among the items of pOptions or \ 
+         if "odbc" is among the items of pOptions or \
                "postgresql" is among the items of pOptions then
             return __MeetsRequirements("desktop")
-         end if  
+         end if
          return the platform is not "HTML5"
       case "jvm"
          return __MeetsRequirements("platform", "MacOS,Linux")
@@ -729,26 +735,32 @@ command TestEnsureJVM
    TestSkipIfNot "jvm"
 
    if $JAVA_HOME is empty then
-      local tPath
-      switch the platform
-         case "MacOS"
-            put word 1 to -1 of shell("/usr/libexec/java_home") into tPath
-            break
-         case "Linux"
-            local tJAVAC
-            put "/bin/javac" into tJAVAC
-            put word 1 to -1 of shell("/usr/bin/env readlink -f /usr" & tJAVAC) into tPath
-            if there is a file tPath and tPath ends with tJAVAC then
-               set the itemDelimiter to slash
-               delete item -2 to -1 of tPath
-            end if
-            break
-      end switch
+	  local tPath
+	  put TestGetJavaHome() into tPath
       if there is a folder tPath then
          put tPath into $JAVA_HOME
       end if
    end if
 end TestEnsureJVM
+
+function TestGetJavaHome
+   local tPath
+   switch the platform
+      case "MacOS"
+         put word 1 to -1 of shell("/usr/libexec/java_home") into tPath
+         break
+      case "Linux"
+         local tJAVAC
+         put "/bin/javac" into tJAVAC
+         put word 1 to -1 of shell("/usr/bin/env readlink -f /usr" & tJAVAC) into tPath
+         if there is a file tPath and tPath ends with tJAVAC then
+            set the itemDelimiter to slash
+            delete item -2 to -1 of tPath
+         end if
+         break
+   end switch
+   return tPath
+end TestGetJavaHome
 
 command TestEnumPropRoundTrip pObjectType, pProperty, pValues
    local tStack
@@ -771,7 +783,7 @@ command TestEnumPropRoundTrip pObjectType, pProperty, pValues
       TestAssert format("round trip %s '%s'", pProperty, tValue), \
             the pProperty of tObject is tValue
       TestDiagnostic format("%s is '%s'", pProperty, the pProperty of tObject)
-   
+
       save stack tStack
       delete stack tStack
       TestAssert format("round trip to disk %s '%s'", pProperty, tValue), \
@@ -782,4 +794,3 @@ command TestEnumPropRoundTrip pObjectType, pProperty, pValues
    delete file the filename of stack tStack
    delete stack tStack
 end TestEnumPropRoundTrip
-

@@ -154,16 +154,22 @@ on TestClipboardTypeSelection
 end TestClipboardTypeSelection
 
 on TestClipboardMultipleTypes
+   local tFilePath, tNativeFilePath
+   put "/file/path" into tFilePath
+   put tFilePath into tNativeFilePath
+   if the platform is "win32" then
+      replace slash with backslash in tNativeFilePath
+   end if
    -- Tests whether the fullClipboardData can successfully hold multiple types of data simultaneously
    lock the clipboard
    set the fullClipboardData to empty
    set the fullClipboardData["text"] to "text"
    set the fullClipboardData["image"] to _TinyPNG()
-   set the fullClipboardData["files"] to "/file/path"
+   set the fullClipboardData["files"] to tFilePath
    set the fullClipboardData["private"] to "private"
    TestAssert "Multiple types: text", "text" is among the lines of the keys of the fullClipboardData and fullClipboardData["text"] is "text"
    TestAssert "Multiple types: image", "image" is among the lines of the keys of the fullClipboardData and fullClipboardData["image"] is _TinyPNG()
-   TestAssert "Multiple types: files", "files" is among the lines of the keys of the fullClipboardData and line 1 of fullClipboardData["files"] is "/file/path"
+   TestAssert "Multiple types: files", "files" is among the lines of the keys of the fullClipboardData and line 1 of fullClipboardData["files"] is tNativeFilePath
    TestAssert "Multiple types: private", "private" is among the lines of the keys of the fullClipboardData and fullClipboardData["private"] is "private"
    set the fullClipboardData to empty
    unlock the clipboard
@@ -216,7 +222,7 @@ on TestClipboardPrivateKey
 
    TestAssert "helper changed clipboard externally", the result is 0
    
-   if the platform is "Linux" then
+   if the platform is "Linux" or the platform is "win32" then
       TestAssertBroken "private key not present after external change", \
          "private" is not among the keys of the clipboardData, \
          "Bug 19117"

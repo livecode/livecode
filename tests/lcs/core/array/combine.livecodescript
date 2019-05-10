@@ -35,7 +35,12 @@ on TestCombineStrings
    sort lines of tArray by item 1 of each
    sort lines of tUncombinedData by item 1 of each
    
-   TestAssert "Combine strings", tUncombinedData is tArray
+   if the platform is "win32" then
+      TestAssertBroken "Combine strings", tUncombinedData is tArray, \
+         "Bug 20964"
+   else
+      TestAssert "Combine strings", tUncombinedData is tArray
+   end if
 end TestCombineStrings
 
 
@@ -76,8 +81,14 @@ on TestCombineMixed
    
    sort lines of tArray by item 1 of each
    sort lines of tUncombinedData by item 1 of each
-   
-   TestAssert "Combine numbers and strings", tUncombinedData is tArray
+
+   if the platform is "win32" then
+      TestAssertBroken "Combine numbers and strings", \
+         tUncombinedData is tArray, "Bug 20964"
+   else
+      TestAssert "Combine numbers and strings", \
+         tUncombinedData is tArray
+   end if
 end TestCombineMixed
 
 
