@@ -66,13 +66,6 @@ If you use the invisible form, the object is created with its visible
 property set to false, so it cannot be seen. Use this form to create a 
 hidden object, change its appearance or position, then make it visible.
 
-When the new control is created, the Pointer tool is automatically 
-chosen. If you use the create command in a handler, you can use the 
-following statement after the create command to resume using the Browse 
-tool:
-
-    send "choose browse tool" to me in 1 tick
-
 >*Tip:*  To create a control in a specific stack, first set the 
 <defaultStack> to the stack where you want to create the new control:
 
