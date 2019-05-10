@@ -68,8 +68,9 @@ before_install:
   - |
     if [[ "$TRAVIS_OS_NAME" == "windows" ]] ; then
       choco install --yes cygwin -params '/InstallDir:C:\Cygwin'
-      choco install --yes --source cygwin bash make curl flex bison zip unzip
+      choco install --yes --source cygwin bash make curl zip unzip
       choco install make
+      choco install winflexbison
     fi
 
 # Set up the source tree by fetching Linux-specific prebuilt objects
