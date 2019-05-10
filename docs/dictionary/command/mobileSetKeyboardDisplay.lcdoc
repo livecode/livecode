@@ -1,0 +1,40 @@
+Name: mobileSetKeyboardDisplay
+
+Type: command
+
+Syntax: mobileSetKeyboardDisplay <mode>
+
+Summary:
+Configures the mode in which the keyboard is displayed
+
+Introduced: 9.5
+
+OS: ios, android
+
+Platforms: mobile
+
+Example:
+mobileSetKeyboardDisplay "pan"
+
+Example:
+mobileSetKeyboardDisplay "over"
+
+Parameters:
+mode (enum):
+The mode of keyboard display to use. One of:
+
+-   "over": Display the keyboard over the current stack rect. Over is the default
+keyboard display mode
+-   "pan": Pan the stack up so that the rect of the foucused object will be
+visible above the keyboard
+
+Description:
+Use the <mobileSetKeyboardDisplay> command to configure the move of
+keyboard display.
+
+The <mobileSetKeyboardDisplay> setting takes affect the next time the keyboard is
+shown. It does not affect the current keyboard, if it is being displayed. 
+
+References: keyboardDeactivated (message), keyboardActivated (message), 
+mobileGetKeyboardDisplay (function)
+

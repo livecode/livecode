@@ -2967,26 +2967,26 @@ Exec_stat MCHandleHideStatusBar(void* context, MCParameter* p_parameters)
     return ES_ERROR;
 }
 
-static MCMiscKeyboardType MCMiscKeyboardTypeFromString(MCStringRef p_string)
+static MCInterfaceKeyboardType MCInterfaceKeyboardTypeFromString(MCStringRef p_string)
 {
     if (MCStringIsEqualToCString(p_string, "alphabet", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeAlphabet;
+        return kMCInterfaceKeyboardTypeAlphabet;
     else if (MCStringIsEqualToCString(p_string, "numeric", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeNumeric;
+        return kMCInterfaceKeyboardTypeNumeric;
     else if (MCStringIsEqualToCString(p_string, "decimal", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeDecimal;
+        return kMCInterfaceKeyboardTypeDecimal;
     else if (MCStringIsEqualToCString(p_string, "number", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeNumber;
+        return kMCInterfaceKeyboardTypeNumber;
     else if (MCStringIsEqualToCString(p_string, "phone", kMCCompareCaseless))
-        return kMCMiscKeyboardTypePhone;
+        return kMCInterfaceKeyboardTypePhone;
     else if (MCStringIsEqualToCString(p_string, "email", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeEmail;
+        return kMCInterfaceKeyboardTypeEmail;
     else if (MCStringIsEqualToCString(p_string, "url", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeUrl;
+        return kMCInterfaceKeyboardTypeUrl;
     else if (MCStringIsEqualToCString(p_string, "contact", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeContact;
+        return kMCInterfaceKeyboardTypeContact;
     else // default
-        return kMCMiscKeyboardTypeDefault;
+        return kMCInterfaceKeyboardTypeDefault;
 }
 
 Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
@@ -2996,11 +2996,11 @@ Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
     bool t_success = true;
     
     MCAutoStringRef t_keyboard_type_string;
-    MCMiscKeyboardType t_keyboard_type;
+    MCInterfaceKeyboardType t_keyboard_type;
     
     t_success = MCParseParameters(p_parameters, "x", &(&t_keyboard_type_string));
     
-    t_keyboard_type = MCMiscKeyboardTypeFromString(*t_keyboard_type_string);
+    t_keyboard_type = MCInterfaceKeyboardTypeFromString(*t_keyboard_type_string);
     
     MCMiscSetKeyboardType(ctxt, t_keyboard_type);
     
@@ -3009,30 +3009,30 @@ Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
-static MCMiscKeyboardReturnKey MCMiscKeyboardReturnKeyTypeFromString(MCStringRef p_string)
+static MCInterfaceReturnKeyType MCInterfaceReturnKeyTypeTypeFromString(MCStringRef p_string)
 {
     if (MCStringIsEqualToCString(p_string, "go", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyGo;
+        return kMCInterfaceReturnKeyTypeGo;
     else if (MCStringIsEqualToCString(p_string, "google", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyGoogle;
+        return kMCInterfaceReturnKeyTypeGoogle;
     else if (MCStringIsEqualToCString(p_string, "join", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyJoin;
+        return kMCInterfaceReturnKeyTypeJoin;
     else if (MCStringIsEqualToCString(p_string, "next", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyNext;
+        return kMCInterfaceReturnKeyTypeNext;
     else if (MCStringIsEqualToCString(p_string, "route", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyRoute;
+        return kMCInterfaceReturnKeyTypeRoute;
     else if (MCStringIsEqualToCString(p_string, "search", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeySearch;
+        return kMCInterfaceReturnKeyTypeSearch;
     else if (MCStringIsEqualToCString(p_string, "send", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeySend;
+        return kMCInterfaceReturnKeyTypeSend;
     else if (MCStringIsEqualToCString(p_string, "yahoo", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyYahoo;
+        return kMCInterfaceReturnKeyTypeYahoo;
     else if (MCStringIsEqualToCString(p_string, "done", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyDone;
+        return kMCInterfaceReturnKeyTypeDone;
     else if (MCStringIsEqualToCString(p_string, "emergency call", kMCCompareCaseless))
-        return kMCMiscKeyboardReturnKeyEmergencyCall;
+        return kMCInterfaceReturnKeyTypeEmergencyCall;
     else // default
-        return kMCMiscKeyboardReturnKeyDefault;
+        return kMCInterfaceReturnKeyTypeDefault;
 }
 
 Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters)
@@ -3040,19 +3040,75 @@ Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters
 	MCExecContext ctxt(nil, nil, nil);
     
     MCAutoStringRef t_keyboard_return_key_string;
-    MCMiscKeyboardReturnKey t_keyboard_return_key;
+    MCInterfaceReturnKeyType t_keyboard_return_key;
     bool t_success;
     
     t_success = MCParseParameters(p_parameters, "x", &(&t_keyboard_return_key_string));
     
     if (t_success)
     {
-        t_keyboard_return_key = MCMiscKeyboardReturnKeyTypeFromString(*t_keyboard_return_key_string);
+        t_keyboard_return_key = MCInterfaceReturnKeyTypeTypeFromString(*t_keyboard_return_key_string);
         MCMiscSetKeyboardReturnKey(ctxt, t_keyboard_return_key);
     }
     
     if (!ctxt.HasError())
         return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+static const char *s_keyboard_display_names[] =
+{
+    "over", "pan", nil
+};
+
+
+Exec_stat MCHandleSetKeyboardDisplay(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    ctxt.SetTheResultToEmpty();
+    
+    MCAutoStringRef t_mode_string;
+    if (!MCParseParameters(p_parameters, "x", &(&t_mode_string)))
+    {
+        return ES_ERROR;
+    }
+    
+    bool t_success = true;
+    
+    intenum_t t_mode = 0;
+    for (uint32_t i = 0; s_keyboard_display_names[i] != nil; i++)
+    {
+        if (MCStringIsEqualToCString(*t_mode_string, s_keyboard_display_names[i], kMCCompareCaseless))
+        {
+            t_mode = i;
+            break;
+        }
+    }
+    
+    MCMiscExecSetKeyboardDisplay(ctxt, t_mode);
+    
+    if (!ctxt.HasError())
+    {
+        return ES_NORMAL;
+    }
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleGetKeyboardDisplay(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    ctxt.SetTheResultToEmpty();
+    
+    intenum_t t_mode;
+    MCMiscExecGetKeyboardDisplay(ctxt, t_mode);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToStaticCString(s_keyboard_display_names[t_mode]);
+        return ES_NORMAL;
+    }
     
     return ES_ERROR;
 }
@@ -4782,6 +4838,9 @@ static const MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobileIsNFCEnabled", MCHandleIsNFCEnabled, nil},
 	{false, "mobileEnableNFCDispatch", MCHandleEnableNFCDispatch, nil},
 	{false, "mobileDisableNFCDispatch", MCHandleDisableNFCDispatch, nil},
+    
+    {false, "mobileSetKeyboardDisplay", MCHandleSetKeyboardDisplay, nil},
+    {false, "mobileGetKeyboardDisplay", MCHandleGetKeyboardDisplay, nil},
     
 	{nil, nil, nil}    
 };

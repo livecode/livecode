@@ -584,26 +584,26 @@ bool MCSystemGetPixelDensity(real64_t& r_density)
 // SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
 ////////////////////////////////////////////////////////////////////////////////
 
-static UIKeyboardType MCMiscGetUIKeyboardTypeFromExecEnum(MCMiscKeyboardType p_type)
+UIKeyboardType MCInterfaceGetUIKeyboardTypeFromExecEnum(MCInterfaceKeyboardType p_type)
 {
     switch(p_type)
     {
-        case kMCMiscKeyboardTypeAlphabet:
+        case kMCInterfaceKeyboardTypeAlphabet:
             return UIKeyboardTypeAlphabet;
-        case kMCMiscKeyboardTypeNumeric:
+        case kMCInterfaceKeyboardTypeNumeric:
             return UIKeyboardTypeNumbersAndPunctuation;
-        case kMCMiscKeyboardTypeUrl:
+        case kMCInterfaceKeyboardTypeUrl:
             return UIKeyboardTypeURL;
-        case kMCMiscKeyboardTypeNumber:
+        case kMCInterfaceKeyboardTypeNumber:
             return UIKeyboardTypeNumberPad;
-        case kMCMiscKeyboardTypePhone:
+        case kMCInterfaceKeyboardTypePhone:
             return UIKeyboardTypePhonePad;
-        case kMCMiscKeyboardTypeContact:
+        case kMCInterfaceKeyboardTypeContact:
             return UIKeyboardTypeNamePhonePad;
-        case kMCMiscKeyboardTypeEmail:
+        case kMCInterfaceKeyboardTypeEmail:
             return UIKeyboardTypeEmailAddress;
 #ifdef __IPHONE_4_1
-        case kMCMiscKeyboardTypeDecimal:
+        case kMCInterfaceKeyboardTypeDecimal:
             return UIKeyboardTypeDecimalPad;
 #endif // __IPHONE_4_1
         default:
@@ -613,34 +613,34 @@ static UIKeyboardType MCMiscGetUIKeyboardTypeFromExecEnum(MCMiscKeyboardType p_t
 
 bool MCSystemSetKeyboardType(intenum_t p_type)
 {
-    MCIPhoneSetKeyboardType(MCMiscGetUIKeyboardTypeFromExecEnum((MCMiscKeyboardType)p_type));
+    MCIPhoneSetKeyboardType(MCInterfaceGetUIKeyboardTypeFromExecEnum((MCInterfaceKeyboardType)p_type));
     
     return  true;
 }
 
-static UIReturnKeyType MCMiscGetUIReturnKeyTypeFromMCExecEnum(MCMiscKeyboardReturnKey p_type)
+UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceReturnKeyType p_type)
 {
     switch(p_type)
     {
-        case kMCMiscKeyboardReturnKeyGo:
+        case kMCInterfaceReturnKeyTypeGo:
             return UIReturnKeyGo;
-        case kMCMiscKeyboardReturnKeyGoogle:
+        case kMCInterfaceReturnKeyTypeGoogle:
             return UIReturnKeyGoogle;
-        case kMCMiscKeyboardReturnKeyJoin:
+        case kMCInterfaceReturnKeyTypeJoin:
             return UIReturnKeyJoin;
-        case kMCMiscKeyboardReturnKeyNext:
+        case kMCInterfaceReturnKeyTypeNext:
             return UIReturnKeyNext;
-        case kMCMiscKeyboardReturnKeySearch:
+        case kMCInterfaceReturnKeyTypeSearch:
             return UIReturnKeySearch;
-        case kMCMiscKeyboardReturnKeySend:
+        case kMCInterfaceReturnKeyTypeSend:
             return UIReturnKeySend;
-        case kMCMiscKeyboardReturnKeyRoute:
+        case kMCInterfaceReturnKeyTypeRoute:
             return UIReturnKeyRoute;
-        case kMCMiscKeyboardReturnKeyYahoo:
+        case kMCInterfaceReturnKeyTypeYahoo:
             return UIReturnKeyYahoo;
-        case kMCMiscKeyboardReturnKeyDone:
+        case kMCInterfaceReturnKeyTypeDone:
             return UIReturnKeyDone;
-        case kMCMiscKeyboardReturnKeyEmergencyCall:
+        case kMCInterfaceReturnKeyTypeEmergencyCall:
             return UIReturnKeyEmergencyCall;
         default:
             return UIReturnKeyDefault;
@@ -649,8 +649,14 @@ static UIReturnKeyType MCMiscGetUIReturnKeyTypeFromMCExecEnum(MCMiscKeyboardRetu
 
 bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
 {
-    MCIPhoneSetReturnKeyType(MCMiscGetUIReturnKeyTypeFromMCExecEnum((MCMiscKeyboardReturnKey)p_type));
+    MCIPhoneSetReturnKeyType(MCInterfaceGetUIReturnKeyTypeFromExecEnum((MCInterfaceReturnKeyType)p_type));
                              
+    return true;
+}
+
+bool MCSystemSetKeyboardDisplay(intenum_t p_type)
+{
+    MCIPhoneSetKeyboardDisplay((MCIPhoneKeyboardDisplayMode)p_type);
     return true;
 }
 

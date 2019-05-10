@@ -1117,6 +1117,7 @@ const LT factor_table[] =
         {"items", TT_CLASS, CT_ITEM},
 		{"joinstyle", TT_PROPERTY, P_JOIN_STYLE},
         {"jpegquality", TT_PROPERTY, P_JPEG_QUALITY},
+        {"keyboardtype", TT_PROPERTY, P_KEYBOARD_TYPE},
         {"keys", TT_FUNCTION, F_KEYS},
         {"keysdown", TT_FUNCTION, F_KEYS_DOWN},
         {"kind", TT_PROPERTY, P_KIND},
@@ -1485,7 +1486,8 @@ const LT factor_table[] =
         {"result", TT_FUNCTION, F_RESULT},
         {"retainimage", TT_PROPERTY, P_RETAIN_IMAGE},
         {"retainpostscript", TT_PROPERTY, P_RETAIN_POSTSCRIPT},
-		{"revavailablehandlers", TT_PROPERTY, P_REV_AVAILABLE_HANDLERS},
+        {"returnkeytype", TT_PROPERTY, P_RETURN_KEY_TYPE},
+        {"revavailablehandlers", TT_PROPERTY, P_REV_AVAILABLE_HANDLERS},
 		{"revavailablevariables", TT_PROPERTY, P_REV_AVAILABLE_VARIABLES},
         {"revbehavioruses", TT_PROPERTY, P_REV_BEHAVIOR_USES},
 #ifdef MODE_DEVELOPMENT

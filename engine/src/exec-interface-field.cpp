@@ -101,6 +101,54 @@ static MCExecEnumTypeInfo _kMCInterfaceTextDirectionTypeInfo =
     _kMCInterfaceTextDirectionElementInfo
 };
 
+static MCExecEnumTypeElementInfo _kMCInterfaceKeyboardTypeElementInfo[] =
+{
+    { "", kMCInterfaceKeyboardTypeNone, false},
+    { "default", kMCInterfaceKeyboardTypeDefault, false},
+    { "alphabet", kMCInterfaceKeyboardTypeAlphabet, false},
+    { "numeric", kMCInterfaceKeyboardTypeNumeric, false},
+    { "decimal", kMCInterfaceKeyboardTypeDecimal, false},
+    { "number", kMCInterfaceKeyboardTypeNumber, false},
+    { "phone", kMCInterfaceKeyboardTypePhone, false},
+    { "email", kMCInterfaceKeyboardTypeEmail, false},
+    { "url", kMCInterfaceKeyboardTypeUrl, false},
+    { "contact", kMCInterfaceKeyboardTypeContact, false}
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceKeyboardTypeTypeInfo =
+{
+    "Interface.KeyboardType",
+    sizeof(_kMCInterfaceKeyboardTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceKeyboardTypeElementInfo
+};
+
+MCExecEnumTypeInfo* kMCInterfaceKeyboardTypeTypeInfo = &_kMCInterfaceKeyboardTypeTypeInfo;
+
+static MCExecEnumTypeElementInfo _kMCInterfaceReturnKeyTypeElementInfo[] =
+{
+    { "", kMCInterfaceReturnKeyTypeNone, false},
+    { "default", kMCInterfaceReturnKeyTypeDefault, false},
+    { "go", kMCInterfaceReturnKeyTypeGo, false},
+    { "google", kMCInterfaceReturnKeyTypeGoogle, false},
+    { "join", kMCInterfaceReturnKeyTypeJoin, false},
+    { "next", kMCInterfaceReturnKeyTypeNext, false},
+    { "route", kMCInterfaceReturnKeyTypeRoute, false},
+    { "search", kMCInterfaceReturnKeyTypeSearch, false},
+    { "send", kMCInterfaceReturnKeyTypeSend, false},
+    { "yahoo", kMCInterfaceReturnKeyTypeYahoo, false},
+    { "done", kMCInterfaceReturnKeyTypeDone, false},
+    { "emergency call", kMCInterfaceReturnKeyTypeEmergencyCall, false}
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceReturnKeyTypeTypeInfo =
+{
+    "Interface.ReturnKeyType",
+    sizeof(_kMCInterfaceReturnKeyTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceReturnKeyTypeElementInfo
+};
+
+MCExecEnumTypeInfo* kMCInterfaceReturnKeyTypeTypeInfo = &_kMCInterfaceReturnKeyTypeTypeInfo;
+
 //////////
 
 static void MCInterfaceFieldRangesParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceFieldRanges& r_output)
@@ -1383,4 +1431,24 @@ void MCField::SetEffectiveRectangle(MCExecContext& ctxt, MCRectangle p_rect)
 {
     MCObject::SetEffectiveRectangle(ctxt, p_rect);
     Redraw(true, textx, texty);
+}
+
+void MCField::GetKeyboardType(MCExecContext& ctxt, intenum_t& r_type)
+{
+    r_type = static_cast<intenum_t>(keyboard_type);
+}
+
+void MCField::SetKeyboardType(MCExecContext& ctxt, intenum_t p_type)
+{
+    keyboard_type = static_cast<MCInterfaceKeyboardType>(p_type);
+}
+
+void MCField::GetReturnKeyType(MCExecContext& ctxt, intenum_t& r_type)
+{
+    r_type = static_cast<intenum_t>(return_key_type);
+}
+
+void MCField::SetReturnKeyType(MCExecContext& ctxt, intenum_t p_type)
+{
+    return_key_type = static_cast<MCInterfaceReturnKeyType>(p_type);
 }

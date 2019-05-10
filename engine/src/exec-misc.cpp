@@ -57,52 +57,6 @@ static MCExecEnumTypeInfo _kMCMiscStatusBarStyleTypeInfo =
 
 MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo = &_kMCMiscStatusBarStyleTypeInfo;
 
-static MCExecEnumTypeElementInfo _kMCMiscKeyboardTypeElementInfo[] =
-{
-    { "default", kMCMiscKeyboardTypeDefault, false},
-    { "alphabet", kMCMiscKeyboardTypeAlphabet, false},
-    { "numeric", kMCMiscKeyboardTypeNumeric, false},
-    { "decimal", kMCMiscKeyboardTypeDecimal, false},
-    { "number", kMCMiscKeyboardTypeNumber, false},
-    { "phone", kMCMiscKeyboardTypePhone, false},
-    { "email", kMCMiscKeyboardTypeEmail, false},
-    { "url", kMCMiscKeyboardTypeUrl, false},
-    { "contact", kMCMiscKeyboardTypeContact, false}
-};
-
-static MCExecEnumTypeInfo _kMCMiscKeyboardTypeTypeInfo =
-{
-    "Misc.KeyboardType",
-    sizeof(_kMCMiscKeyboardTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-    _kMCMiscKeyboardTypeElementInfo
-};
-
-MCExecEnumTypeInfo* kMCMiscKeyboardTypeTypeInfo = &_kMCMiscKeyboardTypeTypeInfo;
-
-static MCExecEnumTypeElementInfo _kMCMiscKeyboardReturnKeyElementInfo[] =
-{
-    { "default", kMCMiscKeyboardReturnKeyDefault, false},
-    { "go", kMCMiscKeyboardReturnKeyGo, false},
-    { "google", kMCMiscKeyboardReturnKeyGoogle, false},
-    { "join", kMCMiscKeyboardReturnKeyJoin, false},
-    { "next", kMCMiscKeyboardReturnKeyNext, false},
-    { "route", kMCMiscKeyboardReturnKeyRoute, false},
-    { "search", kMCMiscKeyboardReturnKeySearch, false},
-    { "send", kMCMiscKeyboardReturnKeySend, false},
-    { "yahoo", kMCMiscKeyboardReturnKeyYahoo, false},
-    { "done", kMCMiscKeyboardReturnKeyDone, false},
-    { "emergency call", kMCMiscKeyboardReturnKeyEmergencyCall, false}
-};
-
-static MCExecEnumTypeInfo _kMCMiscKeyboardReturnKeyTypeInfo =
-{
-    "Misc.KeyboardReturnKey",
-    sizeof(_kMCMiscKeyboardReturnKeyElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-    _kMCMiscKeyboardReturnKeyElementInfo
-};
-
-MCExecEnumTypeInfo* kMCMiscKeyboardReturnKeyTypeInfo = &_kMCMiscKeyboardReturnKeyTypeInfo;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token)
@@ -224,8 +178,26 @@ void MCMiscSetKeyboardReturnKey(MCExecContext& ctxt, intenum_t p_keyboard_return
 {
     if (MCSystemSetKeyboardReturnKey(p_keyboard_return_key))
         return;
+
+    ctxt.Throw();
+}
+
+static intenum_t s_current_keyboard_display = 0;
+
+void MCMiscExecSetKeyboardDisplay(MCExecContext& ctxt, intenum_t p_mode)
+{
+    if (MCSystemSetKeyboardDisplay(p_mode))
+    {
+        s_current_keyboard_display = p_mode;
+        return;
+    }
     
     ctxt.Throw();
+}
+
+void MCMiscExecGetKeyboardDisplay(MCExecContext& ctxt, intenum_t& r_mode)
+{
+    r_mode = s_current_keyboard_display;
 }
 
 void MCMiscGetPreferredLanguages(MCExecContext& ctxt, MCStringRef& r_languages)

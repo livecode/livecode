@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphics.h"
 #include "resolution.h"
+#include "exec-interface.h"
 
 #include <jni.h>
 #include "mcmanagedpthread.h"
@@ -642,9 +643,33 @@ void MCScreenDC::openIME()
 {
 }
 
+extern int32_t MCInterfaceAndroidKeyboardEnumFromMCExecEnum(MCInterfaceKeyboardType p_type);
+extern int32_t MCInterfaceAndroidReturnKeyTypeEnumFromMCExecEnum(MCInterfaceReturnKeyType p_type);
 void MCScreenDC::activateIME(Boolean activate)
 {
-	MCAndroidEngineRemoteCall("setTextInputVisible", "vb", nil, activate);
+    int32_t t_keyboard_type = 0;
+    intenum_t t_field_keyboard_type = kMCInterfaceKeyboardTypeNone;
+    
+    int32_t t_return_key_type = 0;
+    intenum_t t_field_return_key_type = kMCInterfaceReturnKeyTypeNone;
+    
+    if (MCactivefield.IsValid())
+    {
+        t_field_keyboard_type = MCactivefield->getkeyboardtype();
+        t_field_return_key_type = MCactivefield->getreturnkeytype();
+    }
+    
+    if (t_field_keyboard_type != kMCInterfaceKeyboardTypeNone)
+    {
+        t_keyboard_type = MCInterfaceAndroidKeyboardEnumFromMCExecEnum(static_cast<MCInterfaceKeyboardType>(t_field_keyboard_type));
+    }
+    
+    if (t_field_return_key_type != kMCInterfaceReturnKeyTypeNone)
+    {
+        t_return_key_type = MCInterfaceAndroidReturnKeyTypeEnumFromMCExecEnum(static_cast<MCInterfaceReturnKeyType>(t_field_return_key_type));
+    }
+    
+    MCAndroidEngineRemoteCall("setTextInputVisible", "vbii", nil, activate, t_keyboard_type, t_return_key_type);
 }
 
 void MCScreenDC::closeIME()
@@ -2013,6 +2038,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaDone(JNI
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaCanceled(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardShown(JNIEnv *env, jobject object, int height) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyboardHidden(JNIEnv *env, jobject object) __attribute__((visibility("default")));
+extern "C" JNIEXPORT jobject JNICALL Java_com_runrev_android_Engine_doGetFocusedRect(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view)
 {
@@ -3081,6 +3107,58 @@ JNIEXPORT jstring JNICALL Java_com_runrev_android_Engine_doGetCustomPropertyValu
     }
 
     return t_js;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+JNIEXPORT jobject JNICALL Java_com_runrev_android_Engine_doGetFocusedRect(JNIEnv *env, jobject object)
+{
+    MCObject *t_object = nullptr;
+    if (MCactivefield.IsValid())
+    {
+        t_object = MCactivefield;
+    }
+    
+    if (t_object == nullptr)
+    {
+        t_object = MCdefaultstackptr->getcard()->getkfocused();
+    }
+    
+    if (t_object == nullptr)
+    {
+        t_object = MCdefaultstackptr->getcard();
+    }
+    
+    if (t_object == nullptr)
+    {
+        return nullptr;
+    }
+    
+    MCRectangle t_object_rect = t_object -> getrect();
+    MCGAffineTransform t_transform = MCdefaultstackptr->getdevicetransform();
+    
+    MCRectangle t_transformed_object_rect =
+            MCRectangleGetTransformedBounds(t_object_rect, t_transform);
+    
+    jclass t_class = env->FindClass("android/graphics/Rect");
+    if (t_class == nullptr)
+    {
+        return nullptr;
+    }
+    
+    jmethodID t_constructor = env->GetMethodID(t_class, "<init>", "(IIII)V");
+    if (t_constructor == nullptr)
+    {
+        return nullptr;
+    }
+    jobject t_rect = env->NewObject(t_class,
+                                    t_constructor,
+                                    t_transformed_object_rect.x,
+                                    t_transformed_object_rect.y,
+                                    t_transformed_object_rect.x + t_transformed_object_rect.width,
+                                    t_transformed_object_rect.y + t_transformed_object_rect.height);
+
+    return t_rect;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

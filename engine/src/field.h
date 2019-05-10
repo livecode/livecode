@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mccontrol.h"
 #include "exec.h"
+#include "exec-interface.h"
 
 #define SCROLL_RATE 100
 #define MAX_PASTE_MESSAGES 32
@@ -239,7 +240,9 @@ private:
 	MCStringRef label;
     MCTextDirection text_direction;
     MCInterfaceFieldCursorMovement cursor_movement;
-    
+    MCInterfaceKeyboardType keyboard_type : 4;
+    MCInterfaceReturnKeyType return_key_type : 4;
+
     // MM-2014-08-11: [[ Bug 13149 ]] Used to flag if a recompute is required during the next draw.
     bool m_recompute : 1;
 	
@@ -608,6 +611,9 @@ public:
 	bool imagechanged(MCImage *p_image, bool p_deleting);
     
     MCRectangle firstRectForCharacterRange(int32_t& si, int32_t& ei);
+    
+    MCInterfaceKeyboardType getkeyboardtype() { return keyboard_type; }
+    MCInterfaceReturnKeyType getreturnkeytype() { return return_key_type; }
 
     ////////// BIDIRECTIONAL SUPPORT
     
@@ -720,6 +726,11 @@ public:
     void GetTabAlignments(MCExecContext& ctxt, MCInterfaceFieldTabAlignments &r_alignments);
     void GetPageHeights(MCExecContext& ctxt, uindex_t& r_count, uinteger_t*& r_heights);
     void GetPageRanges(MCExecContext& ctxt, MCInterfaceFieldRanges& r_ranges);
+    
+    void GetKeyboardType(MCExecContext& ctxt, intenum_t& r_type);
+    void SetKeyboardType(MCExecContext& ctxt, intenum_t p_type);
+    void GetReturnKeyType(MCExecContext& ctxt, intenum_t& r_type);
+    void SetReturnKeyType(MCExecContext& ctxt, intenum_t p_type);
     
     virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
     virtual void SetShowBorder(MCExecContext& ctxt, bool setting);

@@ -49,6 +49,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "text.h"
 
 #include "mblandroidjava.h"
+#include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -558,21 +559,21 @@ void MCAndroidSearchKey()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static int32_t MCMiscAndroidKeyboardEnumFromMCExecEnum(MCMiscKeyboardType p_type)
+int32_t MCInterfaceAndroidKeyboardEnumFromMCExecEnum(MCInterfaceKeyboardType p_type)
 {
     switch(p_type)
     {
-        case kMCMiscKeyboardTypeAlphabet:
+        case kMCInterfaceKeyboardTypeAlphabet:
             return 1;
-        case kMCMiscKeyboardTypeDecimal:
+        case kMCInterfaceKeyboardTypeDecimal:
             return 1;
-        case kMCMiscKeyboardTypeNumeric:
+        case kMCInterfaceKeyboardTypeNumeric:
             return 3;
-        case kMCMiscKeyboardTypeNumber:
+        case kMCInterfaceKeyboardTypeNumber:
             return 2;
-        case kMCMiscKeyboardTypePhone:
+        case kMCInterfaceKeyboardTypePhone:
             return 4;
-        case kMCMiscKeyboardTypeEmail:
+        case kMCInterfaceKeyboardTypeEmail:
             return 5;
         default:
             return 1;
@@ -581,19 +582,13 @@ static int32_t MCMiscAndroidKeyboardEnumFromMCExecEnum(MCMiscKeyboardType p_type
 
 bool MCSystemSetKeyboardType(intenum_t p_type)
 {
-    int32_t t_type = MCMiscAndroidKeyboardEnumFromMCExecEnum((MCMiscKeyboardType)p_type);
+    int32_t t_type = MCInterfaceAndroidKeyboardEnumFromMCExecEnum((MCInterfaceKeyboardType)p_type);
     
     g_android_keyboard_type = t_type;
     
 	MCAndroidEngineRemoteCall("setTextInputMode", "vi", nil, g_android_keyboard_type);
     
     return true;
-}
-
-bool MCSystemSetKeyboardReturnType(intenum_t p_type)
-{
-    // not implemented on Android
-    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -702,9 +697,40 @@ bool MCSystemGetReachabilityTarget(MCStringRef& r_target)
     return false;
 }
 
+int32_t MCInterfaceAndroidReturnKeyTypeEnumFromMCExecEnum(MCInterfaceReturnKeyType p_type)
+{
+    switch(p_type)
+    {
+        case kMCInterfaceReturnKeyTypeGo:
+            return 0x2; // IME_ACTION_GO
+        case kMCInterfaceReturnKeyTypeNext:
+            return 0x5; // IME_ACTION_NEXT
+        case kMCInterfaceReturnKeyTypeSearch:
+            return 0x3; // IME_ACTION_SEARCH
+        case kMCInterfaceReturnKeyTypeSend:
+            return 0x4; // IME_ACTION_SEND
+        case kMCInterfaceReturnKeyTypeDone:
+            return 0x6; // IME_ACTION_DONE
+        case kMCInterfaceReturnKeyTypeDefault:
+            return 0x40000000 | 0x6; // IME_FLAG_NO_ENTER_ACTION | IME_ACTION_DONE
+        default:
+            return 0x0; // IME_ACTION_UNSPECIFIED
+    }
+}
+
 bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
 {
-    return false;
+    int32_t t_type = MCInterfaceAndroidReturnKeyTypeEnumFromMCExecEnum(static_cast<MCInterfaceReturnKeyType>(p_type));
+    MCAndroidEngineRemoteCall("setKeyboardReturnKey", "vi", nullptr, t_type);
+    
+    return true;
+}
+
+
+bool MCSystemSetKeyboardDisplay(intenum_t p_type)
+{
+    MCAndroidEngineRemoteCall("setKeyboardDisplay", "vi", nullptr, p_type);
+    return true;
 }
 
 // SN-2014-12-18: [[ Bug 13860 ]] Parameter added in case it's a filename, not raw data, in the DataRef

@@ -112,7 +112,11 @@ public class Engine extends View implements EngineApi
 
 	private boolean m_text_editor_visible;
 	private int m_text_editor_mode;
+    private int m_default_text_editor_mode;
 
+    private int m_default_ime_action;
+    private int m_ime_action;
+    
     private SensorModule m_sensor_module;
     private DialogModule m_dialog_module;
     private NetworkModule m_network_module;
@@ -162,9 +166,13 @@ public class Engine extends View implements EngineApi
 		// create our text editor
         // IM-2012-03-23: switch to monitoring the InputConnection to the EditText field to fix
         // bugs introduced by the previous method of checking for changes to the field
-		m_text_editor_mode = 1;
-		m_text_editor_visible = false;
+		m_default_text_editor_mode = 1;
+        m_text_editor_mode = 0;
+        m_text_editor_visible = false;
 
+        m_default_ime_action = EditorInfo.IME_FLAG_NO_ENTER_ACTION | EditorInfo.IME_ACTION_DONE;
+        m_ime_action = 0;
+        
         // initialise modules
         m_sensor_module = new SensorModule(this);
         m_dialog_module = new DialogModule(this);
@@ -583,13 +591,27 @@ public class Engine extends View implements EngineApi
 				updateComposingText(text);
 				return super.setComposingText(text, newCursorPosition);
 			}
+            @Override
+            public boolean performEditorAction (int editorAction)
+            {
+                handleKey(0, 10);
+                return true;
+            }
         };
         
 		int t_type = getInputType(false);
 		
         outAttrs.actionLabel = null;
 		outAttrs.inputType = t_type;
-        outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | EditorInfo.IME_FLAG_NO_ENTER_ACTION | EditorInfo.IME_ACTION_DONE;
+        
+        if (m_ime_action != 0)
+        {
+            outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | m_ime_action;
+        }
+        else
+        {
+            outAttrs.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI | m_default_ime_action;
+        }
         
         return t_connection;
     }
@@ -609,7 +631,41 @@ public class Engine extends View implements EngineApi
 		
 		// HH-2017-01-18: [[ Bug 18058 ]] Fix keyboard not show in landscape orientation
         imm.showSoftInput(this, InputMethodManager.SHOW_FORCED);
-	}
+    }
+    
+    @Override
+    public void getFocusedRect(Rect r_rect)
+    {
+        Rect t_rect = doGetFocusedRect();
+        
+        if (t_rect == null)
+        {
+            super.getFocusedRect(r_rect);
+        }
+        else
+        {
+            r_rect.set(t_rect);
+        }
+    }
+    
+    private static final int KEYBOARD_DISPLAY_OVER = 0;
+    private static final int KEYBOARD_DISPLAY_PAN = 1;
+    
+    public void setKeyboardDisplay(int p_mode)
+    {
+        if (p_mode == KEYBOARD_DISPLAY_PAN)
+        {
+            getActivity()
+                .getWindow()
+                .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+        }
+        else if (p_mode == KEYBOARD_DISPLAY_OVER)
+        {
+            getActivity()
+                .getWindow()
+                .setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        }
+    }
 
     public void hideKeyboard()
     {
@@ -631,7 +687,7 @@ public class Engine extends View implements EngineApi
 			imm.restartInput(this);
 	}
 
-	public void setTextInputVisible(boolean p_visible)
+	public void setTextInputVisible(boolean p_visible, int p_input_mode, int p_ime_action)
 	{
 		m_text_editor_visible = p_visible;
 		
@@ -639,10 +695,23 @@ public class Engine extends View implements EngineApi
 			return;
 		
 		if (p_visible)
+        {
+            m_text_editor_mode = p_input_mode;
+            m_ime_action = p_ime_action;
 			showKeyboard();
+        }
 		else
+        {
 			hideKeyboard();
+            m_text_editor_mode = 0;
+            m_ime_action = 0;
+        }
 	}
+    
+    public void setKeyboardReturnKey(int p_ime_action)
+    {
+        m_default_ime_action = p_ime_action;
+    }
 	
 	public void setTextInputMode(int p_mode)
 	{
@@ -653,9 +722,9 @@ public class Engine extends View implements EngineApi
 		// 4 is phone
 		// 5 is email
 		
-		boolean t_reset = s_running && m_text_editor_visible && p_mode != m_text_editor_mode;
+		boolean t_reset = s_running && m_text_editor_visible && p_mode != m_default_text_editor_mode;
 		
-		m_text_editor_mode = p_mode;
+		m_default_text_editor_mode = p_mode;
 		
 		if (t_reset)
 			resetKeyboard();
@@ -667,6 +736,11 @@ public class Engine extends View implements EngineApi
 		int t_type;
 		
 		int t_mode = m_text_editor_mode;
+        if (t_mode == 0)
+        {
+            t_mode = m_default_text_editor_mode;
+        }
+        
 		// the phone class does not support a password variant, so we switch this for one of the number types
 		if (p_password && t_mode == 4)
 			t_mode = 2;
@@ -3833,6 +3907,8 @@ public class Engine extends View implements EngineApi
 	public static native void doReconfigure(int x, int y, int w, int h, Bitmap bitmap);
 
     public static native String doGetCustomPropertyValue(String set, String property);
+    
+    public static native Rect doGetFocusedRect();
 
 	// MW-2013-08-07: [[ ExternalsApiV5 ]] Native wrapper around MCScreenDC::wait
 	//   used by runActivity() API.

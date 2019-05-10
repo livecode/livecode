@@ -1,23 +1,27 @@
-Name: iphoneSetKeyboardReturnKey
+Name: mobileSetKeyboardReturnKey
+
+Synonyms: iphoneSetKeyboardReturnKey
 
 Type: command
 
-Syntax: iphoneSetKeyboardReturnKey <returnKey>
+Syntax: mobileSetKeyboardReturnKey <returnKey>
 
 Summary:
 Configures the type of return key displayed on the keyboard.
 
 Introduced: 4.5.3
 
-OS: ios
+Changes: LiveCode 9.5 added support for android
+
+OS: ios, android
 
 Platforms: mobile
 
 Example:
-iphoneSetKeyboardReturnKey "alphabet"
+mobileSetKeyboardReturnKey "alphabet"
 
 Example:
-iphoneSetKeyboardReturnKey "numeric"
+mobileSetKeyboardReturnKey "numeric"
 
 Parameters:
 returnKey (enum):
@@ -25,22 +29,22 @@ Specifies what the return key function is.
 
 -   default: the normal return key
 -   go: the 'Go' return key
--   google: the 'Google' return key
--   join: the 'Join' return key
+-   google: the 'Google' return key (iOS only)
+-   join: the 'Join' return key (iOS only)
 -   next: the 'Next' return key
--   route: the 'Route' return key
+-   route: the 'Route' return key (iOS only)
 -   search: the 'Search' return key
 -   send: the 'Send' return key
--   yahoo: the 'Yahoo' return key
+-   yahoo: the 'Yahoo' return key (iOS only)
 -   done: the 'Done' return key
--   emergency call: the 'emergency call' return key
+-   emergency call: the 'emergency call' return key (iOS only)
 
 
 Description:
-Use the iphoneSetKeyboardReturnKey command to configure the type of
+Use the mobileSetKeyboardReturnKey command to configure the type of
 return key displayed on the keyboard.
 
-The <iphoneSetKeyboardReturnKey> command configures the type of return
+The <mobileSetKeyboardReturnKey> command configures the type of return
 key displayed on the keyboard
 
 The return key type setting takes effect the next time the keyboard is
@@ -50,7 +54,10 @@ being focused, simply use the commands in an <openField> handler of the
 given field. The keyboard is only shown after this handler returns, so
 it is the ideal time to configure it.
 
+>**Note:** If a field has a non-empty <returnKeyType> that value will override
+> the the value set by <mobileSetKeyboardReturnKey>.
+
 References: mobileSetKeyboardType (command),
 keyboardDeactivated (message), keyboardActivated (message),
-openField (message)
+openField (message), returnKeyType (property)
 

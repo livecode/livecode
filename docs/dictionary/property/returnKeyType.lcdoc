@@ -1,0 +1,53 @@
+Name: returnKeyType
+
+Type: property
+
+Syntax: set the returnKeyType of <field> to <type>
+Syntax: get the returnKeyType of <field>
+
+Summary:
+Configures the type of return key that is to be displayed on the keyboard.
+
+Introduced: 9.5
+
+Associations: field
+
+OS: ios, android
+
+Platforms: mobile
+
+Example:
+set the returnKeyType of field "cost" to "go"
+
+Example:
+set the returnKeyType of field "name" to empty
+
+Parameters:
+type (enum):
+The type of return key to use. One of:
+
+-   "": use the global value from <mobileSetKeyboardReturnKey>
+-   default: the normal return key
+-   go: the 'Go' return key
+-   google: the 'Google' return key (iOS only)
+-   join: the 'Join' return key (iOS only)
+-   next: the 'Next' return key
+-   route: the 'Route' return key (iOS only)
+-   search: the 'Search' return key
+-   send: the 'Send' return key
+-   yahoo: the 'Yahoo' return key (iOS only)
+-   done: the 'Done' return key
+-   emergency call: the 'emergency call' return key (iOS only)
+
+Description:
+Use the <returnKeyType> command to configure the type of return key that is to be
+displayed for a field. If set to empty which is the default the type set by the 
+<mobileSetKeyboardReturnKey> command is used to configure the type of return key
+that is to be displayed.
+
+The return key type setting takes affect the next time the keyboard is
+shown. It does not affect the current keyboard, if it is being displayed. 
+
+References: mobileSetKeyboardReturnKey (command),
+keyboardDeactivated (message), keyboardActivated (message)
+
