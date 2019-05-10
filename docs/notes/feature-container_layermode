@@ -1,0 +1,13 @@
+# New container layer mode
+
+Container layer mode support has been added to the accelerated
+rendering architecture.
+
+The container layer mode only has an effect on unadorned groups
+whose ancestors are also container layer mode unadorned groups.
+
+A container layer mode group provides a container for static and
+dynamic layers, allowing nested groups to also benefit from
+being cached for fast re-rendering.
+
+For more information, see the **layerMode** entry in the dictionary.
