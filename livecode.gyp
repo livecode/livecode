@@ -32,9 +32,6 @@
 
 				# Widgets and libraries
 				'extensions/extensions.gyp:extensions',
-
-				# lcidlc
-				'lcidlc/lcidlc.gyp:lcidlc',
 			],
 			
 			'conditions':
