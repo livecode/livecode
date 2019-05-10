@@ -1395,31 +1395,24 @@ void MCArraysExecFilter(MCExecContext& ctxt, MCArrayRef p_source, bool p_without
 void MCArraysExecFilterWildcard(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys, MCArrayRef &r_result)
 {
     // Create the pattern matcher
-    MCPatternMatcher *t_matcher;
-    t_matcher = new (nothrow) MCWildcardMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    MCWildcardMatcher t_matcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
-    MCArraysExecFilter(ctxt, p_source, p_without, t_matcher, p_match_keys, r_result);
-    
-    delete t_matcher;
+    MCArraysExecFilter(ctxt, p_source, p_without, &t_matcher, p_match_keys, r_result);
 }
 
 void MCArraysExecFilterRegex(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys, MCArrayRef &r_result)
 {
     // Create the pattern matcher
-    MCPatternMatcher *t_matcher;
-    t_matcher = new (nothrow) MCRegexMatcher(p_pattern, p_source, ctxt . GetStringComparisonType());
+    MCRegexMatcher t_matcher(p_pattern, p_source, ctxt . GetStringComparisonType());
     
     MCAutoStringRef t_regex_error;
-    if (!t_matcher -> compile(&t_regex_error))
+    if (!t_matcher.compile(&t_regex_error))
     {
-        delete t_matcher;
         ctxt . LegacyThrow(EE_MATCH_BADPATTERN);
         return;
     }
     
-    MCArraysExecFilter(ctxt, p_source, p_without, t_matcher, p_match_keys, r_result);
-    
-    delete t_matcher;
+    MCArraysExecFilter(ctxt, p_source, p_without, &t_matcher, p_match_keys, r_result);
 }
 
 void MCArraysExecFilterWildcardIntoIt(MCExecContext& ctxt, MCArrayRef p_source, MCStringRef p_pattern, bool p_without, bool p_match_keys)
