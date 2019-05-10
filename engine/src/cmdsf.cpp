@@ -883,12 +883,6 @@ MCFilter::~MCFilter()
 // JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new filter syntax.
 Parse_stat MCFilter::parse(MCScriptPoint &sp)
 {
-	// Syntax :
-	//   filter [ { lines | items | keys | elements } of ] <container_or_exp>
-	//          { with | without | [ not ] matching }
-	//          [ { wildcard | regex } [ pattern ] ] <pattern>
-	//          [ into <container> ]
-	//
 	Parse_errors t_error;
 	t_error = PE_UNDEFINED;
     
@@ -948,20 +942,28 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 		else if (sp.skip_token(SP_FACTOR, TT_UNOP, O_NOT) == PS_NORMAL
 				 && sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_MATCHING) == PS_NORMAL)
 			discardmatches = True;
+        else if (sp.skip_token(SP_MARK, TT_UNDEFINED, MC_WHERE) == PS_NORMAL)
+        {
+            discardmatches = False;
+            matchmode = MA_EXPRESSION;
+        }
 		else
 			t_error = PE_FILTER_NOWITH;
 	}
 
 	// Now look for the optional pattern match mode
-	if (t_error == PE_UNDEFINED)
+	if (t_error == PE_UNDEFINED && matchmode == MA_UNDEFINED)
 	{
 		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_REGEX) == PS_NORMAL)
 			matchmode = MA_REGEX;
-		else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_WILDCARD) == PS_NORMAL)
+        else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_WILDCARD) == PS_NORMAL)
 			matchmode = MA_WILDCARD;
-		// Skip the optional pattern keyword
+        // Skip the optional pattern keyword
 		sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_PATTERN);
 	}
+    
+    if (matchmode == MA_UNDEFINED)
+        matchmode = MA_WILDCARD;
 
 	// Now parse the pattern expression
 	if (t_error == PE_UNDEFINED && sp.parseexp(False, True, &pattern) != PS_NORMAL)
@@ -1006,8 +1008,11 @@ void MCFilter::exec_ctxt(MCExecContext &ctxt)
             return;
     }
     
-    if (!ctxt . EvalExprAsStringRef(pattern, EE_FILTER_CANTGETPATTERN, &t_pattern))
-        return;
+    if (matchmode != MA_EXPRESSION)
+    {
+        if (!ctxt . EvalExprAsStringRef(pattern, EE_FILTER_CANTGETPATTERN, &t_pattern))
+            return;
+    }
         
     MCAutoStringRef t_source_string;
     MCAutoArrayRef t_source_array;
@@ -1031,74 +1036,74 @@ void MCFilter::exec_ctxt(MCExecContext &ctxt)
     
     bool stat;
     
-    if (container == nil && target == nil)
+    if (chunktype == CT_LINE || chunktype == CT_ITEM)
     {
+        MCAutoStringRef t_output_string;
         
-        if (chunktype == CT_LINE || chunktype == CT_ITEM)
-        {
-            if (matchmode == MA_REGEX)
-                MCStringsExecFilterRegexIntoIt(ctxt, *t_source_string, *t_pattern, discardmatches == True, chunktype == CT_LINE);
-            else
-                MCStringsExecFilterWildcardIntoIt(ctxt, *t_source_string, *t_pattern, discardmatches == True, chunktype == CT_LINE);
-        }
+        if (matchmode == MA_REGEX)
+            MCStringsExecFilterRegex(ctxt, *t_source_string, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output_string);
+        else if (matchmode == MA_EXPRESSION)
+            MCStringsExecFilterExpression(ctxt, *t_source_string, pattern, discardmatches == True, chunktype == CT_LINE, &t_output_string);
         else
+            MCStringsExecFilterWildcard(ctxt, *t_source_string, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output_string);
+        
+        if (*t_output_string != nil)
         {
-            if (matchmode == MA_REGEX)
-                MCArraysExecFilterRegexIntoIt(ctxt, *t_source_array, *t_pattern, discardmatches == True, chunktype == CT_KEY);
+            if (target != nil)
+                stat = target -> set(ctxt, PT_INTO, *t_output_string);
+            else if (container != nil)
+                stat = container -> set(ctxt, PT_INTO, *t_output_string);
             else
-                MCArraysExecFilterWildcardIntoIt(ctxt, *t_source_array, *t_pattern, discardmatches == True, chunktype == CT_KEY);
+            {
+                ctxt . SetItToValue(*t_output_string);
+                stat = true;
+            }
+                
+            if (!stat)
+            {
+                ctxt . LegacyThrow(EE_FILTER_CANTSET);
+                return;
+            }
+        }
+        else if (target == nil && container == nil)
+        {
+            ctxt . SetItToEmpty();
         }
     }
     else
     {
-        if (chunktype == CT_LINE || chunktype == CT_ITEM)
-        {
-            MCAutoStringRef t_output_string;
-            
-            if (matchmode == MA_REGEX)
-                MCStringsExecFilterRegex(ctxt, *t_source_string, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output_string);
-            else
-                MCStringsExecFilterWildcard(ctxt, *t_source_string, *t_pattern, discardmatches == True, chunktype == CT_LINE, &t_output_string);
-            
-            if ((target != nil || container != nil) && *t_output_string != nil)
-            {
-                if (target != nil)
-                    stat = target -> set(ctxt, PT_INTO, *t_output_string);
-                else
-                    stat = container -> set(ctxt, PT_INTO, *t_output_string);
-                
-                if (!stat)
-                {
-                    ctxt . LegacyThrow(EE_FILTER_CANTSET);
-                    return;
-                }
-            }
-
-        }
+        MCAutoArrayRef t_output_array;
+        
+        if (matchmode == MA_REGEX)
+            MCArraysExecFilterRegex(ctxt, *t_source_array, *t_pattern, discardmatches == True, chunktype == CT_KEY, &t_output_array);
+        else if (matchmode == MA_EXPRESSION)
+            MCArraysExecFilterExpression(ctxt, *t_source_array, pattern, discardmatches == True, chunktype == CT_KEY, &t_output_array);
         else
+            MCArraysExecFilterWildcard(ctxt, *t_source_array, *t_pattern, discardmatches == True, chunktype == CT_KEY, &t_output_array);
+        
+        if (*t_output_array != nil)
         {
-            MCAutoArrayRef t_output_array;
-            
-            if (matchmode == MA_REGEX)
-                MCArraysExecFilterRegex(ctxt, *t_source_array, *t_pattern, discardmatches == True, chunktype == CT_KEY, &t_output_array);
+            if (target != nil)
+                stat = target -> set(ctxt, PT_INTO, *t_output_array);
+            else if (container != nil)
+                stat = container -> set(ctxt, PT_INTO, *t_output_array);
             else
-                MCArraysExecFilterWildcard(ctxt, *t_source_array, *t_pattern, discardmatches == True, chunktype == CT_KEY, &t_output_array);
-            
-            if ((target != nil || container != nil) && *t_output_array != nil)
             {
-                if (target != nil)
-                    stat = target -> set(ctxt, PT_INTO, *t_output_array);
-                else
-                    stat = container -> set(ctxt, PT_INTO, *t_output_array);
-                
-                if (!stat)
-                {
-                    ctxt . LegacyThrow(EE_FILTER_CANTSET);
-                    return;
-                }
+                ctxt . SetItToValue(*t_output_array);
+                stat = true;
             }
-
+            
+            if (!stat)
+            {
+                ctxt . LegacyThrow(EE_FILTER_CANTSET);
+                return;
+            }
         }
+        else if (target == nil && container == nil)
+        {
+            ctxt . SetItToEmpty();
+        }
+
     }
     
     if (ctxt . HasError())

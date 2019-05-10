@@ -2,9 +2,11 @@ Name: filter
 
 Type: command
 
-Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} [wildcard pattern] <wildcardPattern> [into <targetContainer>]
+Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} [wildcard] [pattern] <wildcardPattern> [into <targetContainer>]
 
-Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} regex pattern <regexPattern> [into <targetContainer>]
+Syntax: filter [{lines | items | keys | elements} of] <filterSource> {with| without | [not] matching} regex [pattern] <regexPattern> [into <targetContainer>]
+
+Syntax: filter [{lines | items | keys | elements} of] <filterSource> where <whereExpression> [into <targetContainer>]
 
 Summary:
 Filters each line, item, key or element in a source container or expression,
@@ -53,6 +55,21 @@ put false into tArray["bar"]
 filter elements of tArray without "f*"
 put the keys of tArray is "foo"
 
+Example:
+create field "Numbers"
+put "123,234,345,456,567,678,789" into field "Numbers"
+filter items of field "Numbers" where each >= 300 and each <= 500
+-- field contains "345,456,567"
+
+Example:
+command FilterIt pValue
+   filter lines of pValue where checkLine(each)
+end FilterIt
+
+function checkLine pLine
+   return item 1 of pLine > item 2 of pLine
+end checkLine
+
 Parameters:
 filterSource:
 An expression that evaluates to a string, array, or a container.
@@ -68,6 +85,9 @@ guide for more info on regex usage.
 
 targetContainer:
 An expression that evaluates to a container.
+
+whereExpression:
+An expression that evaluates to a boolean.
 
 It:
 If the filter command is used on a <filterSource> which is not
@@ -134,6 +154,9 @@ character which is not a, b or c (upper or lower case)
 If no <targetContainer> is specified, and you filter a <container>, 
 the <container> contents will be replaced by the filtered result.
 
+When using the where form of the <filter> command the <each> keyword may
+be used in the <whereExpression> for the value to be filtered.
+
 Changes:
 The <filter>...without form was added in version 2.1.1. In previous
 versions, the <filter> command could be used only to retrieve lines that
@@ -147,11 +170,12 @@ could be used only for a container. The <filter>...[not] matching form
 was added in version 6.1 to clarify the pattern handling. The
 <filter>...into form was added in version 6.1. In previous versions, the
 filter command always replaced the contents of the original container.
-Filtering of array keys and elements was added in version 8.1.
+Filtering of array keys and elements was added in version 8.1. The where
+form of the filter command was added in version 9.5.
 
 References: replace (command), sort (command), matchChunk (function),
 matchText (function), replaceText (function), it (keyword),
 caseSensitive (property), container (glossary), expression (glossary),
-regular expression (glossary)
+regular expression (glossary), each (keyword)
 
 Tags: text processing
