@@ -7,3 +7,5 @@ FOR %%L in (OpenSSL ICU CEF Curl) DO (
 		SET /P !PREBUILT_LIB!_BUILDREVISION=<versions\!PREBUILT_LIB!_buildrevision
 	)
 )
+
+FOR /F "tokens=*" %%x IN ('git -C ../thirdparty/ log -n 1 "--format=%%H"') DO SET Thirdparty_VERSION=%%x

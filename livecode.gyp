@@ -216,6 +216,104 @@
 				],
 			],
 		},
+		
+		{
+			'target_name': 'thirdparty-prebuilts',
+			'type': 'none',
+			
+			'variables':
+			{
+				'thirdparty_libs_core':
+				[
+					'thirdparty/libffi/libffi.gyp:libffi',
+					'thirdparty/libpng/libpng.gyp:libpng',
+					'thirdparty/libz/libz.gyp:libz',
+					'thirdparty/libgif/libgif.gyp:libgif',
+					'thirdparty/libjpeg/libjpeg.gyp:libjpeg',
+					'thirdparty/libpcre/libpcre.gyp:libpcre',
 
+					'thirdparty/libskia/libskia.gyp:libskia',
+					'thirdparty/libskia/libskia.gyp:libskia_opt_none',
+					'thirdparty/libskia/libskia.gyp:libskia_opt_arm',
+					'thirdparty/libskia/libskia.gyp:libskia_opt_sse2',
+					'thirdparty/libskia/libskia.gyp:libskia_opt_sse3',
+					'thirdparty/libskia/libskia.gyp:libskia_opt_sse41',
+					'thirdparty/libskia/libskia.gyp:libskia_opt_sse42',
+					'thirdparty/libskia/libskia.gyp:libskia_opt_avx',
+					'thirdparty/libskia/libskia.gyp:libskia_opt_hsw',
+				],
+				
+				'thirdparty_libs_native':
+				[
+					'thirdparty/libmysql/libmysql.gyp:libmysql',
+					'thirdparty/libsqlite/libsqlite.gyp:libsqlite',
+					'thirdparty/libxml/libxml.gyp:libxml',
+					'thirdparty/libxslt/libxslt.gyp:libxslt',
+					'thirdparty/libzip/libzip.gyp:libzip',
+				],
+				
+				'thirdparty_libs_desktop':
+				[
+					'thirdparty/libiodbc/libiodbc.gyp:libiodbc',
+					'thirdparty/libpq/libpq.gyp:libpq',
+					'thirdparty/libcairo/libcairo.gyp:libcairo',
+				],
+				
+				'thirdparty_libs_fonts':
+				[
+					'thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
+					'thirdparty/libfreetype/libfreetype.gyp:libfreetype',
+				],
+			},
+			
+			'dependencies':
+			[
+				'<@(thirdparty_libs_core)',
+			],
+			
+			'conditions':
+			[
+				[
+					'OS == "mac" or OS == "win" or OS == "linux"',
+					{
+						'dependencies':
+						[
+							'<@(thirdparty_libs_native)',
+							'<@(thirdparty_libs_desktop)',
+						],
+					},
+				],
+				[
+					'OS == "ios"',
+					{
+						'dependencies':
+						[
+							'<@(thirdparty_libs_native)',
+							'thirdparty/libcairo/libcairo.gyp:libcairo',
+						],
+					},
+				],
+				[
+					'OS == "android"',
+					{
+						'dependencies':
+						[
+							'<@(thirdparty_libs_native)',
+							'<@(thirdparty_libs_fonts)',
+							'thirdparty/libexpat/libexpat.gyp:libexpat',
+						],
+					},
+				],
+				[
+					'OS == "emscripten"',
+					{
+						'dependencies':
+						[
+							'<@(thirdparty_libs_fonts)',
+						],
+					},
+				],
+			],
+		},
 	],
 }

@@ -100,7 +100,7 @@
 				'../libexternal/libexternal.gyp:libExternal',
 				'../thirdparty/libmysql/libmysql.gyp:libmysql',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
-				'../thirdparty/libz/libz.gyp:libz',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 			],
 			
 			'include_dirs':
@@ -159,7 +159,7 @@
 				'../libexternal/libexternal.gyp:libExternal',
 				'../thirdparty/libmysql/libmysql.gyp:libmysql',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
-				'../thirdparty/libz/libz.gyp:libz',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 			],
 			
 			'include_dirs':

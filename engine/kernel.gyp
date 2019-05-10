@@ -20,14 +20,11 @@
 				
 				'../libbrowser/libbrowser.gyp:libbrowser',
 
-				'../thirdparty/libgif/libgif.gyp:libgif',
-				'../thirdparty/libjpeg/libjpeg.gyp:libjpeg',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
-				'../thirdparty/libpcre/libpcre.gyp:libpcre',
-				'../thirdparty/libpng/libpng.gyp:libpng',
-				'../thirdparty/libz/libz.gyp:libz',
 				
 				'../prebuilt/libopenssl.gyp:libopenssl_headers',
+
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 
 				'engine-common.gyp:encode_version',
 				'engine-common.gyp:quicktime_stubs',
@@ -68,12 +65,6 @@
 				[
 					'OS == "android"',
 					{
-						'dependencies':
-						[
-							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
-							'../thirdparty/libskia/libskia.gyp:libskia',
-						],
-						
 						'sources!':
 						[
 							# Not yet supported on Android
@@ -100,10 +91,6 @@
 				[
 					'OS == "emscripten"',
 					{
-						'dependencies':
-						[
-							'../thirdparty/libskia/libskia.gyp:libskia',
-						],
 						'sources':
 						[
 							'<@(engine_minizip_source_files)',

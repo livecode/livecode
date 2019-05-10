@@ -50,7 +50,7 @@
 				'kernel.gyp:kernel',
 
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
-				'../thirdparty/libz/libz.gyp:libz',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 			],
 			
 			'sources':

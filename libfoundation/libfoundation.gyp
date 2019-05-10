@@ -45,10 +45,10 @@
 			
 			'dependencies':
 			[
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 				'../prebuilt/libicu.gyp:libicu',
 				'../prebuilt/libicu.gyp:encode_minimal_icu_data',
 				'../thirdparty/libffi/libffi.gyp:libffi',
-				'../thirdparty/libz/libz.gyp:libz',
 			],
 			
 			'include_dirs':
