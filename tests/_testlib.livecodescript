@@ -740,3 +740,37 @@ command TestEnsureJVM
       end if
    end if
 end TestEnsureJVM
+
+command TestEnumPropRoundTrip pObjectType, pProperty, pValues
+   local tStack
+   put "TestRoundTrip" & pProperty into tStack
+   create stack tStack
+   set the defaultStack to tStack
+
+   set the filename of stack tStack to the tempname
+
+   local tObject
+   if pObjectType is not "stack" then
+      do "create" && pObjectType
+      put it into tObject
+   else
+      put the long id of stack tStack into tObject
+   end if
+
+   repeat for each item tValue in pValues
+      set the pProperty of tObject to tValue
+      TestAssert format("round trip %s '%s'", pProperty, tValue), \
+            the pProperty of tObject is tValue
+      TestDiagnostic format("%s is '%s'", pProperty, the pProperty of tObject)
+   
+      save stack tStack
+      delete stack tStack
+      TestAssert format("round trip to disk %s '%s'", pProperty, tValue), \
+            the pProperty of tObject is tValue
+      TestDiagnostic format("%s is '%s'", pProperty, the pProperty of tObject)
+   end repeat
+
+   delete file the filename of stack tStack
+   delete stack tStack
+end TestEnumPropRoundTrip
+
