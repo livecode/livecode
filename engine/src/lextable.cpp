@@ -1107,6 +1107,7 @@ const LT factor_table[] =
         {"items", TT_CLASS, CT_ITEM},
 		{"joinstyle", TT_PROPERTY, P_JOIN_STYLE},
         {"jpegquality", TT_PROPERTY, P_JPEG_QUALITY},
+        {"keyboardtype", TT_PROPERTY, P_KEYBOARD_TYPE},
         {"keys", TT_FUNCTION, F_KEYS},
         {"keysdown", TT_FUNCTION, F_KEYS_DOWN},
         {"kind", TT_PROPERTY, P_KIND},

@@ -57,28 +57,6 @@ static MCExecEnumTypeInfo _kMCMiscStatusBarStyleTypeInfo =
 
 MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo = &_kMCMiscStatusBarStyleTypeInfo;
 
-static MCExecEnumTypeElementInfo _kMCMiscKeyboardTypeElementInfo[] =
-{
-    { "default", kMCMiscKeyboardTypeDefault, false},
-    { "alphabet", kMCMiscKeyboardTypeAlphabet, false},
-    { "numeric", kMCMiscKeyboardTypeNumeric, false},
-    { "decimal", kMCMiscKeyboardTypeDecimal, false},
-    { "number", kMCMiscKeyboardTypeNumber, false},
-    { "phone", kMCMiscKeyboardTypePhone, false},
-    { "email", kMCMiscKeyboardTypeEmail, false},
-    { "url", kMCMiscKeyboardTypeUrl, false},
-    { "contact", kMCMiscKeyboardTypeContact, false}
-};
-
-static MCExecEnumTypeInfo _kMCMiscKeyboardTypeTypeInfo =
-{
-    "Misc.KeyboardType",
-    sizeof(_kMCMiscKeyboardTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-    _kMCMiscKeyboardTypeElementInfo
-};
-
-MCExecEnumTypeInfo* kMCMiscKeyboardTypeTypeInfo = &_kMCMiscKeyboardTypeTypeInfo;
-
 static MCExecEnumTypeElementInfo _kMCMiscKeyboardReturnKeyElementInfo[] =
 {
     { "default", kMCMiscKeyboardReturnKeyDefault, false},

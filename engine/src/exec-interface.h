@@ -231,6 +231,22 @@ void MCInterfaceStackFileVersionFree(MCExecContext& ctxt, MCInterfaceStackFileVe
 
 void MCInterfaceTabStopsParse(MCExecContext& ctxt, bool p_is_relative, uinteger_t* p_tabs, uindex_t p_count, uint2*& r_new_stops, uindex_t& r_new_stop_count);
 
+//////////
+
+enum MCInterfaceKeyboardType : unsigned
+{
+    kMCInterfaceKeyboardTypeNone,
+    kMCInterfaceKeyboardTypeDefault,
+    kMCInterfaceKeyboardTypeAlphabet,
+    kMCInterfaceKeyboardTypeNumeric,
+    kMCInterfaceKeyboardTypeDecimal,
+    kMCInterfaceKeyboardTypeNumber,
+    kMCInterfaceKeyboardTypePhone,
+    kMCInterfaceKeyboardTypeEmail,
+    kMCInterfaceKeyboardTypeUrl,
+    kMCInterfaceKeyboardTypeContact
+};
+
 #endif // EXEC_INTERFACE_H
 
 //////////

@@ -584,26 +584,26 @@ bool MCSystemGetPixelDensity(real64_t& r_density)
 // SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
 ////////////////////////////////////////////////////////////////////////////////
 
-static UIKeyboardType MCMiscGetUIKeyboardTypeFromExecEnum(MCMiscKeyboardType p_type)
+UIKeyboardType MCInterfaceGetUIKeyboardTypeFromExecEnum(MCInterfaceKeyboardType p_type)
 {
     switch(p_type)
     {
-        case kMCMiscKeyboardTypeAlphabet:
+        case kMCInterfaceKeyboardTypeAlphabet:
             return UIKeyboardTypeAlphabet;
-        case kMCMiscKeyboardTypeNumeric:
+        case kMCInterfaceKeyboardTypeNumeric:
             return UIKeyboardTypeNumbersAndPunctuation;
-        case kMCMiscKeyboardTypeUrl:
+        case kMCInterfaceKeyboardTypeUrl:
             return UIKeyboardTypeURL;
-        case kMCMiscKeyboardTypeNumber:
+        case kMCInterfaceKeyboardTypeNumber:
             return UIKeyboardTypeNumberPad;
-        case kMCMiscKeyboardTypePhone:
+        case kMCInterfaceKeyboardTypePhone:
             return UIKeyboardTypePhonePad;
-        case kMCMiscKeyboardTypeContact:
+        case kMCInterfaceKeyboardTypeContact:
             return UIKeyboardTypeNamePhonePad;
-        case kMCMiscKeyboardTypeEmail:
+        case kMCInterfaceKeyboardTypeEmail:
             return UIKeyboardTypeEmailAddress;
 #ifdef __IPHONE_4_1
-        case kMCMiscKeyboardTypeDecimal:
+        case kMCInterfaceKeyboardTypeDecimal:
             return UIKeyboardTypeDecimalPad;
 #endif // __IPHONE_4_1
         default:
@@ -613,7 +613,7 @@ static UIKeyboardType MCMiscGetUIKeyboardTypeFromExecEnum(MCMiscKeyboardType p_t
 
 bool MCSystemSetKeyboardType(intenum_t p_type)
 {
-    MCIPhoneSetKeyboardType(MCMiscGetUIKeyboardTypeFromExecEnum((MCMiscKeyboardType)p_type));
+    MCIPhoneSetKeyboardType(MCInterfaceGetUIKeyboardTypeFromExecEnum((MCInterfaceKeyboardType)p_type));
     
     return  true;
 }

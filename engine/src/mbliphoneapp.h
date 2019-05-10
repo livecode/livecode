@@ -140,6 +140,7 @@ enum MCIPhoneKeyboardDisplayMode
     bool m_did_become_active;
 
     MCIPhoneKeyboardDisplayMode m_keyboard_display;
+    UIKeyboardType m_keyboard_type;
 }
 
 //////////

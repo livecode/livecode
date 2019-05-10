@@ -2967,26 +2967,26 @@ Exec_stat MCHandleHideStatusBar(void* context, MCParameter* p_parameters)
     return ES_ERROR;
 }
 
-static MCMiscKeyboardType MCMiscKeyboardTypeFromString(MCStringRef p_string)
+static MCInterfaceKeyboardType MCInterfaceKeyboardTypeFromString(MCStringRef p_string)
 {
     if (MCStringIsEqualToCString(p_string, "alphabet", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeAlphabet;
+        return kMCInterfaceKeyboardTypeAlphabet;
     else if (MCStringIsEqualToCString(p_string, "numeric", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeNumeric;
+        return kMCInterfaceKeyboardTypeNumeric;
     else if (MCStringIsEqualToCString(p_string, "decimal", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeDecimal;
+        return kMCInterfaceKeyboardTypeDecimal;
     else if (MCStringIsEqualToCString(p_string, "number", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeNumber;
+        return kMCInterfaceKeyboardTypeNumber;
     else if (MCStringIsEqualToCString(p_string, "phone", kMCCompareCaseless))
-        return kMCMiscKeyboardTypePhone;
+        return kMCInterfaceKeyboardTypePhone;
     else if (MCStringIsEqualToCString(p_string, "email", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeEmail;
+        return kMCInterfaceKeyboardTypeEmail;
     else if (MCStringIsEqualToCString(p_string, "url", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeUrl;
+        return kMCInterfaceKeyboardTypeUrl;
     else if (MCStringIsEqualToCString(p_string, "contact", kMCCompareCaseless))
-        return kMCMiscKeyboardTypeContact;
+        return kMCInterfaceKeyboardTypeContact;
     else // default
-        return kMCMiscKeyboardTypeDefault;
+        return kMCInterfaceKeyboardTypeDefault;
 }
 
 Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
@@ -2996,11 +2996,11 @@ Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
     bool t_success = true;
     
     MCAutoStringRef t_keyboard_type_string;
-    MCMiscKeyboardType t_keyboard_type;
+    MCInterfaceKeyboardType t_keyboard_type;
     
     t_success = MCParseParameters(p_parameters, "x", &(&t_keyboard_type_string));
     
-    t_keyboard_type = MCMiscKeyboardTypeFromString(*t_keyboard_type_string);
+    t_keyboard_type = MCInterfaceKeyboardTypeFromString(*t_keyboard_type_string);
     
     MCMiscSetKeyboardType(ctxt, t_keyboard_type);
     

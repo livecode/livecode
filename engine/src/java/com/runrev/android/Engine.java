@@ -112,6 +112,7 @@ public class Engine extends View implements EngineApi
 
 	private boolean m_text_editor_visible;
 	private int m_text_editor_mode;
+    private int m_default_text_editor_mode;
 
     private int m_default_ime_action;
     
@@ -164,8 +165,9 @@ public class Engine extends View implements EngineApi
 		// create our text editor
         // IM-2012-03-23: switch to monitoring the InputConnection to the EditText field to fix
         // bugs introduced by the previous method of checking for changes to the field
-		m_text_editor_mode = 1;
-		m_text_editor_visible = false;
+		m_default_text_editor_mode = 1;
+        m_text_editor_mode = 0;
+        m_text_editor_visible = false;
 
         m_default_ime_action = EditorInfo.IME_FLAG_NO_ENTER_ACTION | EditorInfo.IME_ACTION_DONE;
         
@@ -675,7 +677,7 @@ public class Engine extends View implements EngineApi
 			imm.restartInput(this);
 	}
 
-	public void setTextInputVisible(boolean p_visible)
+	public void setTextInputVisible(boolean p_visible, int p_input_mode)
 	{
 		m_text_editor_visible = p_visible;
 		
@@ -683,9 +685,15 @@ public class Engine extends View implements EngineApi
 			return;
 		
 		if (p_visible)
+        {
+            m_text_editor_mode = p_input_mode;
 			showKeyboard();
+        }
 		else
+        {
 			hideKeyboard();
+            m_text_editor_mode = 0;
+        }
 	}
     
     public void setKeyboardReturnKey(int p_ime_action)
@@ -702,9 +710,9 @@ public class Engine extends View implements EngineApi
 		// 4 is phone
 		// 5 is email
 		
-		boolean t_reset = s_running && m_text_editor_visible && p_mode != m_text_editor_mode;
+		boolean t_reset = s_running && m_text_editor_visible && p_mode != m_default_text_editor_mode;
 		
-		m_text_editor_mode = p_mode;
+		m_default_text_editor_mode = p_mode;
 		
 		if (t_reset)
 			resetKeyboard();
@@ -716,6 +724,11 @@ public class Engine extends View implements EngineApi
 		int t_type;
 		
 		int t_mode = m_text_editor_mode;
+        if (t_mode == 0)
+        {
+            t_mode = m_default_text_editor_mode;
+        }
+        
 		// the phone class does not support a password variant, so we switch this for one of the number types
 		if (p_password && t_mode == 4)
 			t_mode = 2;

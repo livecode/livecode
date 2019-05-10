@@ -101,6 +101,29 @@ static MCExecEnumTypeInfo _kMCInterfaceTextDirectionTypeInfo =
     _kMCInterfaceTextDirectionElementInfo
 };
 
+static MCExecEnumTypeElementInfo _kMCInterfaceKeyboardTypeElementInfo[] =
+{
+    { "", kMCInterfaceKeyboardTypeNone, false},
+    { "default", kMCInterfaceKeyboardTypeDefault, false},
+    { "alphabet", kMCInterfaceKeyboardTypeAlphabet, false},
+    { "numeric", kMCInterfaceKeyboardTypeNumeric, false},
+    { "decimal", kMCInterfaceKeyboardTypeDecimal, false},
+    { "number", kMCInterfaceKeyboardTypeNumber, false},
+    { "phone", kMCInterfaceKeyboardTypePhone, false},
+    { "email", kMCInterfaceKeyboardTypeEmail, false},
+    { "url", kMCInterfaceKeyboardTypeUrl, false},
+    { "contact", kMCInterfaceKeyboardTypeContact, false}
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceKeyboardTypeTypeInfo =
+{
+    "Interface.KeyboardType",
+    sizeof(_kMCInterfaceKeyboardTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCInterfaceKeyboardTypeElementInfo
+};
+
+MCExecEnumTypeInfo* kMCInterfaceKeyboardTypeTypeInfo = &_kMCInterfaceKeyboardTypeTypeInfo;
+
 //////////
 
 static void MCInterfaceFieldRangesParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceFieldRanges& r_output)
@@ -1383,4 +1406,14 @@ void MCField::SetEffectiveRectangle(MCExecContext& ctxt, MCRectangle p_rect)
 {
     MCObject::SetEffectiveRectangle(ctxt, p_rect);
     Redraw(true, textx, texty);
+}
+
+void MCField::GetKeyboardType(MCExecContext& ctxt, intenum_t& r_type)
+{
+    r_type = static_cast<intenum_t>(keyboard_type);
+}
+
+void MCField::SetKeyboardType(MCExecContext& ctxt, intenum_t p_type)
+{
+    keyboard_type = static_cast<MCInterfaceKeyboardType>(p_type);
 }

@@ -49,6 +49,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "text.h"
 
 #include "mblandroidjava.h"
+#include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -558,21 +559,21 @@ void MCAndroidSearchKey()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static int32_t MCMiscAndroidKeyboardEnumFromMCExecEnum(MCMiscKeyboardType p_type)
+int32_t MCInterfaceAndroidKeyboardEnumFromMCExecEnum(MCInterfaceKeyboardType p_type)
 {
     switch(p_type)
     {
-        case kMCMiscKeyboardTypeAlphabet:
+        case kMCInterfaceKeyboardTypeAlphabet:
             return 1;
-        case kMCMiscKeyboardTypeDecimal:
+        case kMCInterfaceKeyboardTypeDecimal:
             return 1;
-        case kMCMiscKeyboardTypeNumeric:
+        case kMCInterfaceKeyboardTypeNumeric:
             return 3;
-        case kMCMiscKeyboardTypeNumber:
+        case kMCInterfaceKeyboardTypeNumber:
             return 2;
-        case kMCMiscKeyboardTypePhone:
+        case kMCInterfaceKeyboardTypePhone:
             return 4;
-        case kMCMiscKeyboardTypeEmail:
+        case kMCInterfaceKeyboardTypeEmail:
             return 5;
         default:
             return 1;
@@ -581,7 +582,7 @@ static int32_t MCMiscAndroidKeyboardEnumFromMCExecEnum(MCMiscKeyboardType p_type
 
 bool MCSystemSetKeyboardType(intenum_t p_type)
 {
-    int32_t t_type = MCMiscAndroidKeyboardEnumFromMCExecEnum((MCMiscKeyboardType)p_type);
+    int32_t t_type = MCInterfaceAndroidKeyboardEnumFromMCExecEnum((MCInterfaceKeyboardType)p_type);
     
     g_android_keyboard_type = t_type;
     

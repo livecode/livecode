@@ -275,6 +275,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     }
     
     m_keyboard_display = kMCIPhoneKeyboardDisplayModeOver;
+    m_keyboard_type = UIKeyboardTypeDefault;
     
 	// We are done (successfully) so return ourselves.
 	return self;
@@ -910,6 +911,9 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 - (void)keyboardDidDeactivate:(NSNotification *)notification
 {
     m_keyboard_is_visible = false;
+    
+    [[[m_main_controller rootView] textView] setKeyboardType: m_keyboard_type];
+
 }
 
 - (BOOL)isKeyboardVisible
@@ -1026,6 +1030,8 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	return m_launch_url;
 }
 
+extern UIKeyboardType MCInterfaceGetUIKeyboardTypeFromExecEnum(MCInterfaceKeyboardType p_type);
+
 - (void)activateKeyboard
 {
 	// If we are still starting up, then record the request.
@@ -1034,6 +1040,20 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 		m_keyboard_activation_pending = true;
 		return;
 	}
+    
+    if (MCactivefield.IsValid())
+    {
+        MCInterfaceKeyboardType t_ktype = MCactivefield->getkeyboardtype();
+        if (t_ktype != kMCInterfaceKeyboardTypeNone)
+        {
+            UIKeyboardType t_keyboard_type = MCInterfaceGetUIKeyboardTypeFromExecEnum(t_ktype);
+            [[[m_main_controller rootView] textView] setKeyboardType: t_keyboard_type];
+        }
+        else
+        {
+            [[[m_main_controller rootView] textView] setKeyboardType: m_keyboard_type];
+        }
+    }
 	
 	// Tell the root view to activate it's text view.
 	[[m_main_controller rootView] activateKeyboard];
@@ -1070,6 +1090,8 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 
 - (void)configureKeyboardType: (UIKeyboardType)p_new_type
 {
+    m_keyboard_type = p_new_type;
+    
 	[[[m_main_controller rootView] textView] setKeyboardType: p_new_type];
 }
 

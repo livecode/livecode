@@ -1,0 +1,49 @@
+Name: keyboardType
+
+Type: property
+
+Syntax: set the keyboardType of <field> to <type>
+Syntax: get the keyboardType of <field>
+
+Summary:
+Configures the type of keyboard that is to be displayed.
+
+Introduced: 9.5
+
+Associations: field
+
+OS: ios, android
+
+Platforms: mobile
+
+Example:
+set the keyboardType of field "cost" to "alphabet"
+
+Example:
+set the keyboardType of field "name" to empty
+
+Parameters:
+type (enum):
+The type of keyboard to use. One of:
+
+-   "": use the global value from mobileSetKeyboardType
+-   "default": the alphabetic keyboard
+-   "numeric": the numeric keyboard with punctuation
+-   "url": the url entry keyboard (iOS only)
+-   "number": the number pad keyboard
+-   "phone": the phone number pad keyboard
+-   "contact": the phone contact pad keyboard (iOS only)
+-   "email": the email keyboard
+
+Description:
+Use the <keyboardType> command to configure the type of keyboard that is to be
+displayed for a field. If set to empty which is the default the type set by the 
+<mobileSetKeyboardType> command is used to configure the type of keyboard that
+is to be displayed.
+
+The keyboard type setting takes affect the next time the keyboard is
+shown. It does not affect the current keyboard, if it is being displayed. 
+
+References: mobileSetKeyboardType (command),
+keyboardDeactivated (message), keyboardActivated (message)
+

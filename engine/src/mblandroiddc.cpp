@@ -46,6 +46,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphics.h"
 #include "resolution.h"
+#include "exec-interface.h"
 
 #include <jni.h>
 #include "mcmanagedpthread.h"
@@ -642,9 +643,22 @@ void MCScreenDC::openIME()
 {
 }
 
+extern int32_t MCInterfaceAndroidKeyboardEnumFromMCExecEnum(MCInterfaceKeyboardType p_type);
 void MCScreenDC::activateIME(Boolean activate)
 {
-	MCAndroidEngineRemoteCall("setTextInputVisible", "vb", nil, activate);
+    int32_t t_keyboard_type = 0;
+    intenum_t t_type = kMCInterfaceKeyboardTypeNone;
+    if (MCactivefield.IsValid())
+    {
+        t_type = MCactivefield->getkeyboardtype();
+    }
+    
+    if (t_type != kMCInterfaceKeyboardTypeNone)
+    {
+        t_keyboard_type = MCInterfaceAndroidKeyboardEnumFromMCExecEnum(static_cast<MCInterfaceKeyboardType>(t_type));
+    }
+    
+    MCAndroidEngineRemoteCall("setTextInputVisible", "vbi", nil, activate, t_keyboard_type);
 }
 
 void MCScreenDC::closeIME()

@@ -488,19 +488,6 @@ enum MCMiscStatusBarStyle
     kMCMiscStatusBarStyleSolid
 };
 
-enum MCMiscKeyboardType
-{
-    kMCMiscKeyboardTypeDefault,
-    kMCMiscKeyboardTypeAlphabet,
-    kMCMiscKeyboardTypeNumeric,
-    kMCMiscKeyboardTypeDecimal,
-    kMCMiscKeyboardTypeNumber,
-    kMCMiscKeyboardTypePhone,
-    kMCMiscKeyboardTypeEmail,
-    kMCMiscKeyboardTypeUrl,
-    kMCMiscKeyboardTypeContact
-};
-
 enum MCMiscKeyboardReturnKey
 {
     kMCMiscKeyboardReturnKeyDefault,
