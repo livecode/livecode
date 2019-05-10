@@ -64,6 +64,7 @@ MCPropertyInfo MCControl::kProperties[] =
     DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_MARGINS, InterfaceMargins, MCControl, Margins)
 	DEFINE_RW_OBJ_PROPERTY(P_TOOL_TIP, String, MCControl, ToolTip)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TOOL_TIP, BinaryString, MCControl, UnicodeToolTip)
+    DEFINE_RW_OBJ_PROPERTY(P_LAYER_CLIP_RECT, OptionalRectangle, MCControl, LayerClipRect)
 	DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
 	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
     
@@ -100,6 +101,8 @@ MCControl::MCControl()
 	layer_resetattrs();
 	// MW-2011-09-21: [[ Layers ]] The layer starts off as static.
 	m_layer_mode_hint = kMCLayerModeHintStatic;
+    m_layer_has_clip_rect = false;
+    m_layer_clip_rect = kMCEmptyRectangle;
 }
 
 MCControl::MCControl(const MCControl &cref) : MCObject(cref)
@@ -122,6 +125,8 @@ MCControl::MCControl(const MCControl &cref) : MCObject(cref)
 	layer_resetattrs();
 	// MW-2011-09-21: [[ Layers ]] The layer takes its layer hint from the source.
 	m_layer_mode_hint = cref . m_layer_mode_hint;
+    m_layer_has_clip_rect = cref.m_layer_has_clip_rect;
+    m_layer_clip_rect = cref.m_layer_clip_rect;
 }
 
 MCControl::~MCControl()
@@ -817,6 +822,13 @@ void MCControl::redraw(MCDC *dc, const MCRectangle &dirty)
 		
 		dc -> setopacity(255);
 		dc -> setfunction(GXcopy);
+        
+        /* Apply the layerClipRect property, if set. */
+        if (m_layer_has_clip_rect)
+        {
+            trect = MCU_intersect_rect(trect, m_layer_clip_rect);
+        }
+        
 		dc->cliprect(trect);
         
 		// MW-2011-09-06: [[ Redraw ] Make sure we draw the control normally (not

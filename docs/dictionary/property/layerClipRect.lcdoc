@@ -1,0 +1,38 @@
+Name: layerClipRect
+
+Type: property
+
+Syntax: set the layerClipRect of <control> to <rectangle>
+
+Summary:
+Specifies the visible area of a control
+
+Introduced: 9.5
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Example:
+// restrict visible region of image to a square in the top-left of the card
+set the layerClipRect of image "myImage" to 0,0,50,50
+
+Example:
+// Hide 10 pixels from the border of image "myImage"
+local tRect
+put the rect of image "myImage" into tRect
+add 10 to item 1 of tRect
+add 10 to item 2 of tRect
+subtract 10 from item 3 of tRect
+subtract 10 from item 4 of tRect
+set the layerClipRect of image "myImage" to tRect
+
+Parameters:
+<rectangle>:
+A rectangle in card coordinates.
+
+Description:
+Use the <layerClipRect> property to clip an object's display to a rectangle.
+The clipping rectangle only changes what part of the object is rendered,
+it has no effect on interaction; in particular, mouse events will still
+occur as they would without it being set.

@@ -1123,6 +1123,12 @@ void MCCard::render_control(MCTileCacheRef p_tiler, MCControl *p_control, const 
     // IM-2013-10-14: [[ FullscreenMode ]] Constrain each layer to the visible area
     t_layer_clip = MCU_intersect_rect(t_layer_clip, p_visible_rect);
     
+    /* If the layer has a layerClipRect, then apply it here. */
+    if (p_control->layer_has_clip_rect())
+    {
+        t_layer_clip = MCU_intersect_rect(t_layer_clip, p_control->layer_get_clip_rect());
+    }
+    
     // IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
     // IM-2013-09-30: [[ FullscreenMode ]] Use stack transform to get device coords
     t_layer . region = MCRectangle32GetTransformedBounds(t_layer_region, p_transform);

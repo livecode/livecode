@@ -337,6 +337,50 @@ void MCControl::GetEffectiveLayerMode(MCExecContext& ctxt, intenum_t& r_mode)
 	r_mode = (intenum_t)layer_geteffectivemode();
 }
 
+void MCControl::GetLayerClipRect(MCExecContext& ctxt, MCRectangle*& r_layer_clip_rect)
+{
+    if (m_layer_has_clip_rect)
+    {
+        *r_layer_clip_rect = m_layer_clip_rect;
+    }
+    else
+    {
+        r_layer_clip_rect = nullptr;
+    }
+}
+
+void MCControl::SetLayerClipRect(MCExecContext& ctxt, MCRectangle* p_layer_clip_rect)
+{
+    bool t_old_has_layer_clip_rect = m_layer_has_clip_rect;
+    MCRectangle t_old_layer_clip_rect = m_layer_clip_rect;
+    
+    bool t_redraw = false;
+    if (p_layer_clip_rect != nullptr)
+    {
+        m_layer_clip_rect = *p_layer_clip_rect;
+        m_layer_has_clip_rect = true;
+        
+        if (!t_old_has_layer_clip_rect ||
+                MCU_equal_rect(m_layer_clip_rect, t_old_layer_clip_rect))
+        {
+            t_redraw = true;
+        }
+    }
+    else
+    {
+        m_layer_has_clip_rect = false;
+        if (t_old_has_layer_clip_rect)
+        {
+            t_redraw = true;
+        }
+    }
+    
+    if (t_redraw)
+    {
+        Redraw();
+    }
+}
+
 void MCControl::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins)
 {
     if (p_margins . type == kMCInterfaceMarginsTypeSingle)
