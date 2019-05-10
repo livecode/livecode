@@ -50,13 +50,22 @@ guess_linux_arch_script := \
 	esac
 guess_linux_arch := $(shell $(guess_linux_arch_script))
 
-guess_platform_script := \
+guess_platform_no_arch_script := \
 	case `uname -s` in \
-	    Linux) echo linux-$(guess_linux_arch) ;; \
+	    Linux) echo linux ;; \
 	    Darwin) echo mac ;; \
+        MSYS*) echo win ;; \
 	esac
+guess_platform_no_arch := $(shell $(guess_platform_no_arch_script))
+
+guess_platform_script := \
+    case `uname -s` in \
+        Linux) echo linux-$(guess_linux_arch) ;; \
+        Darwin) echo mac ;; \
+        MSYS*) echo win-$(guess_linux_arch) ;; \
+    esac
 guess_platform := $(shell $(guess_platform_script))
-	
+
 guess_engine_flags_script := \
 	if echo $(guess_platform) | grep "^linux" >/dev/null 2>&1 && \
 	        ! xset -q >/dev/null 2>&1 ; then \
@@ -70,5 +79,20 @@ else
 	bin_dir ?= $(top_srcdir)/$(guess_platform)-bin
 endif
 
-guess_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/Standalone-Community.app/Contents/MacOS/Standalone-Community,$(bin_dir)/standalone-community)
-guess_dev_engine := $(if $(filter mac,$(guess_platform)),$(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community,$(bin_dir)/LiveCode-Community)
+guess_engine_script := \
+    case `uname -s` in \
+        Linux) echo $(bin_dir)/standalone-community ;; \
+        Darwin) echo $(bin_dir)/Standalone-Community.app/Contents/MacOS/Standalone-Community ;; \
+        MSYS*) echo $(bin_dir)/standalone-community.exe ;; \
+    esac
+guess_engine := $(shell $(guess_engine_script))
+
+
+guess_dev_engine_script := \
+    case `uname -s` in \
+        Linux) echo $(bin_dir)/LiveCode-Community ;; \
+        Darwin) echo $(bin_dir)/LiveCode-Community.app/Contents/MacOS/LiveCode-Community ;; \
+        MSYS*) echo $(bin_dir)/LiveCode-Community.exe ;; \
+    esac
+guess_dev_engine := $(shell $(guess_dev_engine_script))
+

@@ -26,7 +26,11 @@ else
 LCS_CMD = $(INTERPRETER) $(LCS_ENGINE) $(LCS_ENGINE_FLAGS) $(LCS_TESTRUNNER) run $(LCS_TESTS_DIR)
 endif
 
-LCS_SERVER_ENGINE ?= $(bin_dir)/server-community
+ifeq ($(guess_platform),win)
+	LCS_SERVER_ENGINE ?= $(bin_dir)/server-community.exe
+else
+	LCS_SERVER_ENGINE ?= $(bin_dir)/server-community
+endif
 LCS_SERVER_TESTRUNNER ?= $(TESTS_DIR)/_testrunner.lc
 LCS_SERVER_CMD = $(LCS_SERVER_ENGINE) $(LCS_SERVER_TESTRUNNER) run $(LCS_TESTS_DIR)
 
@@ -34,10 +38,18 @@ LCS_SERVER_CMD = $(LCS_SERVER_ENGINE) $(LCS_SERVER_TESTRUNNER) run $(LCS_TESTS_D
 
 MODULE_DIR ?= $(bin_dir)/modules/lci
 
-LC_COMPILE ?= $(bin_dir)/lc-compile
+ifeq ($(guess_platform),win)
+	LC_COMPILE ?= $(bin_dir)/lc-compile.exe
+else
+	LC_COMPILE ?= $(bin_dir)/lc-compile
+endif
 LC_COMPILE_FLAGS += --modulepath $(LCM_DIR) --modulepath $(MODULE_DIR)
 
-LC_RUN ?= $(bin_dir)/lc-run
+ifeq ($(guess_platform),win)
+	LC_RUN ?= $(bin_dir)/lc-run.exe
+else
+	LC_RUN ?= $(bin_dir)/lc-run
+endif
 
 LCB_LOG = _lcb_test_suite.log
 
