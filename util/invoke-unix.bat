@@ -1,5 +1,3 @@
-@echo off
-
 REM This batch file forwards commands to a Unix-like shell
 
 REM We use the delayed-expansion feature of the command processor
@@ -21,12 +19,16 @@ REM If not, look in a couple of likely locations for it
 WHERE /Q cygpath.exe 1>NUL 2>NUL
 IF %ERRORLEVEL% EQU 0 (
   SET cygwin_path=
+  @echo Cygwin in the PATH
 ) ELSE IF DEFINED CYGPATH (
   SET cygwin_path=%CYGPATH%\bin\
+  @echo Cygwin at %CYGPATH%\bin\
 ) ELSE IF EXIST C:\Cygwin64\bin (
   SET cygwin_path=C:\Cygwin64\bin\
+  @echo Cygwin at C:\Cygwin64\bin\
 ) ELSE IF EXIST C:\Cygwin\bin (
   SET cygwin_path=C:\Cygwin\bin\
+  @echo Cygwin at C:\Cygwin\bin\
 ) ELSE (
   @ECHO >&2 Cannot locate a Cygwin installation
   EXIT 1

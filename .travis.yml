@@ -67,7 +67,7 @@ before_install:
 
   - |
     if [[ "$TRAVIS_OS_NAME" == "windows" ]] ; then
-      choco install --yes cygwin -params '/InstallDir:C:\cygwin'
+      choco install --yes cygwin -params '/InstallDir:C:\Cygwin'
       choco install --yes --source cygwin bash make curl flex bison zip unzip
       choco install make
     fi
