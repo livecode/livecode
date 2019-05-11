@@ -2859,6 +2859,8 @@ void MCAndroidDisableOpenGLMode(void)
 
 static bool s_in_permission_dialog = false;
 static bool s_permission_granted = false;
+
+MC_DLLEXPORT_DEF
 bool MCAndroidCheckRuntimePermission(MCStringRef p_permission)
 {
     bool t_result;
@@ -2867,10 +2869,11 @@ bool MCAndroidCheckRuntimePermission(MCStringRef p_permission)
     
     while (s_in_permission_dialog)
         MCscreen -> wait(60.0, False, True);
-    
+
     return s_permission_granted;
 }
 
+MC_DLLEXPORT_DEF
 bool MCAndroidCheckPermissionExists(MCStringRef p_permission)
 {
     bool t_result;
@@ -2879,6 +2882,7 @@ bool MCAndroidCheckPermissionExists(MCStringRef p_permission)
     return t_result;
 }
 
+MC_DLLEXPORT_DEF
 bool MCAndroidHasPermission(MCStringRef p_permission)
 {
     bool t_result;
