@@ -579,7 +579,11 @@ on Android and iOS).
 
 The Obj-C binding string has the following form:
 
-    "objc:[class.](+|-)method[?thread]"
+    "objc:[library>][class.](+|-)method[?thread]"
+
+Here *library* specifies the name of the library or framework to bind to (if no
+library is specified a symbol from the engine executable or a library it is
+linked to is assumed).
 
 Here *class* specifies the name of the class containing the method to
 bind to. If the method is an instance method, the class can be omitted,
