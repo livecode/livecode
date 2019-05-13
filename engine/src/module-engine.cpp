@@ -42,6 +42,8 @@
 #include "module-engine.h"
 #include "widget.h"
 #include "libscript/script.h"
+#include "filepath.h"
+#include "osspec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1319,6 +1321,69 @@ MCEngineEvalKeyIsDown(uint8_t p_key, bool p_event, bool& r_down)
     {
         r_down = (MCscreen->querymods() & t_modifier) != 0;
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+static MCStringRef
+MCEngineDoResolveFilePathRelativeToStack(MCStringRef p_filepath, MCStack *p_stack)
+{
+    if (!MCPathIsAbsolute(p_filepath))
+    {
+        if (p_stack == nullptr)
+        {
+            if (!MCdefaultstackptr)
+            {
+                MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no default stack"), nil);
+                return nullptr;
+            }
+            
+            p_stack = MCdefaultstackptr;
+        }
+        
+        // else try to resolve from stack file location
+        MCAutoStringRef t_resolved;
+        if (p_stack->resolve_relative_path(p_filepath, &t_resolved))
+        {
+            return t_resolved.Take();
+        }
+        
+        // else try to resolve from current folder
+        if (MCS_resolvepath(p_filepath, &t_resolved))
+        {
+            return t_resolved.Take();
+        }
+    }
+            
+    return MCValueRetain(p_filepath);;
+}
+
+extern "C" MC_DLLEXPORT_DEF MCStringRef MCEngineExecResolveFilePathRelativeToObject(MCStringRef p_filepath, MCScriptObjectRef p_object)
+{
+    if (!MCEngineEnsureScriptObjectAccessIsAllowed())
+        return nullptr;
+    
+    MCStack *t_stack = nullptr;
+    if (p_object != nullptr)
+    {
+        MCObject *t_object = nullptr;
+        uint32_t t_part_id = 0;
+        if (!MCEngineEvalObjectOfScriptObject(p_object, t_object, t_part_id))
+            return nullptr;
+        
+        t_stack = t_object->getstack();
+    }
+    
+    return MCEngineDoResolveFilePathRelativeToStack(p_filepath, t_stack);
+}
+
+extern "C" MC_DLLEXPORT_DEF MCStringRef MCEngineExecResolveFilePath(MCStringRef p_filepath)
+{
+    if (!MCEngineEnsureScriptObjectAccessIsAllowed())
+        return nullptr;
+    
+    return MCEngineDoResolveFilePathRelativeToStack(p_filepath, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

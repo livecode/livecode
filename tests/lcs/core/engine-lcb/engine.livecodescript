@@ -20,6 +20,7 @@ on TestSetup
    TestSkipIfNot "lcb"
    
    TestLoadAuxiliaryExtension "_engine"
+   TestLoadAuxiliaryExtension "_widget_resolvepath"
 end TestSetup
 
 on TestExtensionLibraryDelimiterAccess
@@ -153,3 +154,14 @@ on TestEngineCaller
     TestAssert "library handler can get caller", \
     	the long id of sCallbackTarget is the long id of tButton
 end TestEngineCaller
+
+on TestEngineResolvePath
+	local tWidget
+	create widget as "com.livecode.lcs_tests.core.engine_lcb.widget_resolvepath"
+	put it into tWidget
+
+	set the testPath of tWidget to "engine.livecodescript"
+	local tPath
+	put the testPath of tWidget into tPath
+	TestAssert "resolve path resolves correctly", tPath is the filename of me
+end TestEngineResolvePath

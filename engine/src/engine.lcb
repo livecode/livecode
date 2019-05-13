@@ -85,6 +85,9 @@ public foreign handler MCEngineEvalMyResourcesFolder(out pFile as optional Strin
 
 public foreign handler MCEngineEvalKeyIsDown(in pKey as UInt8, in pEvent as CBool, out rState as CBool) returns nothing binds to "<builtin>"
 
+public foreign handler MCEngineExecResolveFilePath(in pFilePath as String) returns optional String binds to "<builtin>"
+public foreign handler MCEngineExecResolveFilePathRelativeToObject(in pFilePath as String, in pObject as ScriptObject) returns optional String binds to "<builtin>"
+
 /**
 Summary:	Resolves a string to a script object.
 Object:		The string describing the script object.
@@ -660,6 +663,39 @@ syntax KeyIsDown is expression
             "caps" "lock" <mKey=4> ) "key" "is" ( "currently" <mEvent=false> | <mEvent=true> ) "down"
 begin
     MCEngineEvalKeyIsDown(mKey, mEvent, output)
+end syntax
+
+/**
+Summary:       Resolves a file path relative to a script object.
+FilePath:          A string relative or full file path.
+Object:        The string describing the script object.
+
+The result:    The resolved file path string.
+
+Example:
+variable tObject as ScriptObject
+resolve script object "this stack"
+put the result into tObject
+variable tIconPath as String
+if tObject exists then
+    resolve file "images/icon.png" relative to tObject
+    put the result into tIconPath
+end if
+
+Description:
+Use the <ResolveFilePath|resolve file path> statement to resolve a relative file
+path in LCB using the same file path resolution semantics used by LCS. If no
+object is specified then the file path will be resolved releative to the
+defaultStack.
+
+Tags: Script Engine
+*/
+
+syntax ResolveFilePath is statement
+    "resolve" "file" <FilePath: Expression> [ "relative" "to" <Object: Expression> ]
+begin
+    MCEngineExecResolveFilePath(FilePath)
+    MCEngineExecResolveFilePathRelativeToObject(FilePath,  Object)
 end syntax
 
 end module
