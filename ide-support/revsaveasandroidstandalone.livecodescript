@@ -906,17 +906,30 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
             throw the result
          end if
       end repeat
-
+      
       -------- Assembling Assets
       revStandaloneProgress "Assembling assets..."
+      
+      -- Make sure we include the res folders for each aar when packaging
+      local tAarResFolderOpts
+      put empty into tAarResFolderOpts
+      repeat with x = 1 to the number of lines in pSettings["aarFiles"]
+         local tAarResFolder
+         put tBuildFolder & slash & x & "/res" into tAarResFolder
+         if there is a folder tAarResFolder then
+            put "-S" && quote & tAarResFolder & quote & space after tAarResFolderOpts
+         end if
+      end repeat      
       
       local tAaptResult
       if there is a folder tResBuildFolder then
          executeShellCommand pathToAapt(), "package", "-f", "-M", tManifestFile, \
-               "-I", pathToRootClasses(),"-F", tAssetArchive, "-S", tResBuildFolder
+               "-I", pathToRootClasses(),"-F", tAssetArchive, "-S", tResBuildFolder, \
+               tAarResFolderOpts, "--auto-add-overlay"
       else
          executeShellCommand pathToAapt(), "package", "-f", "-M", tManifestFile, \
-               "-I", pathToRootClasses(),"-F", tAssetArchive
+               "-I", pathToRootClasses(),"-F", tAssetArchive, \
+               tAarResFolderOpts, "--auto-add-overlay"
       end if
       put the result into tAaptResult
       processAaptResult tAaptResult
@@ -1130,7 +1143,7 @@ private command generateResourceClasses pBuildFolder, pResBuildFolder, \
    repeat with x = 1 to the number of lines in xSettings["aarFiles"]
       put pBuildFolder & "/" & x & "/AndroidManifest.xml" into tManifest
       executeShellCommand pathToAapt(), "package", "-f", "-M", tManifest, \
-            "-I", pathToRootClasses(), "-S", pResBuildFolder, "-J", \
+            "-I", pathToRootClasses(), "-S", pBuildFolder & slash & x & "/res/", "-J", \
             tOutputFolder & "/", "-m"
       put the result into tAaptResult
       processAaptResult tAaptResult
@@ -1173,15 +1186,6 @@ private command expandAARsAndComputeSettings tBuildFolder, @xSettingsA
       set the folder to tExtractFolder
       executeShellCommand pathToJar(), "xf", tAAR
       updateSettingsForExtractedAAR tExtractFolder, xSettingsA
-      -- also extract to general res folder
-      put tBuildFolder & slash & "res-build" \
-            into tExtractFolder
-      revSBEnsureFolder tExtractFolder
-      set the folder to tExtractFolder
-      executeShellCommand pathToJar(), "xf", tAAR
-      if the result is not empty then
-         answer the result
-      end if
    end repeat
    set the folder to tDefaultFolder
 end expandAARsAndComputeSettings
