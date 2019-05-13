@@ -2186,8 +2186,8 @@ end syntax
 
 public foreign handler MCCanvasImageGetWidth(in pImage as Image, out rWidth as UInt32) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageGetHeight(in pImage as Image, out rHeight as UInt32) returns nothing binds to "<builtin>"
-// TODO - add support for metadata
-//public foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as Array) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasImageGetMetadata(in pImage as Image, out rMetadata as Array) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasImageGetDensity(in pImage as Image, out rDensity as CDouble) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasImageGetPixels(in pImage as Image, out rPixels as Data) returns nothing binds to "<builtin>"
 // TODO - add image frame index property?
 
@@ -2245,11 +2245,65 @@ end syntax
 
 //////////
 
-//syntax ImageMetadataProperty is prefix operator with property precedence
-//	"the" "metadata" "of" <mImage: Expression>
-//begin
-//	MCCanvasImageGetMetadata(mImage, output)
-//end syntax
+/**
+Summary:	the metadata associated with an image.
+
+mImage:		An expression which evaluates to an image.
+
+Description:	An array containing metadata associated with an image.
+
+Example:
+	// Load an image from a file
+	variable tImage as Image
+	put image from file "images/logo.png" into tImage
+	
+	// get the image metadata
+	variable tMetadata as Array
+	put the metadata of tImage into tMetadata
+	
+	// get image density in DPI from the image metadata
+	variable tDPI as Number
+	if "density" is among the keys of tMetadata then
+		put tMetadata["density"] into tDPI
+	else
+		put 72 into tDPI
+	end if
+
+Tags: canvas
+*/
+syntax ImageMetadataProperty is prefix operator with property precedence
+	"the" "metadata" "of" <mImage: Expression>
+begin
+	MCCanvasImageGetMetadata(mImage, output)
+end syntax
+
+//////////
+
+/**
+Summary:	The density of an image.
+
+mImage:		An expression which evaluates to an image.
+
+Description:	The image density in DPI (dots per inch)
+
+Example:
+	// Load an image from a file
+	variable tImage as Image
+	put image from file "images/logo.png" into tImage
+	
+	// scale down image based on standard DPI of 72.
+	variable tScale as Number
+	put (72 / the density of tImage) into tScale
+	scale this canvas by [tScale, tScale]
+	draw tImage into rectangle [0,0,the width of tImage,the height of tImage] of this canvas
+
+Tags: canvas
+*/
+syntax ImageDensityProperty is prefix operator with property precedence
+	"the" "density" "of" <mImage: Expression>
+begin
+	MCCanvasImageGetDensity(mImage, output)
+end syntax
 
 //////////
 

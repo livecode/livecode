@@ -40,6 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 #include "graphics_util.h"
+#include "module-canvas.h"
 
 //////////
 
@@ -843,56 +844,35 @@ void MCImage::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
 // MERG-2015-02-11: [[ ImageMetadata ]] Refactored image metadata property
 void MCImage::GetMetadataProperty(MCExecContext& ctxt, MCNameRef p_prop, MCExecValue& r_value)
 {
-    // AL-2015-07-22: [[ Bug 15620 ]] If image rep is nil, don't try to fetch metadata
-    bool t_stat;
-    t_stat = m_rep != nil;
-    
-    MCImageMetadata t_metadata;
-    if (t_stat)
-    {
-        m_rep->GetMetadata(t_metadata);
-        t_stat = t_metadata.has_density;
-    }
-    
-    MCExecValue t_density;
-    if (t_stat)
-    {
-        t_density . double_value = t_metadata . density;
-        t_density . type = kMCExecValueTypeDouble;
-    }
-    
-    if (t_stat)
-    {
-        if (p_prop == nil || MCNameIsEmpty(p_prop))
-        {
-            MCAutoArrayRef v;
-            t_stat = MCArrayCreateMutable(&v);
-            
-            MCValueRef t_prop_value;
-            
-            if (t_stat)
-            {
-                MCExecTypeConvertAndReleaseAlways(ctxt, t_density . type, &t_density , kMCExecValueTypeValueRef, &t_prop_value);
-                t_stat = !ctxt . HasError();
-            }
-            
-            if (t_stat)
-                t_stat = MCArrayStoreValue(*v, false, MCNAME("density"), t_prop_value);
-            
-            if (t_stat)
-            {
-                r_value . arrayref_value = MCValueRetain(*v);
-                r_value . type = kMCExecValueTypeArrayRef;
-            }
-        }
-        else
-            r_value = t_density;
-    }
-    
-    if (!t_stat)
-    {
-        r_value . arrayref_value = MCValueRetain(kMCEmptyArray);
-        r_value . type = kMCExecValueTypeArrayRef;
-    }
-    
+	// AL-2015-07-22: [[ Bug 15620 ]] If image rep is nil, don't try to fetch metadata
+	bool t_stat;
+	t_stat = m_rep != nil;
+
+	MCAutoArrayRef t_metadata;
+	if (t_stat)
+		t_stat = MCImageRepGetMetadata(m_rep, &t_metadata);
+
+	if (t_stat)
+	{
+		if (p_prop == nil || MCNameIsEmpty(p_prop))
+		{
+			r_value . arrayref_value = MCValueRetain(*t_metadata);
+			r_value . type = kMCExecValueTypeArrayRef;
+		}
+		else
+		{
+			t_stat = MCArrayFetchValue(*t_metadata, true, p_prop, r_value.valueref_value);
+			if (t_stat)
+			{
+				MCValueRetain(r_value.valueref_value);
+				r_value.type = kMCExecValueTypeValueRef;
+			}
+		}
+	}
+
+	if (!t_stat)
+	{
+		r_value . arrayref_value = MCValueRetain(kMCEmptyArray);
+		r_value . type = kMCExecValueTypeArrayRef;
+	}
 }

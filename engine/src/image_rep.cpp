@@ -893,6 +893,42 @@ bool MCImageRepGetFrameDuration(MCImageRep *p_image_rep, uint32_t p_frame, uint3
 	return p_image_rep->GetFrameDuration(p_frame, r_duration);
 }
 
+bool MCImageRepGetMetadata(MCImageRep *p_image_rep, MCArrayRef &r_metadata)
+{
+	MCImageMetadata t_metadata;
+	if (!p_image_rep->GetMetadata(t_metadata))
+		return false;
+	
+	MCAutoArrayRef t_metadata_array;
+	if (!MCArrayCreateMutable(&t_metadata_array))
+		return false;
+	
+	if (t_metadata.has_density)
+	{
+		MCAutoNumberRef t_density;
+		if (!MCNumberCreateWithReal(t_metadata.density, &t_density))
+			return false;
+		if (!MCArrayStoreValue(*t_metadata_array, false, MCNAME("density"), *t_density))
+			return false;
+	}
+	/* TODO - support other metadata fields */
+	
+	return MCArrayCopy(*t_metadata_array, r_metadata);
+}
+
+bool MCImageRepGetDensity(MCImageRep *p_image_rep, double &r_density)
+{
+	MCImageMetadata t_metadata;
+	if (!p_image_rep->GetMetadata(t_metadata) || !t_metadata.has_density)
+	{
+		r_density = 72.0;
+		return true;
+	}
+	
+	r_density = t_metadata.density;
+	return true;
+}
+
 bool MCImageRepLock(MCImageRep *p_image_rep, uint32_t p_index, MCGFloat p_density, MCGImageFrame &r_frame)
 {
 	return p_image_rep->LockImageFrame(p_index, p_density, r_frame);
