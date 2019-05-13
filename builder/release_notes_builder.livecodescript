@@ -97,6 +97,9 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
                   case "scriptprofiler"
                   case "securekey"
                   case "pdf"
+                  case "androidbarcode"
+                  case "androidbarcodescanner"
+                  case "androidbarcodesupport"                     
                      put "business" into tComponents[tIndex]["metadata"]["edition"]
                      break
                   default
