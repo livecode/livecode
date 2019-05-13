@@ -6,10 +6,10 @@ source "${BASEDIR}/scripts/util.inc"
 
 # Grab the source for the library
 if [ "${ARCH}" == "x86" ] ; then
-   CEF_DST="cef_binary_${CEF_VERSION}_${CEF_BUILDREVISION}_${PLATFORM}32"
+   CEF_DST="cef_binary_${CEF_VERSION}+${CEF_BUILDREVISION}+chromium-${CEFChromium_VERSION}_${PLATFORM}32"
    CEF_SRC="cef_binary_${CEF_VERSION}%2B${CEF_BUILDREVISION}%2Bchromium-${CEFChromium_VERSION}_${PLATFORM}32.tar.bz2"
 elif [ "${ARCH}" == "x86_64" ] ; then
-   CEF_DST="cef_binary_${CEF_VERSION}_${CEF_BUILDREVISION}_${PLATFORM}64"
+   CEF_DST="cef_binary_${CEF_VERSION}+${CEF_BUILDREVISION}+chromium-${CEFChromium_VERSION}_${PLATFORM}64"
    CEF_SRC="cef_binary_${CEF_VERSION}%2B${CEF_BUILDREVISION}%2Bchromium-${CEFChromium_VERSION}_${PLATFORM}64.tar.bz2"
 else 
   echo "No binaries available for arch"
