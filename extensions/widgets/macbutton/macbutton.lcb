@@ -160,7 +160,7 @@ end handler
 
 private type NSUInteger is CULong
 private foreign handler ObjC_NSButtonAlloc() returns ObjcRetainedId binds to "objc:NSButton.+alloc"
-private foreign handler ObjC_NSButtonInit(in pObj as ObjcId) returns ObjcId binds to "objc:NSButton.-init"
+private foreign handler ObjC_NSButtonInit(in pObj as ObjcRetainedId) returns optional ObjcRetainedId binds to "objc:NSButton.-init"
 private foreign handler ObjC_NSButtonSetEnabled(in pObj as ObjcId, in pEnabled as CBool) returns nothing binds to "objc:NSButton.-setEnabled:"
 private foreign handler ObjC_NSButtonSetFont(in pObj as ObjcId, in pFont as ObjcId) returns nothing binds to "objc:NSButton.-setFont:"
 private foreign handler ObjC_NSButtonSetButtonType(in pObj as ObjcId, in pStyle as NSUInteger) returns nothing binds to "objc:NSButton.-setButtonType:"
