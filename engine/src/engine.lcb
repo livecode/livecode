@@ -454,16 +454,15 @@ Example:
 
 Description:
 Executes the given fragment of LiveCode script in the context of the target
-script object, or `this card of the defaultStack` if none is specified. The list
-of arguments is accessible from the script fragment using the `paramCount()` and
-`param()` functions.
+script object. If no object is specified then execution occurs in the context of
+`this card of the defaultStack` in a library handler or the current widget
+instance script object if in a widget handler.
+
+The list of arguments is accessible from the script fragment using the
+`paramCount()` and `param()` functions.
 
 >*Note:* An error is thrown if this syntax is used in a context where access
 to script objects is not allowed.
-
->*Note:* The `execute script` command is subject to Anomaly 19137. It is
-recommended to always use targetted forms of the command, as the default target
-might change in a future release.
 
 Tags: Script Engine
 */
@@ -684,9 +683,12 @@ end if
 
 Description:
 Use the <ResolveFilePath|resolve file path> statement to resolve a relative file
-path in LCB using the same file path resolution semantics used by LCS. If no
-object is specified then the file path will be resolved releative to the
-defaultStack.
+path in LCB using the same file path resolution semantics used by LCS.
+If no object is specified the file path will be resolved relative to either
+`the defaultStack` or if in a widget handler the stack the current widget is on.
+
+>*Note:* An error is thrown if this syntax is used in a context where access
+to script objects is not allowed.
 
 Tags: Script Engine
 */

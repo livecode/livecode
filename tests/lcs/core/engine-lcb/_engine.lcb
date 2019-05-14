@@ -52,4 +52,22 @@ end handler
 public handler TestEngine_Caller(in pCallback as String)
 	send pCallback to the caller
 end handler
+
+public handler TestEngine_ResolveFile(in pPath as String, in pRelativeObject as String) returns String
+	if pRelativeObject is not empty then
+		variable tObject as ScriptObject
+		resolve script object pRelativeObject
+		put the result into tObject
+		if tObject exists then
+			resolve file pPath relative to tObject
+			return the result
+		else
+			throw "object not found:" && pRelativeObject
+		end if
+	else
+		resolve file pPath
+		return the result
+	end if
+end handler
+
 end library

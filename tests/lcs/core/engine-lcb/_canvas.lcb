@@ -15,4 +15,11 @@ public handler CanvasTestImageFromResourceFile()
 	return not (the pixels of tImage is empty)
 end handler
 
+public handler TestCanvas_ImageFromFile(in pPath as String) returns Boolean
+	variable tImage as Image
+	put image from file pPath into tImage
+	-- if image from file fails it will throw
+	return true
+end handler
+
 end library

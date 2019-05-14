@@ -20,6 +20,7 @@ on TestSetup
    TestSkipIfNot "lcb"
    
    TestLoadAuxiliaryExtension "_canvas", TestGetInputFilesFolder()
+   TestLoadAuxiliaryExtension "_widget_canvas"
 end TestSetup
 
 on TestCanvasGetPixelHeight
@@ -31,3 +32,30 @@ on TestCanvasImageFromResourceFile
 	TestAssert "canvas image from resource file not empty", \
 		CanvasTestImageFromResourceFile()
 end TestCanvasImageFromResourceFile
+
+on TestCanvasImageFromFile
+	local tDefaultStack
+	put the defaultStack into tDefaultStack
+
+	set the defaultStack to the short name of me
+	
+	local tWidget
+	create widget as "com.livecode.lcs_tests.core.engine_lcb.widget_canvas"
+	put it into tWidget
+
+	TestAssert \
+			"image from file in library path relative to current card of the defaultStack", \
+			TestCanvas_ImageFromFile("_test_image.png")
+
+	-- test implicit widget with the default stack elsewhere
+	local tPath
+	set the defaultStack to "TestRunner"
+	-- will throw if not found
+	set the imagePath of tWidget to "_test_image.png"
+	put the imagePath of tWidget into tPath
+	TestAssert \
+			"image from file in widget path relative to widget", \
+			tPath is "_test_image.png"
+
+	set the defaultStack to tDefaultStack
+end TestCanvasImageFromFile

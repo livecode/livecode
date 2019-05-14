@@ -41,6 +41,8 @@ void MCEngineScriptObjectPreventAccess(void);
 
 void MCEngineScriptObjectAllowAccess(void);
 
+MCObject* MCEngineCurrentContextObject(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

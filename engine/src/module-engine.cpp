@@ -543,14 +543,35 @@ extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendToScriptObject(bool p_is_
 extern MCWidgetRef MCcurrentwidget;
 extern void MCWidgetExecPostToParentWithArguments(MCStringRef p_message, MCProperListRef p_arguments);
 
+MCObject* MCEngineCurrentContextObject(void)
+{
+    MCObject *t_object = nullptr;
+    if (MCcurrentwidget)
+    {
+        t_object = MCWidgetGetHost(MCcurrentwidget);
+    }
+    else if (MCdefaultstackptr)
+    {
+        t_object = MCdefaultstackptr->getcurcard();
+    }
+    
+    if (t_object == nullptr)
+    {
+        MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no default stack"), nil);
+        return nullptr;
+    }
+    
+    return t_object;
+}
+
 extern "C" MC_DLLEXPORT_DEF MCValueRef MCEngineExecSendWithArguments(bool p_is_function, MCStringRef p_message, MCProperListRef p_arguments)
 {
-    // PM-2017-10-31: [[ Bugfix 20625 ]] May have no default stack on startup
-    if (!MCdefaultstackptr)
-        return nil;
-    MCObject *t_target = MCdefaultstackptr -> getcurcard();
-    if (MCcurrentwidget)
-        t_target = MCWidgetGetHost(MCcurrentwidget);
+    MCObject *t_target = MCEngineCurrentContextObject();
+    
+    if (t_target == nullptr)
+    {
+        return nullptr;
+    }
     
     return MCEngineDoSendToObjectWithArguments(p_is_function, p_message, t_target, p_arguments);
 }
@@ -600,22 +621,18 @@ extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostToScriptObject(MCStringRef p_me
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineExecPostWithArguments(MCStringRef p_message, MCProperListRef p_arguments)
 {
-	// PM-2017-10-31: [[ Bugfix 20625 ]] May have no default stack on startup
-	if (!MCdefaultstackptr)
-		return;
-		
-    MCObject *t_target = MCdefaultstackptr -> getcurcard();
-    if (MCcurrentwidget)
+    if (MCcurrentwidget && !MCWidgetIsRoot(MCcurrentwidget))
     {
-        if (!MCWidgetIsRoot(MCcurrentwidget))
-        {
-            MCWidgetExecPostToParentWithArguments(p_message, p_arguments);
-            return;
-        }
-        t_target = MCWidgetGetHost(MCcurrentwidget);
+        MCWidgetExecPostToParentWithArguments(p_message, p_arguments);
+        return;
     }
     
-    MCEngineDoPostToObjectWithArguments(p_message, t_target, p_arguments);
+    MCObject *t_target = MCEngineCurrentContextObject();
+    
+    if (t_target != nullptr)
+    {
+        MCEngineDoPostToObjectWithArguments(p_message, t_target, p_arguments);
+    }
 }
 
 extern "C" MC_DLLEXPORT_DEF void MCEngineExecPost(MCStringRef p_message)
@@ -648,13 +665,12 @@ MCEngineDoExecuteScriptInObjectWithArguments(MCStringRef p_script, MCObject *p_o
 {
 	if (p_object == nil)
 	{
-		if (!MCdefaultstackptr)
-		{
-			MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no default stack"), nil);
-			return nullptr;
+        p_object = MCEngineCurrentContextObject();
+        
+        if (p_object == nullptr)
+        {
+        	return nullptr;
 		}
-		
-		p_object = MCdefaultstackptr->getcurcard();
 	}
 	
 	MCExecContext ctxt(p_object, nil, nil);
@@ -1333,13 +1349,14 @@ MCEngineDoResolveFilePathRelativeToStack(MCStringRef p_filepath, MCStack *p_stac
     {
         if (p_stack == nullptr)
         {
-            if (!MCdefaultstackptr)
+            MCObject *t_target = MCEngineCurrentContextObject();
+            
+            if (t_target == nullptr)
             {
-                MCErrorCreateAndThrow(kMCGenericErrorTypeInfo, "reason", MCSTR("no default stack"), nil);
                 return nullptr;
             }
             
-            p_stack = MCdefaultstackptr;
+            p_stack = t_target->getstack();
         }
         
         // else try to resolve from stack file location

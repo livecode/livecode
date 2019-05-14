@@ -20,7 +20,7 @@ on TestSetup
    TestSkipIfNot "lcb"
    
    TestLoadAuxiliaryExtension "_engine"
-   TestLoadAuxiliaryExtension "_widget_resolvepath"
+   TestLoadAuxiliaryExtension "_widget_engine"
 end TestSetup
 
 on TestExtensionLibraryDelimiterAccess
@@ -40,24 +40,38 @@ end TestExtensionLibraryDelimiterAccess
 //////////
 
 on TestExtensionExecuteScript
-   -- See Anomaly 19137
-   TestExtensionExecuteScript_Do "return the long id of this card", empty, empty
-   TestAssert "execute script works", the result is the long id of this card
+    -- Implicit object in libraries is this card of the defaultStack
+    TestExtensionExecuteScript_Do "return the long id of this card", empty, empty
+    TestAssert "execute script in library works", the result is the long id of this card of the defaultStack
 
-   create stack "TempStack"
-   TestExtensionExecuteScript_Do "return the short name of me", the long id of stack "TempStack", empty
-   TestAssert "execute script in object works", the result is the short name of stack "TempStack"
-   delete stack "TempStack"
+    -- Implicit object in widgets is the widget
+    local tWidget
+    create widget as "com.livecode.lcs_tests.core.engine_lcb.widget_engine"
+    put it into tWidget
+    set the scriptString of tWidget to "return the long id of me"
+    TestAssert "execute script in widget works", the scriptResult of tWidget is tWidget
 
-   local tArgs
-   put 200 into tArgs[1]
-   TestExtensionExecuteScript_Do "return param(1)", empty, tArgs
-   TestAssert "execute script with arguments works", the result is 200
+    local tParams
+    put "foobar" into tParams[1]
+    set the scriptParams of tWidget to tParams
+    set the scriptString of tWidget to "set the uTest of me to param(1)"
+    get the scriptResult of tWidget
+    TestAssert "execute script in widget with params works", the uTest of tWidget is "foobar"
 
-   create stack "TempStack2"
-   TestExtensionExecuteScript_Do "return the short name of me & param(1)", the long id of stack "TempStack2", tArgs
-   TestAssert "execute script in object with arguments works", the result is "TempStack2200"
-   delete stack "TempStack2"
+    create stack "TempStack"
+    TestExtensionExecuteScript_Do "return the short name of me", the long id of stack "TempStack", empty
+    TestAssert "execute script in object works", the result is the short name of stack "TempStack"
+    delete stack "TempStack"
+
+    local tArgs
+    put 200 into tArgs[1]
+    TestExtensionExecuteScript_Do "return param(1)", empty, tArgs
+    TestAssert "execute script with arguments works", the result is 200
+
+    create stack "TempStack2"
+    TestExtensionExecuteScript_Do "return the short name of me & param(1)", the long id of stack "TempStack2", tArgs
+    TestAssert "execute script in object with arguments works", the result is "TempStack2200"
+    delete stack "TempStack2"
 end TestExtensionExecuteScript
 
 /////////
@@ -155,13 +169,41 @@ on TestEngineCaller
     	the long id of sCallbackTarget is the long id of tButton
 end TestEngineCaller
 
-on TestEngineResolvePath
-	local tWidget
-	create widget as "com.livecode.lcs_tests.core.engine_lcb.widget_resolvepath"
-	put it into tWidget
+//////////
 
-	set the testPath of tWidget to "engine.livecodescript"
-	local tPath
-	put the testPath of tWidget into tPath
-	TestAssert "resolve path resolves correctly", tPath is the filename of me
+on TestEngineResolvePath
+    local tDefaultStack
+    put the defaultStack into tDefaultStack
+
+    local tWidget
+    create widget as "com.livecode.lcs_tests.core.engine_lcb.widget_engine"
+    put it into tWidget
+
+    local tPath
+    set the pathExplicit of tWidget to "_testrunner.livecodescript"
+    put the pathExplicit of tWidget into tPath
+    TestAssert \
+      "resolve path relative to explicit object in widget", \
+      tPath is the filename of stack "TestRunner"
+
+    TestAssert \
+      "resolve path relative to explicit object in library", \
+      TestEngine_ResolveFile("_testrunner.livecodescript", \
+      the long id of stack "TestRunner") \
+      is the filename of stack "TestRunner"
+
+    TestAssert \
+      "resolve path relative to implicit object in library", \
+      TestEngine_ResolveFile("engine.livecodescript", "") \
+      is the filename of me
+
+    -- test implicit widget with the default stack elsewhere
+    set the defaultStack to "TestRunner"
+    set the pathImplicit of tWidget to "engine.livecodescript"
+    put the pathImplicit of tWidget into tPath
+    TestAssert \
+      "resolve path relative to implicit widget", \
+      tPath is the filename of me
+
+    set the defaultStack to tDefaultStack
 end TestEngineResolvePath
