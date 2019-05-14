@@ -180,13 +180,9 @@ public:
         MCRectangle t_volume_well;
         t_volume_well = getVolumeBarPartRect(dirty, kMCPlayerControllerPartVolumeWell);
         
-        MCGBitmapEffects t_effects;
-        t_effects . has_drop_shadow = false;
-        t_effects . has_outer_glow = false;
-        t_effects . has_inner_glow = false;
+        MCGBitmapEffects t_effects = MCGBitmapEffects();
         t_effects . has_inner_shadow = true;
-        t_effects . has_color_overlay = false;
-        
+		
         MCGShadowEffect t_inner_shadow;
         t_inner_shadow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 56.0 / 255.0);
         t_inner_shadow . blend_mode = kMCGBlendModeClear;
@@ -526,13 +522,9 @@ public:
         MCRectangle t_rate_well;
         t_rate_well = getRateBarPartRect(dirty, kMCPlayerControllerPartRateWell);
         
-        MCGBitmapEffects t_effects;
-        t_effects . has_drop_shadow = false;
-        t_effects . has_outer_glow = false;
-        t_effects . has_inner_glow = false;
+        MCGBitmapEffects t_effects = MCGBitmapEffects();
         t_effects . has_inner_shadow = true;
-        t_effects . has_color_overlay = false;
-        
+
         MCGShadowEffect t_inner_shadow;
         t_inner_shadow . color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 56.0 / 255.0);
         t_inner_shadow . blend_mode = kMCGBlendModeClear;
@@ -2590,13 +2582,9 @@ void MCPlayer::drawControllerWellButton(MCGContextRef p_gcontext)
     t_drawn_well_rect . x += 4;
     t_drawn_well_rect . width -= 10;
     
-    MCGBitmapEffects t_effects;
-	t_effects . has_drop_shadow = false;
-	t_effects . has_outer_glow = false;
-	t_effects . has_inner_glow = false;
-	t_effects . has_inner_shadow = true;
-    t_effects . has_color_overlay = false;
-    
+    MCGBitmapEffects t_effects = MCGBitmapEffects();
+    t_effects . has_inner_shadow = true;
+
     MCGShadowEffect t_inner_shadow;
     t_inner_shadow . color = MCGColorMakeRGBA(56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0);
     t_inner_shadow . blend_mode = kMCGBlendModeClear;

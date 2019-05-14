@@ -236,11 +236,7 @@ void MCGraphicsContext::begin(bool p_group)
 
 bool MCGraphicsContext::begin_with_effects(MCBitmapEffectsRef p_effects, const MCRectangle &p_shape)
 {
-	MCGBitmapEffects t_effects;
-	t_effects . has_drop_shadow = false;
-	t_effects . has_outer_glow = false;
-	t_effects . has_inner_glow = false;
-	t_effects . has_inner_shadow = false;
+	MCGBitmapEffects t_effects = MCGBitmapEffects();
 
 	if ((p_effects -> mask & kMCBitmapEffectTypeColorOverlayBit) != 0)
 	{

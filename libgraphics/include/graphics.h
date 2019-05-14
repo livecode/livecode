@@ -531,6 +531,8 @@ struct MCGBitmapEffects
 	bool has_inner_shadow = false;
 	bool has_outer_glow = false;
 	bool has_drop_shadow = false;
+	
+	bool isolated = false;
 };
 
 struct MCGDeviceMaskInfo

@@ -1183,12 +1183,14 @@ static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_chi
 							   p_effects . outer_glow . color,
 							   p_effects . outer_glow . blend_mode);
 							   
-	
-	// Render the layer itself (using the layer's alpha and blend mode - well, if we can agree that's a good change!).
-	self->layer->canvas->save();
-	self->layer->canvas->resetMatrix();
-	self->layer->canvas->drawBitmap(t_child_bitmap, p_child->origin_x, p_child->origin_y, NULL);
-	self->layer->canvas->restore();
+	if (!p_effects . isolated)
+	{
+		// Render the layer itself (using the layer's alpha and blend mode - well, if we can agree that's a good change!).
+		self->layer->canvas->save();
+		self->layer->canvas->resetMatrix();
+		self->layer->canvas->drawBitmap(t_child_bitmap, p_child->origin_x, p_child->origin_y, NULL);
+		self->layer->canvas->restore();
+	}
 	
 	if (p_effects . has_inner_shadow)
 		MCGContextRenderEffect(self,
