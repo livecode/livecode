@@ -15,8 +15,10 @@ if not defined BUILDTYPE set BUILDTYPE=Debug
 if not defined BUILD_EDITION set BUILD_EDITION=community
 if /I "%BUILD_EDITION%"=="commercial" (
     set BUILD_PROJECT=livecode-commercial.sln
+    set DEFAULT_TARGET=____\default
 ) else (
     set BUILD_PROJECT=livecode\livecode.sln
+    set DEFAULT_TARGET=default
 )
 
 @rem Guess target architecture based on build platform
@@ -36,7 +38,7 @@ call "%VSINSTALLDIR%VC\Auxiliary\Build\vcvarsall.bat" %VSCMD_ARG_TGT_ARCH%
 @if "%1" NEQ "" (
 	set MSBUILD_TARGET_ARG=/t:%1
 ) else (
-	set MSBUILD_TARGET_ARG=/t:default
+	set MSBUILD_TARGET_ARG=/t:%DEFAULT_TARGET%
 )
 
 msbuild %BUILD_PROJECT% /fl /flp:Verbosity=normal /nologo /m:1 %MSBUILD_TARGET_ARG% /p:Configuration=%BUILDTYPE% /p:Platform=%MSBUILD_PLATFORM%
