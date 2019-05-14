@@ -1,0 +1,17 @@
+widget com.livecode.lcs_tests.core.engine_lcb.widget_canvas
+
+use com.livecode.widget
+use com.livecode.canvas
+
+private variable mImage as String
+
+property imagePath get mImage set SetImage
+
+handler SetImage(in pPath as String)
+	variable tImage as Image
+	put image from file pPath into tImage
+	-- if image from file fails it will throw
+	put pPath into mImage
+end handler
+
+end widget

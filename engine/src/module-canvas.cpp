@@ -24,6 +24,7 @@
 
 #include "module-canvas.h"
 #include "module-canvas-internal.h"
+#include "module-engine.h"
 
 //////////
 
@@ -1865,8 +1866,14 @@ void MCCanvasImageMakeWithPath(MCStringRef p_path, MCCanvasImageRef &r_image)
 {
 	MCImageRep *t_image_rep;
 	t_image_rep = nil;
-	
-	if (!MCImageGetRepForFileWithStackContext(p_path, MCWidgetGetHost(MCcurrentwidget)->getstack(), t_image_rep))
+    
+    MCObject *t_object = MCEngineCurrentContextObject();
+    if (t_object == nullptr)
+    {
+        return;
+    }
+    
+	if (!MCImageGetRepForFileWithStackContext(p_path, t_object->getstack(), t_image_rep))
 	{
 		MCCanvasThrowError(kMCCanvasImageRepReferencedErrorTypeInfo);
 		return;

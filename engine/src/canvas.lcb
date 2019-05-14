@@ -2096,6 +2096,11 @@ Example:
 	variable tImage
 	put image from file "images/logo.png" into tImage
 
+Description:
+If the file path is relative it will be resolved relative to
+`this card of the defaultStack` in a library handler or the current
+widget instance script object if in a widget handler.
+
 Tags: Canvas
 */
 

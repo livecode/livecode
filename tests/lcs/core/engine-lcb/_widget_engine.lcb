@@ -1,0 +1,47 @@
+widget com.livecode.lcs_tests.core.engine_lcb.widget_engine
+
+use com.livecode.engine
+use com.livecode.widget
+
+private variable mScript as String
+private variable mParams as List
+
+property scriptParams get mParams set mParams
+property scriptString get mScript set mScript
+property scriptResult get TestExtensionExecuteScript_Do
+
+handler TestExtensionExecuteScript_Do() returns optional any
+	if mParams is the empty list then
+		execute script mScript
+	else
+		execute script mScript with mParams
+	end if
+	return the result
+end handler
+
+/////////
+
+private variable mPath as String
+private variable mImage as String
+
+property pathExplicit get mPath set SetPathExplicit
+property pathImplicit get mPath set SetPathImplicit
+
+handler SetPathExplicit(in pPath as String)
+	variable tObject as ScriptObject
+	resolve script object "stack \qTestRunner\q"
+	put the result into tObject
+	if tObject exists then
+		resolve file pPath relative to tObject
+		put the result into mPath
+	else
+		put "" into mPath
+	end if
+end handler
+
+handler SetPathImplicit(in pPath as String)
+	resolve file pPath
+	put the result into mPath
+end handler
+
+end widget
