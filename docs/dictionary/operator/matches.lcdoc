@@ -1,0 +1,81 @@
+Name: matches
+
+Type: operator
+
+Syntax: <value> matches { "regex" | "wildcard" } [pattern] <pattern>
+
+Summary:
+Compares a <value> to a <wildcard> pattern or <regular expression>.
+
+Introduced: 9.5
+
+OS: mac, windows, linux, ios, android
+
+Platforms: desktop, server, mobile
+
+Example:
+"foobar" matches wildcard pattern "*b*" -- evaluates to true
+
+Example:
+"Foobar" matches regex pattern "^f.*r$" -- evaluates to false
+
+Example:
+"Foobar" matches regex pattern "(?i)^f.*r$" -- evaluates to true
+
+Parameters:
+value:
+The <value> is a <string> to be compared against the <pattern>
+
+pattern:
+A <regular expression> or <wildcard> pattern to compare to the <value>
+
+Description:
+Use the <matches> <operator> to determine if a <value> conforms to a <wildcard>
+pattern or <regular expression>.
+
+>*Note:* If the <value> is an array it will first be converted into the empty
+> string, thus any array will only match a <regular expression> or <wildcard>
+> pattern that matches an empty string.
+
+If the <regex pattern> form is specified, the <pattern> should
+be formatted as a <regular expression>. There are [many websites](https://www.google.com/search?regex)
+that provide examples and tutorials of RegEx expressions.
+
+If the <wildcard> pattern form is to be used, the <pattern> should
+consist of a string of characters to match, which may be combined with any
+number of the following special characters:
+
+- `*` : Matches zero or more of any character. The pattern `A*C`
+    matches "AC", "ABC", or "ADZXC".
+- `?` : Matches exactly one character. The pattern `A?C` matches
+  "ABC", but not "AC" or "ADZXC".
+- `[chars]` : Matches any one of the characters inside the brackets. The
+  pattern `A[BC]D` matches "ABD" or "ACD", but not "AD" or "ABCD".
+- `[!chars]` : Matches any character which is not one of the characters
+  inside the brackets.
+- `[char-char]` : Matches any character whose unicode codepoint is between
+  the first character and the second character, such as `[a-y]` any character
+  between "a" and "y" but not "z"
+
+You can match instances of special chars as follows:
+
+- `?` with `[?]`
+- `*` with `[*]`
+- `[` with `[[]`
+- `-` with `-`
+- `!` with `!`
+
+For example, the <pattern> `[[]A]*` will match any
+string beginning with `[A]`. Broken down, there is `[[]` which equates
+to an open square bracket `[` followed by `A]*` as the closing square
+bracket is not a special character.
+
+The three bracketed forms can be combined to create more complex
+character classes, for example the <pattern> `[!abcA-C]` matches any
+character which is not a, b or c (upper or lower case)
+
+References: operator (glossary), case-sensitive (glossary), value (glossary),
+string (glossary), expression (glossary), caseSensitive (property),
+regular expression (glossary), wildcard (glossary)
+
+Tags: text processing

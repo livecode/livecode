@@ -492,4 +492,13 @@ public:
     virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
 };
 
+class MCMatches : public MCBinaryOperator
+{
+public:
+    virtual Parse_stat parse(MCScriptPoint&, Boolean the);
+    virtual void eval_ctxt(MCExecContext &ctxt, MCExecValue &r_value);
+private:
+    Match_mode m_matchmode;
+};
+
 #endif

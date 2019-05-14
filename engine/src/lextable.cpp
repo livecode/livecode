@@ -1214,6 +1214,7 @@ const LT factor_table[] =
         {"maskdata", TT_PROPERTY, P_MASK_DATA},
         {"maskpixmapid", TT_PROPERTY, P_MASK_PIXMAP_ID},
         {"matchchunk", TT_FUNCTION, F_MATCH_CHUNK},
+        {"matches", TT_BINOP, O_MATCHES},
         {"matchtext", TT_FUNCTION, F_MATCH_TEXT},
         {"matrixmultiply", TT_FUNCTION, F_MATRIX_MULTIPLY},
         {"max", TT_FUNCTION, F_MAX},

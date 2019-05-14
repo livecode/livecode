@@ -2778,7 +2778,13 @@ enum Exec_errors
     EE_BAD_PERMISSION_NAME,
     
     // {EE-0910} Property: value is not a data
-    EE_PROPERTY_NOTADATA
+    EE_PROPERTY_NOTADATA,
+
+    // {EE-0911} matches: illegal type for right operand
+    EE_MATCHES_BADRIGHT,
+    
+    // {EE-0912} matches: illegal type for left operand
+    EE_MATCHES_BADLEFT,
     
 };
 
