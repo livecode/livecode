@@ -488,6 +488,8 @@ MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepReferencedErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepDataErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepPixelsErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepGetGeometryErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepGetMetadataErrorTypeInfo;
+MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepGetDensityErrorTypeInfo;
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasImageRepLockErrorTypeInfo;
 
 MC_DLLEXPORT_DEF MCTypeInfoRef kMCCanvasGradientInvalidRampErrorTypeInfo;
@@ -1970,6 +1972,20 @@ void MCCanvasImageGetHeight(MCCanvasImageRef p_image, uint32_t &r_height)
 }
 
 MC_DLLEXPORT_DEF
+void MCCanvasImageGetMetadata(MCCanvasImageRef p_image, MCArrayRef &r_metadata)
+{
+	if (!MCImageRepGetMetadata(MCCanvasImageGetImageRep(p_image), r_metadata))
+		MCCanvasThrowError(kMCCanvasImageRepGetMetadataErrorTypeInfo);
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasImageGetDensity(MCCanvasImageRef p_image, double &r_density)
+{
+	if (!MCImageRepGetDensity(MCCanvasImageGetImageRep(p_image), r_density))
+		MCCanvasThrowError(kMCCanvasImageRepGetDensityErrorTypeInfo);
+}
+
+MC_DLLEXPORT_DEF
 void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 {
 	MCImageRep *t_image_rep;
@@ -2013,11 +2029,6 @@ void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels)
 	/* UNCHECKED */ MCDataCreateWithBytesAndRelease(t_buffer, t_buffer_size, r_pixels);
 	
 	MCImageRepUnlockRaster(t_image_rep, 0, t_raster);
-}
-
-void MCCanvasImageGetMetadata(MCCanvasImageRef p_image, MCArrayRef &r_metadata)
-{
-	// TODO - implement image metadata
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6388,6 +6399,14 @@ bool MCCanvasErrorsInitialize()
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepGetGeometryError"), MCNAME("canvas"), MCSTR("Unable to get image geometry."), kMCCanvasImageRepGetGeometryErrorTypeInfo))
 		return false;
 	
+	kMCCanvasImageRepGetMetadataErrorTypeInfo = nil;
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepGetMetadataError"), MCNAME("canvas"), MCSTR("Unable to get image metadata."), kMCCanvasImageRepGetMetadataErrorTypeInfo))
+		return false;
+	
+	kMCCanvasImageRepGetDensityErrorTypeInfo = nil;
+	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepGetDensityError"), MCNAME("canvas"), MCSTR("Unable to get image density."), kMCCanvasImageRepGetDensityErrorTypeInfo))
+		return false;
+	
 	kMCCanvasImageRepLockErrorTypeInfo = nil;
 	if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.canvas.ImageRepLockError"), MCNAME("canvas"), MCSTR("Unable to lock image pixels."), kMCCanvasImageRepLockErrorTypeInfo))
 		return false;
@@ -6452,6 +6471,8 @@ void MCCanvasErrorsFinalize()
 	MCValueRelease(kMCCanvasImageRepDataErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageRepPixelsErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageRepGetGeometryErrorTypeInfo);
+	MCValueRelease(kMCCanvasImageRepGetMetadataErrorTypeInfo);
+	MCValueRelease(kMCCanvasImageRepGetDensityErrorTypeInfo);
 	MCValueRelease(kMCCanvasImageRepLockErrorTypeInfo);
 	
 	MCValueRelease(kMCCanvasGradientStopRangeErrorTypeInfo);

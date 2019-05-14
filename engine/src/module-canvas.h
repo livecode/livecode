@@ -56,7 +56,10 @@ bool MCImageRepCreateWithPath(MCStringRef p_path, MCImageRep *&r_image_rep);
 bool MCImageRepCreateWithData(MCDataRef p_data, MCImageRep *&r_image_rep);
 bool MCImageRepCreateWithPixels(MCDataRef p_pixels, uint32_t p_width, uint32_t p_height, MCGPixelFormat p_format, bool p_premultiplied, MCImageRep *&r_image_rep);
 bool MCImageRepGetGeometry(MCImageRep *p_image_rep, uint32_t &r_width, uint32_t &r_height);
+bool MCImageRepGetMetadata(MCImageRep *p_image_rep, MCArrayRef &r_metadata);
+bool MCImageRepGetDensity(MCImageRep *p_image_rep, double &r_density);
 bool MCImageRepGetFrameDuration(MCImageRep *p_image_rep, uint32_t p_frame, uint32_t &r_duration);
+bool MCImageRepGetMetadata(MCImageRep *p_image_rep, MCArrayRef &r_metadata);
 
 bool MCImageRepLock(MCImageRep *p_image_rep, uint32_t p_index, MCGFloat p_density, MCGImageFrame &r_frame);
 void MCImageRepUnlock(MCImageRep *p_image_rep, uint32_t p_index, MCGImageFrame &p_frame);
@@ -152,6 +155,8 @@ extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepReferencedErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepDataErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepPixelsErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepGetGeometryErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepGetMetadataErrorTypeInfo;
+extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepGetDensityErrorTypeInfo;
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasImageRepLockErrorTypeInfo;
 	
 extern MC_DLLEXPORT MCTypeInfoRef kMCCanvasGradientStopRangeErrorTypeInfo;
@@ -308,9 +313,9 @@ extern "C" MC_DLLEXPORT void MCCanvasImageMakeWithResourceFile(MCStringRef p_res
 // Properties
 extern "C" MC_DLLEXPORT void MCCanvasImageGetWidth(MCCanvasImageRef p_image, uint32_t &r_width);
 extern "C" MC_DLLEXPORT void MCCanvasImageGetHeight(MCCanvasImageRef p_image, uint32_t &r_height);
+extern "C" MC_DLLEXPORT void MCCanvasImageGetMetadata(MCCanvasImageRef p_image, MCArrayRef &r_metadata);
+extern "C" MC_DLLEXPORT void MCCanvasImageGetDensity(MCCanvasImageRef p_image, double &r_density);
 extern "C" MC_DLLEXPORT void MCCanvasImageGetPixels(MCCanvasImageRef p_image, MCDataRef &r_pixels);
-// TODO - Add support for image metadata
-//void MCCanvasImageGetMetadata(const MCCanvasImage &p_image, MCArrayRef &r_metadata);
 
 // TODO - Implement image operations
 //void MCCanvasImageTransform(MCCanvasImage &x_image, const MCCanvasTransform &p_transform);
