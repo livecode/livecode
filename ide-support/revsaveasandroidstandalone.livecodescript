@@ -1619,15 +1619,20 @@ function mapFilePath pPath
    
    local tPath
    local tBinariesFolder, tComponent, tSuffix
-   local tArch
+   local tArch, tFoundArch
    repeat for each item tItem in revSBPlatformArchitectures("Android")
       if pPath contains ("/" & __ArchABI(tItem) & "/") then
          put tItem into tArch
       end if
+
+      if tFoundArch is empty and \
+            there is a folder pathToRepoAndroidBinaries(tItem) then
+         put tItem into tFoundArch
+      end if
    end repeat
 
    if tArch is empty then
-      put "armv7" into tArch
+      put tFoundArch into tArch
    end if
 
    put pathToRepoAndroidBinaries(tArch) into tBinariesFolder

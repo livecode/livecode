@@ -58,7 +58,7 @@ command deployDo pTargetStack, pTargetDevice
       
       executeShellCommand pathToAdb(), "-s", word 2 to -1 of pTargetDevice, "shell", "getprop", "ro.product.cpu.abi"
       local tABI
-      put line 1 of the result into tABI
+      put word 1 of line 1 of the result into tABI
       if not (tABI is among the items of "armeabi-v7a,arm64-v8a,x86,x86_64") then
          put "Checking target device architecture failed:" && the result into tError
       end if
