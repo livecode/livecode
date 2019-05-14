@@ -5669,21 +5669,33 @@ static void MCPolarCoordsToCartesian(MCGFloat p_distance, MCGFloat p_angle, MCGF
 	r_y = p_distance * sin(p_angle);
 }
 
-void _MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas, bool p_isolated);
+void _MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRectangleRef p_shape, MCCanvasRef p_canvas, bool p_isolated);
 
 MC_DLLEXPORT_DEF
 void MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas)
 {
-	_MCCanvasBeginLayerWithEffect(p_effect, p_canvas, false);
+	_MCCanvasBeginLayerWithEffect(p_effect, nil, p_canvas, false);
+}
+
+MC_DLLEXPORT_DEF
+void MCCanvasBeginLayerWithEffectForRect(MCCanvasEffectRef p_effect, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
+{
+	_MCCanvasBeginLayerWithEffect(p_effect, p_rect, p_canvas, false);
 }
 
 MC_DLLEXPORT_DEF
 void MCCanvasBeginEffectOnlyLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas)
 {
-	_MCCanvasBeginLayerWithEffect(p_effect, p_canvas, true);
+	_MCCanvasBeginLayerWithEffect(p_effect, nil, p_canvas, true);
 }
 
-void _MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_canvas, bool p_isolated)
+MC_DLLEXPORT_DEF
+void MCCanvasBeginEffectOnlyLayerWithEffectForRect(MCCanvasEffectRef p_effect, MCCanvasRectangleRef p_rect, MCCanvasRef p_canvas)
+{
+	_MCCanvasBeginLayerWithEffect(p_effect, p_rect, p_canvas, true);
+}
+
+void _MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRectangleRef p_shape, MCCanvasRef p_canvas, bool p_isolated)
 {
 	__MCCanvasImpl *t_canvas;
 	t_canvas = MCCanvasGet(p_canvas);
@@ -5761,7 +5773,11 @@ void _MCCanvasBeginLayerWithEffect(MCCanvasEffectRef p_effect, MCCanvasRef p_can
 	}
 	
 	MCGRectangle t_rect;
-	t_rect = MCGContextGetClipBounds(t_canvas->context);
+	if (p_shape != nil)
+		MCCanvasRectangleGetMCGRectangle(p_shape, t_rect);
+	else
+		t_rect = MCGRectangleMake(-500000, -500000, 1000000, 1000000);
+	
 	MCGContextBeginWithEffects(t_canvas->context, t_rect, t_effects);
 }
 

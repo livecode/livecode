@@ -4389,7 +4389,9 @@ public foreign handler MCCanvasSaveState(in pCanvas as Canvas) returns nothing b
 public foreign handler MCCanvasRestoreState(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasBeginLayer(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasBeginLayerWithEffect(in pEffect as Effect, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasBeginLayerWithEffectForRect(in pEffect as Effect, in pRect as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasBeginEffectOnlyLayerWithEffect(in pEffect as Effect, in pCanvas as Canvas) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasBeginEffectOnlyLayerWithEffectForRect(in pEffect as Effect, in pRect as Rectangle, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 public foreign handler MCCanvasEndLayer(in pCanvas as Canvas) returns nothing binds to "<builtin>"
 
 public foreign handler MCCanvasFill(in pCanvas as Canvas) returns nothing binds to "<builtin>"
@@ -4565,9 +4567,14 @@ end syntax
 Summary:	Begin a new drawing layer on a canvas.
 
 mCanvas:		An expression which evaluates to a canvas.
+mBounds:		An expression which evaluates to a rectangle.
 mEffect:	An expression which evaluates to an effect.
 
-Description:	Begins a new layer on <mCanvas> to group drawing operations for which the opacity, blend mode, and optional effect are to be applied to as a whole rather than individually.
+Description:	Begins a new layer on <mCanvas> to group drawing operations for
+which the opacity, blend mode, and optional effect are to be applied to as a
+whole rather than individually. The optional drawing bounds can be used to
+restrict the area to which the effect is applied, allowing the canvas library to
+optimize memory allocation & drawing operations for the new layer.
 
 Example:
 	// Draw two overlapping rectangles grouped with half transparency
@@ -4595,10 +4602,16 @@ begin
 	MCCanvasBeginLayer(mCanvas)
 	MCCanvasBeginLayerWithEffect(mEffect, mCanvas)
 end syntax
+syntax CanvasOperationBeginLayerWithEffectForRect is statement
+	"begin" "layer" "with" <mEffect: Expression> "for" <mBounds: Expression> "on" <mCanvas: Expression>
+begin
+	MCCanvasBeginLayerWithEffectForRect(mEffect, mBounds, mCanvas)
+end syntax
 syntax CanvasOperationBeginEffectOnlyLayer is statement
-	"begin" "effect" "only" "layer" "with" <mEffect: Expression> "on" <mCanvas: Expression>
+	"begin" "effect" "only" "layer" "with" <mEffect: Expression> [ "for" <mBounds: Expression> ] "on" <mCanvas: Expression>
 begin
 	MCCanvasBeginEffectOnlyLayerWithEffect(mEffect, mCanvas)
+	MCCanvasBeginEffectOnlyLayerWithEffectForRect(mEffect, mBounds, mCanvas)
 end syntax
 
 //////////
