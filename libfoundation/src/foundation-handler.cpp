@@ -301,6 +301,40 @@ cleanup:
         MCValueRelease(t_value_args[i]);
 }
 
+#if defined(__ANDROID__)
+
+/* For some reason the current version / config of libffi on newer versions of
+ * android fails to generate closure trampolines in memory with the exec bit
+ * set. To work-around this we set the exec bit of the memory page containing
+ * the function ptr directly. */
+
+#include <sys/mman.h>
+
+static bool ensure_block_is_executable(void *p_block, size_t p_size)
+{
+    /* Round the start of the block pointer down to the nearest page. */
+    byte_t *t_start_page = (byte_t *)(((uintptr_t)p_block) & ~4095);
+    
+    /* Round the end of the block pointer up to the nearest page. */
+    byte_t *t_finish_page = (byte_t *)((((uintptr_t)p_block + p_size) + 4095) & ~4095);
+    
+    /* Change the protection flags of the page range to read/write/exec. */
+    return mprotect(t_start_page,
+                    t_finish_page - t_start_page,
+                    PROT_READ|PROT_EXEC|PROT_WRITE) == 0;
+}
+
+#else
+
+/* Other platforms do not need any explicit action as libffi works correctly. */
+
+static bool ensure_block_is_executable(void *p_block, size_t p_size)
+{
+    return true;
+}
+
+#endif
+
 MC_DLLEXPORT_DEF
 bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
 {
@@ -325,6 +359,13 @@ bool MCHandlerGetFunctionPtr(MCHandlerRef self, void*& r_function_ptr)
         ffi_closure_free(self -> closure);
         self -> closure = nil;
         return MCErrorThrowGeneric(MCSTR("unexpected libffi failure"));
+    }
+
+    /* Change the protection flags of the page range to read/write/exec. */
+    if (!ensure_block_is_executable(self->closure,
+                                    sizeof(ffi_closure)))
+    {
+        return MCErrorThrowGeneric(MCSTR("unable to generate executable closure trampoline"));
     }
     
     r_function_ptr = self -> function_ptr;
