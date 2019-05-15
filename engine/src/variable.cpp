@@ -1104,7 +1104,8 @@ bool MCContainer::remove(MCExecContext& ctxt)
 
 bool MCContainer::set_valueref(MCValueRef p_value)
 {
-	return m_variable -> setvalueref(getpath(), false, p_value);
+    m_variable -> clearuql();
+    return m_variable -> setvalueref(getpath(), false, p_value);
 }
 
 MCValueRef MCContainer::get_valueref()

@@ -1224,7 +1224,8 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
         }
 	}
 	else if (MCTypeInfoIsHandler(p_slot_type.type) &&
-			 MCHandlerTypeInfoIsForeign(p_slot_type.type))
+			 MCHandlerTypeInfoIsForeign(p_slot_type.type) &&
+             p_value != kMCNull)
 	{
 		// If the slot type is a foreign handler, then we fetch a closure
 		// from the handler value.
