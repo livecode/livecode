@@ -1,0 +1,884 @@
+/*
+Copyright (C) 2018 LiveCode Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+/**
+Manage mac status menus
+
+Description:
+This library allows the creation and management of mac status menus
+
+
+Name: macStatusMenuPick
+
+Type: message
+
+Syntax: macStatusMenuPick <pName>, <pChosenItem>
+
+OS: mac
+
+Platforms: desktop
+
+Summary: Sent when an item is picked from the menu
+
+Parameters: 
+
+pName: The name of the status menu that the item was picked from
+
+pChosenItem: The label of the menu item the user chose. If the menu item chosen
+is part of a submenu, the menu item label is followed by a vertical bar (|) and
+the submenu's label.
+
+Description:
+The <macStatusMenuPick> message is sent to the object that created the status
+menu using the <macStatusMenuCreate> handler.
+
+References: macStatusMenuCreate (handler)
+
+*/
+
+library com.livecode.library.native.mac.statusmenu
+
+use com.livecode.foreign
+use com.livecode.objc
+use com.livecode.engine
+
+metadata version is "1.0.0"
+metadata author is "LiveCode"
+metadata title is "Mac Status Menu"
+
+private constant kNSVariableStatusItemLength is -1.0
+private constant kNSSquareStatusItemLength is -2.0
+private constant kNSControlStateValueMixed is -1
+private constant kNSControlStateValueOff is 0
+private constant kNSControlStateValueOn is 1
+
+// NSEventModifierFlagShift = 1 << 17
+private constant kNSEventModifierFlagShift is 131072
+// NSEventModifierFlagControl = 1 << 18
+private constant kNSEventModifierFlagControl is 262144
+// NSEventModifierFlagOption = 1 << 19
+private constant kNSEventModifierFlagOption is 524288
+// NSEventModifierFlagCommand = 1 << 20
+private constant kNSEventModifierFlagCommand is 1048576
+
+private constant kNSImageLeft is 2
+private constant kNSImageRight is 3
+private constant kNSImageOverlaps is 6
+
+private type CGFloat is NaturalFloat
+private type NSUInteger is CULong
+private type NSInteger is CSLong
+
+-- NSMenu
+private foreign handler ObjC_NSMenuAlloc() \
+	returns ObjcRetainedId binds to "objc:NSMenu.+alloc"
+private foreign handler Objc_NSMenuInitWithTitle(in pObj as ObjcRetainedId, in pTitle as ObjcId) \
+	returns optional ObjcRetainedId binds to "objc:NSMenu.-initWithTitle:"
+private foreign handler ObjC_NSMenuAddItem(in pObj as ObjcId, in pMenuItem as ObjcId) \
+	returns nothing binds to "objc:NSMenu.-addItem:"
+private foreign handler ObjC_NSMenuSetTitle(in pObj as ObjcId, in pTitle as ObjcId) \
+	returns nothing binds to "objc:NSMenu.-setTitle:"
+private foreign handler ObjC_NSMenuRemoveAllItems(in pObj as ObjcId) \
+	returns nothing binds to "objc:NSMenu.-removeAllItems"
+private foreign handler ObjC_NSMenuSetAutoenablesItems(in pObj as ObjcId, in pAutoEnables as CBool) \
+	returns nothing binds to "objc:NSMenu.-setAutoenablesItems:"
+
+-- NSMenuItem
+private foreign handler ObjC_NSMenuItemAlloc() \
+	returns ObjcRetainedId binds to "objc:NSMenuItem.+alloc"
+private foreign handler ObjC_NSMenuItemInitWithTitleActionKeyEquivalent(in pObj as ObjcRetainedId, in pTitle as ObjcId, in pAction as optional UIntPtr, in pKeyEquivalent as ObjcId) \
+	returns optional ObjcRetainedId binds to "objc:NSMenuItem.-initWithTitle:action:keyEquivalent:"
+private foreign handler ObjC_NSMenuItemSetSubmenu(in pObj as ObjcId, in pSubMenu as ObjcId) \
+	returns nothing binds to "objc:NSMenuItem.-setSubmenu:"
+private foreign handler ObjC_NSMenuItemSetKeyEquivalentModifierMask(in pObj as ObjcId, in pModifierMask as CSInt) \
+	returns nothing binds to "objc:NSMenuItem.-setKeyEquivalentModifierMask:"
+private foreign handler ObjC_NSMenuItemSetAction(in pObj as ObjcId, in pAction as UIntPtr) \
+	returns nothing binds to "objc:NSMenuItem.-setAction:"
+private foreign handler ObjC_NSMenuItemSetTarget(in pObj as ObjcId, in pTarget as ObjcId) \
+	returns nothing binds to "objc:NSMenuItem.-setTarget:"
+private foreign handler ObjC_NSMenuItemSeparatorItem() \
+	returns ObjcId binds to "objc:NSMenuItem.+separatorItem"
+private foreign handler ObjC_NSMenuItemSetEnabled(in pObj as ObjcId, in pEnabled as CBool) \
+	returns nothing binds to "objc:NSMenuItem.-setEnabled:"
+private foreign handler ObjC_NSMenuItemSetState(in pObj as ObjcId, in pState as NSInteger) \
+	returns nothing binds to "objc:NSMenuItem.-setState:"
+private foreign handler ObjC_NSMenuItemSetOnStateImage(in pObj as ObjcId, in pImage as ObjcId) \
+	returns nothing binds to "objc:NSMenuItem.-setOnStateImage:"
+
+-- NSStatusBar
+private foreign handler ObjC_NSStatusBarSystemStatusBar() \
+	returns ObjcId binds to "objc:NSStatusBar.+systemStatusBar"
+private foreign handler ObjC_NSStatusBarStatusItemWithLength(in pObj as ObjcId, in pLength as CGFloat) \
+	returns optional ObjcId binds to "objc:NSStatusBar.-statusItemWithLength:"
+private foreign handler ObjC_NSStatusBarGetThickness(in pObj as ObjcId) \
+	returns CGFloat binds to "objc:NSStatusBar.-getThickness"
+private foreign handler ObjC_NSStatusBarRemoveStatusItem(in pObj as ObjcId, in pStatusItem as ObjcId) \
+	returns nothing binds to "objc:NSStatusBar.-removeStatusItem:"
+
+-- NSStatusItem
+private foreign handler ObjC_NSStatusItemMenu(in pObj as ObjcId) \
+	returns ObjcId binds to "objc:NSStatusItem.-menu"
+private foreign handler ObjC_NSStatusItemSetMenu(in pObj as ObjcId, in pMenu as ObjcId) \
+	returns nothing binds to "objc:NSStatusItem.-setMenu:"
+private foreign handler ObjC_NSStatusItemButton(in pObj as ObjcId) \
+	returns ObjcId binds to "objc:NSStatusItem.-button"
+private foreign handler ObjC_NSStatusItemSetButton(in pObj as ObjcId, in pButton as ObjcId) \
+	returns nothing binds to "objc:NSStatusItem.-setButton:"
+private foreign handler ObjC_NSStatusItemSetVisible(in pObj as ObjcId, in pVisible as CBool) \
+	returns nothing binds to "objc:NSStatusItem.-setVisible:"
+private foreign handler ObjC_NSStatusItemSetHighlightMode(in pObj as ObjcId, in pHighlightMode as CBool) \
+	returns nothing binds to "objc:NSStatusItem.-setHighlightMode:"
+private foreign handler ObjC_NSStatusItemSetLength(in pObj as ObjcId, in pLength as CGFloat) \
+	returns nothing binds to "objc:NSStatusItem.-setLength:"
+
+-- NSButton
+private foreign handler ObjC_NSButtonSetImage(in pObj as ObjcId, in pImage as ObjcId) \
+	returns nothing binds to "objc:NSButton.-setImage:"
+private foreign handler ObjC_NSButtonSetAlternateImage(in pObj as ObjcId, in pImage as ObjcId) \
+	returns nothing binds to "objc:NSButton.-setAlternateImage:"
+private foreign handler ObjC_NSButtonSetToolTip(in pObj as ObjcId, in pTooltip as ObjcId) \
+	returns nothing binds to "objc:NSButton.-setToolTip:"
+private foreign handler ObjC_NSButtonSetTitle(in pObj as ObjcId, in pTitle as ObjcId) \
+	returns nothing binds to "objc:NSButton.-setTitle:"
+private foreign handler ObjC_NSButtonSetImagePosition(in pObj as ObjcId, in pPosition as NSInteger) \
+	returns nothing binds to "objc:NSButton.-setImagePosition:"
+
+-- NSStatusBarButton
+private foreign handler ObjC_NSStatusBarButtonSetAppearsDisabled(in pObj as ObjcId, in pDisabled as CBool) \
+	returns nothing binds to "objc:NSStatusBarButton.-setAppearsDisabled:"
+
+-- NSImage
+private foreign handler ObjC_NSImageAlloc() \
+	returns ObjcRetainedId binds to "objc:NSImage.+alloc"
+private foreign handler ObjC_NSImageInitWithData(in pObj as ObjcRetainedId, in pData as ObjcId) \
+	returns optional ObjcRetainedId binds to "objc:NSImage.-initWithData:"
+private foreign handler ObjC_NSImageInitWithContentsOfFile(in pObj as ObjcRetainedId, in pFilename as ObjcId) \
+	returns optional ObjcRetainedId binds to "objc:NSImage.-initWithContentsOfFile:"
+private foreign handler ObjC_NSImageSetTemplate(in pObj as ObjcId, in pTemplate as CBool) \
+	returns nothing binds to "objc:NSImage.-setTemplate:"
+
+private variable mStatusMenus as Array
+private variable mCustomIcons as Array
+
+/**
+
+Create a status menu
+
+OS: mac
+
+Platforms: desktop
+
+Example:
+macStatusMenuCreate "mymenu"
+
+Parameters:
+pName: The name of the status menu to create
+
+Description:
+Use <pName> to refer to the status menu when setting properties and deleting
+the status menu.
+
+*/
+public handler macStatusMenuCreate(in pName as String) returns nothing
+	if not IsMac() then
+		return
+	end if
+
+	if pName is empty then
+		throw "status menu name must not be empty"
+	end if
+
+	if pName is among the keys of mStatusMenus then
+		throw "a status menu named " & pName & " has already been created"
+	end if
+
+	variable tMenu as Array
+	put the caller into tMenu["target"]
+
+	unsafe
+		variable tStatusBar as ObjcObject
+		put ObjC_NSStatusBarSystemStatusBar() into tStatusBar
+
+		variable tStatusItem as ObjcObject
+		put ObjC_NSStatusBarStatusItemWithLength(tStatusBar, kNSSquareStatusItemLength) into tStatusItem
+
+		variable tStatusMenu as optional ObjcObject
+		put ObjC_NSMenuAlloc() into tStatusMenu
+		put ObjC_NSMenuInitWithTitle(tStatusMenu, StringToNSString("")) into tStatusMenu
+		if tStatusMenu is nothing then
+			throw "could not create menu"
+		end if
+		
+		ObjC_NSMenuSetAutoenablesItems(tStatusMenu, false)
+		ObjC_NSStatusItemSetMenu(tStatusItem, tStatusMenu)
+
+		put tStatusItem into tMenu["item"]
+	end unsafe
+
+	put [] into tMenu["proxies"]
+
+	put tMenu into mStatusMenus[pName]
+end handler
+
+/**
+
+Delete a status menu
+
+OS: mac
+
+Platforms: desktop
+
+Example:
+macStatusMenuDelete "mymenu"
+
+Parameters:
+pName: The name of a previously created status menu
+
+Description:
+Deleting the status menu removes it from the staus menubar
+
+*/
+public handler macStatusMenuDelete(in pName as String) returns nothing
+	if not IsMac() then
+		return
+	end if
+
+	if pName is not among the keys of mStatusMenus then
+		throw "a status menu named " & pName & " has not been created"
+	end if
+
+	delete mStatusMenus[pName]
+end handler
+
+/**
+
+Get the names of any menus that have been created
+
+OS: mac
+
+Platforms: desktop
+
+Example:
+if "mymenu" is among the lines of macStatusMenuNames() then
+	macStatusMenuDelete "mymenu"
+end if
+
+Returns:
+A return delimited list of menu names.
+
+Description:
+Use macStatusMenuNames to ensure that a menu has been created before calling a
+handler that may throw an error if called with a menu that does not exist.
+
+*/
+public handler macStatusMenuNames() returns String
+	variable tKeys as List
+	put the keys of mStatusMenus into tKeys
+
+	variable tNames as String
+	combine tKeys with "\n" into tNames
+
+	return tNames
+end handler
+
+/**
+
+Set a property on a status menu
+
+OS: mac
+
+Platforms: desktop
+
+Example:
+on EnableStatusMenu pEnabled
+   macStatusMenuSet "mymenu", "enabled", pEnabled
+   if pEnabled then
+      macStatusMenuSet "mymenu", "icon", the long id of image "enabled"
+      macStatusMenuSet "mymenu", "items", "Open" & return & "-" & return & "Settings" 
+   else
+      macStatusMenuSet "mymenu", "icon", the long id of image "disabled"
+      macStatusMenuSet "mymenu", "items", empty
+   end if
+end EnableStatusMenu
+
+Parameters:
+pName: The name of a previously created status menu
+
+pProperty (enum):
+ - "visible" - (boolean) set to false to hide the menu. Defaults to true.
+ - "enabled" - (boolean) set to false to make the menu appear disabled. Use in
+ comination with setting the items to empty so that the menu does not show when
+ the user clicks on it. Defaults to true.
+ - "tooltip" - (string) the tooltip to show over the status menu
+ - "icongravity" - (enum) one of "left", "right" or "center". Used when displaying
+ both a menu title and icon
+ - "length" - one of "square", "variable" or a number. Note "variable" mode does
+ not appear to dynamically update the width as stated in Apple documentation.
+ - "icon" - (string) the full path to an image file or a reference to an image object. If
+ the image object has its filename set it must be a full path. If it is an imported
+ image then it must be in a format supported by NSImage -initWithContentsOfFile.
+ Setting the icon to empty to clear it.
+ - "title" - (string) the title of the menu. Set to empty (the default) to only use an icon.
+ - "items" - (string) the items of is a similar format used by LiveCode menus
+
+pValue: The value as described for each property
+
+Description:
+Specify the menu items in the following form:
+
+    [<flags>] <label> ['/' <accelerator> ['|' <tag>]]
+
+Where <flags> may include:
+
+!c, !n, !m: the menu item has respectively, a check, no check, or a mixed state icon
+
+>**Note:** A difference between standard LiveCode menus and the macStatusMenu
+> library is that the radio button (!r) used in LiveCode menus is not supported,
+> however, the mixed state (!m) is. Additionally you can use the <macStatusMenuSetCustomIcon>
+> command to specify a custom icon.
+
+(: the menu item is disabled
+
+-: the menu item is replaced with a menu separator
+
+multiple tab characters: the number of tabs specifes the depth of the menu item;
+use this to create submenus 
+
+The <accelerator> can be specified as one of:
+
+char: Command key + specified char
+keyname: Named key without modifiers
+modifiers char: Specified modifiers + character
+modifiers keyname: Specified modifiers + named key
+In the accelerator, modifiers is either a space separated list of: 
+
+- 'command' or 'cmd'
+- 'control' or 'ctrl'
+- 'option' or 'opt', 'alt', 'shift'
+
+In this case the keyname/char should be separated from the list by a space
+
+Or modifiers may be a sequence of characters, including:
+
+^: Command
+@: Shift
+#: Option
+%: Control
+
+In this case no space between the sequence and keyname/char is required
+
+The following named keys are supported:
+
+F1, F2, F3, F4, ... F15,
+Left, Up, Right, Down,
+Backspace, Delete,
+Tab, Space,
+Return, Enter,
+Home, End, Escape,
+PgUp, PgDown
+
+A tag can be specified as a | character followed by a string of ASCII characters. 
+If such a tag is present then that tag will take the place of the menu label as 
+the parameter to the menuPick.
+
+A tag will only be recognised following the <accelerator>. To specify a menu tag 
+without an accelerator shortcut, an empty <accelerator> can be specified using /| 
+followed by the tag text.
+
+References: macStatusMenuSetCustomIcon (handler)
+
+*/
+public handler macStatusMenuSet(in pName as String, in pProperty as String, in pValue as String) returns nothing
+	if not IsMac() then
+		return
+	end if
+
+	if pName is not among the keys of mStatusMenus then
+		throw "a status menu named " & pName & " has not been created"
+	end if
+
+	put the lower of pProperty into pProperty
+
+	unsafe
+		if pProperty is "visible" then
+			ObjC_NSStatusItemSetVisible(mStatusMenus[pName]["item"], pValue parsed as boolean)
+		else if pProperty is "tooltip" then
+			variable tButton as ObjcObject
+			put ObjC_NSStatusItemButton(mStatusMenus[pName]["item"]) into tButton
+			ObjC_NSButtonSetToolTip(tButton, StringToNSString(pValue))
+		else if pProperty is "enabled" then
+			variable tButton as ObjcObject
+			put ObjC_NSStatusItemButton(mStatusMenus[pName]["item"]) into tButton
+			ObjC_NSStatusBarButtonSetAppearsDisabled(tButton, not (pValue parsed as boolean))
+		else if pProperty is "icongravity" then
+			put the lower of pValue into pValue
+			variable tGravity as Number
+			if pValue is "left" then
+				put kNSImageLeft into tGravity
+			else if pValue is "right" then
+				put kNSImageRight into tGravity
+			else if pValue is "center" then
+				put kNSImageOverlaps into tGravity
+			else
+				throw "unknown icon gravity " & pValue 
+			end if
+			variable tButton as ObjcObject
+			put ObjC_NSStatusItemButton(mStatusMenus[pName]["item"]) into tButton
+			ObjC_NSButtonSetImagePosition(tButton, tGravity)
+		else if pProperty is "length" then
+			put the lower of pValue into pValue
+			variable tLength as Number
+			if pValue is "square" then
+				put kNSSquareStatusItemLength into tLength
+			else if pValue is "variable" then
+				put kNSVariableStatusItemLength into tLength
+			else
+				parse pValue as number into tLength
+			end if
+			ObjC_NSStatusItemSetLength(mStatusMenus[pName]["item"], tLength)
+		else if pProperty is "icon" then
+			variable tImage as optional ObjcObject
+			put __StringToNSImage(pValue) into tImage
+
+			if tImage is nothing then
+				throw "could not create image"
+			end if
+
+			ObjC_NSImageSetTemplate(tImage, true)
+
+			variable tButton as ObjcObject
+			put ObjC_NSStatusItemButton(mStatusMenus[pName]["item"]) into tButton
+			ObjC_NSButtonSetImage(tButton, tImage)
+		else if pProperty is "title" then
+			variable tButton as ObjcObject
+			put ObjC_NSStatusItemButton(mStatusMenus[pName]["item"]) into tButton
+			ObjC_NSButtonSetTitle(tButton, StringToNSString(pValue))
+		else if pProperty is "items" then
+			variable tItems as List
+			put __ParseItems(pValue) into tItems
+
+			__AddItemsToMenu(pName, tItems)
+		end if
+	end unsafe
+end handler
+
+/**
+
+Create a custom icon for use when setting menu items
+
+OS: mac
+
+Platforms: desktop
+
+Example:
+macStatusMenuCreate "r", the long id of image "dot"
+
+Parameters:
+pCharacter (string): a single character to associate with the icon. May not be
+c, n or m as those characters are reserved
+
+pImage (string): the path to an image file or a reference to an image object. If
+it is an imported image then it must be in a format supported by
+`NSImage -initWithContentsOfFile`.
+
+Description:
+When creating the menu items the icon to use for the item is identified by `!`
+followed by a character. The builtin icons are `c` (checkmark), `n` (no checkmark)
+and `m` (mixed state). Use <macStatusMenuSetCustomIcon> to add another custom icon
+to use.
+
+*/
+public handler macStatusMenuSetCustomIcon(in pCharacter as String, in pImage as String)
+	if pCharacter is "c" or pCharacter is "n" or pCharacter is "m" then
+		throw "can not set custom icons for c,n or m"
+	end if
+
+	if the number of chars in pCharacter is not 1 then
+		throw "custom icons must be associated with a single character"
+	end if
+
+	unsafe
+		variable tImage as optional ObjcObject
+		put __StringToNSImage(pImage) into tImage
+
+		if tImage is nothing then
+			throw "could not create image"
+		end if
+
+		ObjC_NSImageSetTemplate(tImage, true)
+		put tImage into mCustomIcons[pCharacter]
+	end unsafe
+end handler
+
+private unsafe handler __StringToNSImage(in pImage as String) returns optional ObjcObject
+	variable tObject as optional ScriptObject
+	resolve script object pImage
+	put the result into tObject
+	
+	variable tImage as optional ObjcObject
+	variable tFile as String
+	if tObject exists then
+		put property "filename" of tObject into tFile
+		if tFile is empty then
+			variable tData as Data
+			put property "text" of tObject into tData
+			put ObjC_NSImageAlloc() into tImage
+			put ObjC_NSImageInitWithData(tImage, DataToNSData(tData)) into tImage
+		else
+			resolve file tFile relative to tObject
+			if the result is not nothing then
+				put the result into tFile
+			end if
+		end if
+	else
+		resolve file pImage
+		if the result is not nothing then
+			put the result into tFile
+		end if
+	end if
+
+	if tFile is not empty then
+		put ObjC_NSImageAlloc() into tImage
+		put ObjC_NSImageInitWithContentsOfFile(tImage, StringToNSString(tFile)) into tImage
+	end if
+
+	return tImage
+end handler
+
+private handler __ParseItems(in pItems as String) returns List
+	variable tRawList as List
+	split pItems by "\n" into tRawList
+
+	variable tList as List
+	variable tElement as String
+	variable tPreviousItem as optional Array
+	repeat for each element tElement in tRawList
+		variable tItem as Array
+
+		variable tDepth as Number
+		repeat while tElement begins with "\t"
+			add 1 to tDepth
+			delete the first codeunit of tElement
+		end repeat
+		put tDepth + 1 into tItem["depth"]
+
+		if tPreviousItem is not nothing then
+			put tItem["depth"] into tPreviousItem["nextdepth"]
+			push tPreviousItem onto back of tList
+		end if
+
+		if tElement begins with "(" then
+			put false into tItem["enabled"]
+			delete the first codeunit of tElement
+		else
+			put true into tItem["enabled"]
+		end if
+
+		put false into tItem["separator"]
+		put nothing into tItem["state"]
+		put nothing into tItem["icon"]
+
+		if tElement begins with "!" then
+			delete the first codeunit of tElement
+			if tElement begins with "c" then
+				put kNSControlStateValueOn into tItem["state"]
+			else if tElement begins with "n" then
+				put kNSControlStateValueOff into tItem["state"]
+			else if tElement begins with "m" then
+				-- slight variation to LC menus allowing mixed mode but not radio
+				put kNSControlStateValueMixed into tItem["state"]
+			else if the first char of tElement is among the keys of mCustomIcons then
+				put kNSControlStateValueOn into tItem["state"]
+				put the first char of tElement into tItem["icon"]
+			else
+				throw "unknown icon type !" & the first char of tElement
+			end if
+
+			delete the first codeunit of tElement
+
+		else if tElement begins with "-" then
+			put true into tItem["separator"]
+		end if
+
+		variable tTitleSplit as List
+		split tElement by "/" into tTitleSplit
+		put tTitleSplit[1] into tItem["title"]
+
+		put { "command" : false, \
+				"control" : false, \
+				"shift" : false, \
+				"option" : false, \
+				"key" : "" } into tItem["accelerator"]
+
+		put nothing into tItem["tag"]
+
+		if the number of elements in tTitleSplit > 1 then
+			-- parse tag
+			variable tAcceleratorSplit as List
+			split tTitleSplit[2] by "|" into tAcceleratorSplit
+			if the number of elements in tAcceleratorSplit > 1 then
+				put tAcceleratorSplit[2] into tItem["tag"]
+			end if
+
+			variable tNamedAccelerators as List
+			split tAcceleratorSplit[1] by " " into tNamedAccelerators
+			if the number of elements in tNamedAccelerators > 1 then
+				variable tElement as String
+				repeat for each element tElement in tNamedAccelerators
+					if tElement is "command" \
+							or tElement is "cmd" then
+						put true into tItem["accelerator"]["command"]
+					else if tElement is "shift" then
+						put true into tItem["accelerator"]["shift"]
+					else if tElement is "option" \
+							or tElement is "opt" \
+							or tElement is "alt" then
+						put true into tItem["accelerator"]["option"]
+					else if tElement is "control" \
+							or tElement is "ctrl" then
+						put true into tItem["accelerator"]["control"]
+					else
+						put tElement after tItem["accelerator"]["key"]
+						exit repeat
+					end if
+				end repeat
+			else
+				-- parse accelerator
+				variable tCodeunit as String
+				repeat for each codeunit tCodeunit in tAcceleratorSplit[1]
+					if tCodeunit is "^" then
+						put true into tItem["accelerator"]["command"]
+					else if tCodeunit is "@" then
+						put true into tItem["accelerator"]["shift"]
+					else if tCodeunit is "#" then
+						put true into tItem["accelerator"]["option"]
+					else if tCodeunit is "%" then
+						put true into tItem["accelerator"]["control"]
+					else
+						put tCodeunit after tItem["accelerator"]["key"]
+					end if
+				end repeat
+			end if
+		end if
+
+		put tItem into tPreviousItem
+	end repeat
+
+	if tPreviousItem is not nothing then
+		put tPreviousItem["depth"] into tPreviousItem["nextdepth"]
+		push tPreviousItem onto back of tList
+	end if
+
+	return tList
+end handler
+
+private unsafe handler __AddItemsToMenu(in pName as String, in pMenuItems as List)
+	put [] into mStatusMenus[pName]["proxies"]
+	
+	variable tParentMenu as ObjcObject
+	put ObjC_NSStatusItemMenu(mStatusMenus[pName]["item"]) into tParentMenu
+	ObjC_NSMenuRemoveAllItems(tParentMenu)
+
+	variable tTags as List
+	variable tParents as List
+	
+	variable tItem as Array
+	repeat for each element tItem in pMenuItems
+		unsafe
+			variable tMenuItem as optional ObjcObject
+			put __CreateMenuItem(pName, tTags, tItem) into tMenuItem
+
+			ObjC_NSMenuAddItem(tParentMenu, tMenuItem)
+			
+			if tItem["depth"] is tItem["nextdepth"] - 1 then
+				variable tMenu as optional ObjcObject
+				put ObjC_NSMenuAlloc() into tMenu
+				put ObjC_NSMenuInitWithTitle(tMenu, StringToNSString(tItem["title"])) into tMenu
+				if tMenu is nothing then
+					throw "could not create menu"
+				end if
+
+				ObjC_NSMenuSetAutoenablesItems(tMenu, false)
+				
+				ObjC_NSMenuItemSetSubmenu(tMenuItem, tMenu)
+				
+				push tItem["title"] onto back of tTags
+				push tParentMenu onto back of tParents
+				put tMenu into tParentMenu
+			else if tItem["depth"] < tItem["nextdepth"] - 1 then
+				throw "invalid menu item heirarchy"
+			else if tItem["depth"] > tItem["nextdepth"] then
+				repeat tItem["depth"] - tItem["nextdepth"] times
+					pop back of tParents into tParentMenu
+					pop back of tTags
+				end repeat
+			end if
+		end unsafe
+	end repeat
+end handler
+
+private unsafe handler __CreateMenuItem(in pName as String, inout xTags as List, in pItem as Array) returns ObjcObject
+	variable tMenuItem as optional ObjcObject
+	if pItem["separator"] then
+		put ObjC_NSMenuItemSeparatorItem() into tMenuItem
+	else
+		variable tTitle as ObjcObject
+		put StringToNSString(pItem["title"]) into tTitle
+
+		if pItem["tag"] is not nothing then
+			push pItem["tag"] onto back of xTags
+		else
+			push pItem["title"] onto back of xTags
+		end if
+
+		variable tContext as Array
+		put pName into tContext["name"]
+		combine xTags with "|" into tContext["which"]
+
+		put ObjC_NSMenuItemAlloc() into tMenuItem
+		
+		variable tProxy as ObjcObject
+		put ObjcProxyGetTarget(MenuActionCallback, tContext) into tProxy
+		ObjC_NSMenuItemSetTarget(tMenuItem, tProxy)
+
+		variable tKeyCode as ObjcObject
+		put StringToNSString(__KeyCode(pItem["accelerator"]["key"])) into tKeyCode
+
+		push tProxy onto mStatusMenus[pName]["proxies"]
+
+		put ObjC_NSMenuItemInitWithTitleActionKeyEquivalent(tMenuItem, tTitle, ObjcProxyGetAction(), tKeyCode) into tMenuItem
+		if tMenuItem is nothing then
+			throw "could not create menu item"
+		end if
+		
+		variable tModifierMask as Number
+		if pItem["accelerator"]["shift"] then
+			put tModifierMask bitwise or kNSEventModifierFlagShift into tModifierMask
+		end if
+		if pItem["accelerator"]["control"] then
+			put tModifierMask bitwise or kNSEventModifierFlagControl into tModifierMask
+		end if
+		if pItem["accelerator"]["option"] then
+			put tModifierMask bitwise or kNSEventModifierFlagOption into tModifierMask
+		end if
+		if pItem["accelerator"]["command"] then
+			put tModifierMask bitwise or kNSEventModifierFlagCommand into tModifierMask
+		end if
+		ObjC_NSMenuItemSetKeyEquivalentModifierMask(tMenuItem, tModifierMask)
+
+		if pItem["state"] is not nothing then
+			ObjC_NSMenuItemSetState(tMenuItem, pItem["state"])
+		end if
+
+		if pItem["icon"] is not nothing \
+				and pItem["icon"] is among the keys of mCustomIcons then
+			ObjC_NSMenuItemSetOnStateImage(tMenuItem, mCustomIcons[pItem["icon"]])
+		end if
+
+		ObjC_NSMenuItemSetEnabled(tMenuItem, pItem["enabled"])
+		
+		pop back of xTags
+	end if
+
+	return tMenuItem
+end handler
+
+private constant kKeyCodes is { \
+		"f22" : 0xF719, \
+		"f6" : 0xF709, \
+		"f23" : 0xF71A, \
+		"f7" : 0xF70A, \
+		"f20" : 0xF717, \
+		"f21" : 0xF718, \
+		"enter" : 0x0003, \
+		"f26" : 0xF71D, \
+		"home" : 0xF729, \
+		"end" : 0xF72B, \
+		"f27" : 0xF71E, \
+		"up" : 0xF700, \
+		"f31" : 0xF722, \
+		"return" : 0x000d, \
+		"begin" : 0xF72A, \
+		"pause" : 0xF730, \
+		"f30" : 0xF721, \
+		"down" : 0xF701, \
+		"pgup" : 0xF72C, \
+		"f11" : 0xF70E, \
+		"break" : 0xF732, \
+		"f10" : 0xF70D, \
+		"f35" : 0xF726, \
+		"f13" : 0xF710, \
+		"f34" : 0xF725, \
+		"f12" : 0xF70F, \
+		"f15" : 0xF712, \
+		"left" : 0xF702, \
+		"f14" : 0xF711, \
+		"insert" : 0xF727, \
+		"f1" : 0xF704, \
+		"f2" : 0xF705, \
+		"sys_req" : 0xF731, \
+		"f3" : 0xF706, \
+		"f4" : 0xF707, \
+		"f5" : 0xF708, \
+		"f19" : 0xF716, \
+		"f18" : 0xF715, \
+		"f33" : 0xF724, \
+		"f32" : 0xF723, \
+		"right" : 0xF703, \
+		"f8" : 0xF70B, \
+		"f24" : 0xF71B, \
+		"f25" : 0xF71C, \
+		"f9" : 0xF70C, \
+		"backspace" : 0x0008, \
+		"tab" : 0x0009, \
+		"f28" : 0xF71F, \
+		"f29" : 0xF720, \
+		"scroll_lock" : 0xF72F, \
+		"f17" : 0xF714, \
+		"f16" : 0xF713, \
+		"pgdown" : 0xF72D \
+	}
+
+private handler __KeyCode(in pKey as String) returns String
+	if pKey is empty then
+		return ""
+	end if
+
+	if pKey is among the keys of kKeyCodes then
+		return the char with code kKeyCodes[pKey]
+	end if
+
+	return the lower of the first codeunit of pKey
+end handler
+
+private handler MenuActionCallback(in pSender as ObjcObject, in pContext as optional any) returns nothing
+	if pContext["name"] is not among the keys of mStatusMenus then
+		return
+	end if
+
+	if mStatusMenus[pContext["name"]]["target"] exists then
+		post "macStatusMenuPick" \
+			to mStatusMenus[pContext["name"]]["target"] \
+			with [pContext["name"], pContext["which"]]
+	end if
+end handler
+
+private handler IsMac() returns Boolean
+	return the operating system is "mac"
+end handler
+
+end library
