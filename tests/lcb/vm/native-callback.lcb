@@ -58,6 +58,23 @@ public handler TestNativeCallback()
 	test "use function pointer" when sTotal is (1 + 2 + 3 + 4 + 5 + 6)
 end handler
 
+--------- NULLPTR FUNCTION PTRS
+
+foreign handler type DummyHandlerType() returns nothing
+
+/* To test whether nothing can be passed as an optional handler type value we
+ * need any function which takes a pointer, but will ignore it. */
+foreign handler MCDataCreateWithBytes(in pPointer as optional DummyHandlerType, in pLength as LCUIndex, out rData as Data) returns CBool binds to "<builtin>"
+
+public handler TestNullptrNativeCallback()
+	variable tDummyHandler as optional DummyHandlerType
+	variable tDummyData as optional Data
+	unsafe
+		MCDataCreateWithBytes(tDummyHandler, 0, tDummyData)
+	end unsafe
+	test "use nothing as optional function pointer" when tDummyData is not nothing
+end handler
+
 --------- FOREIGN HANDLER FUNCTION PTRS
 
 -- This test checks that it is possible to pass foreign handlers around as
