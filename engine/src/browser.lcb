@@ -112,9 +112,9 @@ public foreign handler type MCBrowserRequestCallback(in pContext as optional Poi
 public foreign handler type MCBrowserJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as ZStringUTF8, in pParams as MCBrowserListRef) returns nothing
 public foreign handler type MCBrowserProgressCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pProgress as UInt32) returns nothing
 
-public foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as MCBrowserRequestCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as MCBrowserJavaScriptCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserSetProgressHandler(in pBrowser as MCBrowserRef, in pCallback as MCBrowserProgressCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserRequestCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserJavaScriptCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetProgressHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserProgressCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 
 --------------------------------------------------------------------------------
 

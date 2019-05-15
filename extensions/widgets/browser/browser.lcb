@@ -560,10 +560,14 @@ private unsafe handler InitBrowserView()
 end handler
 
 private unsafe handler FinalizeBrowserView()
-	if mOpenState is not kOpenStateClosed then
+    if mOpenState is not kOpenStateClosed then
 		set my native layer to nothing
 
-		if mBrowser is not nothing then
+        if mBrowser is not nothing then
+            MCBrowserSetRequestHandler(mBrowser, nothing, nothing)
+            MCBrowserSetJavaScriptHandler(mBrowser, nothing, nothing)
+            MCBrowserSetProgressHandler(mBrowser, nothing, nothing)
+
 			MCBrowserRelease(mBrowser)
 			put nothing into mBrowser
 		end if
