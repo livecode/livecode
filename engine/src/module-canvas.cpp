@@ -843,7 +843,7 @@ static bool __MCCanvasPointEqual(MCValueRef p_left, MCValueRef p_right)
 	if (p_left == p_right)
 		return true;
 	
-	return MCMemoryCompare(MCValueGetExtraBytesPtr(p_left), MCValueGetExtraBytesPtr(p_left), sizeof(__MCCanvasPointImpl)) == 0;
+	return MCMemoryCompare(MCValueGetExtraBytesPtr(p_left), MCValueGetExtraBytesPtr(p_right), sizeof(__MCCanvasPointImpl)) == 0;
 }
 
 static hash_t __MCCanvasPointHash(MCValueRef p_value)
