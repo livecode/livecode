@@ -139,9 +139,6 @@ private command doRun pInfo
    put tLogForWriting into url ("binfile:" & tLogFilename)
    
    if TesterTapGetWorstResult(tAnalysis) is "FAIL" then
-      if $V is not empty then
-         write tLogForWriting to stdout
-   	  end if
       quit 1
    end if
 end doRun
@@ -324,6 +321,16 @@ command TestRunnerProcessOutput pScriptfile, pCommand, pOutput
    put TesterTapAnalyse(tTestLog) into tTapResults
 
    TesterLogSummaryLine tTapResults, (TesterGetPrettyTestName(pScriptFile) & ":" && pCommand)
+
+   if TesterTapGetWorstResult(tTapResults) is "FAIL" then
+      if $V is not empty then
+         put textEncode(pOutput, "utf8") into pOutput
+         if the platform is "win32" then
+            replace return with numToChar(13) & numToChar(10) in pOutput
+         end if
+         write pOutput to stderr
+      end if
+   end if
 
    return tTapResults
 end TestRunnerProcessOutput

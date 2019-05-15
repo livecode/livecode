@@ -258,7 +258,7 @@ end handler
 
 private type NSUInteger is CULong
 private foreign handler ObjC_NSTextFieldAlloc() returns ObjcRetainedId binds to "objc:NSTextField.+alloc"
-private foreign handler ObjC_NSTextFieldInit(in pObj as ObjcId) returns ObjcId binds to "objc:NSTextField.-init"
+private foreign handler ObjC_NSTextFieldInit(in pObj as ObjcRetainedId) returns optional ObjcRetainedId binds to "objc:NSTextField.-init"
 private foreign handler ObjC_NSTextFieldSetEnabled(in pObj as ObjcId, in pEnabled as CBool) returns nothing binds to "objc:NSTextField.-setEnabled:"
 private foreign handler ObjC_NSTextFieldSetFont(in pObj as ObjcId, in pFont as ObjcId) returns nothing binds to "objc:NSTextField.-setFont:"
 private foreign handler ObjC_NSTextFieldSetBezelStyle(in pObj as ObjcId, in pStyle as NSUInteger) returns nothing binds to "objc:NSTextField.-setBezelStyle:"

@@ -26,15 +26,20 @@ foreign handler sprintf(in pTarget as Pointer, in pFormat as ZStringNative, ...)
 foreign handler MCStringCreateWithCString(in pCString as Pointer, out rString as String) returns CBool binds to "<builtin>"
 
 public handler TestForeignInvoke_Varargs()
-   variable tString1 as String
-   variable tString2 as String
+   variable tOutputBuffer as Pointer
    unsafe
-      variable tOutputBuffer as Pointer
       put malloc(4096) into tOutputBuffer
+   end unsafe
 
+   variable tString1 as String
+   unsafe
       sprintf(tOutputBuffer, "no formats")
       MCStringCreateWithCString(tOutputBuffer, tString1)
+   end unsafe
+   test "sprintf works with no variadic arguments" when tString1 is "no formats"
 
+   variable tString2 as String
+   unsafe
       variable tInt as SInt16
       variable tLong as SInt32
       variable tLongLong as SInt64
@@ -47,11 +52,20 @@ public handler TestForeignInvoke_Varargs()
       put 7.5 into tDouble
       sprintf(tOutputBuffer, "%d %ld %lld %.1f %.1lf", tInt, tLong, tLongLong, tFloat, tDouble)
       MCStringCreateWithCString(tOutputBuffer, tString2)
+   end unsafe
+   test "sprintf works with variadic arguments" when tString2 is "1000 1000000000 1000000000000000 3.5 7.5"
 
+   variable tString3 as String
+   unsafe
+      variable tNothing as optional Pointer
+      sprintf(tOutputBuffer, "nullptr %p", tNothing)
+      MCStringCreateWithCString(tOutputBuffer, tString3)
+   end unsafe
+   test "sprintf works with nullptr variadic argument" when tString3 begins with "nullptr "
+
+   unsafe
       free(tOutputBuffer)
    end unsafe
-   test "sprintf works with no variadic arguments" when tString1 is "no formats"
-   test "sprintf works with variadic arguments" when tString2 is "1000 1000000000 1000000000000000 3.5 7.5"
 end handler
 
 --------

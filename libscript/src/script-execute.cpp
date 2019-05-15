@@ -503,7 +503,7 @@ MCScriptExecuteContext::InvokeForeignVarArgument(MCScriptForeignInvocation& p_in
     MCTypeInfoRef t_actual_type = t_resolved_type.type;
     
     // Fetch the promoted type of arg type (sub ints promote to int, and float
-    // promotes to double).
+    // promotes to double) - but only if the actual type is foreign.
     const MCForeignTypeDescriptor *t_desc = nullptr;
     if (MCTypeInfoIsForeign(t_actual_type))
     {
@@ -511,16 +511,19 @@ MCScriptExecuteContext::InvokeForeignVarArgument(MCScriptForeignInvocation& p_in
     }
     
     MCTypeInfoRef t_arg_type = t_actual_type;
-    if (t_desc->promote != nullptr)
+    if (t_desc != nullptr)
     {
-        MCResolvedTypeInfo t_resolved_arg_type;
-        if (!ResolveTypeInfo(t_desc->promotedtype,
-                             t_resolved_arg_type))
+        if (t_desc->promote != nullptr)
         {
-            return false;
+            MCResolvedTypeInfo t_resolved_arg_type;
+            if (!ResolveTypeInfo(t_desc->promotedtype,
+                                 t_resolved_arg_type))
+            {
+                return false;
+            }
+            
+            t_arg_type = t_resolved_arg_type.type;
         }
-        
-        t_arg_type = t_resolved_arg_type.type;
     }
     
     // Compute the slot attributes - using the (potentially) promoted type.
@@ -1221,7 +1224,8 @@ MCScriptExecuteContext::UnboxingConvert(MCValueRef p_value,
         }
 	}
 	else if (MCTypeInfoIsHandler(p_slot_type.type) &&
-			 MCHandlerTypeInfoIsForeign(p_slot_type.type))
+			 MCHandlerTypeInfoIsForeign(p_slot_type.type) &&
+             p_value != kMCNull)
 	{
 		// If the slot type is a foreign handler, then we fetch a closure
 		// from the handler value.
