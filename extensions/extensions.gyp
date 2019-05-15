@@ -150,7 +150,8 @@
 				'libraries/json/json.lcb',
 				'libraries/objectrepository/objectrepository.lcb',
 				'libraries/ini/ini.lcb',
-				'libraries/timezone/timezone.lcb',				
+				'libraries/timezone/timezone.lcb',
+				'libraries/macstatusmenu/macstatusmenu.lcb',
 
 				'widgets/androidbutton/androidbutton.lcb',
 				'widgets/androidfield/androidfield.lcb',
