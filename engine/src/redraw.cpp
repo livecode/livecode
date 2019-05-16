@@ -1245,7 +1245,7 @@ void MCCard::render(void)
     MCObjptr *t_objptrs;
     t_objptrs = getobjptrs();
     
-	if (MCTileCacheIsClean(t_tiler))
+	if (t_objptrs != nullptr && MCTileCacheIsClean(t_tiler))
     {
         MCObjptr *t_objptr;
         t_objptr = t_objptrs -> prev();
