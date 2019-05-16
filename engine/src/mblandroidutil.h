@@ -63,8 +63,11 @@ void MCAndroidObjectCall(jobject p_object, const char *p_method, const char *p_s
 void MCAndroidObjectRemoteCall(jobject p_object, const char *p_method, const char *p_signature, void *p_return_value, ...);
 
 bool MCAndroidGetBuildInfo(MCStringRef t_key, MCStringRef &r_value);
+extern "C" MC_DLLEXPORT
 bool MCAndroidCheckRuntimePermission(MCStringRef p_permission);
+extern "C" MC_DLLEXPORT
 bool MCAndroidCheckPermissionExists(MCStringRef p_permission);
+extern "C" MC_DLLEXPORT
 bool MCAndroidHasPermission(MCStringRef p_permission);
 
 typedef struct _android_device_configuration
