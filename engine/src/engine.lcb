@@ -46,6 +46,8 @@ public foreign handler MCEngineEvalScriptObjectExists(in pObject as ScriptObject
 public foreign handler MCEngineEvalScriptObjectDoesNotExist(in pObject as ScriptObject, out rExists as CBool) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecGetPropertyOfScriptObject(in pProperty as String, in pObject as ScriptObject, out rValue as any) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecSetPropertyOfScriptObject(in pValue as any, in pProperty as String, in pObject as ScriptObject) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecGetPropertyOfSetOfScriptObject(in pProperty as String, in pSet as String, in pObject as ScriptObject, out rValue as any) returns nothing binds to "<builtin>"
+public foreign handler MCEngineExecSetPropertyOfSetOfScriptObject(in pValue as any, in pProperty as String, in pSet as String, in pObject as ScriptObject) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalOwnerOfScriptObject(in pObject as ScriptObject, out rParent as ScriptObject) returns nothing binds to "<builtin>"
 public foreign handler MCEngineEvalChildrenOfScriptObject(in pObject as ScriptObject, out rChildren as List) returns nothing binds to "<builtin>"
 public foreign handler MCEngineExecSendToScriptObject(in pIsFunction as CBool, in pMessage as String, in pTarget as ScriptObject) returns optional any binds to "<builtin>"
@@ -181,6 +183,7 @@ end syntax
 /**
 Summary:	The property of a script object.
 Property: 	The name of the property to manipulate
+Set:		The name of the custom property set to access
 Object:		An expression that evaluates to a <ScriptObject>.
 
 
@@ -194,6 +197,9 @@ Example:
 	set property "invisible" of the result to true
     get property "script" of my script object
 
+Example:
+	get property "customProp" of set "cMyCustomPropertySet" of my script object
+	
 Description:
 Use to manipulate properties of a script object.
 
@@ -210,6 +216,13 @@ syntax PropertyOfScriptObject is prefix operator with property precedence
 begin
     MCEngineExecGetPropertyOfScriptObject(Property, Object, output)
     MCEngineExecSetPropertyOfScriptObject(input, Property, Object)
+end syntax
+
+syntax PropertyOfSetOfScriptObject is prefix operator with property precedence
+    "property" <Property: Expression> "of" "set" <Set: Expression> "of" <Object: Expression>
+begin
+    MCEngineExecGetPropertyOfSetOfScriptObject(Property, Set, Object, output)
+    MCEngineExecSetPropertyOfSetOfScriptObject(input, Property, Set, Object)
 end syntax
 
 /**
