@@ -211,7 +211,7 @@ int MCA_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *
     {        
         r_value = MCValueRetain(*t_file);
         if (*t_type != nil)
-            r_result = MCValueRetain(*t_file);
+            r_result = MCValueRetain(*t_type);
     }
 	
 	return 0;
