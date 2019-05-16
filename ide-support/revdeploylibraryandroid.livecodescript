@@ -537,6 +537,13 @@ function pathToJar pRoot
    return pRoot & slash & "bin" & slash & executableName("jar")
 end pathToJar
 
+function pathToPlayServices  pRoot
+   if pRoot is empty then
+      put sAndroidRoot into pRoot
+   end if
+   return pRoot & slash & "extras/google/m2repository/com/google/android/gms"
+end pathToPlayServices
+
 ////////////////////////////////////////////////////////////////////////////////
 
 private command configureJavaRootWindows

@@ -350,6 +350,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       revSBUpdateSettingsForExtensions "android", pSettings
       revSBResolveCopyFilesList tBaseFolder, "android", pSettings, tResolvedFileData
       
+      addPlayServiceAARsToSettings pSettings
       expandAARsAndComputeSettings tBuildFolder, pSettings
       
       repeat for each element tFile in tResolvedFileData
@@ -1174,6 +1175,31 @@ private command appendToStringList pValue, @xList
    end if
 end appendToStringList
 
+private command addPlayServiceAARsToSettings  @xSettingsA
+   local tPlayServicesPath
+   put pathToPlayServices() into tPlayServicesPath
+   
+   repeat for each line tPlayService in xSettingsA["android,play dependencies"]
+      local tPlayVersion
+      set the itemDel to "-"
+      put the last item of tPlayService into tPlayVersion
+      delete the last item of tPlayService
+      set the itemDel to comma
+      
+      local tPlayServiceAARPath
+      put tPlayServicesPath & slash & \
+            "play-services-" & tPlayService & slash & \
+            tPlayVersion & slash & \
+            "play-services-" & tPlayService & "-" & tPlayVersion & ".aar" \
+            into tPlayServiceAARPath
+      if there is not a file tPlayServiceAARPath then
+         throw "unable to locate play service dependency" && tPlayService && "version" && tPlayVersion
+      end if
+      
+      appendToStringList tPlayServiceAARPath, xSettingsA["aarFiles"]
+   end repeat
+end addPlayServiceAARsToSettings
+
 private command expandAARsAndComputeSettings tBuildFolder, @xSettingsA
    local tCount, tDefaultFolder
    put the folder into tDefaultFolder
@@ -1585,6 +1611,11 @@ private function pathToJar pRoot
    dispatch function "pathToJar" to stack kDeployLibrary with pRoot
    return the result
 end pathToJar
+
+private function pathToPlayServices pRoot
+   dispatch function "pathToPlayServices" to stack kDeployLibrary with pRoot
+   return the result
+end pathToPlayServices
 
 ################################################################################
 

@@ -2497,6 +2497,12 @@ command revSBUpdateForDependencies pPlatform, pArchs, pSDK, @xSettings
                xSettings["android,device capabilities"][tFeature]
       end repeat
       
+      local tPlayVersion
+      put tAndroidMetadataA["play"]["version"]into tPlayVersion
+      repeat for each item tPlayDep in tAndroidMetadataA["play"]["deps"]
+         appendToStringList tPlayDep & "-" & tPlayVersion, xSettings["android,play dependencies"]
+      end repeat
+      
       revSBUpdateExtensionCodeInclusions tExtension, pPlatform, pArchs, pSDK, xSettings
       revSBUpdatePerExtensionSettings tExtension, pPlatform, xSettings
    end repeat
