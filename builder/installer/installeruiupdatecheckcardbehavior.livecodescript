@@ -713,13 +713,9 @@ end getBuildNumber
 private function getPlatformString
    switch the platform
       case "Win32"
-         return "windows/x86"
+         return "windows" & slash & the processor
       case "MacOS"
-         if the processor is "x86" then
-            return "mac/x86"
-         else
-            return "mac/ppc"
-         end if
+         return "mac" & slash & the processor
       case "Linux"
          return "linux" & slash & the processor
    end switch
