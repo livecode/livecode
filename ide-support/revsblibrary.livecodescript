@@ -2251,7 +2251,7 @@ command revSBUpdateDeployParams pStack, pTarget, pStandaloneSettings, @xDeployPa
          appendToStringList tExtensionFileDataA["file"], tModules
       else if tExtensionFileDataA["type"] is "lcs" then
          __LoadStackOnStartup tExtensionDataA["id"], tAuxiliaryStackFiles, tStartupScript, tGeneratedStartupScript
-      else
+      else if not extensionIsBuiltin(tExtensionDataA["id"]) then
          revStandaloneAddWarning "Extension" && tExtensionDataA["id"] && "not found"
       end if
    end repeat
