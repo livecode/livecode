@@ -273,7 +273,7 @@ private function __dependencyOrder pDependencies, pList
    return tOrder
 end __dependencyOrder
 
-private function __extensionIsBuiltin pID
+function extensionIsBuiltin pID
    switch pID
       case "com.livecode.widget"
       case "com.livecode.engine"
@@ -308,7 +308,7 @@ private function __extensionIsBuiltin pID
       default
          return false
    end switch
-end __extensionIsBuiltin
+end extensionIsBuiltin
 
 /**
 Order extensions by dependency using requires info
@@ -335,7 +335,7 @@ function extensionOrderByDependency pExtensions, pRequiresA, \
    repeat for each line tExtension in pExtensions
       put pRequiresA[tExtension] into tRequirements
       repeat for each element tDependent in tRequirements
-         if not pIncludeBuiltin and __extensionIsBuiltin(tDependent) then
+         if not pIncludeBuiltin and extensionIsBuiltin(tDependent) then
             next repeat  	 
          end if
          __addToDependencies tExtension, tDependent, tDependencies
