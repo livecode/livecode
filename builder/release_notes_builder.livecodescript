@@ -73,8 +73,8 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
                put the number of elements of tComponents + 1 into tIndex
                put tFolder into tComponents[tIndex]["folder"]
                put "extension" into tComponents[tIndex]["metadata"]["category"]
-               
-               put tEdition into tComponents[tIndex]["metadata"]["edition"]
+
+               put ExtensionGetEdition(tEdition, tFolder) into tComponents[tIndex]["metadata"]["edition"]
                put ExtensionsGetSectionName(tFolder) into tComponents[tIndex]["metadata"]["section"]
             end repeat
          end repeat
@@ -89,18 +89,7 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
                put the number of elements of tComponents + 1 into tIndex
                put tFolder into tComponents[tIndex]["folder"]
                put "extension" into tComponents[tIndex]["metadata"]["category"]
-               
-               --!TODO move these extensions to components
-               switch PathGetLastComponent(tFolder)
-                  case "revdeploylibrarydesktop"
-                  case "remotedebugger"
-                  case "scriptprofiler"
-                  case "securekey"
-                     put "business" into tComponents[tIndex]["metadata"]["edition"]
-                     break
-                  default
-                     put tEdition into tComponents[tIndex]["metadata"]["edition"]
-               end switch
+               put ExtensionGetEdition(tEdition, tFolder) into tComponents[tIndex]["metadata"]["edition"]
                put ExtensionsGetSectionName(tFolder) into tComponents[tIndex]["metadata"]["section"]
             end repeat
          end repeat
@@ -121,6 +110,19 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
       builderLog "error", tError
    end try
 end releaseNotesBuilderRun
+
+private function ExtensionGetEdition pEdition, pFolder
+   --!TODO move these extensions to components
+   switch PathGetLastComponent(pFolder)
+      case "revdeploylibrarydesktop"
+      case "remotedebugger"
+      case "scriptprofiler"
+      case "securekey"
+         return "business"
+      default
+         return pEdition
+   end switch
+end ExtensionGetEdition
 
 private function PathGetLastComponent pPath
    set the itemdelimiter to slash
