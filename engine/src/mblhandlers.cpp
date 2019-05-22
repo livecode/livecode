@@ -1006,7 +1006,7 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     {
         MCAutoValueRef t_value;
         MCAutoStringRef t_string;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
         t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
@@ -1016,7 +1016,7 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     {
         MCAutoValueRef t_value;
         MCAutoBooleanRef t_bool;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         // PM-2015-03-11: [[ Bug 14855 ]] Evaluate correctly the second param
         if (ctxt . ConvertToBoolean(*t_value, &t_bool))
             t_loosely = MCValueIsEqualTo(*t_bool, kMCTrue);
@@ -1048,7 +1048,7 @@ Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
     {
         MCAutoValueRef t_value;
         MCAutoStringRef t_string;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
         t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
@@ -1127,7 +1127,7 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     {
         MCAutoValueRef t_value;
         MCAutoStringRef t_string;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
         t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
@@ -1137,7 +1137,7 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     {
         MCAutoValueRef t_value;
         MCAutoBooleanRef t_bool;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         // PM-2015-03-11: [[ Bug 14855 ]] Evaluate correctly the second param
         if(ctxt . ConvertToBoolean(*t_value, &t_bool))
             t_detailed = MCValueIsEqualTo(*t_bool, kMCTrue);
@@ -1269,7 +1269,7 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
     {
         MCAutoValueRef t_value;
         MCAutoNumberRef t_number;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
         t_timeout = MCNumberFetchAsInteger(*t_number);
     }
@@ -1315,7 +1315,7 @@ Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
     {
         MCAutoValueRef t_value;
         MCAutoStringRef t_string;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_string);
         t_sensor = MCSensorTypeFromString(*t_string);
         p_parameters = p_parameters->getnext();
@@ -1384,7 +1384,7 @@ Exec_stat MCHandleSetLocationHistoryLimit(void *p_context, MCParameter *p_parame
         return ES_NORMAL;
     
     MCAutoValueRef t_value;
-    p_parameters->eval(ctxt, &t_value);
+    p_parameters->eval_argument(ctxt, &t_value);
         
     uinteger_t t_limit = 0;
     /* UNCHECKED */ ctxt . ConvertToUnsignedInteger(*t_value, t_limit);
@@ -1460,7 +1460,7 @@ Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters) // ABPer
     {
         MCAutoValueRef t_value;
         MCAutoNumberRef t_number;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
         t_contact_id = MCNumberFetchAsInteger(*t_number);
     }
@@ -1513,7 +1513,7 @@ Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
     {
         MCAutoValueRef t_value;
         MCAutoNumberRef t_number;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
         t_contact_id = MCNumberFetchAsInteger(*t_number);
     }
@@ -1541,7 +1541,7 @@ Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters)
     {
         MCAutoValueRef t_value;
         MCAutoNumberRef t_number;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToNumber(*t_value, &t_number);
         t_contact_id = MCNumberFetchAsInteger(*t_number);
     }
@@ -1580,7 +1580,7 @@ Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
     if (p_parameters)
     {
         MCAutoValueRef t_value;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         /* UNCHECKED */ ctxt . ConvertToString(*t_value, &t_contact_name);
     }
     ctxt.SetTheResultToEmpty();
@@ -1978,7 +1978,7 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
     {
         MCAutoValueRef t_value;
 
-        if (p_parameters->eval(ctxt, &t_value)
+        if (p_parameters->eval_argument(ctxt, &t_value)
                 && !MCValueIsEmpty(*t_value))
         {
 			t_success = MCD_convert_to_datetime(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
@@ -1989,7 +1989,7 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
     {
         MCAutoValueRef t_value;
 
-        if (p_parameters->eval(ctxt, &t_value)
+        if (p_parameters->eval_argument(ctxt, &t_value)
                 && !MCValueIsEmpty(*t_value))
         {
 			t_success = MCD_convert_to_datetime(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
@@ -2027,7 +2027,7 @@ Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_paramet
 	if (t_success && p_parameters != nil)
     {
         MCAutoValueRef t_value;
-        if (p_parameters->eval(ctxt, &t_value)
+        if (p_parameters->eval_argument(ctxt, &t_value)
                 && !MCValueIsEmpty(*t_value))
         {
             t_success = MCD_convert_to_datetime(ctxt, *t_value, CF_UNDEFINED, CF_UNDEFINED, t_date);
@@ -3745,7 +3745,7 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
     {
         MCAutoValueRef t_value;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         t_success = ctxt . ConvertToString(*t_value, &t_current);
         p_parameters = p_parameters->getnext();
     }
@@ -3753,7 +3753,7 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
     {
         MCAutoValueRef t_value;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         t_success = ctxt . ConvertToString(*t_value, &t_start);
         p_parameters = p_parameters->getnext();
     }
@@ -3761,7 +3761,7 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
     {
         MCAutoValueRef t_value;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         t_success = ctxt . ConvertToString(*t_value, &t_end);
         p_parameters = p_parameters->getnext();
     }
@@ -3833,7 +3833,7 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
     {
         MCAutoValueRef t_value;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         t_success = ctxt . ConvertToString(*t_value, &t_current);
         p_parameters = p_parameters->getnext();
     }
@@ -3841,7 +3841,7 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
     {
         MCAutoValueRef t_value;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         t_success = ctxt . ConvertToString(*t_value, &t_start);
         p_parameters = p_parameters->getnext();
     }
@@ -3849,7 +3849,7 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
     {
         MCAutoValueRef t_value;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         t_success = ctxt . ConvertToString(*t_value, &t_end);
         p_parameters = p_parameters->getnext();
     }
@@ -3916,7 +3916,7 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
     {
         MCAutoValueRef t_value;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         t_success = ctxt . ConvertToString(*t_value, &t_current);
         p_parameters = p_parameters->getnext();
     }
@@ -3924,7 +3924,7 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
     {
         MCAutoValueRef t_value;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         t_success = ctxt . ConvertToString(*t_value, &t_start);
         p_parameters = p_parameters->getnext();
     }
@@ -3932,7 +3932,7 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
     {
         MCAutoValueRef t_value;
-        p_parameters->eval(ctxt, &t_value);
+        p_parameters->eval_argument(ctxt, &t_value);
         t_success = ctxt . ConvertToString(*t_value, &t_end);
         p_parameters = p_parameters->getnext();
     }
@@ -4186,7 +4186,7 @@ Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters)
 
     MCAutoValueRef t_value;
     if (t_success && p_parameters != nil)
-        t_success = p_parameters -> eval(ctxt, &t_value);
+        t_success = p_parameters -> eval_argument(ctxt, &t_value);
     
     if (t_success)
         MCNativeControlExecSet(ctxt, *t_control_name, *t_property, *t_value);
@@ -4239,7 +4239,7 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
     MCValueRef t_value;
     while (t_success && p_parameters != nil)
     {
-        p_parameters -> eval(ctxt, t_value);
+        p_parameters -> eval_argument(ctxt, t_value);
         t_success = t_params . Push(t_value);
         p_parameters = p_parameters -> getnext();
     }
