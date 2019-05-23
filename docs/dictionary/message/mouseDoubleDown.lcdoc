@@ -44,13 +44,13 @@ button> 1 or 2, no <mouseDoubleDown> <message> is sent.
 > the <mouseDoubleDown> <message> is sent to the <object(glossary)>
 > behind the <image>, not to the <image>.
 
-References: Browse tool (glossary), card (glossary), 
-control (glossary), double-click (glossary), 
+References: pass (control structure), Browse tool (glossary), 
+card (glossary), control (glossary), double-click (glossary), 
 doubleClickDelta (property), doubleClickInterval (property), 
 field (glossary), image (glossary), message (glossary), 
 mouse button (glossary), mouse pointer (glossary), 
 mouseDoubleUp (message), mouseStillDown (message), object (glossary), 
-pass (command), pixel (glossary), unlock (glossary)
+pixel (glossary), unlock (glossary)
 
 Tags: ui
 

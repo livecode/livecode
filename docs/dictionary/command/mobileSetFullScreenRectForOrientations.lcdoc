@@ -53,4 +53,5 @@ the <mobileAllowedOrientations>.
 References: mobileLockOrientation (command), mobileSetAllowedOrientations (command),
 mobileUnlockOrientation (command), mobileAllowedOrientations (function),
 mobileDeviceOrientation (function), mobileOrientation (function),
-orientationChanged (message), resizeStack (message)
+orientationChanged (message), resizeStack (message), 
+fullscreenMode (property)
