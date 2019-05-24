@@ -156,7 +156,7 @@ attributes of the &lt;font&gt; tag.
   <fontLanguage|language> specification.
 * color="#NNNNNN" appears if the <foregroundColor> is not the <default>.
 * bgcolor="#NNNNNN" appears if the <backgroundColor> is not the
-  > <default>. 
+  <default>. 
 
 >*Note:* An <HTML>-style color definition consists of a hash mark (#)
 > followed by three 2-digit hexadecimal numbers,

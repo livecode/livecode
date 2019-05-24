@@ -70,6 +70,6 @@ mobileStartTrackingSensor (command),
 mobileGetLocationHistory (function),
 mobileGetLocationHistoryLimit (function),
 mobileSensorAvailable (function), mobileSensorReading (function),
-mobileLocationAuthorizationStatus (function),
+mobileLocationAuthorizationStatus (function), function (glossary),
 locationChanged (message), trackingError (message)
 

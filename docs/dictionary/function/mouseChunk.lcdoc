@@ -43,8 +43,8 @@ the first <character> of the <word>, and the endChar is the last
 To get the text of the word or text group, use the mouseText <function>.
 
 >*Important:*  Words are defined a little differently by the
-> <mouseChunk> <function> than the way they are used in <chunk
-> expression|chunk expressions>. A word, for purposes of the
+> <mouseChunk> <function> than the way they are used in 
+> <chunk expression|chunk expressions>. A word, for purposes of the
 > <mouseChunk>, is any text delimited by spaces, tabs, returns, or
 > punctuation. If the mouse pointer is over a punctuation <character>,
 > only that <character> is returned.
