@@ -38,7 +38,7 @@ A <newBackground> message is sent after the <newGroup> <message>. (The
 References: paste (command), group (command), copy (command),
 clone (command), pass (control structure), object (glossary),
 trap (glossary), message (glossary), HyperCard (glossary),
-templateGroup (glossary), message path (glossary),
+message path (glossary), templateGroup (keyword),
 newBackground (message), script (property)
 
 Tags: objects

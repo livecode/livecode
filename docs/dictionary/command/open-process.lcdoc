@@ -143,7 +143,7 @@ References: kill (command), close process (command),
 read from process (command), write to process (command),
 exit (control structure), screenName (function), command (glossary),
 OS X (glossary), textDecode (function), Windows (glossary),
-Mac OS (glossary), Unix (glossary), textEncode (keyword),
+Mac OS (glossary), Unix (glossary),
 background (glossary), process (glossary), characters (keyword),
 hideConsoleWindows (property)
 
