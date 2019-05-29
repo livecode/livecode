@@ -9,7 +9,7 @@ if defined ProgramFiles(x86) (
 )
 
 @rem Guess build mode
-if not defined BUILDTYPE set BUILDTYPE=Debug
+if not defined BUILDTYPE set BUILDTYPE=Fast
 
 @rem Guess build project
 if not defined BUILD_EDITION set BUILD_EDITION=community
