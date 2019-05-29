@@ -105,8 +105,7 @@ script: |
   if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
     cmd.exe /C configure.bat &&
     cmd.exe /C make.cmd &&
-    make -C tests lcs-server-check &&
-    editbin /SUBSYSTEM:CONSOLE build-win-x86_64\livecode\Debug\standalone-community.exe &&
+    python tools/editbin.py build-win-x86_64/livecode/Debug/standalone-community.exe &&
     make -C tests
   elif [[ "${COVERITY_SCAN_BRANCH}" != "1" ]]; then
     mkdir -p "${LICENSE_DIR}" &&
