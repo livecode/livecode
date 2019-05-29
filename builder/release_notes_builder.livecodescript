@@ -56,14 +56,14 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
       put "" into tComponents[tIndex]["metadata"]["edition"]
       
       local tPath, tTypePath
-      local tReposA, tEdition
+      local tReposA, tDefaultEdition
       put builderPrivateRepoFolder() into tReposA["indy"]
       put builderRepoFolder() into tReposA["community"]
       
-      repeat for each key tEdition in tReposA
-         put tReposA[tEdition] into tPath
-         
-         repeat for each item tType in kExtensionLcbTypes
+      repeat for each key tDefaultEdition in tReposA
+         put tReposA[tDefaultEdition] into tPath
+
+         repeat for each item tType in kExtensionLcbTypes,kExtensionScriptTypes
             put tPath & slash & "extensions" & slash & tType into tTypePath
             if there is not a folder tTypePath then
                next repeat
@@ -74,37 +74,13 @@ command releaseNotesBuilderRun pEdition, pVersion, pReleaseType, pOutputDir
                put tFolder into tComponents[tIndex]["folder"]
                put "extension" into tComponents[tIndex]["metadata"]["category"]
                
+               local tEdition
+               put ExtensionsGetEdition(tFolder) into tEdition
+               if tEdition is empty then
+                  put tDefaultEdition into tEdition
+               end if
                put tEdition into tComponents[tIndex]["metadata"]["edition"]
-               put ExtensionsGetSectionName(tFolder) into tComponents[tIndex]["metadata"]["section"]
-            end repeat
-         end repeat
-         
-         repeat for each item tType in kExtensionScriptTypes
-            put tPath & slash & "extensions" & slash & tType into tTypePath
-            if there is not a folder tTypePath then
-               next repeat
-            end if
-            
-            repeat for each line tFolder in FileGetSubFolders(tTypePath)
-               put the number of elements of tComponents + 1 into tIndex
-               put tFolder into tComponents[tIndex]["folder"]
-               put "extension" into tComponents[tIndex]["metadata"]["category"]
-               
-               --!TODO move these extensions to components
-               switch PathGetLastComponent(tFolder)
-                  case "revdeploylibrarydesktop"
-                  case "remotedebugger"
-                  case "scriptprofiler"
-                  case "securekey"
-                  case "pdf"
-                  case "androidbarcode"
-                  case "androidbarcodescanner"
-                  case "androidbarcodesupport"                     
-                     put "business" into tComponents[tIndex]["metadata"]["edition"]
-                     break
-                  default
-                     put tEdition into tComponents[tIndex]["metadata"]["edition"]
-               end switch
+
                put ExtensionsGetSectionName(tFolder) into tComponents[tIndex]["metadata"]["section"]
             end repeat
          end repeat
@@ -894,16 +870,32 @@ private function ExtensionsGetName pExtPath
 end ExtensionsGetName
 
 private function ExtensionsGetLCSName pExtPath
-   local tDoc, tTitle
+   return ExtensionGetSingleLineElement(pExtPath, "Title")
+end ExtensionsGetLCSName
+
+private function ExtensionsGetEdition pExtPath
+   if there is a file ExtensionsGetDocPath(pExtPath) then
+      return ExtensionGetSingleLineElement(pExtPath, "Edition")
+   end if
+   return empty
+end ExtensionsGetEdition
+
+private function ExtensionGetSingleLineElement pExtPath, pElement
+   local tDoc
    put builderFileGetContents(ExtensionsGetDocPath(pExtPath)) into tDoc
+   
+   local tRegex
+   put "(?i)^" & pElement &":\s+(.*)" into tRegex
+      
+   local tValue
    repeat for each line tLine in tDoc
-      get matchText(tLine, "(?i)^\s*(?:Title\:)\s+([\w.]*)", tTitle)
-      if tTitle is not empty then
-         exit repeat
+      get matchText(word 1 to -1 of tLine, tRegex, tValue)
+      if tValue is not empty then
+         return tValue
       end if
    end repeat
-   return tTitle
-end ExtensionsGetLCSName
+   return empty
+end ExtensionGetSingleLineElement
    
 private function ExtensionsGetLCBName pExtPath
    local tManifest, tXmlId
@@ -945,7 +937,8 @@ private function ExtensionsGetLCSKind pExtPath, pShortName
    end if
    put builderFileGetUTF8Contents(merge("[[pExtPath]]/[[pShortName]].livecodescript")) into tSource
    repeat for each line tLine in tSource
-      get matchText(tLine, "(?i)^\s*(?:" & quote & "script" & quote & ")\s+([\w.]*)", tName)
+      get matchText(tLine, "(?i)^script" && quote & "(.*)" & quote, tName)
+
       if tName is not empty then
          exit repeat
       end if
