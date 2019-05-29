@@ -761,7 +761,7 @@ private function __ArchitectureSynonyms pArchitecture
       case "x86-32"
          return pArchitecture,"x86,i386"
       case "x86-64"
-         return pArchitecture,"x64"
+         return pArchitecture,"x64,x86_64"
    end switch
    
    return pArchitecture
