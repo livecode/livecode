@@ -77,7 +77,7 @@ named "My Button". The <card> also has a <card control|card field> named
 > inside this <folder>. The <long> name of a stack in an application 
 > is the location of the application inside the 
 > <application bundle|bundle>, not the <application bundle|bundle's>
-> location. For example, if the <bundle'sfile path> is
+> location. For example, if the bundle's <file path> is
 > "/Volumes/Disk/MyApp.app/", the <long> name of the application's main
 > stack might be "/Volumes/Disk/MyApp.app/Contents/MacOS/MyApp".
 
@@ -91,10 +91,10 @@ results in an <execution error>. If you need to get the name of a
 <group> that is not on the <current card>, use the "<background>"
 terminology instead.
 
-The <long> <name> of a <background> includes the name of the <current
-card>, if the <background> appears on the <current card>. If not, the
-<long> name of the <background> includes the name of the first <card> the
-<background> appears on.
+The <long> <name> of a <background> includes the name of the 
+<current card>, if the <background> appears on the <current card>. If not, 
+the <long> name of the <background> includes the name of the first <card> 
+the <background> appears on.
 
 You can use an object's <name> to refer to the <object(object)> in a
 <statement>. However, the <name> need not be seen on screen, even if the
@@ -148,15 +148,14 @@ standalone application (glossary), file path (glossary),
 property (glossary), folder (glossary),
 development environment (glossary), object reference (glossary),
 application bundle (glossary), execution error (glossary),
-main stack (glossary), OS X (glossary), bundle'sfile path (glossary),
-pane (glossary), property inspector (glossary), current card (glossary),
+main stack (glossary), OS X (glossary), pane (glossary), 
+property inspector (glossary), current card (glossary),
 background (glossary), card control (glossary), object (glossary),
 file (keyword), characters (keyword), long (keyword), button (keyword),
 string (keyword), abbreviated (keyword), card (keyword),
 control (keyword), nameChanged (message), player (object), stack (object),
-control (object), HCAddressing (property), name (property),
-owner (property), ID (property), hilitedButtonName (property),
-label (property), titleWidth (property)
+HCAddressing (property), name (property), owner (property), ID (property), 
+hilitedButtonName (property), label (property), titleWidth (property)
 
 Tags: objects
 
