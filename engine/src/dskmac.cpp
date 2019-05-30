@@ -4087,6 +4087,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
 		if (fptr != NULL)
         {
+            setbuf(fptr, nullptr);
             int val;
             int t_serial_in;
             
