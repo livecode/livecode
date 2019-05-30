@@ -61,13 +61,22 @@ private command _DoTestWidgetScriptObjectAccess pMode
 end _DoTestWidgetScriptObjectAccess
 
 on TestWidgetScriptObjectAccess
+   if the platform is "win32" then
+      TestSkip "no script access allowed in certain circumstances", \
+            "Skip on windows for now"
+      exit TestWidgetScriptObjectAccess
+   end if
+
    create stack "WidgetScriptAccessTest"
    set the defaultStack to "WidgetScriptAccessTest"
 
    create widget "Test" as "com.livecode.lcs_tests.core.widget"
    set the behavior of it to the long id of me
 
-   repeat for each item tMode in "resolve,get,set,send,post,execute"
+   local tModes
+   put "resolve,get,set,send,post,execute" into tModes
+
+   repeat for each item tMode in tModes
       _DoTestWidgetScriptObjectAccess tMode
    end repeat
 
@@ -75,6 +84,11 @@ on TestWidgetScriptObjectAccess
 end TestWidgetScriptObjectAccess
 
 on TestWidgetThrowInOnCreate
+   if the platform is "win32" then
+      TestSkip "error dialog when widget throws in OnCreate", \
+            "Skip on windows for now"
+      exit TestWidgetThrowInOnCreate
+   end if
    create stack "WidgetThrowOnSaveTest"
    set the defaultStack to "WidgetThrowOnSaveTest"
    
