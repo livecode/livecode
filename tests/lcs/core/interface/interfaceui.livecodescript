@@ -255,39 +255,36 @@ TestAssert "test", (the resizeable of this stack is false)
 end TestInterface63
 
 on TestBug11799Part1
- 
+   create stack "Test"
+   set the defaultstack to "Test"
+   create field
 
-create stack "Test"
-set the defaultstack to "Test"
-create field
+   focus on field 1
 
-focus on field 1
+   -- For some reason focusing doesn't happen until events are processed...
+   wait 0 seconds with messages
 
--- For some reason focusing doesn't happen until events are processed...
-wait 0 seconds with messages
-
-TestAssertBroken "test", the focusedObject is the long id of field 1, "11799"
-
+   TestAssert "focusedObject correct after focusing on field ", \
+         the focusedObject is the long id of field 1
 end TestBug11799Part1
+
 on TestBug11799Part2
+   create stack "Test"
+   set the defaultstack to "Test"
+   create field 1
 
+   focus on field 1
 
-create stack "Test"
-set the defaultstack to "Test"
-create field 1
+   -- For some reason focusing doesn't happen until events are processed...
+   wait 0 seconds with messages
 
-focus on field 1
+   focus on nothing
 
--- For some reason focusing doesn't happen until events are processed...
-wait 0 seconds with messages
+   -- After unfocusing, the card will be focused until events are processed...
+   -- ... at which point nothing will be.
 
-focus on nothing
-
--- After unfocusing, the card will be focused until events are processed...
--- ... at which point nothing will be.
-
-TestAssertBroken "test", the focusedObject is the long id of this card, "11799"
-
+   TestAssert "focusedObject current card after focusing on nothing", \
+         the focusedObject is the long id of this card
 end TestBug11799Part2
 
 on TestInterface82
