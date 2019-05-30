@@ -106,7 +106,8 @@ script: |
     cmd.exe /C configure.bat &&
     cmd.exe /C make.cmd &&
     python tools/editbin.py win-x86_64-bin/standalone-community.exe &&
-    MODE=fast make -C tests
+    MODE=fast make -C tests lcs-check &&
+    MODE=fast make -C extensions lcs-check
   elif [[ "${COVERITY_SCAN_BRANCH}" != "1" ]]; then
     mkdir -p "${LICENSE_DIR}" &&
     touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
