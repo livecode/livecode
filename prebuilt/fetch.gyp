@@ -311,13 +311,14 @@
 					
 					'outputs':
 					[
-						'lib/android/<(target_arch)',
+						'lib/android/>(toolset_arch)',
 					],
 					
 					'action':
 					[
 						'./fetch-libraries.sh',
 						'android',
+						'>(toolset_arch)',
 					],
 				},
 			],
@@ -347,6 +348,7 @@
 					[
 						'./fetch-libraries.sh',
 						'linux',
+						'>(toolset_arch)',
 					],
 				},
 			],
@@ -397,8 +399,8 @@
 					
 					'outputs':
 					[
-						'bin/win32/<(target_arch)',
-						'lib/win32/<(target_arch)',
+						'bin/win32/>(toolset_arch)',
+						'lib/win32/>(toolset_arch)',
                         'unpacked',
 					],
 					
@@ -408,6 +410,7 @@
 						'../util/invoke-unix.bat',
 						'./fetch-libraries.sh',
 						'win32',
+						'>(toolset_arch)',
 					],
 				},
 			],
