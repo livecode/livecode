@@ -1,0 +1,1 @@
+# Ensure extension release notes appear under correct heading
