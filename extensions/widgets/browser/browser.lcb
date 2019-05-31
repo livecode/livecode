@@ -203,6 +203,23 @@ The <browserProgressChanged> message is sent to the widget's script
 object when a the loading progress of the current document changes. The <pUrl>
 parameter contains the URL of the loading document. The <pProgress> parameter
 contains the percentage (between 0 and 100) of the document loaded.
+
+
+Name: browserDownloadProgressChanged
+Type: message
+Syntax: browserDownloadProgressChanged <pUrl>, <pState>, <pBytesReceived>, <pTotalBytes>
+
+Summary: Sent when the load progress of a file download changes.
+
+Parameters:
+pUrl (string): The URL of the downloading file.
+pState (string): The current status of the download. one of 'inProgress', 'complete', 'cancelled', 'failed'
+pBytesReceived (number): The number of bytes already downloaded.
+pTotalBytes (number): The total size of the download file. This will be -1 if the size is unknown.
+
+Description:
+The <browserDownloadProgressChanged> message is sent to the widget's script
+object when progress of a file download changes.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -556,6 +573,8 @@ private unsafe handler InitBrowserView()
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
 	MCBrowserSetProgressHandler(mBrowser, OnProgressCallback, nothing)
 	MCBrowserSetFileDialogHandler(mBrowser, OnFileDialogCallback, nothing)
+	MCBrowserSetDownloadRequestHandler(mBrowser, OnDownloadRequestCallback, nothing)
+	MCBrowserSetDownloadProgressHandler(mBrowser, OnDownloadProgressCallback, nothing)
 
 	applyProperties(mProperties)
 end handler
@@ -569,6 +588,8 @@ private unsafe handler FinalizeBrowserView()
             MCBrowserSetJavaScriptHandler(mBrowser, nothing, nothing)
             MCBrowserSetProgressHandler(mBrowser, nothing, nothing)
 			MCBrowserSetFileDialogHandler(mBrowser, nothing, nothing)
+			MCBrowserSetDownloadRequestHandler(mBrowser, nothing, nothing)
+			MCBrowserSetDownloadProgressHandler(mBrowser, nothing, nothing)
 
 			MCBrowserRelease(mBrowser)
 			put nothing into mBrowser
@@ -709,6 +730,15 @@ private handler OnFileDialogCallback(in pContext as optional Pointer, in pBrowse
 	end if
 
 	return true
+end handler
+
+private handler OnDownloadRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pSuggestedName as optional ZStringUTF8) returns CBool
+	MCBrowserDownloadContinueWithSaveDialog(pBrowser)
+	return true
+end handler
+
+private handler OnDownloadProgressCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pState as MCBrowserDownloadState, in pBytesReceived as UInt32, in pTotalBytes as Int32) returns nothing
+	post "browserDownloadProgressChanged" to mScriptObject with [ pUrl, kMCBrowserDownloadStateMap[pState + 1], pBytesReceived, pTotalBytes ]
 end handler
 
 ----------
