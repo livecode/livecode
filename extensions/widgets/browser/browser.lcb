@@ -555,6 +555,7 @@ private unsafe handler InitBrowserView()
 	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
 	MCBrowserSetProgressHandler(mBrowser, OnProgressCallback, nothing)
+	MCBrowserSetFileDialogHandler(mBrowser, OnFileDialogCallback, nothing)
 
 	applyProperties(mProperties)
 end handler
@@ -567,6 +568,7 @@ private unsafe handler FinalizeBrowserView()
             MCBrowserSetRequestHandler(mBrowser, nothing, nothing)
             MCBrowserSetJavaScriptHandler(mBrowser, nothing, nothing)
             MCBrowserSetProgressHandler(mBrowser, nothing, nothing)
+			MCBrowserSetFileDialogHandler(mBrowser, nothing, nothing)
 
 			MCBrowserRelease(mBrowser)
 			put nothing into mBrowser
@@ -668,6 +670,45 @@ end handler
 
 private handler OnProgressCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pProgress as UInt32) returns nothing
 	post "browserProgressChanged" to mScriptObject with [pUrl, pProgress]
+end handler
+
+private handler OnFileDialogCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserFileDialogType, in pOptions as MCBrowserFileDialogOption, in pTitle as optional ZStringUTF8, in pDefaultPath as optional ZStringUTF8, in pFilters as optional ZStringUTF8, in pDefaultFilter as UInt32) returns CBool
+	if pTitle is nothing then
+		put the empty string into pTitle
+	end if
+
+	variable tScript
+	if pType is kMCBrowserFileDialogTypeOpen then
+		put "answer file param(1)" into tScript
+	else if pType is kMCBrowserFileDialogTypeOpenMultiple then
+		put "answer files param(1)" into tScript
+	else if pType is kMCBrowserFileDialogTypeOpenFolder then
+		put "answer folder param(1)" into tScript
+	else if pType is kMCBrowserFileDialogTypeSave then
+		put "ask file param(1)" into tScript
+	end if
+
+	variable tParams
+	put [ pTitle ] into tParams
+
+	if pDefaultPath is not nothing then
+		put " with param(2)" after tScript
+		push pDefaultPath onto tParams
+	end if
+
+	put "\nif the result is empty then return it else return empty" after tScript
+
+	variable tResult
+	execute script tScript with tParams
+	put the result into tResult
+	log tResult
+	if tResult is empty then
+		MCBrowserFileDialogCancel(pBrowser)
+	else
+		MCBrowserFileDialogSelectPaths(pBrowser, tResult, pDefaultFilter)
+	end if
+
+	return true
 end handler
 
 ----------
