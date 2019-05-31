@@ -397,6 +397,29 @@ metadata allowUserInteraction.default is "true"
 metadata allowUserInteraction.label is "Allow user interaction"
 
 /**
+Name: enableDragDrop
+Type: property
+
+Syntax:
+set the enableDragDrop of <widget> to <enableDragDrop>
+get the enableDragDrop of <widget>
+
+Summary: Controls whether the browser responds to drag 'n drop interactions.
+
+Value (boolean):
+`true` if the browser should respond to drag 'n drop interaction;
+`false` otherwise.
+
+Description:
+Use the <enableDragDrop> property to control if the browser should respond
+to drag 'n drop interaction.
+*/
+property enableDragDrop get getEnableDragDrop set setEnableDragDrop
+metadata enableDragDrop is "com.livecode.pi.boolean"
+metadata enableDragDrop.default is "true"
+metadata enableDragDrop.label is "Enable drag 'n drop within the browser"
+
+/**
 Name: isSecure
 Type: property
 
@@ -513,7 +536,7 @@ variable mScriptObject as ScriptObject
 
 --------------------------------------------------------------------------------
 
-constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers", "allowUserInteraction", "isSecure"]
+constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "enableDragDrop", "userAgent", "javaScriptHandlers", "allowUserInteraction", "isSecure"]
 
 --------------------------------------------------------------------------------
 
@@ -875,6 +898,16 @@ end handler
 
 private handler getIsSecure() returns Boolean
 	return getProperty("isSecure")
+end handler
+
+--
+
+private handler getEnableDragDrop() returns Boolean
+	return getProperty("enableDragDrop")
+end handler
+
+private handler setEnableDragDrop(in pEnableDragDrop as Boolean)
+	setProperty("enableDragDrop", pEnableDragDrop)
 end handler
 
 ----------
