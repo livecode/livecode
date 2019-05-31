@@ -20,7 +20,7 @@
 				'../../../libfoundation/libfoundation.gyp:libFoundation',
 				'../../../libscript/libscript.gyp:libScript',
 				'../../libcompile/libcompile.gyp:libcompile',
-				'../../../thirdparty/libffi/libffi.gyp:libffi',
+				'../../../prebuilt/thirdparty.gyp:thirdparty_prebuilt_ffi',
 			],
 
 			'sources':

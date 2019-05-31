@@ -30,9 +30,9 @@
             [
                 '../libexternal/libexternal.gyp:libExternal',
                 '../libexternal/libexternal.gyp:libExternal-symbol-exports',
-				'../thirdparty/libxml/libxml.gyp:libxml',
-				'../thirdparty/libxslt/libxslt.gyp:libxslt',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_xml',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_xslt',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
 			],
 			
 			'include_dirs':
@@ -58,7 +58,7 @@
 					'dist_files': [ '<(PRODUCT_DIR)/<(_product_name)>(ext_bundle_suffix)' ],
 				},
 			},
-			
+		
 			'conditions':
 			[
 				[
@@ -80,9 +80,9 @@
 			[
 				'../libexternal/libexternal.gyp:libExternal',
                 '../libexternal/libexternal.gyp:libExternal-symbol-exports',
-				'../thirdparty/libxml/libxml.gyp:libxml',
-				'../thirdparty/libxslt/libxslt.gyp:libxslt',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_xml',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_xslt',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
 			],
 			
 			'include_dirs':
@@ -100,6 +100,7 @@
 				'INFOPLIST_FILE': 'rsrc/revxml-Info.plist',
 				'EXPORTED_SYMBOLS_FILE': 'revxml.exports',
 			},
+
 			'conditions':
 			[
 				[

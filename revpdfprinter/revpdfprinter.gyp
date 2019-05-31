@@ -17,7 +17,7 @@
 			[
 				'../libcore/libcore.gyp:libCore',
 				'../libexternal/libexternal.gyp:libExternal',
-				'../thirdparty/libcairo/libcairo.gyp:libcairo',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_cairo',
 			],
 			
 			'include_dirs':

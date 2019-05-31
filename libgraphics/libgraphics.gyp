@@ -14,10 +14,28 @@
 			
 			'dependencies':
 			[
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_gif',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_png',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_jpeg',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_skia',
 				'../libfoundation/libfoundation.gyp:libFoundation',
 			],
-			
+
+			'conditions':
+			[
+				[
+					'OS in ("emscripten", "android")',
+					{
+						'dependencies':
+						[
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_freetype',
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_harfbuzz',
+							'../prebuilt/libicu.gyp:libicu',
+						],
+					},
+				],
+			],		
+	
 			'include_dirs':
 			[
 				'include',

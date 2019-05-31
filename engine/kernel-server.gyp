@@ -56,9 +56,14 @@
 				
 				'../prebuilt/libcurl.gyp:libcurl',
 				'../prebuilt/libopenssl.gyp:libopenssl',
-				
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
-				
+
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_pcre',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_jpeg',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_gif',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_png',
+		
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
+		
 				'engine-common.gyp:quicktime_stubs',
 				
 				'lcb-modules.gyp:engine_lcb_modules',
@@ -87,11 +92,11 @@
 				[
 					'OS == "linux"',
 					{
-						'include_dirs':
+						'dependencies':
 						[
-							'../thirdparty/headers/linux/include/cairo',
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_cairo',
 						],
-						
+
 						'defines':
                         [
 	                        'PANGO_ENABLE_BACKEND',
