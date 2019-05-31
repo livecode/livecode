@@ -37,8 +37,6 @@
 			'dependencies':
 			[
 				'kernel.gyp:kernel',
-				
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 			],
 			
 			'includes':

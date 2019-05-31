@@ -25,7 +25,8 @@
 			[
 				'../libexternal/libexternal.gyp:libExternal',
                 '../libexternal/libexternal.gyp:libExternal-symbol-exports',
-				'../thirdparty/libzip/libzip.gyp:libzip',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_zip',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
 			],
 			
 			'sources':
@@ -76,7 +77,8 @@
 			[
                 '../libexternal/libexternal.gyp:libExternal',
                 '../libexternal/libexternal.gyp:libExternal-symbol-exports',
-				'../thirdparty/libzip/libzip.gyp:libzip',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_zip',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
 			],
 			
 			'sources':

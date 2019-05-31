@@ -14,7 +14,11 @@
 			
 			'dependencies':
 			[
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_harfbuzz',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_gif',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_png',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_jpeg',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_skia',
 				'../libfoundation/libfoundation.gyp:libFoundation',
 			],
 			

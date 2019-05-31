@@ -98,9 +98,8 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../thirdparty/libmysql/libmysql.gyp:libmysql',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_mysql',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 			],
 			
 			'include_dirs':
@@ -157,9 +156,8 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../thirdparty/libmysql/libmysql.gyp:libmysql',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_mysql',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 			],
 			
 			'include_dirs':
@@ -225,7 +223,7 @@
 					{
 						'dependencies':
 						[
-							'../thirdparty/libiodbc/libiodbc.gyp:libiodbc',
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_iodbc',
 						],
 					},
 					{
@@ -289,7 +287,7 @@
 					{
 						'dependencies':
 						[
-							'../thirdparty/libiodbc/libiodbc.gyp:libiodbc',
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_iodbc',
 						],
 					},
 					{
@@ -361,7 +359,7 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../thirdparty/libpq/libpq.gyp:libpq',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_pq',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 			],
 			
@@ -407,7 +405,7 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../thirdparty/libpq/libpq.gyp:libpq',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_pq',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 			],
 			
@@ -469,7 +467,7 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../thirdparty/libsqlite/libsqlite.gyp:libsqlite',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_sqlite',
 			],
 			
 			'include_dirs':
@@ -576,7 +574,7 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../thirdparty/libsqlite/libsqlite.gyp:libsqlite',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_sqlite',
 			],
 			
 			'include_dirs':
