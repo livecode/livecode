@@ -311,14 +311,14 @@
 					
 					'outputs':
 					[
-						'lib/android/>(toolset_arch)',
+						'lib/android/>(target_arch)',
 					],
 					
 					'action':
 					[
 						'./fetch-libraries.sh',
 						'android',
-						'>(toolset_arch)',
+						'>(target_arch)',
 					],
 				},
 			],
@@ -326,7 +326,7 @@
 		{
 			'target_name': 'fetch-linux',
 			'type': 'none',
-			
+
 			'actions':
 			[
 				{
@@ -348,7 +348,7 @@
 					[
 						'./fetch-libraries.sh',
 						'linux',
-						'>(toolset_arch)',
+						'<(host_arch)',
 					],
 				},
 			],
@@ -356,12 +356,12 @@
 		{
 			'target_name': 'fetch-mac',
 			'type': 'none',
-			
+
 			'actions':
 			[
 				{
 					'action_name': 'fetch',
-					'message': 'Fetching prebuilt libraries for OSX',
+					'message': 'Fetching prebuilt libraries for HOST OS <(host_os) HOST ARCH <(host_arch) TARGET OS <(OS) TARGET ARCH <(target_arch)',
 					
 					'inputs':
 					[
@@ -386,6 +386,22 @@
 			'target_name': 'fetch-win',
 			'type': 'none',
 
+			'variables':
+			{
+				'conditions':
+				[
+					[
+						'target_arch == "x64"',
+						{
+							'fetch_arch': 'x86_64',
+						},
+						{
+							'fetch_arch': 'x86',
+						},
+					],
+				],
+			},
+
 			'actions':
 			[
 				{
@@ -399,8 +415,8 @@
 					
 					'outputs':
 					[
-						'bin/win32/>(toolset_arch)',
-						'lib/win32/>(toolset_arch)',
+						'bin/win32/>(fetch_arch)',
+						'lib/win32/>(fetch_arch)',
                         'unpacked',
 					],
 					
@@ -409,8 +425,9 @@
 						'call',
 						'../util/invoke-unix.bat',
 						'./fetch-libraries.sh',
-						'win32',
-						'>(toolset_arch)',
+						# Ensure gyp does not treat these parameters as paths
+						'$(not_a_real_variable)win32',
+						'$(not_a_real_variable)>(fetch_arch)',
 					],
 				},
 			],

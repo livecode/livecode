@@ -61,7 +61,9 @@
 				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_jpeg',
 				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_gif',
 				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_png',
-				
+		
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
+		
 				'engine-common.gyp:quicktime_stubs',
 				
 				'lcb-modules.gyp:engine_lcb_modules',

@@ -359,8 +359,8 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_pq',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_pq',
 			],
 			
 			'include_dirs':

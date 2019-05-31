@@ -14,6 +14,7 @@
       'dependencies':
 			[
 				'../libfoundation/libfoundation.gyp:libFoundation',
+                '../prebuilt/thirdparty.gyp:thirdparty_prebuilt_ffi',
 				'encode_support',
 			],
 

@@ -13,6 +13,11 @@
 			
 			'toolsets': ['host','target'],
 			
+			'dependencies':
+			[
+				'../../prebuilt/thirdparty.gyp:thirdparty_prebuilt_ffi',
+			],
+
 			'conditions':
 			[
 				[

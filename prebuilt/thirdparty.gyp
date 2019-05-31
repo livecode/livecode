@@ -755,13 +755,14 @@
 			'dependencies':
 			[
 				'thirdparty_prebuilt_dep',
+				'libicu.gyp:libicu_include',
 			],
 
 			'direct_dependent_settings':
 			{
 				'include_dirs':
 				[
-					'../thirdparty/libharfbuzz/include',
+					'../thirdparty/libharfbuzz/src',
 				],
 			},
 
@@ -973,9 +974,9 @@
 						{						
 							'libraries':
 							[
-								#'-lgdi32',
-								#'-luser32',
-								#'-lmsimg32',
+								'-lgdi32',
+								'-luser32',
+								'-lmsimg32',
 								'-llibcairo',
 							],
 						},
@@ -1787,6 +1788,12 @@
 						{							
 							'libraries':
 							[
+								'-ladvapi32',
+								'-lsecur32',
+								'-lshell32',
+								'-lwldap32',
+								'-lws2_32',
+								'-lwsock32',
 								'-llibpq',
 							],
 						},
@@ -1880,8 +1887,8 @@
 						{							
 							'libraries':
 							[
-								#'-ladvapi32',
-								#'-luser32',
+								'-ladvapi32',
+								'-luser32',
 								'-llibmysql',
 							],
 						},
