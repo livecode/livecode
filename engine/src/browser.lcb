@@ -53,6 +53,7 @@ public type MCBrowserRequestType is CInt
 public type MCBrowserRequestState is CInt
 public type MCBrowserFileDialogType is CInt
 public type MCBrowserFileDialogOption is CInt
+public type MCBrowserDownloadState is CInt
 
 --
 
@@ -114,14 +115,22 @@ public foreign handler type MCBrowserRequestCallback(in pContext as optional Poi
 public foreign handler type MCBrowserJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as ZStringUTF8, in pParams as MCBrowserListRef) returns nothing
 public foreign handler type MCBrowserProgressCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pProgress as UInt32) returns nothing
 public foreign handler type MCBrowserFileDialogCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserFileDialogType, in pOptions as MCBrowserFileDialogOption, in pTitle as optional ZStringUTF8, in pDefaultPath as optional ZStringUTF8, in pFilters as optional ZStringUTF8, in pDefaultFilter as UInt32) returns CBool
+public foreign handler type MCBrowserDownloadRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pSuggestedName as optional ZStringUTF8) returns CBool
+public foreign handler type MCBrowserDownloadProgressCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pState as MCBrowserDownloadState, in pBytesReceived as UInt32, in pTotalBytes as Int32) returns nothing
 
 public foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserRequestCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserJavaScriptCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserSetProgressHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserProgressCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserSetFileDialogHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserFileDialogCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetDownloadRequestHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserDownloadRequestCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetDownloadProgressHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserDownloadProgressCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserFileDialogCancel(in pBrowser as MCBrowserRef) returns nothing binds to "<builtin>"
 public foreign handler MCBrowserFileDialogSelectPaths(in pBrowser as MCBrowserRef, in pPaths as ZStringUTF8, in pSelectedFilter as UInt32) returns nothing binds to "<builtin>"
+
+public foreign handler MCBrowserDownloadCancel(in pBrowser as MCBrowserRef) returns nothing binds to "<builtin>"
+public foreign handler MCBrowserDownloadContinueWithSavePath(in pBrowser as MCBrowserRef, in pSavePath as ZStringUTF8) returns nothing binds to "<builtin>"
+public foreign handler MCBrowserDownloadContinueWithSaveDialog(in pBrowser as MCBrowserRef) returns nothing binds to "<builtin>"
 
 --------------------------------------------------------------------------------
 
@@ -175,6 +184,15 @@ public constant kMCBrowserFileDialogTypeMap is ["open", "openMultiple", "openFol
 
 public constant kMCBrowserFileDialogOptionOverwritePrompt is 1
 public constant kMCBrowserFileDialogOptionHideReadOnly is 2
+
+--
+
+public constant kMCBrowserDownloadStateInProgress is 0
+public constant kMCBrowserDownloadStateCompleted is 1
+public constant kMCBrowserDownloadStateCancelled is 2
+public constant kMCBrowserDownloadStateFailed is 3
+
+public constant kMCBrowserDownloadStateMap is [ "inProgress", "completed", "cancelled", "failed" ]
 
 --
 
