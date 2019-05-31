@@ -118,7 +118,29 @@ function fetchLibrary {
 if [ 0 -eq "$#" ]; then
     SELECTED_PLATFORMS="${PLATFORMS[@]}"
 else
-    SELECTED_PLATFORMS="$@"
+    ARGS_ARE_PLATFORMS=1
+    for SELECTED_PLATFORM in "$@" ; do
+        ARG_IS_PLATFORM=0
+        for AVAILABLE_PLATFORM in "${PLATFORMS[@]}"; do
+            if [ "$AVAILABLE_PLATFORM" == "$SELECTED_PLATFORM" ]; then
+                ARG_IS_PLATFORM=1
+                break
+            fi
+        done
+        if [ "$ARG_IS_PLATFORM" != "1" ]; then
+            ARGS_ARE_PLATFORMS=0
+            break
+        fi
+    done
+
+    if [ "$ARGS_ARE_PLATFORMS" == "1" ]; then
+        SELECTED_PLATFORMS="$@"
+    else
+        # If not all args are platforms, assume first arg is platform and the
+        # rest are architectures
+        SELECTED_PLATFORMS="$1"
+        shift 1
+    fi
 fi
 
 FETCH_HEADERS=0
@@ -132,11 +154,17 @@ for PLATFORM in ${SELECTED_PLATFORMS} ; do
 		FETCH_HEADERS=1
 	fi
 
-	eval "ARCHS=( \${ARCHS_${PLATFORM}[@]} )"
+    if [ "$ARGS_ARE_PLATFORMS" == "1" ]; then
+	    eval "ARCHS=( \${ARCHS_${PLATFORM}[@]} )"
+        SELECTED_ARCHS="${ARCHS[@]}"
+    else
+        SELECTED_ARCHS="$@"
+    fi
+
 	eval "LIBS=( \${LIBS_${PLATFORM}[@]} )"
 	eval "SUBPLATFORMS=( \${SUBPLATFORMS_${PLATFORM}[@]} )"
 
-	for ARCH in "${ARCHS[@]}" ; do
+	for ARCH in ${SELECTED_ARCHS} ; do
 		for LIB in "${LIBS[@]}" ; do
 			if [ ! -z "${SUBPLATFORMS}" ] ; then
 				for SUBPLATFORM in "${SUBPLATFORMS[@]}" ; do
@@ -168,7 +196,7 @@ for PLATFORM in ${SELECTED_PLATFORMS} ; do
 		# the "Release" configuration, in terms of linkability.  So if
 		# there's a "Release" build of any given library, duplicate
 		# it for "Fast"
-        for ARCH in "${ARCHS[@]}" ; do
+        for ARCH in ${SELECTED_ARCHS} ; do
                 for LIB in "${LIBS[@]}" ; do
                         echo "Providing 'Fast' configuration for ${LIB} library"
                         for SUBPLATFORM in "${SUBPLATFORMS[@]}"; do
@@ -186,7 +214,7 @@ for PLATFORM in ${SELECTED_PLATFORMS} ; do
                 done
         done
                         
-        for ARCH in "${ARCHS[@]}" ; do
+        for ARCH in ${SELECTED_ARCHS} ; do
                 for LIB in "${LIBS[@]}" ; do
                         echo "Monkey patching toolset/arch for ${LIB} library"
                         for SUBPLATFORM in "v140_static_debug" "v140_static_release" "v140_static_fast"; do

@@ -64,7 +64,7 @@ before_install:
 
 # Set up the source tree by fetching Linux-specific prebuilt objects
 install: 
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then (cd prebuilt && ./fetch-libraries.sh linux) ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then (cd prebuilt && ./fetch-libraries.sh linux x86_64) ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx"   ]] ; then (cd prebuilt && ./fetch-libraries.sh mac)   ; fi
 
 # Bootstrap the LCB compiler, build the default target set and run a
