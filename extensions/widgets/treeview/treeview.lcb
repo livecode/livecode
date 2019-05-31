@@ -1025,7 +1025,7 @@ public handler OnClick() returns nothing
 		put tData["path"] into tPath
 		combine tPath with "]["
 		put "Really delete array element at path [" & the result & "]?" into tPrompt
-		execute script "answer \q" & tPrompt & "\q with OK and Cancel; return it"
+		execute script "answer \q" & tPrompt & "\q with \qOK\q and \qCancel\q; return it"
 		if the result is "OK" then
 			removePath(tData["path"])
 		end if
@@ -1721,7 +1721,7 @@ private handler addKey(in pListElt as Integer, in pPath as List, in pLevel as In
 					"Would you like to replace it with an empty array or " & \
 					"move it to the first element?" into tPrompt
 			execute script "answer \q" & tPrompt & \
-					"\q with Cancel or Replace or Move; return it"
+					"\q with \qCancel\q or \qReplace\q or \qMove\q; return it"
 			if the result is "Replace" then
 				put "" into tElement
 			else if the result is "Cancel" then
