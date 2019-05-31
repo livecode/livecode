@@ -1260,6 +1260,7 @@ public:
 
         if (t_fptr != NULL)
         {
+            setbuf(t_fptr, nullptr);
             configureSerialPort((short)fileno(t_fptr));
 
             t_handle = new (nothrow) MCStdioFileHandle(t_fptr);
