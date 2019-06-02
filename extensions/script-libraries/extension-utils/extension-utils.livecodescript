@@ -273,7 +273,7 @@ private function __dependencyOrder pDependencies, pList
    return tOrder
 end __dependencyOrder
 
-function extensionIsBuiltin pID
+private function extensionIsBuiltin pID
    switch pID
       case "com.livecode.widget"
       case "com.livecode.engine"
@@ -331,8 +331,13 @@ dependency information in <pRequiresA>
 function extensionOrderByDependency pExtensions, pRequiresA, \
       pIncludeBuiltin
    # Accumulate an array of dependencies
-   local tDependencies, tRequirements
+   local tDependencies, tRequirements, tExtensions
    repeat for each line tExtension in pExtensions
+      if not pIncludeBuiltin and extensionIsBuiltin(tExtension) then
+         next repeat
+      end if
+      __addToList tExtension, tExtensions
+
       put pRequiresA[tExtension] into tRequirements
       repeat for each element tDependent in tRequirements
          if not pIncludeBuiltin and extensionIsBuiltin(tDependent) then
@@ -343,7 +348,7 @@ function extensionOrderByDependency pExtensions, pRequiresA, \
    end repeat
    
    # Order them
-   return __dependencyOrder(tDependencies, pExtensions)
+   return __dependencyOrder(tDependencies, tExtensions)
 end extensionOrderByDependency
 
 private function __extensionResourcePath
