@@ -2382,6 +2382,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		if (!t_search_wstr.Lock(*t_search_path))
 			return false;
 		ffh = FindFirstFileW(*t_search_wstr, &data);
+		if (ffh == INVALID_HANDLE_VALUE)
+		{
+			return false;
+		}
 
 		do
 		{

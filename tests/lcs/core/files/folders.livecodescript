@@ -111,25 +111,33 @@ on TestFoldersFirstLine
    TestAssert "Fist line of the folders is always  '..'", first line of tFolders is ".."
 end TestFoldersFirstLine
 
-on TestFoldersInEmptyFolder
+on TestEmptyFolder
    // Bug 16223: if no folder is listed by 'the folders', there should still
    // be ".." at the head of the list
    local tFolders, tNewFolder, tOldCwd
+   put the defaultFolder into tOldCwd
    
    // Create a new, empty folder
-   put "files__TestFoldersInEmptyFolder" into tNewFolder
-   create folder tNewFolder
+   put "files__TestEmptyFolder" into tNewFolder
+   set the defaultFolder to specialFolderPath("temporary")
    
-   put the defaultFolder into tOldCwd
+   create folder tNewFolder
+
+   TestAssert "An empty non-current folder returns '..'", folders(tNewFolder) is ".."
+   TestAssert "An empty non-current folder returns empty files", files(tNewFolder) is empty
+   TestAssert "An empty non-current folder returns empty detailed files", files(tNewFolder, "detailed") is empty
+   
    set the defaultFolder to tNewFolder
    
    put the folders into tFolders
    
-   TestAssert "'..' is the only folder in an empty folder", the folders is ".."
+   TestAssert "An empty current folder returns '..'", the folders is ".."
+   TestAssert "An empty current folder returns empty files", the files is empty
+   TestAssert "An empty current folder returns empty detailed files", the detailed files is empty
    
    delete folder tNewFolder
    set the defaultFolder to tOldCwd
-end TestFoldersInEmptyFolder
+end TestEmptyFolder
 
 on TestFoldersOfTilde
    TestSkipIfNot "platform", "MacOS,Linux"
@@ -160,3 +168,13 @@ on TestResolveFolderAlias
     end if
 end TestResolveFolderAlias
 
+on TestNonExistentFolder
+    local tUUID
+    put uuid() into tUUID
+
+    set the folder to tUUID
+    TestAssert "set the folder to non-existent folder", the result is "can't open directory"
+    TestAssert "The folders of non-existent folder", folders(tUUID) is empty
+    TestAssert "The files of non-existent folder", files(tUUID) is empty
+    TestAssert "The detailed files of non-existent folder", files(tUUID, "detailed") is empty
+end TestNonExistentFolder
