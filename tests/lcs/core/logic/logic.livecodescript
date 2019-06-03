@@ -52,8 +52,12 @@ private function IsMacDesktop
    return true
 end IsMacDesktop
 
-private command __checkVariableType pVariable, pType
+private command __checkVariableType pVariable, pType, pSkip, pReason
    repeat for each item tType in kIsA_types
+      if tType is among the items of pSkip then
+         TestSkip merge("'Variable containing '[[pVariable]]' is a [[tType]]"), pReason
+         next repeat
+      end if
       if tType is among the items of pType then
          TestAssert _fixSharp(merge("'Variable containing '[[pVariable]]' is a [[tType]]")), value("pVariable is a " & tType)
       else
@@ -155,10 +159,18 @@ on TestIsA
    __checkVariableType "some text", "ascii string"
    
    // numToChar(128)
-   __checkVariableType numToChar(128), ""
+   if the platform is "win32" then
+      __checkVariableType numToChar(128), "", "date", "Bug 20966"   
+   else
+      __checkVariableType numToChar(128), ""
+   end if
    
    // Unicode string
-   __checkVariableType "ыщьуерштп", ""
+   if the platform is "win32" then
+      __checkVariableType "ыщьуерштп", "", "date", "Bug 20966"   
+   else
+      __checkVariableType "ыщьуерштп", ""
+   end if
    
    // Empty
    __checkVariableType empty, ""

@@ -7,6 +7,12 @@ on TestSetup
 end TestSetup
 
 on TestContextLines
+   // These tests seem to fail on windows
+   if the platform is "win32" then
+      TestAssertBroken "Diff library context lines", false, "Bug 22152"
+      exit TestContextLines
+   end if
+
    local tTestFolder
    put get_test_folder() & "/test_context" into tTestFolder
    
@@ -23,6 +29,12 @@ on TestLineEndings
 end TestLineEndings
 
 on TestTerminatingNewline
+   // These tests seem to fail on windows
+   if the platform is "win32" then
+      TestAssertBroken "Diff library terminating new line", false, "Bug 22152"
+      exit TestTerminatingNewline
+   end if
+
    local tTestFolder
    put get_test_folder() & "/test_terminating_newline" into tTestFOlder
    

@@ -33,10 +33,10 @@ on TestPageHeights
    
    local tFieldContentFilename
    set the itemDel to slash
-   put item 1 to -2 of the filename of this stack into tFieldContentFilename
-   put slash & "_pageHeightsFieldContent.txt" after tFieldContentFilename
-   set the htmlText of field "testPageHeightsField" to url ("file:/"&tFieldContentFilename)
-   
+   put the filename of this stack into tFieldContentFilename
+   put "_pageHeightsFieldContent.txt" into item -1 of tFieldContentFilename
+   set the htmlText of field "testPageHeightsField" to url ("file:"&tFieldContentFilename)
+
    TestAssert "Field is not empty", field "testPageHeightsField" is not empty
       
    local tObservedPageHeights

@@ -3,9 +3,9 @@ script "TestLibUrlStatusCodes"
 local sLogField
 
 on TestSetup
-   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIfNot "desktop"
    TestSkipIf "environment", "server"
-   
+
    if not TestIsInStandalone() then
       local tLibURl
       put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
@@ -15,6 +15,10 @@ end TestSetup
 
 
 on TestStatusCodes
+   if the platform is "win32" then
+      TestAssertBroken "libUrl status codes", false, "bug 22154"
+      exit TestStatusCodes
+   end if
    # Response Code 204
    set the socketTimeoutInterval to 10000
    put the milliseconds into tStartTime

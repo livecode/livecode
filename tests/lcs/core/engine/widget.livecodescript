@@ -52,27 +52,46 @@ end TestWidgetBindErrorsDontEscape
 //////////
 
 private command _DoTestWidgetScriptObjectAccess pMode
-   set the testMode of widget "Test" to pMode
-
-   export widget "Test" to array tVar
-
-   TestAssertErrorDialog "no script access allowed for" && pMode, \ 
-       "EE_EXTENSION_ERROR_DOMAIN"
-end _DoTestWidgetScriptObjectAccess
-
-on TestWidgetScriptObjectAccess
    create stack "WidgetScriptAccessTest"
    set the defaultStack to "WidgetScriptAccessTest"
 
    create widget "Test" as "com.livecode.lcs_tests.core.widget"
    set the behavior of it to the long id of me
 
-   repeat for each item tMode in "resolve,get,set,send,post,execute"
-      _DoTestWidgetScriptObjectAccess tMode
-   end repeat
+   set the testMode of widget "Test" to pMode
+
+   local tVar
+   export widget "Test" to array tVar
+
+   TestAssertErrorDialog "no script access allowed for" && pMode, \ 
+       "EE_EXTENSION_ERROR_DOMAIN"
 
    delete stack "WidgetScriptAccessTest"
-end TestWidgetScriptObjectAccess
+end _DoTestWidgetScriptObjectAccess
+
+on TestWidgetScriptObjectAccessResolve
+   _DoTestWidgetScriptObjectAccess "resolve"
+end TestWidgetScriptObjectAccessResolve
+
+on TestWidgetScriptObjectAccessGet
+   _DoTestWidgetScriptObjectAccess "get"
+end TestWidgetScriptObjectAccessGet
+
+on TestWidgetScriptObjectAccessSet
+   _DoTestWidgetScriptObjectAccess "set"
+end TestWidgetScriptObjectAccessSet
+
+on TestWidgetScriptObjectAccessSend
+   _DoTestWidgetScriptObjectAccess "send"
+end TestWidgetScriptObjectAccessSend
+
+on TestWidgetScriptObjectAccessPost
+   _DoTestWidgetScriptObjectAccess "post"
+end TestWidgetScriptObjectAccessPost
+
+on TestWidgetScriptObjectAccessExcecute
+   _DoTestWidgetScriptObjectAccess "execute"
+end TestWidgetScriptObjectAccessExcecute
 
 on TestWidgetThrowInOnCreate
    create stack "WidgetThrowOnSaveTest"
