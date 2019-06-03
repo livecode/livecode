@@ -119,7 +119,6 @@ and build LiveCode from there.
 If you installed the Visual Studio build tools, you can run:
 
 ````
-cd build-win-x86
 set BUILD_PLATFORM=win-x86
 cmd /C ..\make.cmd
 ````
