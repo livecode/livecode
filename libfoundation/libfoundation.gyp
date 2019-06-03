@@ -45,9 +45,9 @@
 			
 			'dependencies':
 			[
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
 				'../prebuilt/libicu.gyp:libicu',
 				'../prebuilt/libicu.gyp:encode_minimal_icu_data',
+                '../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
 				'../thirdparty/libffi/libffi.gyp:libffi',
 			],
 			

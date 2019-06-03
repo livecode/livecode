@@ -24,7 +24,12 @@
 				
 				'../prebuilt/libopenssl.gyp:libopenssl_headers',
 
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_pcre',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_jpeg',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_gif',
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_png',
+
+				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
 
 				'engine-common.gyp:encode_version',
 				'engine-common.gyp:quicktime_stubs',
@@ -72,7 +77,12 @@
 							'src/mblcamera.cpp',
 						],
 										
-						
+						'dependencies':
+						[
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_skia',
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_freetype',
+						],
+
 						'link_settings':
 						{
 							'ldflags':
@@ -94,6 +104,11 @@
 						'sources':
 						[
 							'<@(engine_minizip_source_files)',
+						],
+
+						'dependencies':
+						[
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_skia',
 						],
 					},
 				],
