@@ -38,8 +38,7 @@
 			],
 			
 			'conditions':
-			[
-				
+			[				
 				[
 					'OS != "emscripten"',
 					{
