@@ -14,10 +14,10 @@ if not defined BUILDTYPE set BUILDTYPE=Debug
 @rem Guess build project
 if not defined BUILD_EDITION set BUILD_EDITION=community
 if /I "%BUILD_EDITION%"=="commercial" (
-    set BUILD_PROJECT=livecode-commercial.sln
+    set BUILD_PROJECT=build-%BUILD_PLATFORM%\livecode-commercial.sln
     set DEFAULT_TARGET=____\default
 ) else (
-    set BUILD_PROJECT=livecode\livecode.sln
+    set BUILD_PROJECT=build-%BUILD_PLATFORM%\livecode\livecode.sln
     set DEFAULT_TARGET=default
 )
 
