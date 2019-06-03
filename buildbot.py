@@ -195,25 +195,23 @@ class UniqueMspdbsrv(object):
 def exec_msbuild(platform):
     # Run the make.cmd batch script; it's run using Wine if this is
     # not actually a Windows system.
-    cwd = 'build-' + platform
-
     if _platform.system() == 'Windows':
         with UniqueMspdbsrv() as mspdbsrv:
-            args = ['cmd', '/C', '..\\make.cmd']
+            args = ['cmd', '/C', 'make.cmd']
             print(' '.join(args))
-            result = subprocess.call(args, cwd=cwd)
+            result = subprocess.call(args)
 
         sys.exit(result)
 
     else:
-        args = ['wine', 'cmd', '/K', '..\\make.cmd']
+        args = ['wine', 'cmd', '/K', 'make.cmd']
         print(' '.join(args))
-        exit_status = sys.exit(subprocess.call(args, cwd=cwd))
+        exit_status = sys.exit(subprocess.call(args))
 
         # Clean up any Wine processes that are still hanging around.
         # This is important in case the build fails.
         args = ['wineserver', '-k', '-w']
-        subprocess.call(args, cwd=cwd)
+        subprocess.call(args)
 
         sys.exit(exit_status)
 
