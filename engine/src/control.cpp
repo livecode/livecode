@@ -44,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "bitmapeffect.h"
 #include "graphicscontext.h"
 #include "graphics_util.h"
+#include "widget.h"
 
 #include "exec.h"
 
@@ -631,7 +632,14 @@ void MCControl::undo(Ustruct *us)
 		}
 		return;
 	case UT_REPLACE:
-		del(true);
+        if (gettype() == CT_WIDGET)
+        {
+            static_cast<MCWidget*>(this)->delforundo(true);
+        }
+        else
+        {
+            del(true);
+        }
 		us->type = UT_DELETE;
 		return;
 	default:

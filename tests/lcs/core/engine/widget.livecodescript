@@ -115,3 +115,45 @@ on TestWidgetRetainRep
    delete stack "WidgetRetainRepTest"
    delete file tPath
 end TestWidgetRetainRep
+
+on TestWidgetDeleteUndo
+   -- ensure the extension is not already loaded
+   if "com.livecode.lcs_tests.core.widget_save" is \
+            among the lines of the loadedExtensions then
+      unload extension "com.livecode.lcs_tests.core.widget_save"
+   end if
+
+   create stack "WidgetDeleteUndo"
+   set the defaultStack to "WidgetDeleteUndo"
+
+   local tWidget
+   put "com.livecode.lcs_tests.core.widget_save" into tWidget["$kind"]
+   put uuid() into tWidget["$state"]["info"]
+   import widget from array tWidget
+
+   select widget 1
+   delete
+   undo
+
+   local tOut
+   export widget 1 to array tOut
+   TestAssert "Undo on deleted unbound extension retains rep", tOut["$state"]["info"] is tWidget["$state"]["info"]
+   
+   select widget 1
+   delete
+
+   TestLoadAuxiliaryExtension "_widget_save"
+   undo
+   TestAssert "Undo on deleted unbound extension rebinds and retains rep", the savedInfo of widget 1 is tWidget["$state"]["info"]
+   
+   select widget 1
+   delete
+   undo -- replace
+   TestAssert "Undo on deleted bound extension rebinds and retains rep", the savedInfo of widget 1 is tWidget["$state"]["info"]
+   
+   undo -- delete
+   undo -- replace
+   TestAssert "Undo delete/replace on deleted bound extension rebinds and retains rep", the savedInfo of widget 1 is tWidget["$state"]["info"]
+   
+   delete stack "WidgetDeleteUndo"
+end TestWidgetDeleteUndo

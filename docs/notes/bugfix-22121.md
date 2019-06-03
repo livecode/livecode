@@ -1,0 +1,1 @@
+# Fix widgets not rebinding when undo is called after deletion

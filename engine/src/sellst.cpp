@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "field.h"
 #include "paragraf.h"
 #include "image.h"
+#include "widget.h"
 #include "mcerror.h"
 #include "sellst.h"
 #include "undolst.h"
@@ -583,8 +584,18 @@ Boolean MCSellist::del()
             MCControl *cptr = tptr->m_ref.GetAs<MCControl>();
             uint2 num = 0;
             cptr->getcard()->count(CT_LAYER, CT_UNDEFINED, cptr, num, True);
+            
+            bool t_del;
+            if (cptr->gettype() == CT_WIDGET)
+            {
+                t_del = static_cast<MCWidget*>(cptr)->delforundo(true);
+            }
+            else
+            {
+                t_del = cptr->del(true);
+            }
 
-            if (cptr->del(true))
+            if (t_del)
             {
                 Ustruct *us = new (nothrow) Ustruct;
                 us->type = UT_DELETE;
