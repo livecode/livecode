@@ -311,13 +311,14 @@
 					
 					'outputs':
 					[
-						'lib/android/<(target_arch)',
+						'lib/android/>(target_arch)',
 					],
 					
 					'action':
 					[
 						'./fetch-libraries.sh',
 						'android',
+						'>(target_arch)',
 					],
 				},
 			],
@@ -347,6 +348,7 @@
 					[
 						'./fetch-libraries.sh',
 						'linux',
+						'<(host_arch)',
 					],
 				},
 			],
@@ -384,6 +386,22 @@
 			'target_name': 'fetch-win',
 			'type': 'none',
 
+			'variables':
+			{
+				'conditions':
+				[
+					[
+						'target_arch == "x64"',
+						{
+							'fetch_arch': 'x86_64',
+						},
+						{
+							'fetch_arch': 'x86',
+						},
+					],
+				],
+			},
+
 			'actions':
 			[
 				{
@@ -397,8 +415,8 @@
 					
 					'outputs':
 					[
-						'bin/win32/<(target_arch)',
-						'lib/win32/<(target_arch)',
+						'bin/win32/>(fetch_arch)',
+						'lib/win32/>(fetch_arch)',
                         'unpacked',
 					],
 					
@@ -407,7 +425,9 @@
 						'call',
 						'../util/invoke-unix.bat',
 						'./fetch-libraries.sh',
-						'win32',
+						# Ensure gyp does not treat these parameters as paths
+						'$(not_a_real_variable)win32',
+						'$(not_a_real_variable)>(fetch_arch)',
 					],
 				},
 			],
