@@ -425,8 +425,8 @@ on TestWaitDepth
          "end waitDepthTest"
    
    send "waitDepthTest" to button 1 in 0 seconds
-   wait 0 seconds with messages
-   
+   wait 1 second with messages
+
    TestAssert "Waitdepth increases", gWaitDepthTestResult is (1 + the waitdepth)
 end TestWaitDepth
 

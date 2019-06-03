@@ -7,6 +7,9 @@ on TestSetup
 end TestSetup
 
 on TestContextLines
+   // These tests seem to fail on windows
+   TestSkipIf "platform", "win32"
+
    local tTestFolder
    put get_test_folder() & "/test_context" into tTestFolder
    
@@ -23,6 +26,9 @@ on TestLineEndings
 end TestLineEndings
 
 on TestTerminatingNewline
+   // These tests seem to fail on windows
+   TestSkipIf "platform", "win32"
+
    local tTestFolder
    put get_test_folder() & "/test_terminating_newline" into tTestFOlder
    

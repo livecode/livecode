@@ -287,20 +287,8 @@ end TestDeleteFile
 
 on TestLaunch
    local taskList
-   
-   if the platform is "Win32" then
-      put shell("tasklist /V") into taskList
-      
-      if taskList contains "notepad.exe" then
-         get shell("taskkill /IM notepad.exe")
-      end if
-      
-      launch "notepad.exe"
-      
-      put shell("tasklist /V") into taskList
-      
-      TestAssert "Notepad has been launched", taskList contains "notepad.exe"
-   else if the platform is "MacOS" then
+
+   if the platform is "MacOS" then
       put shell("ps -ax") into taskList
       
       launch (specialfolderpath("apps") & slash & "textEdit.app")
@@ -334,19 +322,9 @@ on TestLaunchWith
    local taskList
    
    put the openFiles into taskList
-   
-   if the platform is "Win32" then	
-      launch "Test.txt" with "notepad"
-      
-      put shell("tasklist /V") into taskList
-      
-      TestAssert "file Text.txt lauched with Notepad", taskList contains "notepad.exe"
-      
-      get shell("taskkill /IM notepad.exe")
-      
-      delete file "Test.txt"
-   else if the platform is "MacOS" then
-      
+
+   if the platform is "MacOS" then
+
       launch "Test.txt" with (specialfolderpath("apps") & slash & "textEdit.app")
       
       put shell("ps -ax") into taskList

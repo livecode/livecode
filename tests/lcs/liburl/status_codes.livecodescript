@@ -3,9 +3,10 @@ script "TestLibUrlStatusCodes"
 local sLogField
 
 on TestSetup
-   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIf "platform", "win32"
+   TestSkipIfNot "desktop"
    TestSkipIf "environment", "server"
-   
+
    if not TestIsInStandalone() then
       local tLibURl
       put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl

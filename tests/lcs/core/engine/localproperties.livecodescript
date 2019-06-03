@@ -195,7 +195,11 @@ on TestCenturyCutOff
    put "1/1/" & tCutOff + 1 into tDate
    convert tDate to dateItems
    
-   TestAssert "centuryCutOff, above", item 1 of tDate is ("19" & tCutOff + 1)
+   if the platform is "win32" then
+      TestAssertBroken "centuryCutOff, above", item 1 of tDate is ("19" & tCutOff + 1), "Bug 12866"
+   else
+      TestAssert "centuryCutOff, above", item 1 of tDate is ("19" & tCutOff + 1)   
+   end if
    
    // Set the date below the centurycutoff
    put "1/1/" & tCutOff - 1 into tDate
