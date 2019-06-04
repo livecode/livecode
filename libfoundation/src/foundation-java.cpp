@@ -220,3 +220,22 @@ MC_DLLEXPORT bool MCJavaGetJObjectClassName(MCJavaObjectRef p_object, MCStringRe
     
     return MCJavaPrivateGetJObjectClassName(p_object, r_name);
 }
+
+MC_DLLEXPORT bool MCJavaConvertProperListRefToJObjectArray(MCProperListRef p_list, MCStringRef p_class_name, MCJavaObjectRef &r_obj_array)
+{
+    if (!s_java_initialised)
+        return MCJavaPrivateErrorThrow(kMCJavaJRENotSupportedErrorTypeInfo);
+    
+    MCNewAutoNameRef t_class_name;
+    return MCNameCreate(p_class_name, &t_class_name) && \
+        MCJavaPrivateProperListToJObjectArray(p_list, *t_class_name, r_obj_array);
+}
+
+MC_DLLEXPORT bool MCJavaConvertJObjectArrayToProperListRef(MCJavaObjectRef p_obj_array, MCProperListRef &r_list)
+{
+    if (!s_java_initialised)
+        return MCJavaPrivateErrorThrow(kMCJavaJRENotSupportedErrorTypeInfo);
+    
+    return MCJavaPrivateProperListFromJObjectArray(p_obj_array, r_list);
+}
+
