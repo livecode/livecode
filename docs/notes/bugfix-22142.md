@@ -1,0 +1,1 @@
+# Update `the machine` documentation to include `x86_64` return value on Windows 64 bit
