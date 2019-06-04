@@ -24,7 +24,8 @@ if the machine contains "Powerbook" then checkBattery
 Returns (enum):
 The <machine> <function> <return|returns> a <string>.
 
--   x86: windows based system
+-   x86: windows 32 bit based system
+-   x86_64: windows 64 bit based system
 -   iPod Touch: the device is one of the iPod Touch models
 -   iPhone: the device is one of the iPhone models
 -   iPhone Simulator: the device is a simulated iPhone
