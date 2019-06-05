@@ -1015,6 +1015,13 @@ void MCChunk::getoptionalobj(MCExecContext& ctxt, MCObjectPtr &r_object, Boolean
 		Chunk_term t_type = t_object . object -> gettype();
 		if (MCChunkTermIsControl(t_type) && t_type != CT_GROUP)
         {
+            // object can not be a parent
+            if (!noobjectchunks())
+            {
+                ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
+                return;
+            }
+            
                 MCCard *t_card;
                 t_card = t_object . object -> getcard(t_object . part_id);
                 if (t_card == nil)

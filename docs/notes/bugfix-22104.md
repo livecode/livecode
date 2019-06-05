@@ -1,0 +1,1 @@
+# Throw error when object chunk of me is used for a non-group control
