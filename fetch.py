@@ -45,7 +45,7 @@ def guess_target():
     system = platform.system()
     arch = platform.machine()
     if system == 'Darwin':
-        return 'mac'
+        return 'mac-universal'
     if system == 'Linux':
         if re.match('^(x|i.?)86$', arch) is not None:
             return 'linux-x86'
@@ -102,15 +102,23 @@ def validate_target(opts):
 # Action
 ################################################################
 
-def exec_fetch_libraries(build_platform):
+def exec_fetch_libraries(build_platform, build_arch):
 	if platform.system() == 'Windows':
-		args = [".\util\invoke-unix.bat", "prebuilt/fetch-libraries.sh", build_platform]
+		args = [".\util\invoke-unix.bat", "prebuilt/fetch-libraries.sh", build_platform, build_arch]
 	else:
-		args = ["./prebuilt/fetch-libraries.sh", build_platform]
+		args = ["./prebuilt/fetch-libraries.sh", build_platform, build_arch]
 	print(' '.join(args))
 	status = subprocess.call(args)
 	if status != 0:
 		sys.exit(status)
+
+def get_fetch_arch(platform, arch):
+    if platform in ['mac', 'ios']:
+        return "Universal"
+    elif platform == 'linux' and arch == 'x86':
+        return "i386"
+    else:
+        return arch
 
 def fetch(args):
     opts = {}
@@ -119,17 +127,24 @@ def fetch(args):
 
     validate_target(opts)
     
+    host_components = guess_target().split('-')
+    target_components = opts['TARGET'].split('-')
+
     # Get the host platform to pass to fetch-libraries
-    host_platform = guess_target().split('-')[0]
+    host_platform = host_components[0]
+
+    host_arch = get_fetch_arch(host_platform, host_components[1])
 
     # Get the target platform to pass to fetch-libraries
-    target_platform = opts['TARGET'].split('-')[0]
+    target_platform = target_components[1]
+
+    target_arch = get_fetch_arch(target_platform, target_components[0])
 
     print('Fetching host platform prebuilts (' + host_platform + ')')
-    exec_fetch_libraries(host_platform)
+    exec_fetch_libraries(host_platform, host_arch)
 
     print('Fetching target platform prebuilts (' + target_platform + ')')
-    exec_fetch_libraries(target_platform)
+    exec_fetch_libraries(target_platform, target_arch)
 
 if __name__ == '__main__':
     fetch(sys.argv[1:])
