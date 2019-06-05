@@ -9,13 +9,21 @@
 		{
 			'target_name': 'default',
 			'type': 'none',
-			'dependencies': [ 'binzip-copy', ],
+			'dependencies': 
+			[ 
+				'binzip-copy', 
+				'check',
+			],
 		},
 
 		{
 			'target_name': 'check',
 			'type': 'none',
-			'dependencies': [ 'cpptest-run-all', ],
+			'dependencies': 
+			[ 		
+				'cpptest-run-all', 
+				'tests/tests.gyp:tests-run-all',
+			],
 		},
 
 		{

@@ -1,0 +1,252 @@
+#!
+ 
+send "doCompile" to me
+
+function q pParam
+   return quote & pParam & quote
+end q
+
+private function absoluteFilePaths pFiles, pSourceFolder
+  local tPrefix, tPrefixBuild
+  put pSourceFolder & slash into tPrefix
+
+  split pFiles by return
+  combine pFiles with (return & tPrefix)
+  put tPrefix before pFiles
+  return pFiles
+end absoluteFilePaths
+
+private function pathFromNative pPath
+   if the platform is "win32" then
+      replace backslash with slash in pPath
+   end if
+   return pPath
+end pathFromNative
+
+private command addToList @xList, pValue
+   put pValue into xList[the number of elements in xList + 1]
+end addToList
+
+private function compiledModuleMap pSourceFolder, pTarget, pFiles
+  set the itemdelimiter to slash
+  
+  -- Figure out how to modify the path to put it in the tests build
+  -- folder
+  local tItemCount, tTestsItem
+  repeat for each item tItem in pSourceFolder
+	 add 1 to tItemCount
+	 if tItem is "tests" then
+		put tItemCount into tTestsItem
+		exit repeat
+	 end if
+  end repeat 
+		
+  local tMapA, tListA
+  repeat for each line tFile in pFiles
+     set the itemdelimiter to slash
+     put tFile into tMapA["source"]    
+	 if tTestsItem is not empty then
+		put pTarget into item 1 to tTestsItem of tFile
+	 else
+		put ".." & slash & pTarget & slash before tFile
+	 end if 
+	 set the itemdelimiter to "."
+	 put "lcm" into item -1 of tFile 	 
+	 put tFile into tMapA["target"]
+	 addToList tListA, tMapA
+  end repeat
+  return tListA
+end compiledModuleMap
+
+private function __PathToRepo
+   set the itemdelimiter to slash
+   
+   return item 1 to -3 of pathFromNative(the filename of me)
+end __PathToRepo
+
+private command doShell pShellCmd, @rResult, @rOutput
+   local tOldHide
+   put the hideConsoleWindows into tOldHide
+   set the hideConsoleWindows to true
+
+   put shell(pShellCmd) into rOutput
+   put the result into rResult
+   
+   set the hideConsoleWindows to tOldHide
+end doShell
+
+on doCompile
+   local tArgs
+   put the commandArguments into tArgs
+   
+   local tEngine
+   put the commandName into tEngine
+   
+   set the itemdelimiter to slash
+   
+   local tUtilsFilename 
+   put __PathToRepo() & slash & \
+      "extensions" & slash & "script-libraries" & slash & \ 
+      "extension-utils" & slash & \
+      "extension-utils.livecodescript" into tUtilsFilename
+
+   write tUtilsFilename & return to stdout
+
+   start using stack tUtilsFilename
+   
+   -- All uses currently find lcb sources in a source folder
+   local tSourceFolder
+   put pathFromNative(tArgs[3]) into tSourceFolder
+   
+   local tFiles
+   put GetFileNames(tSourceFolder, "lcb") into tFiles
+   
+   local tSendCmd   
+   switch tArgs[2]
+   case "findandbuild"
+      local tCount
+      put "extensionBuildPackageAndExtractLCB" into tSendCmd
+      repeat for each line tLine in tFiles
+         add 1 to tCount
+         put tSourceFolder & slash & tLine into tArgs[9 + tCount]
+      end repeat
+      repeat with x = 4 to the number of elements in tArgs
+         put " tArgs[" & x & "]," after tSendCmd
+      end repeat
+      delete the last char of tSendCmd      
+      break
+   case "findandcompile"
+      put absoluteFilePaths(tFiles, tSourceFolder) into tFiles
+
+      extensionDepsOrder "", tFiles
+      if the result is not empty then
+         write "failed" & return to stdout
+         write the result to stderr
+         quit 1   
+      end if
+      put it into tFiles
+
+      local tLCI
+      put pathFromNative(tArgs[4]) & slash & "lci" into tLCI
+         
+      repeat for each element tElement in \
+         compiledModuleMap(tSourceFolder, pathFromNative(tArgs[4]), tFiles)
+         extensionCompile "", tElement["source"], "", tLCI, "", \
+            item 1 to -2 of tElement["target"], \
+            item -1 of tElement["target"]
+      end repeat
+      quit 0
+   case "lcruntests"
+      local tTestLib, tJavaHome
+      put __PathToRepo() & slash & "tests" & slash & \
+         "_testlib.livecodescript" into tTestLib
+      dispatch function "TestGetJavaHome" to stack tTestLib
+      if it is "handled" then
+         put the result into $JAVA_HOME
+      end if
+   
+      put absoluteFilePaths(tFiles, tSourceFolder) into tFiles
+      
+      local tShellCmd, tResult, tRunFlags
+	  repeat with x = 7 to the number of elements in tArgs
+		 put " -l" && q(tArgs[x]) after tRunFlags
+	  end repeat  
+	  put q(tArgs[5]) into tShellCmd      
+      put tRunFlags after tShellCmd
+	  put " --handler RunModuleTests" after tShellCmd
+	  put " --" after tShellCmd
+	  put " " & q(tArgs[6]) after tShellCmd
+	  put " --lc-run " after tShellCmd
+	  put q(tArgs[5] & tRunFlags) after tShellCmd
+
+      local tShellResult, tShellOutput, tLogFilesA, tTestShell
+      set the itemdelimiter to "."
+      repeat for each element tElement in \
+         compiledModuleMap(tSourceFolder, pathFromNative(tArgs[4]), tFiles)
+         put tShellCmd && tElement["target"] into tTestShell
+         doShell tTestShell, tShellResult, tShellOutput
+
+         put "log" into item -1 of tElement["target"]
+         addToList tLogFilesA, the folder & slash & tElement["target"]
+         put tShellOutput into url("binfile:" & tElement["target"])
+         write tShellOutput & return to stdout
+      end repeat
+
+	  -- Summarize tests
+	  put q(tArgs[5]) into tShellCmd      
+      put tRunFlags after tShellCmd
+	  put " --handler SummarizeTests" after tShellCmd
+	  put " --" after tShellCmd
+	  put " " & q(tArgs[6]) after tShellCmd
+	  put " --summary-log" after tShellCmd
+	  put " " & q(tSourceFolder & slash & "_lcb_test_suite.log") \
+	     after tShellCmd
+	  repeat for each element tElement in tLogFilesA
+	     put " " & tElement after tShellCmd
+	  end repeat
+
+      doShell tShellCmd, tShellResult, tShellOutput
+	  write tShellOutput to stdout
+	  if tShellResult is not empty then
+	     quit tShellResult
+	  end if
+	  quit 0
+   default
+      write "invalid mode" && tArgs[2] to stderr
+      quit 1
+      break
+   end switch
+   try
+      send tSendCmd to stack tUtilsFilename
+   catch tError
+      write tError to stderr
+      quit 1
+   end try
+end doCompile
+
+-- Get all files beneath the pBaseFolder with extension pExtension
+private function GetFileNames pBaseFolder, pExtension
+   local tList
+   GetFileNamesRecursive pBaseFolder, empty, pExtension, tList
+
+   return tList
+end GetFileNames
+
+private command appendToStringList @xList, pValue
+   if xList is empty then
+      put pValue into xList
+   else
+      put return & pValue after xList
+   end if
+end appendToStringList
+
+private command GetFileNamesRecursive pPath, pRelPath, pExtension, @xList
+   -- Process files in the current directory
+   local tFile
+   repeat for each line tFile in files(pPath)
+      if tFile ends with ("." & pExtension) then
+
+         if pRelPath is not empty then
+            put pRelPath & slash before tFile
+         end if
+         
+         appendToStringList xList, tFile
+      end if
+   end repeat
+
+   -- Process subdirectories
+   local tFolder, tFolderPath
+   repeat for each line tFolder in folders(pPath)
+      if tFolder begins with "." then
+         next repeat
+      end if
+
+      put pPath & slash & tFolder into tFolderPath
+
+      if pRelPath is not empty then
+         put pRelPath & slash before tFolder
+      end if
+
+      GetFileNamesRecursive tFolderPath, tFolder, pExtension, xList
+   end repeat
+end GetFileNamesRecursive
