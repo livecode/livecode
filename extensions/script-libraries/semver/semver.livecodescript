@@ -649,38 +649,298 @@ private function __SatisfiesRange pVersion, pRange
    return tResult
 end __SatisfiesRange
 
-private command __SemverSplitRange @xRange
-   replace "||" with " || " in xRange
-   repeat while xRange contains "  "
-      replace "  " with " " in xRange
-   end repeat
-   split xRange by space
-end __SemverSplitRange
+private function __IsX pVal
+   return pVal is empty or pVal is "x" or pVal is "*"
+end __IsX
 
-command semverParseRange @xRange
-   __SemverSplitRange xRange
+private function __ExpandCaret pRangeComparator
+   local tExpandedRange
    
-   local tHyphen = false
-   repeat with tIndex = 1 to the number of elements of xRange
-      if xRange[tIndex] is "||" then
+   if __IsX(pRangeComparator["major"]) then
+      -- ^ --> *
+      put empty into tExpandedRange
+   else if __IsX(pRangeComparator["minor"]) then
+      -- ^1 --> >=1.0.0 <2.0.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put 0 into tExpandedRange[1]["minor"]
+      put 0 into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] + 1 into tExpandedRange[2]["major"]
+      put 0 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   else if __IsX(pRangeComparator["patch"]) then
+      if pRangeComparator["major"] is 0 then
+         -- ^0.1 --> >=0.1.0 <0.2.0
+         put pRangeComparator["major"] into tExpandedRange[1]["major"]
+         put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+         put 0 into tExpandedRange[1]["patch"]
+         put ">=" into tExpandedRange[1]["operator"]
+         
+         put pRangeComparator["major"] into tExpandedRange[2]["major"]
+         put pRangeComparator["minor"] + 1 into tExpandedRange[2]["minor"]
+         put 0 into tExpandedRange[2]["patch"]
+         put "<" into tExpandedRange[2]["operator"]
+      else
+         -- ^1.2 --> >=1.2.0 <2.0.0
+         put pRangeComparator["major"] into tExpandedRange[1]["major"]
+         put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+         put 0 into tExpandedRange[1]["patch"]
+         put ">=" into tExpandedRange[1]["operator"]
+         
+         put pRangeComparator["major"] + 1 into tExpandedRange[2]["major"]
+         put 0 into tExpandedRange[2]["minor"]
+         put 0 into tExpandedRange[2]["patch"]
+         put "<" into tExpandedRange[2]["operator"]
+      end if
+   else
+      if pRangeComparator["major"] is 0 then
+         if pRangeComparator["minor"] is 0 then
+            -- ^0.0.1 --> >=0.0.1 <0.0.2
+            put pRangeComparator["major"] into tExpandedRange[1]["major"]
+            put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+            put pRangeComparator["patch"] into tExpandedRange[1]["patch"]
+            put ">=" into tExpandedRange[1]["operator"]
+            
+            put pRangeComparator["major"] into tExpandedRange[2]["major"]
+            put pRangeComparator["minor"] into tExpandedRange[2]["minor"]
+            put pRangeComparator["patch"] + 1 into tExpandedRange[2]["patch"]
+            put "<" into tExpandedRange[2]["operator"]
+         else
+            -- ^0.1.1 --> >=0.1.1 <0.2.0
+            put pRangeComparator["major"] into tExpandedRange[1]["major"]
+            put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+            put pRangeComparator["patch"] into tExpandedRange[1]["patch"]
+            put ">=" into tExpandedRange[1]["operator"]
+            
+            put pRangeComparator["major"] into tExpandedRange[2]["major"]
+            put pRangeComparator["minor"] + 1 into tExpandedRange[2]["minor"]
+            put 0 into tExpandedRange[2]["patch"]
+            put "<" into tExpandedRange[2]["operator"]
+         end if
+      else
+         -- ^1.2.3 --> >=1.2.3 <2.0.0
+         put pRangeComparator["major"] into tExpandedRange[1]["major"]
+         put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+         put pRangeComparator["patch"] into tExpandedRange[1]["patch"]
+         put ">=" into tExpandedRange[1]["operator"]
+         
+         put pRangeComparator["major"] + 1 into tExpandedRange[2]["major"]
+         put 0 into tExpandedRange[2]["minor"]
+         put 0 into tExpandedRange[2]["patch"]
+         put "<" into tExpandedRange[2]["operator"]
+      end if
+   end if
+   
+   return tExpandedRange
+end __ExpandCaret
+
+private function __ExpandTilde pRangeComparator
+   local tExpandedRange
+   
+   if __IsX(pRangeComparator["major"]) then
+      -- ~ --> *
+      put empty into tExpandedRange
+   else if __IsX(pRangeComparator["minor"]) then
+      -- ~1 --> >=1.0.0 <2.0.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put 0 into tExpandedRange[1]["minor"]
+      put 0 into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] + 1 into tExpandedRange[2]["major"]
+      put 0 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   else if __IsX(pRangeComparator["patch"]) then
+      -- ~1.2 --> >=1.2.0 <1.3.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+      put 0 into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] into tExpandedRange[2]["major"]
+      put pRangeComparator["minor"] + 1 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   else
+      -- ~1.2.3 --> >=1.2.3 <1.3.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+      put pRangeComparator["patch"] into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] into tExpandedRange[2]["major"]
+      put pRangeComparator["minor"] + 1 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   end if
+   
+   return tExpandedRange
+end __ExpandTilde
+
+private function __ExpandXRanges pRangeComparator
+   local tExpandedRange
+   
+   local tMajorIsX, tMinorIsX, tPatchIsX,
+   put __IsX(pRangeComparator["major"]) into tMajorIsX
+   put __IsX(pRangeComparator["minor"]) into tMinorIsX
+   put __IsX(pRangeComparator["patch"]) into tPatchIsX
+      
+   if not (tMajorIsX or tMinorIsX or tPatchIsX) then
+      -- No Xs --> leave as is
+      put pRangeComparator into tExpandedRange[1]
+   else if tMajorIsX then
+      if pRangeComparator["operator"] is among the chars of "><" then
+         -- >X -> <0.0.0 (nothing matches)
+         -- <X -> <0.0.0
+         put 0 into tExpandedRange[1]["major"]
+         put 0 into tExpandedRange[1]["minor"]
+         put 0 into tExpandedRange[1]["patch"]
+         put "<" into tExpandedRange[1]["operator"]
+      else
+         -- X --> * (everything matches)
+         -- >=X --> *
+         -- <=X --> *
+      end if
+   else if pRangeComparator["operator"] is not empty then
+      switch pRangeComparator["operator"]
+         case ">"
+            if tMinorIsX then
+               -- >1 --> >=2.0.0
+               put pRangeComparator["major"] + 1 into tExpandedRange[1]["major"]
+               put 0 into tExpandedRange[1]["minor"]
+               put 0 into tExpandedRange[1]["patch"]
+               put ">=" into tExpandedRange[1]["operator"]
+            else
+               -- >1.2 --> >=1.3.0
+               put pRangeComparator["major"] into tExpandedRange[1]["major"]
+               put pRangeComparator["minor"] + 1 into tExpandedRange[1]["minor"]
+               put 0 into tExpandedRange[1]["patch"]
+               put ">=" into tExpandedRange[1]["operator"]
+            end if
+            break
+            
+         case "<="
+            if tMinorIsX then
+               -- <=1 --> <2.0.0
+               put pRangeComparator["major"] + 1 into tExpandedRange[1]["major"]
+               put 0 into tExpandedRange[1]["minor"]
+               put 0 into tExpandedRange[1]["patch"]
+               put "<" into tExpandedRange[1]["operator"]
+            else
+               -- <=0.5 --> <0.6.0
+               put pRangeComparator["major"] into tExpandedRange[1]["major"]
+               put pRangeComparator["minor"] + 1 into tExpandedRange[1]["minor"]
+               put 0 into tExpandedRange[1]["patch"]
+               put "<" into tExpandedRange[1]["operator"]
+            end if
+            break
+            
+         default
+            put pRangeComparator into tExpandedRange[1]
+            if tMinorIsX then
+               put 0 into tExpandedRange[1]["minor"]
+            end if
+            if tPatchIsX then
+               put 0 into tExpandedRange[1]["patch"]
+            end if 
+            break
+      end switch
+   else if tMinorIsX then
+      -- 1 --> >=1.0.0 <2.0.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put 0 into tExpandedRange[1]["minor"]
+      put 0 into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] + 1 into tExpandedRange[2]["major"]
+      put 0 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   else -- tPatchIsX
+      -- 1.2 --> >=1.2.0 <1.3.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+      put 0 into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] into tExpandedRange[2]["major"]
+      put pRangeComparator["minor"] + 1 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   end if
+   
+   return tExpandedRange
+end __ExpandXRanges
+
+command semverParseRange @xRange, pExpand
+   local tRange
+   put xRange into tRange
+   
+   replace "||" with " || " in tRange
+   repeat while tRange contains "  "
+      replace "  " with " " in tRange
+   end repeat
+   
+   local tRangeA, tRangeComparatorCount, tHyphen
+   put 1 into tRangeComparatorCount
+   put false into tHyphen
+   
+   local tRangeComparator
+   repeat for each word tRangeComparator in tRange
+      if tRangeComparator is "||" then
+         put tRangeComparator into tRangeA[tRangeComparatorCount]
+         add 1 to tRangeComparatorCount
          next repeat
       end if
-      if xRange[tIndex] is "-" then
-         put ">=" into xRange[tIndex-1]["operator"]
+      
+      if tRangeComparator is "-" then
+         put ">=" into tRangeA[tRangeComparatorCount - 1]["operator"]
          put true into tHyphen
          next repeat
       end if
       
-      __SemverParse xRange[tIndex], true
+      __SemverParse tRangeComparator, true
       if the result is not empty then
          return the result for error
       end if
       
       if tHyphen then
-         put "<=" into xRange[tIndex]["operator"]
+         put "<=" into tRangeComparator["operator"]
          put false into tHyphen
       end if
+      
+      if not pExpand then
+         put tRangeComparator into tRangeA[tRangeComparatorCount]
+         add 1 to tRangeComparatorCount
+      else
+         local tExpandedRangeComparatorsA
+         switch tRangeComparator["operator"]
+            case "^"
+               put __ExpandCaret(tRangeComparator) into tExpandedRangeComparatorsA
+               break
+               
+            case "~"
+               put __ExpandTilde(tRangeComparator)  into tExpandedRangeComparatorsA
+               break
+               
+            default
+               put __ExpandXRanges(tRangeComparator) into tExpandedRangeComparatorsA
+               break
+         end switch
+         
+         local tExpandedRangeComparator
+         repeat for each element tExpandedRangeComparator in tExpandedRangeComparatorsA
+            put tExpandedRangeComparator into tRangeA[tRangeComparatorCount]
+            add 1 to tRangeComparatorCount
+         end repeat
+      end if
    end repeat
+   
+   put tRangeA into xRange
+   return empty for value
 end semverParseRange
 
 /**
