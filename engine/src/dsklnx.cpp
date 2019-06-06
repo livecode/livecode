@@ -110,29 +110,38 @@ static void parseSerialControlStr(char *setting, struct termios *theTermios)
         if (MCU_strncasecmp(type, "baud", strlen(type)) == 0)
         {
             long baudrate = strtol(value, NULL, 10);
-            if (baudrate == 57600)
-                baud = B57600;
-            else if (baudrate == 38400)
-                baud = B38400;
-            else if (baudrate == 19200)
-                baud = B19200;
-            else if (baudrate == 9600)
+            
+            switch(baudrate)
+            {
+            case 4000000: baud = B4000000; break;
+            case 3500000: baud = B3500000; break;
+            case 3000000: baud = B3000000; break;
+            case 2500000: baud = B2500000; break;
+            case 2000000: baud = B2000000; break;
+            case 1500000: baud = B1500000; break;
+            case 1152000: baud = B1152000; break;
+            case 1000000: baud = B1000000; break;
+            case 921600: baud = B921600; break;
+            case 576000: baud = B576000; break;
+            case 500000: baud = B500000; break;
+            case 460800: baud = B460800; break;
+            case 230400: baud = B230400; break;
+            case 115200: baud = B115200; break;
+            case 57600: baud = B57600; break;
+            case 38400: baud = B38400; break;
+            case 19200: baud = B19200; break;
+            case 9600: baud = B9600; break;
+            case 4800: baud = B4800; break;
+            case 2400: baud = B2400; break;
+            case 1800: baud = B1800; break;
+            case 1200: baud = B1200; break;
+            case 600: baud = B600; break;
+            case 300: baud = B300; break;
+            default:
                 baud = B9600;
-
-            else if (baudrate == 4800)
-                baud = B4800;
-            else if (baudrate == 3600)
-                baud = B4800;
-            else if (baudrate == 2400)
-                baud = B2400;
-            else if (baudrate == 1800)
-                baud = B1800;
-            else if (baudrate == 1200)
-                baud = B1200;
-            else if (baudrate == 600)
-                baud = B600;
-            else if (baudrate == 300)
-                baud = B300;
+                break;
+            }
+            
             cfsetispeed(theTermios, baud);
             cfsetospeed(theTermios, baud);
         }
@@ -1247,6 +1256,7 @@ public:
 
         if (t_fptr != NULL)
         {
+            setbuf(t_fptr, nullptr);
             configureSerialPort((short)fileno(t_fptr));
 
             t_handle = new (nothrow) MCStdioFileHandle(t_fptr);

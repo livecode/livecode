@@ -34,5 +34,5 @@ handlerName (string): The name of the handler that modified <msg>
 lineNumber (integer): The line number within the script that modified
 <msg>
 
-References: put (command), message (glossary), msg (keyword),
-stdout (keyword)
+References: put (command), message (glossary), command (glossary),
+msg (keyword), stdout (keyword)

@@ -35,17 +35,18 @@ return-delimited list of char ranges. Each char range corresponds to an
 individual page.
 
 For example, for a field capable of displaying two lines of text and
-containing these lines: Line 1
-Line 2
-Line 3
-Line 4
-Line 5
-Line 6
+containing these lines: 
+   Line 1
+   Line 2
+   Line 3
+   Line 4
+   Line 5
+   Line 6
 
 The <pageRanges> would return:
-1,14
-15,28
-29,42
+   1,14
+   15,28
+   29,42
 
 References: height (property), formattedHeight (property)
 
