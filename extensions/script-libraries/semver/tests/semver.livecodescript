@@ -94,6 +94,34 @@ on TestSemverGreaterThanPrereleaseRange
    __TestSatisfiesRange "1.2.3","~1.2.0-beta-1", true
 end TestSemverGreaterThanPrereleaseRange
 
+command TestSemverMaxSatisfying
+   local tVersions, tInvalidVersions
+   put "1.2.3" & return & "4.5.6" & return & "7.8.9" into tVersions
+   put tVersions & return & "invalid" into tInvalidVersions
+   
+   __TestMaxMinSatisfying tVersions, empty, "7.8.9", true, true, true
+   __TestMaxMinSatisfying tVersions, "1.0.0 - 5.0.0", "4.5.6", true, true, true
+   __TestMaxMinSatisfying tVersions, ">7.8.9", empty, true, true, true
+   __TestMaxMinSatisfying empty, ">=1.2.3", empty, true, true, true
+   
+   __TestMaxMinSatisfying tInvalidVersions, empty, empty, true, false, true
+   __TestMaxMinSatisfying empty, "invalid", empty, true, true, false
+end TestSemverMaxSatisfying
+
+command TestSemverMinSatisfying
+   local tVersions, tInvalidVersions
+   put "1.2.3" & return & "4.5.6" & return & "7.8.9" into tVersions
+   put tVersions & return & "invalid" into tInvalidVersions
+   
+   __TestMaxMinSatisfying tVersions, empty, "1.2.3", false, true, true
+   __TestMaxMinSatisfying tVersions, "1.0.0 - 5.0.0", "1.2.3", false, true, true
+   __TestMaxMinSatisfying tVersions, ">7.8.9", empty, false, true, true
+   __TestMaxMinSatisfying empty, ">=1.2.3", empty, false, true, true
+   
+   __TestMaxMinSatisfying tInvalidVersions, empty, empty, false, false, true
+   __TestMaxMinSatisfying empty, "invalid", empty, false, true, false
+end TestSemverMinSatisfying
+
 command __TestSatisfiesRange pVersion, pRange, pSatisfies
    local tOutput
    put "version" && pVersion into tOutput
@@ -135,3 +163,52 @@ command __TestParsing pValid, pVersion, pRange
    put ": " & tResult after tOutput
    TestAssert tOutput, tResult is pValid
 end __TestParsing
+
+command __TestMaxMinSatisfying pVersions, pRange, pExpected, pIsMax, pVersionsAreValid, pRangeIsValid
+   local tOutput
+   put empty into tOutput
+   
+   if pIsMax then
+      put "max" after tOutput
+   else
+      put "min" after tOutput
+   end if
+   
+   local tVersions
+   if pVersionsAreValid then
+      put " from versions " after tOutput
+   else
+      put " from invalid versions " after tOutput
+   end if
+   put pVersions into tVersions
+   replace return with space in tVersions
+   put __wrapQuotes(tVersions) after tOutput
+   
+   if pRangeIsValid then
+      put " satisfying range " after tOutput
+   else
+      put " satisfying invalid range " after tOutput
+   end if
+   put __wrapQuotes(pRange) after tOutput
+   
+   local tReturned, tResult
+   if pIsMax then
+      put semverMaxSatisfying(pVersions, pRange) into tReturned
+      put the result into tResult
+   else
+      put semverMinSatisfying(pVersions, pRange) into tReturned
+      put the result into tResult
+   end if
+   
+   if pVersionsAreValid and pRangeIsValid then
+      put " is" && __wrapQuotes(pExpected) && ":" && __wrapQuotes(tReturned) after tOutput
+      TestAssert tOutput, tReturned is pExpected
+   else
+      put " :" && __wrapQuotes(tResult) after tOutput
+      TestAssert tOutput, tResult is not empty
+   end if
+end __TestMaxMinSatisfying
+
+private function __wrapQuotes pStr
+   return quote & pStr & quote
+end __wrapQuotes

@@ -1019,3 +1019,49 @@ function semverMaxSatisfying pVersions, pRange
    -- will return empty if tFoundIndex is empty
    return pVersions[tFoundIndex]
 end semverMaxSatisfying
+
+/**
+
+Determine the minimum version that satisfies a range
+
+Parameters:
+pVersions (string): A return delimited list of valid version strings
+pRange (string): A valid version range string
+
+Returns:
+The lowest version satisfying the range
+
+*/
+
+function semverMinSatisfying pVersions, pRange
+   split pVersions by return
+   
+   if pRange is not empty then
+      semverParseRange pRange
+      if the result is not empty then
+         return the result for error
+      end if
+   end if
+   
+   local tVersions
+   put pVersions into tVersions
+   local tIndex, tFoundIndex
+   repeat with tIndex = 1 to the number of elements of pVersions
+      semverParse tVersions[tIndex], false
+      if the result is not empty then
+         return the result for error
+      end if
+      
+      if pRange is not empty and not __SatisfiesRange(tVersions[tIndex], pRange) then
+         next repeat
+      end if
+      
+      if tFoundIndex is empty or __GreaterThan(tVersions[tFoundIndex], tVersions[tIndex]) then
+         put tIndex into tFoundIndex
+      end if
+      
+   end repeat
+   
+   -- will return empty if tFoundIndex is empty
+   return pVersions[tFoundIndex]
+end semverMinSatisfying
