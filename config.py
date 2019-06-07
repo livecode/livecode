@@ -149,7 +149,7 @@ def process_env_options(opts):
         'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION', 'ANDROID_LIB_PATH',
         'ANDROID_NDK_PLATFORM_VERSION', 'ANDROID_PLATFORM',
         'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS', 'LTO',
-        'ANDROID_TOOLCHAIN', 'ANDROID_API_VERSION',
+        'ANDROID_TOOLCHAIN', 'ANDROID_TOOLCHAIN_DIR', 'ANDROID_API_VERSION',
         'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
         'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION', 'CC_PREFIX', 'CROSS',
         'SYSROOT', 'AUX_SYSROOT', 'TRIPLE', 'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
@@ -631,7 +631,12 @@ def validate_android_tools(opts):
         opts['ANDROID_BUILD_TOOLS'] = tools
 
     if opts['ANDROID_TOOLCHAIN'] is None:
-        dir = guess_android_tooldir(guess_standalone_toolchain_dir_name(opts['TARGET_ARCH']))
+        toolchain_dir_name = guess_standalone_toolchain_dir_name(opts['TARGET_ARCH'])
+        if opts['ANDROID_TOOLCHAIN_DIR'] is None:
+            dir = guess_android_tooldir(toolchain_dir_name)
+        else:
+            dir = os.path.join(opts['ANDROID_TOOLCHAIN_DIR'], toolchain_dir_name)
+
         if dir is None:
             error('Android toolchain not found for architecture {}; set $ANDROID_TOOLCHAIN'.format(opts['TARGET_ARCH']))
         prefix = guess_compiler_prefix(opts['TARGET_ARCH'])
