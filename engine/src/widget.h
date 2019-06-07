@@ -195,6 +195,9 @@ public:
     
     virtual Boolean del(bool p_check_flag);
     
+    virtual void undo(Ustruct *us);
+    Boolean delforundo(bool p_check_flag);
+    
 	virtual void OnOpen();
 	virtual void OnClose();
 	

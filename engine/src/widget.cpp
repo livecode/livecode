@@ -44,6 +44,7 @@
 #include "system.h"
 #include "globals.h"
 #include "context.h"
+#include "undolst.h"
 
 #include "widget-ref.h"
 #include "widget-events.h"
@@ -775,6 +776,54 @@ Boolean MCWidget::del(bool p_check_flag)
     
     return True;
 }
+
+void MCWidget::undo(Ustruct *us)
+{
+    MCControl::undo(us);
+
+    if (us->type == UT_REPLACE)
+    {
+        MCAutoValueRef t_rep;
+        t_rep.Give(m_rep);
+        m_rep = nullptr;
+        
+        MCNewAutoNameRef t_kind;
+        t_kind.Give(m_kind);
+        m_kind = nullptr;
+        
+        bind(*t_kind, *t_rep);
+    }
+}
+
+Boolean MCWidget::delforundo(bool p_check_flag)
+{
+    MCAutoValueRef t_rep;
+    // Make the widget generate a rep.
+    if (m_rep == nullptr)
+    {
+        if (m_widget != nullptr)
+        {
+            MCWidgetOnSave(m_widget, &t_rep);
+        }
+        
+        if (!t_rep.IsSet())
+        {
+            t_rep = kMCNull;
+        }
+    }
+    
+    if (!del(p_check_flag))
+    {
+        return false;
+    }
+    
+    if (t_rep.IsSet())
+    {
+        m_rep = t_rep.Take();
+    }
+    return true;
+}
+
 
 void MCWidget::OnOpen()
 {
