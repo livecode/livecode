@@ -844,7 +844,6 @@ component Externals.CEF.Windows
 		executable windows:libbrowser-cefprocess.exe
 		executable windows:revbrowser-cefprocess.exe
 		executable windows:Externals/CEF/libcef.dll
-		executable windows:Externals/CEF/d3dcompiler_43.dll
 		executable windows:Externals/CEF/d3dcompiler_47.dll
 		executable windows:Externals/CEF/libEGL.dll
 		executable windows:Externals/CEF/libGLESv2.dll
