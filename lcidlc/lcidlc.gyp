@@ -75,13 +75,7 @@
     {
       'target_name': 'encode_support',
       'type': 'none',
-
-      'sources':
-			[
-				'src/Support.java',
-				'src/Support.mm',
-			],
-
+	  
       'actions':
 			[
 				{
