@@ -149,6 +149,10 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    
    -- Make sure all dependencies are included
    revSBUpdateForDependencies "android", tArchs, , pSettings
+   put the result into tResult
+   if tResult is not empty then
+      throw tResult
+   end if
    revSBEnsurePerExtensionSettings "android", pSettings
    put the result into tResult
    if tResult is not empty then
@@ -1179,21 +1183,37 @@ private command addPlayServiceAARsToSettings  @xSettingsA
    local tPlayServicesPath
    put pathToPlayServices() into tPlayServicesPath
    
-   repeat for each line tPlayService in xSettingsA["android,play dependencies"]
-      local tPlayVersion
-      set the itemDel to "-"
-      put the last item of tPlayService into tPlayVersion
-      delete the last item of tPlayService
-      set the itemDel to comma
+   repeat for each key tPlayService in xSettingsA["android,play dependencies"]
+      local tPlayServiceFolderPath
+      put tPlayServicesPath & slash & \
+            "play-services-" & tPlayService \
+            into tPlayServiceFolderPath
+      
+      if there is not a folder tPlayServiceFolderPath then
+         throw "unable to locate play service dependency" && tPlayService
+      end if
+      
+      local tPlayServiceVersions
+      put folders(tPlayServiceFolderPath) into tPlayServiceVersions
+      filter tPlayServiceVersions without ".*"
+      
+      local tPlayServiceVersionRange
+      put xSettingsA["android,play dependencies"][tPlayService] into tPlayServiceVersionRange
+      
+      local tPlayServiceVersion
+      put semverMaxSatisfying(tPlayServiceVersions, tPlayServiceVersionRange) \
+            into tPlayServiceVersion
+      if tPlayServiceVersion is empty then
+         throw "unable to locate compatible version for play service" && tPlayService && "version" && tPlayServiceVersionRange
+      end if
       
       local tPlayServiceAARPath
-      put tPlayServicesPath & slash & \
-            "play-services-" & tPlayService & slash & \
-            tPlayVersion & slash & \
-            "play-services-" & tPlayService & "-" & tPlayVersion & ".aar" \
+      put tPlayServiceFolderPath & slash & \
+            tPlayServiceVersion & slash & \
+            "play-services-" & tPlayService & "-" & tPlayServiceVersion & ".aar" \
             into tPlayServiceAARPath
       if there is not a file tPlayServiceAARPath then
-         throw "unable to locate play service dependency" && tPlayService && "version" && tPlayVersion
+         throw "unable to locate play service dependency" && tPlayService && "version" && tPlayServiceVersion
       end if
       
       appendToStringList tPlayServiceAARPath, xSettingsA["aarFiles"]

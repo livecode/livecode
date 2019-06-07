@@ -145,6 +145,10 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
       -- Make sure all dependencies are included
       revSBUpdateForDependencies "ios", replaceText(tArchs, space, comma), "iphoneos" & item 1 of tIosXcodePair, pSettings
+      if the result is not empty then
+         throw the result
+      end if
+
    else
       
       -- MM-2012-09-18: We now only support the 4.3 simulators or later.
@@ -157,6 +161,9 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       
       -- Make sure all dependencies are included
       revSBUpdateForDependencies "ios", "x86_64", "iphonesimulator" & tSuffix, pSettings
+      if the result is not empty then
+         throw the result
+      end if
       
       replace "." with "_" in tSuffix
       put tSuffix into tSDKS["sim"]["suffix"]

@@ -58,6 +58,9 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
    
    -- Make sure all dependencies are included
    revSBUpdateForDependencies "emscripten",,, pSettings
+   if the result is not empty then
+      throw the result
+   end if
    
    revSBUpdateSettingsForExtensions "emscripten", pSettings
    
