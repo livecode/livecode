@@ -83,6 +83,7 @@
 				'script-libraries/messageauthentication/messageauthentication.livecodescript',
 				'script-libraries/httpd/httpd.livecodescript',
 				'script-libraries/qr/qr.livecodescript',
+				'script-libraries/semver/semver.livecodescript',
 			],
 			
 			'dependencies':
