@@ -94,7 +94,7 @@ on TestSemverGreaterThanPrereleaseRange
    __TestSatisfiesRange "1.2.3","~1.2.0-beta-1", true
 end TestSemverGreaterThanPrereleaseRange
 
-command TestSemverMaxSatisfying
+on TestSemverMaxSatisfying
    local tVersions, tInvalidVersions
    put "1.2.3" & return & "4.5.6" & return & "7.8.9" into tVersions
    put tVersions & return & "invalid" into tInvalidVersions
@@ -108,7 +108,7 @@ command TestSemverMaxSatisfying
    __TestMaxMinSatisfying empty, "invalid", empty, true, true, false
 end TestSemverMaxSatisfying
 
-command TestSemverMinSatisfying
+on TestSemverMinSatisfying
    local tVersions, tInvalidVersions
    put "1.2.3" & return & "4.5.6" & return & "7.8.9" into tVersions
    put tVersions & return & "invalid" into tInvalidVersions
@@ -121,6 +121,50 @@ command TestSemverMinSatisfying
    __TestMaxMinSatisfying tInvalidVersions, empty, empty, false, false, true
    __TestMaxMinSatisfying empty, "invalid", empty, false, true, false
 end TestSemverMinSatisfying
+
+on TestSemverIntersects
+   -- Hyphen ranges
+   __TestIntersects "4.5.6 - 7.8.9", true, "1.2.3 - 7.8.9", "4.5.6 - 10.11.12"
+   
+   -- Multiple ranges
+   __TestIntersects "6.5.4 - 7.8.9", true, "1.2.3 - 7.8.9", "4.5.6 - 10.11.12", "6.5.4 - 9.8.7"
+   
+   -- Greater than less than ranges
+   __TestIntersects ">4.5.6", true, ">1.2.3", ">4.5.6"
+   __TestIntersects "<1.2.3", true, "<1.2.3", "<4.5.6"
+   __TestIntersects ">1.2.3 <4.5.6", true, ">1.2.3", "<4.5.6"
+   
+   -- Multiple conditions
+   __TestIntersects "3.4.5", true, "1.2.3 || 3.4.5", "3.4.5 || 4.5.6"
+   __TestIntersects "3.4.5", true, "1.2.3 || 3.4.5", "2.0.0 - 4.0.0"
+   __TestIntersects "3.4.5 - 4.0.0", true, "1.2.3 || >=3.4.5", "2.0.0 - 4.0.0"
+   
+   -- Caret ranges
+   __TestIntersects "^1.2.3", true, "^1.2.3", "^1.0.0"
+   __TestIntersects "1.2.3 - 1.5.0", true, "^1.2.3", "1.0.0 - 1.5.0"
+   
+   -- Tilde ranges
+   __TestIntersects "~1.2.3", true, "~1.2.3", "~1.2.0"
+   
+   -- X Ranges
+   __TestIntersects "1.2.3", true, "1.2.3", "1.2.x"
+   __TestIntersects "^1.0.0", true, "1.2.x", "1.x.x"
+   
+   -- Shorthand caret and tilde output formatting
+   __TestIntersects "~1.2.3", true, "^1.2.3", "<1.3.0"
+   __TestIntersects "~1.2.3", true, "~1.2.3", "1.0.0 - 1.5.0"
+   __TestIntersects "~1.2.0", true, "1.2.x", "1.0.0 - 1.5.0"
+   __TestIntersects "^1.0.0", true, "1.x.x", "1.0.0 - 2.5.0"
+   __TestIntersects "^1.2.3", true, "^1.2.3", "1.2.3 - 3.4.5"
+   
+   -- Non intersetion
+   __TestIntersects empty, true, "1.2.3 - 4.5.6", ".8.9 - 10.11.12"
+   __TestIntersects empty, true, "<1", ">=2"
+   
+   -- Invalid ranges
+   __TestIntersects empty, false, "invalid"
+   __TestIntersects empty, false, ">=1.2.3", "invalid"
+end TestSemverIntersects
 
 command __TestSatisfiesRange pVersion, pRange, pSatisfies
    local tOutput
@@ -208,6 +252,28 @@ command __TestMaxMinSatisfying pVersions, pRange, pExpected, pIsMax, pVersionsAr
       TestAssert tOutput, tResult is not empty
    end if
 end __TestMaxMinSatisfying
+
+command __TestIntersects pExpected, pIsValid, pRange1, pRange2, pRange3, pRange4
+   local tParamIndex, tRanges
+   repeat with tParamIndex = 3 to the paramCount
+      put __wrapQuotes(param(tParamIndex)) & ", " after tRanges
+   end repeat
+   delete char -2 to -1 of tRanges
+   
+   local tIntersects, tIntersectsResult, tIntersection, tIntersectionResult
+   put semverRangesIntersect(pRange1, pRange2, pRange3, pRange4) into tIntersects
+   put the result into tIntersectsResult
+   put semverRangesIntersection(pRange1, pRange2, pRange3, pRange4) into tIntersection
+   put the result into tIntersectionResult
+   
+   if pIsValid then
+      TestAssert "ranges" && tRanges && "intersect is" && __wrapQuotes(pExpected is not empty) && ":" && __wrapQuotes(tIntersects), tIntersects is (pExpected is not empty)
+      TestAssert "intersection of ranges" && tRanges && "is" && __wrapQuotes(pExpected) && ":" && __wrapQuotes(tIntersection), tIntersection is pExpected
+   else
+      TestAssert "invalid ranges" && tRanges && "intersect:" && __wrapQuotes(tIntersectsResult), tIntersectsResult is not empty
+      TestAssert "intersection of invalid ranges" && tRanges && ":" && __wrapQuotes(tIntersectionResult), tIntersectionResult is not empty
+   end if
+end __TestIntersects
 
 private function __wrapQuotes pStr
    return quote & pStr & quote
