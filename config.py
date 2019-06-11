@@ -302,7 +302,7 @@ def validate_target_arch(opts):
 
         if re.match('^(ios|mac)', platform) is not None:
             validate_xcode_sdks(opts)
-            arch = guess_xcode_arch(opts['XCODE_TARGET_SDK'])
+            arch = guess_xcode_arch('macosx' + opts['XCODE_TARGET_SDK'])
             if arch is not None:
                 opts['TARGET_ARCH'] = arch
                 opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
@@ -498,14 +498,14 @@ def validate_xcode_sdks(opts):
     if opts['XCODE_TARGET_SDK'] is None:
         validate_os(opts)
         if opts['OS'] == 'mac':
-            opts['XCODE_TARGET_SDK'] = 'macosx10.9'
+            opts['XCODE_TARGET_SDK'] = '10.9'
         elif opts['OS'] == 'ios':
             opts['XCODE_TARGET_SDK'] = 'iphoneos'
 
     if opts['XCODE_HOST_SDK'] is None:
         validate_os(opts)
         if opts['OS'] == 'mac':
-            opts['XCODE_HOST_SDK'] = opts['XCODE_TARGET_SDK']
+            opts['XCODE_HOST_SDK'] = 'macosx' + opts['XCODE_TARGET_SDK']
         elif opts['OS'] == 'ios':
             opts['XCODE_HOST_SDK'] = 'macosx'
 
