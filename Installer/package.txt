@@ -824,18 +824,23 @@ component Externals.MacOSX
 component Externals.CEF.Linux
 	into [[TargetFolder]]/Externals/CEF place
 		executable linux-[[TargetArchitecture]]:Externals/CEF/libcef.so
+		executable linux-[[TargetArchitecture]]:Externals/CEF/libEGL.so
+		executable linux-[[TargetArchitecture]]:Externals/CEF/libGLESv2.so
+		executable linux-[[TargetArchitecture]]:Externals/CEF/chrome-sandbox
 		rfolder linux-[[TargetArchitecture]]:Externals/CEF/locales
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef.pak
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef_100_percent.pak
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef_200_percent.pak
 		file linux-[[TargetArchitecture]]:Externals/CEF/cef_extensions.pak
-
+		file linux-[[TargetArchitecture]]:Externals/CEF/icudtl.dat
+		file linux-[[TargetArchitecture]]:Externals/CEF/natives_blob.bin
+		file linux-[[TargetArchitecture]]:Externals/CEF/snapshot_blob.bin
+		file linux-[[TargetArchitecture]]:Externals/CEF/v8_context_snapshot.bin
+	into [[TargetFolder]]/Externals/CEF/swiftshader place
+		executable linux-[[TargetArchitecture]]:Externals/CEF/swiftshader/libEGL.so
+		executable linux-[[TargetArchitecture]]:Externals/CEF/swiftshader/libGLESv2.so
 	// Horrible workaround for a libCEF bug
 	into [[TargetFolder]] place
-		file linux-[[TargetArchitecture]]:icudtl.dat
-		file linux-[[TargetArchitecture]]:natives_blob.bin
-		file linux-[[TargetArchitecture]]:snapshot_blob.bin
-		file linux-[[TargetArchitecture]]:v8_context_snapshot.bin
 		executable linux-[[TargetArchitecture]]:revbrowser-cefprocess
 		executable linux-[[TargetArchitecture]]:libbrowser-cefprocess
 
