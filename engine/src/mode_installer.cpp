@@ -1841,25 +1841,26 @@ static void *MCExecutableFindSection(const char *p_name)
 #elif defined(_MACOSX)
 #include <mach-o/dyld.h>
 
+/* We only use the 64 bit engine for the installer so this function will only work on that engine */
 static void *MCExecutableFindSection(const char *p_name)
 {
-	const mach_header *t_header;
-	t_header = _dyld_get_image_header(0);
+	const mach_header_64 *t_header;
+	t_header = reinterpret_cast<const struct mach_header_64 *>(_dyld_get_image_header(0));
 	
 	const load_command *t_command;
-	t_command = (const load_command *)(t_header + 1);
+	t_command = reinterpret_cast<const load_command *>(t_header + 1);
 	
 	for(uint32_t i = 0; i < t_header -> ncmds; i++)
 	{
-		if (t_command -> cmd == LC_SEGMENT)
+		if (t_command -> cmd == LC_SEGMENT_64)
 		{
-			const segment_command *t_segment;
-			t_segment = (const segment_command *)t_command;
+			const segment_command_64 *t_segment;
+			t_segment = reinterpret_cast<const segment_command_64 *>(t_command);
 			
 			if (MCMemoryEqual(t_segment -> segname, p_name, MCMin(16, strlen(p_name) + 1)))
 			{
-				const section *t_section;
-                t_section = (const section *)(t_segment + 1);
+				const section_64 *t_section;
+                t_section =  reinterpret_cast<const section_64 *>(t_segment + 1);
 				return reinterpret_cast<char *>(t_section -> addr) + _dyld_get_image_vmaddr_slide(0);
 			}
 		}
