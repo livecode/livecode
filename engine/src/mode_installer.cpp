@@ -1320,7 +1320,9 @@ IO_stat MCDispatch::startup(void)
 
 	// Lookup the name of the project section - if this can't be found there's
 	// something up with the exe.
-	if (MCcapsule.size == 0)
+	MCCapsuleInfo *t_project_info;
+	t_project_info = (MCCapsuleInfo *)MCExecutableFindSection(PROJECT_SECTION_NAME);
+	if (t_project_info == nil || t_project_info -> size <= sizeof(MCCapsuleInfo))
 	{
 #if DEBUG_INSTALLER_STARTUP
         char *openpath = t_mccmd; //point to MCcmd string
@@ -1366,10 +1368,10 @@ IO_stat MCDispatch::startup(void)
 
 	// Decide where to fill from, depending on whether the project data was
 	// spilled or not.
-	if (((MCcapsule.size) & (1U << 31)) == 0)
+	if (((t_project_info -> size) & (1U << 31)) == 0)
 	{
 		// Capsule is not spilled - just use the project section.
-		if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&MCcapsule.data, MCcapsule.size - 4, true))
+		if (!MCCapsuleFillNoCopy(t_capsule, (const void *)&t_project_info -> data, t_project_info -> size - 4, true))
 		{
 			MCCapsuleClose(t_capsule);
 			return IO_ERROR;
