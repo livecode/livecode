@@ -92,14 +92,19 @@ bool MCNumberCreateWithCFNumberRef(CFNumberRef p_cf_number, MCNumberRef& r_numbe
 MC_DLLEXPORT_DEF
 bool MCNumberConvertToCFNumberRef(MCNumberRef p_number, CFNumberRef& r_number_ref)
 {
-    CFNumberRef t_number_ref;
+    // This function assumes integer_t is 32-bit
+    static_assert(sizeof(integer_t) == 4, "size of integer stored in MCNumberRef is 4 bytes");
+
+    CFNumberRef t_number_ref = nullptr;
     if (MCNumberIsInteger(p_number))
     {
-        t_number_ref = CFNumberCreate(nullptr, kCFNumberSInt32Type, &p_number->integer);
+        integer_t t_integer = MCNumberFetchAsInteger(p_number);
+        t_number_ref = CFNumberCreate(nullptr, kCFNumberSInt32Type, &t_integer);
     }
     else
     {
-        t_number_ref = CFNumberCreate(nullptr, kCFNumberDoubleType, &p_number->real);
+        real64_t t_real = MCNumberFetchAsReal(p_number);
+        t_number_ref = CFNumberCreate(nullptr, kCFNumberDoubleType, &t_real);
     }
     
     if (t_number_ref == nullptr)
