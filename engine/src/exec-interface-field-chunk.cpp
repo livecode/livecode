@@ -2085,34 +2085,34 @@ void MCField::SetRightIndentOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id,
     SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, true, p_part_id, si, ei, &MCParagraph::SetRightIndent, p_indent);
 }
 
-void MCField::GetSpaceAboveOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value)
+void MCField::GetSpaceAboveOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value)
 {
-    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetSpaceAbove, r_mixed, r_value);
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetSpaceAbove, r_mixed, r_value);
 }
 
-void MCField::GetEffectiveSpaceAboveOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
+void MCField::GetEffectiveSpaceAboveOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t& r_value)
 {
-    GetParagraphPropOfCharChunk< PodFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveSpaceAbove, r_mixed, r_value);
+    GetParagraphPropOfCharChunk< PodFieldPropType<integer_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveSpaceAbove, r_mixed, r_value);
 }
 
-void MCField::SetSpaceAboveOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t *p_space)
+void MCField::SetSpaceAboveOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t *p_space)
 {
-    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, true, p_part_id, si, ei, &MCParagraph::SetSpaceAbove, p_space);
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, true, p_part_id, si, ei, &MCParagraph::SetSpaceAbove, p_space);
 }
 
-void MCField::GetSpaceBelowOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t*& r_value)
+void MCField::GetSpaceBelowOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t*& r_value)
 {
-    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetSpaceBelow, r_mixed, r_value);
+    GetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetSpaceBelow, r_mixed, r_value);
 }
 
-void MCField::GetEffectiveSpaceBelowOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, uinteger_t& r_value)
+void MCField::GetEffectiveSpaceBelowOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, bool& r_mixed, integer_t& r_value)
 {
-    GetParagraphPropOfCharChunk< PodFieldPropType<uinteger_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveSpaceBelow, r_mixed, r_value);
+    GetParagraphPropOfCharChunk< PodFieldPropType<integer_t> >(ctxt, this, p_part_id, si, ei, &MCParagraph::GetEffectiveSpaceBelow, r_mixed, r_value);
 }
 
-void MCField::SetSpaceBelowOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, uinteger_t *p_space)
+void MCField::SetSpaceBelowOfLineChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, integer_t *p_space)
 {
-    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<uinteger_t> > >(ctxt, this, true, p_part_id, si, ei, &MCParagraph::SetSpaceBelow, p_space);
+    SetParagraphPropOfCharChunk< OptionalFieldPropType< PodFieldPropType<integer_t> > >(ctxt, this, true, p_part_id, si, ei, &MCParagraph::SetSpaceBelow, p_space);
 }
 
 //////////
@@ -2718,40 +2718,40 @@ void MCParagraph::SetRightIndent(MCExecContext& ctxt, integer_t *p_indent)
     setparagraphattr_int16(attrs, PA_HAS_RIGHT_INDENT, offsetof(MCParagraphAttrs, right_indent), p_indent);
 }
 
-void MCParagraph::GetSpaceAbove(MCExecContext& ctxt, uinteger_t*& r_space)
+void MCParagraph::GetSpaceAbove(MCExecContext& ctxt, integer_t*& r_space)
 {
     if (attrs == nil || (attrs -> flags & PA_HAS_SPACE_ABOVE) == 0)
         r_space = nil;
     else
-        *r_space = (uinteger_t)getspaceabove();
+        *r_space = (integer_t)getspaceabove();
 }
 
-void MCParagraph::GetEffectiveSpaceAbove(MCExecContext& ctxt, uinteger_t& r_space)
+void MCParagraph::GetEffectiveSpaceAbove(MCExecContext& ctxt, integer_t& r_space)
 {
-    r_space = (uinteger_t)getspaceabove();
+    r_space = (integer_t)getspaceabove();
 }
 
-void MCParagraph::SetSpaceAbove(MCExecContext& ctxt, uinteger_t *p_space)
+void MCParagraph::SetSpaceAbove(MCExecContext& ctxt, integer_t *p_space)
 {
-    setparagraphattr_int<uinteger_t, 0, 32767>(attrs, PA_HAS_SPACE_ABOVE, offsetof(MCParagraphAttrs, space_above), p_space);
+    setparagraphattr_int16(attrs, PA_HAS_SPACE_ABOVE, offsetof(MCParagraphAttrs, space_above), p_space);
 }
 
-void MCParagraph::GetSpaceBelow(MCExecContext& ctxt, uinteger_t *&r_space)
+void MCParagraph::GetSpaceBelow(MCExecContext& ctxt, integer_t *&r_space)
 {
     if (attrs == nil || (attrs -> flags & PA_HAS_SPACE_BELOW) == 0)
         r_space = nil;
     else
-        *r_space = (uinteger_t)getspacebelow();
+        *r_space = (integer_t)getspacebelow();
 }
 
-void MCParagraph::GetEffectiveSpaceBelow(MCExecContext& ctxt, uinteger_t& r_space)
+void MCParagraph::GetEffectiveSpaceBelow(MCExecContext& ctxt, integer_t& r_space)
 {
-    r_space = (uinteger_t)getspacebelow();
+    r_space = (integer_t)getspacebelow();
 }
 
-void MCParagraph::SetSpaceBelow(MCExecContext& ctxt, uinteger_t *p_space)
+void MCParagraph::SetSpaceBelow(MCExecContext& ctxt, integer_t *p_space)
 {
-    setparagraphattr_int<uinteger_t, 0, 32767>(attrs, PA_HAS_SPACE_BELOW, offsetof(MCParagraphAttrs, space_below), p_space);
+    setparagraphattr_int16(attrs, PA_HAS_SPACE_BELOW, offsetof(MCParagraphAttrs, space_below), p_space);
 }
 
 void MCParagraph::DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, const vector_t<uinteger_t>& p_tabs)

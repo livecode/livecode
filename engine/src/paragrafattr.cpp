@@ -90,10 +90,10 @@ void MCParagraph::fetchattrs(MCArrayRef src)
         SetRightIndent(ctxt, &t_integer_value);
 
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("spaceAbove"), false, t_uint_value))
-        SetSpaceAbove(ctxt, &t_uint_value);
+        SetSpaceAbove(ctxt, &t_integer_value);
 
     if (ctxt . CopyElementAsUnsignedInteger(src, MCNAME("spaceBelow"), false, t_uint_value))
-        SetSpaceBelow(ctxt, &t_uint_value);
+        SetSpaceBelow(ctxt, &t_integer_value);
 
     if (ctxt . CopyElementAsString(src, MCNAME("tabStops"), false, t_stringref_value))
     {

@@ -929,13 +929,13 @@ public:
     void GetEffectiveRightIndent(MCExecContext& ctxt, integer_t& r_indent);
     void SetRightIndent(MCExecContext& ctxt, integer_t *p_indent);
 
-    void GetSpaceAbove(MCExecContext& ctxt, uinteger_t *&r_space);
-    void GetEffectiveSpaceAbove(MCExecContext& ctxt, uinteger_t& r_space);
-    void SetSpaceAbove(MCExecContext& ctxt, uinteger_t *p_space);
+    void GetSpaceAbove(MCExecContext& ctxt, integer_t *&r_space);
+    void GetEffectiveSpaceAbove(MCExecContext& ctxt, integer_t& r_space);
+    void SetSpaceAbove(MCExecContext& ctxt, integer_t *p_space);
 
-    void GetSpaceBelow(MCExecContext& ctxt, uinteger_t*& r_space);
-    void GetEffectiveSpaceBelow(MCExecContext& ctxt, uinteger_t& r_space);
-    void SetSpaceBelow(MCExecContext& ctxt, uinteger_t *p_space);
+    void GetSpaceBelow(MCExecContext& ctxt, integer_t*& r_space);
+    void GetEffectiveSpaceBelow(MCExecContext& ctxt, integer_t& r_space);
+    void SetSpaceBelow(MCExecContext& ctxt, integer_t *p_space);
 
     void DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, const vector_t<uinteger_t> &p_tabs);
     void DoGetTabStops(MCExecContext &ctxt, bool p_is_relative, vector_t<uinteger_t> &r_tabs);
