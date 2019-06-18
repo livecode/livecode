@@ -39,7 +39,10 @@ The <dragData> is an <array> with one or more of the following
 - private: An arbitrary application-defined string. This format will
   only be visible within the same LiveCode process (i.e. when the
   current application is acting as source and target for the current 
-  drag-drop operation)
+  drag-drop operation). The private dragData array element holds binary
+  (single byte) data only. To place Unicode text in dragData["private"]
+  use <textEncoded> and <textDecode> as UTF-8. To place array data use
+  <arrayEncode> and <arrayDecode>
 
 Description:
 Use the <dragData> <property> to find out what is being dragged or to
