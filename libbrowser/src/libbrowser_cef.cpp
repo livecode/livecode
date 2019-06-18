@@ -494,7 +494,11 @@ bool MCCefInitialise(void)
 	t_settings.command_line_args_disabled = true;
 	t_settings.windowless_rendering_enabled = true;
 	t_settings.no_sandbox = true;
+#ifdef _DEBUG
+	t_settings.log_severity = LOGSEVERITY_VERBOSE;
+#else
 	t_settings.log_severity = LOGSEVERITY_DISABLE;
+#endif
 	
     bool t_success = true;
 #ifdef TARGET_PLATFORM_LINUX

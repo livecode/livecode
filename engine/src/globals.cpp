@@ -1275,9 +1275,6 @@ int X_close(void)
     // MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
     MCFontFinalize();
     
-    /* Finalize all builtin extensions */
-    MCExtensionFinalize();
-
 	// MW-2008-01-18: [[ Bug 5711 ]] Make sure we disable the backdrop here otherwise we
 	//   get crashiness on Windows due to hiding the backdrop calling WindowProc which
 	//   attempts to access stacks that have been deleted...
@@ -1291,6 +1288,12 @@ int X_close(void)
 	MCInterfaceFinalize(ctxt);
 
 	MCstacks->closeall();
+    
+    MCscreen->DoRunloopActions();
+    
+    /* Finalize all builtin extensions */
+    MCExtensionFinalize();
+
 	MCselected->clear(False);
     MCundos->freestate();
     

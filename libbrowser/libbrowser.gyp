@@ -193,22 +193,6 @@
 						],
 					},
 				],
-				
-				[
-					'OS == "linux"',
-					{	
-						'copies':
-						[
-							{
-								'destination':'<(PRODUCT_DIR)/Externals/CEF/',
-								'files':
-								[
-									'<(PRODUCT_DIR)/libbrowser-cefprocess',
-								],
-							},
-						],
-					},
-				],
 			],
 			
 			'direct_dependent_settings':
