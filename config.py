@@ -26,10 +26,10 @@ import shutil
 BUILDBOT_PLATFORM_TRIPLES = (
     'x86-linux-debian8',
     'x86_64-linux-debian8',
-    'armv7-android-sdk26_ndk16r15',
-    'arm64-android-sdk26_ndk16r15',
-    'x86-android-sdk26_ndk16r15',
-    'x86_64-android-sdk26_ndk16r15',
+    'armv7-android-ndk16r15',
+    'arm64-android-ndk16r15',
+    'x86-android-ndk16r15',
+    'x86_64-android-ndk16r15',
     'universal-mac-macosx10.9', # Minimum deployment target
     'universal-ios-iphoneos12.1',
     'universal-ios-iphoneos11.2',
@@ -611,7 +611,7 @@ def validate_android_tools(opts):
         opts['ANDROID_NDK_PLATFORM_VERSION'] = '16'
 
     if opts['ANDROID_API_VERSION'] is None:
-        opts['ANDROID_API_VERSION'] = '26'
+        opts['ANDROID_API_VERSION'] = '28'
      
     api_ver = opts['ANDROID_API_VERSION']
 

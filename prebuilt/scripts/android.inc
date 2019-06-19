@@ -1,6 +1,6 @@
 # Android options
 ANDROID_NDK=${ANDROID_NDK:-"${HOME}/android/toolchain/android-ndk"}
-ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-26}
+ANDROID_PLATFORM=${ANDROID_PLATFORM:-android-28}
 
 function configureAndroidToolchain {
 	ANDROID_ARCH=$1
