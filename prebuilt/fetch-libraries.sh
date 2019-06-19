@@ -17,7 +17,7 @@ LIBS_emscripten=( Thirdparty ICU )
 
 SUBPLATFORMS_ios=(iPhoneSimulator8.2 iPhoneSimulator9.2 iPhoneSimulator10.2 iPhoneSimulator11.2 iPhoneSimulator12.1 iPhoneOS9.2 iPhoneOS10.2 iPhoneOS11.2 iPhoneOS12.1)
 SUBPLATFORMS_win32=(v141_static_debug v141_static_release)
-SUBPLATFORMS_android=(sdk26_ndk16r15)
+SUBPLATFORMS_android=(ndk16r15)
 
 # Fetch settings
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
