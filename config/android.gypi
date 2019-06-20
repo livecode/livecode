@@ -32,7 +32,7 @@
 		'strip':   '<!(echo ${STRIP:-strip})',
 
 		'android_ndk_path%': '<(android_ndk_path)',
-		'android_subplatform%': 'sdk<(android_api_version)_ndk<(android_ndk_platform_version)<(android_ndk_version)',
+		'android_subplatform%': 'ndk<(android_ndk_platform_version)<(android_ndk_version)',
 
 		'android_play_path': '<(android_sdk_path)/extras/google/m2repository/com/google/android/gms',
 	},
