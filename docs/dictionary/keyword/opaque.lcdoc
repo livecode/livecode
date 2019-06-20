@@ -29,9 +29,9 @@ Setting a control's <style> <property> to "opaque" sets its <opaque>
 <property> to true.
 
 References: object (glossary), property (glossary), keyword (glossary),
-transparent (keyword), button (keyword), field (keyword),
-opaque (keyword), control (keyword), button (object), style (property),
-owner (property), opaque (property), backgroundColor (property)
+button (keyword), field (keyword), opaque (keyword), control (keyword), 
+button (object), style (property), owner (property), opaque (property), 
+backgroundColor (property)
 
 Tags: ui
 

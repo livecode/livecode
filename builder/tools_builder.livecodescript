@@ -530,8 +530,8 @@ private command toolsBuilderMakeInstaller pVersion, pEdition, pPlatform, pIdeFol
          put tInstallerStackFile into tParams["stackfile"]
          put tOutputFileStub & ".app" & slash & "Contents/MacOS/Installer" into tParams["output"]
          
-         -- We deploy as 32-bit only for now as the 64-bit slice isn't neccessary
-         put "i386" into tParams["architectures"]
+         -- We deploy as 64-bit only as 32-bit apps will be blocked on MacOS 10.15+
+         put "x86-64" into tParams["architectures"]
          
          put url ("binfile:" & pPackageFile) into url ("binfile:" & tOutputFileStub & ".app" & slash & "Contents/Resources/payload")
          

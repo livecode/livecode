@@ -40,7 +40,6 @@
 								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/cef_100_percent.pak',
 								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/cef_200_percent.pak',
 								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/cef_extensions.pak',
-								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/d3dcompiler_43.dll',
 								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/d3dcompiler_47.dll',
 								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/devtools_resources.pak',
 								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/icudtl.dat',
@@ -49,8 +48,7 @@
 								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/libGLESv2.dll',
 								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/natives_blob.bin',
 								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/snapshot_blob.bin',
-								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/widevinecdmadapter.dll',
-							        'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/v8_context_snapshot.bin',
+								    'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/v8_context_snapshot.bin',
 							        'unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/chrome_elf.dll',
 							    ],
 						    },
@@ -139,16 +137,6 @@
                         'copies':
                         [
                             {
-                                'destination': '<(PRODUCT_DIR)/',
-                                'files':
-                                [
-                                    'lib/linux/<(target_arch)/CEF/natives_blob.bin',
-                                    'lib/linux/<(target_arch)/CEF/snapshot_blob.bin',
-                                    'lib/linux/<(target_arch)/CEF/v8_context_snapshot.bin',
-                                    'lib/linux/<(target_arch)/CEF/icudtl.dat',
-                                ],
-                            },
-                            {
                                 'destination': '<(PRODUCT_DIR)/Externals/CEF',
                                 'files':
                                 [
@@ -158,6 +146,21 @@
                                     'lib/linux/<(target_arch)/CEF/cef_extensions.pak',
                                     'lib/linux/<(target_arch)/CEF/devtools_resources.pak',
                                     'lib/linux/<(target_arch)/CEF/libcef.so',
+                                    'lib/linux/<(target_arch)/CEF/libEGL.so',
+                                    'lib/linux/<(target_arch)/CEF/libGLESv2.so',
+                                    'lib/linux/<(target_arch)/CEF/chrome-sandbox',
+									'lib/linux/<(target_arch)/CEF/natives_blob.bin',
+                                    'lib/linux/<(target_arch)/CEF/snapshot_blob.bin',
+                                    'lib/linux/<(target_arch)/CEF/v8_context_snapshot.bin',
+                                    'lib/linux/<(target_arch)/CEF/icudtl.dat',
+                                ],
+                            },
+							{
+                                'destination': '<(PRODUCT_DIR)/Externals/CEF/swiftshader',
+                                'files':
+                                [
+                                    'lib/linux/<(target_arch)/CEF/swiftshader/libEGL.so',
+                                    'lib/linux/<(target_arch)/CEF/swiftshader/libGLESv2.so',
                                 ],
                             },
                             {
@@ -227,10 +230,6 @@
 							    'dist_aux_files':
                                 [
                                     '<(PRODUCT_DIR)/Externals/',
-                                    '<(PRODUCT_DIR)/natives_blob.bin',
-                                    '<(PRODUCT_DIR)/snapshot_blob.bin',
-                                    '<(PRODUCT_DIR)/v8_context_snapshot.bin',
-                                    '<(PRODUCT_DIR)/icudtl.dat',
                                 ],
 						    },
 					    },

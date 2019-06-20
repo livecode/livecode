@@ -33,5 +33,5 @@ In LiveCode IDE <msg> and the <msgChanged> <message> are used to implement
 the message box.
 
 References: put (command), msgChanged (message), keyword (glossary),
-global (keyword), variable (glossary), message (glossary), 
-stdout <keyword>
+global (glossary), variable (glossary), message (glossary), 
+stdout (keyword)

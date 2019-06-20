@@ -31,17 +31,17 @@ Use the <optionKey> <function(control structure)> to check whether the
 <optionKey> to add alternative capabilities to user actions such as
 clicking. 
 
-The altKey, optionKey, and <metaKey> <function(glossary)|functions> all
+The <altKey> and <optionKey> <function(glossary)|functions> both
 <return> the same <value>. Which one to use is a matter of preference.
 
 The terminology varies depending on platform. Users of different
 operating systems may know this key as the Option key (Mac OS systems),
 Meta key (Unix systems), or Alt key (Windows systems).
 
-References: left (constant), return (constant),
+References: left (constant), return (constant), 
 function (control structure), value (function), keysDown (function),
-Alt key (glossary), Meta key (glossary), Option key (glossary),
-return (glossary), metaKey (glossary), function (glossary),
+altKey (function), Alt key (glossary), Meta key (glossary), 
+Option key (glossary), return (glossary), function (glossary),
 optionKeyDown (message)
 
 Tags: ui
