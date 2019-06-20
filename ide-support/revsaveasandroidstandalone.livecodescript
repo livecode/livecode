@@ -422,6 +422,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       replace "${ORIENTATION}" with tInitialOrientation in tManifest
       
       replace "${MIN_SDK_VERSION}" with pSettings["android,minimum version"] in tManifest
+      replace "${TARGET_SDK_VERSION}" with targetSDKVersion() in tManifest
       
       local tUsesFeature, tUsesPermission, tFeatures, tPermissions, tAd
       repeat for each key tFeature in pSettings["android,device capabilities"]
@@ -1546,6 +1547,11 @@ end doShellCommand
 ################################################################################
 
 constant kDeployLibrary = "revDeployLibraryAndroid"
+private function targetSDKVersion
+   dispatch function "deployTargetSdkVersion" to stack kDeployLibrary
+   return the result
+end targetSDKVersion
+
 private function pathToRootClasses pRoot
    dispatch function "pathToRootClasses" to stack kDeployLibrary with pRoot
    return the result

@@ -212,8 +212,17 @@ function deployIsValidJDK pPath
    return true
 end deployIsValidJDK
 
+constant kDeployAndroidTargetSDK = "28"
+function deployTargetSdkVersion
+   return kDeployAndroidTargetSDK
+end deployTargetSdkVersion
+
 function deployRequiredSDK
-   return "Android 8.0 (API 26)"
+   local tMap
+   put deployGetVersionsMap() into tMap
+   local tAndroidVersion
+   put word 1 of tMap[kDeployAndroidTargetSDK] into tAndroidVersion
+   return format("%s (API %s)", tAndroidVersion, kDeployAndroidTargetSDK)
 end deployRequiredSDK
 
 function deployIsValidSDK pPath 
@@ -224,8 +233,8 @@ function deployIsValidSDK pPath
       return false
    end if
    
-   if there is no folder (pPath & slash & "platforms/android-26") then
-      --return "could not find install of SDK level 26, make sure it has been installed with the Android SDK Manager"
+   if there is no folder pathToRootPlatform(pPath) then
+      --return "could not find install of required target SDK, make sure it has been installed with the Android SDK Manager"
       return false
    end if
    
@@ -272,38 +281,37 @@ end deployGetJDK
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// SN-2015-05-13: [[ AndroidVersions ]] Make the available Android minimum versions
-//  something changeable from a script-only stack
-function deployGetVersionsList
-   return "4.1 - Jelly Bean,4.2,4.3," & \
-         "4.4 - KitKat," & \
-         "5.0 - Lollipop,5.1," & \
-         "6.0 - Marshmallow," & \
-         "7.0 - Nougat,7.1," & \
-         "8.0 - Oreo,8.1" 
-end deployGetVersionsList
+function deployGetVersionsMap
+   local tMap
+   put "4.1 - Jelly Bean" into tMap[16]
+   put "4.2" into tMap[17]
+   put "4.3" into tMap[18]
+   put "4.4 - KitKat" into tMap[19]
+   put "5.0 - Lollipop" into tMap[21]
+   put "5.1" into tMap[22]
+   put "6.0 - Marshmallow" into tMap[23]
+   put "7.0 - Nougat" into tMap[24]
+   put "7.1" into tMap[25]
+   put "8.0 - Oreo" into tMap[26]
+   put "8.1" into tMap[27]
+   put "9.0 - Pie" into tMap[28]
+   put "10 - Q" into tMap[29]
+   return tMap
+end deployGetVersionsMap
 
-function deployGetAPIsList
-   return "16,17,18,19,21,22,23,24,25,26,27"
-end deployGetAPIsList
-
+constant kDefaultMinAPIVersion = 9
 function deployGetApiFromVersion pVersion
-   local tItemNumber, tAPI
-   put 1 into tItemNumber
-   put 0 into tAPI
+   local tAPI
+   put kDefaultMinAPIVersion into tAPI
    
-   repeat for each item tAndroidVersion in deployGetVersionsList()
-      if pVersion is tAndroidVersion then
-         put item tItemNumber of deployGetAPIsList() into tAPI
+   local tMap
+   put deployGetVersionsMap() into tMap
+   repeat for each key tAPIKey in tMap
+      if pVersion is tMap[tAPIKey] then
+         put tAPIKey into tAPI
          exit repeat
-      else
-         add 1 to tItemNumber
       end if
    end repeat
-   
-   if tAPI = 0 then // Keep the previous behaviour: defaulting to the smallest API
-      put 9 into tAPI
-   end if
    
    return tAPI
 end deployGetApiFromVersion
@@ -351,12 +359,16 @@ end doShellCommand
 
 ////////////////////////////////////////////////////////////////////////////////
 
-function pathToRootClasses pRoot
+function pathToRootPlatform pRoot
    if pRoot is empty then
       put sAndroidRoot into pRoot
    end if
 
-   return pRoot & slash & "platforms/android-26/android.jar"
+   return pRoot & slash & "platforms/android-" & kDeployAndroidTargetSDK
+end pathToRootPlatform
+
+function pathToRootClasses pRoot
+   return pathToRootPlatform(pRoot) & slash & "android.jar"
 end pathToRootClasses
 
 function pathToSDKClasses pRoot
