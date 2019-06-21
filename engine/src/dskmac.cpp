@@ -567,36 +567,7 @@ static void parseSerialControlStr(MCStringRef setting, struct termios *theTermio
         {
             integer_t baudrate;
             /* UNCHECKED */ MCStringToInteger(*t_value, baudrate);
-			if (baudrate == 57600)
-				baud = B57600;
-			else if (baudrate == 38400)
-				baud = B38400;
-			else if (baudrate == 28800)
-				baud = B28800;
-			else if (baudrate == 19200)
-				baud = B19200;
-			else if (baudrate == 16600)
-				baud = B16600;
-			else if (baudrate == 14400)
-				baud = B14400;
-			else if (baudrate == 9600)
-				baud = B9600;
-			else if (baudrate == 7200)
-				baud = B7200;
-			else if (baudrate == 4800)
-				baud = B4800;
-			else if (baudrate == 3600)
-				baud = B4800;
-			else if (baudrate == 2400)
-				baud = B2400;
-			else if (baudrate == 1800)
-				baud = B1800;
-			else if (baudrate == 1200)
-				baud = B1200;
-			else if (baudrate == 600)
-				baud = B600;
-			else if (baudrate == 300)
-				baud = B300;
+            baud = baudrate;
 			cfsetispeed(theTermios, baud);
 			cfsetospeed(theTermios, baud);
             
@@ -4079,6 +4050,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
 		if (fptr != NULL)
         {
+            setbuf(fptr, nullptr);
             int val;
             int t_serial_in;
             

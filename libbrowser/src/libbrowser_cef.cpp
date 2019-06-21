@@ -296,7 +296,7 @@ public:
 			p_command_line->AppendSwitch(MC_CEF_HIDPI_SWITCH);
 	}
 
-	IMPLEMENT_REFCOUNTING(MCCefBrowserApp)
+	IMPLEMENT_REFCOUNTING(MCCefBrowserApp);
 };
 
 extern "C" int initialise_weak_link_cef(void);
@@ -494,7 +494,11 @@ bool MCCefInitialise(void)
 	t_settings.command_line_args_disabled = true;
 	t_settings.windowless_rendering_enabled = true;
 	t_settings.no_sandbox = true;
+#ifdef _DEBUG
+	t_settings.log_severity = LOGSEVERITY_VERBOSE;
+#else
 	t_settings.log_severity = LOGSEVERITY_DISABLE;
+#endif
 	
     bool t_success = true;
 #ifdef TARGET_PLATFORM_LINUX
@@ -985,7 +989,7 @@ public:
 	// CefRequestHandler interface
 	
 	// Called on UI thread
-	virtual bool OnBeforeBrowse(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request, bool p_is_redirect) OVERRIDE
+	virtual bool OnBeforeBrowse(CefRefPtr<CefBrowser> p_browser, CefRefPtr<CefFrame> p_frame, CefRefPtr<CefRequest> p_request, bool p_user_gesture, bool p_is_redirect) OVERRIDE
 	{
 		// IM-2014-07-21: [[ Bug 12296 ]] If browser has been closed then exit
 		if (nil == m_owner)
@@ -1249,7 +1253,7 @@ public:
 			p_model->Clear();
 	}
 	
-	IMPLEMENT_REFCOUNTING(MCCefBrowserClient)
+	IMPLEMENT_REFCOUNTING(MCCefBrowserClient);
 };
 
 bool MCCefBrowserBase::Initialize()

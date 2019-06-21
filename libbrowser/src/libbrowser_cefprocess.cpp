@@ -428,7 +428,7 @@ public:
 		m_title = p_dom->GetTitle();
 	}
 	
-	IMPLEMENT_REFCOUNTING(MCGetTitleDOMVisitor)
+	IMPLEMENT_REFCOUNTING(MCGetTitleDOMVisitor);
 };
 
 bool MCCefHandleGetTitle(CefRefPtr<CefBrowser> p_browser, CefString &r_return_value)
@@ -561,7 +561,7 @@ public:
 		return false;
 	}
 	
-	IMPLEMENT_REFCOUNTING(MCCefLCFuncHandler)
+	IMPLEMENT_REFCOUNTING(MCCefLCFuncHandler);
 };
 
 class MCCefRenderApp : public CefApp, CefRenderProcessHandler
@@ -807,7 +807,7 @@ private:
 	}
 	
 	
-	IMPLEMENT_REFCOUNTING(MCCefRenderApp)
+	IMPLEMENT_REFCOUNTING(MCCefRenderApp);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

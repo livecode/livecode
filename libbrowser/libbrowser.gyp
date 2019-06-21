@@ -177,6 +177,22 @@
 						],
 					},
 				],
+				
+				[
+					'OS == "win"',
+					{	
+						'copies':
+						[
+							{
+								'destination':'<(PRODUCT_DIR)/Externals/CEF/',
+								'files':
+								[
+									'<(PRODUCT_DIR)/libbrowser-cefprocess.exe',
+								],
+							},
+						],
+					},
+				],
 			],
 			
 			'direct_dependent_settings':
@@ -278,17 +294,6 @@
                             [
                                 'toolset_os == "win"',
                                 {	
-                                    'copies':
-                                    [
-                                        {
-                                            'destination':'<(PRODUCT_DIR)/CEF/',
-                                            'files':
-                                            [
-                                                '<(PRODUCT_DIR)/libbrowser-cefprocess.exe',
-                                            ],
-                                        },
-                                    ],
-
                                     'library_dirs':
                                     [
                                         '../prebuilt/unpacked/cef/<(uniform_arch)-win32-$(PlatformToolset)_static_$(ConfigurationName)/lib/CEF/',

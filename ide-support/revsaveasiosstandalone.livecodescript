@@ -1917,6 +1917,8 @@ private function revGetMobileProfileInfo pProfileId
          get offset("iPhone Distribution:", tCert)
       else if tCert Contains "iOS Development:" then
          get offset("iOS Development:", tCert)
+      else if tCert Contains "Apple Development:" then
+         get offset("Apple Development:", tCert)
       else
          get offset("iPhone Developer:", tCert)
       end if

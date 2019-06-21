@@ -1,0 +1,1 @@
+# Fix `answer file with type` setting `the result` to the chosen file path instead of chosen file type on macOS

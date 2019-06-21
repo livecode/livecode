@@ -2221,8 +2221,22 @@ bool MCChunk::set(MCExecContext &ctxt, Preposition_type p_type, MCExecValue p_va
             MCInterfaceExecPutIntoField(ctxt, *t_string, p_type, t_obj_chunk);
         }
         else
-            MCInterfaceExecPutIntoObject(ctxt, p_value, p_type, t_obj_chunk);
-
+        {
+            // AL-2014-08-04: [[ Bug 13081 ]] 'put into <chunk>' is valid for any container type
+            switch (t_obj_chunk . object -> gettype())
+            {
+                case CT_BUTTON:
+                case CT_IMAGE:
+                case CT_AUDIO_CLIP:
+                case CT_VIDEO_CLIP:
+                    MCInterfaceExecPutIntoObject(ctxt, p_value, p_type, t_obj_chunk);
+                    break;
+                default:
+                    ctxt . LegacyThrow(EE_CHUNK_SETNOTACONTAINER);
+                    break;
+            }
+        }
+        
         MCValueRelease(t_obj_chunk . mark . text);
     }
     

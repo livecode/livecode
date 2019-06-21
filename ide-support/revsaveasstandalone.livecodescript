@@ -180,7 +180,7 @@ on revSaveAsStandalone pStack, pFolder, pPreview, pSuppressSuccessMsg
       end if
       exit revSaveAsStandalone
    end if
-
+   
    # OK-2010-03-31: Ensure that the standalone name doesn't contain stuff that is not allowed in folder names,
    # otherwise this could cause problems. In particular a return char at the end of the name causes the cleanup
    # routines to try and delete the parent folder, which can result in data loss. The data loss potential has also
@@ -221,6 +221,9 @@ on revSaveAsStandalone pStack, pFolder, pPreview, pSuppressSuccessMsg
       local tStandalonePaths
       revDoSaveAsStandalone pStack, pFolder, ,tStandalonePaths
       put the result into tError
+   else
+      answer warning "Saving as standalone application was canceled" 
+      exit revSaveAsStandalone
    end if
    
    if revStandaloneGetWarnings() is not empty and tError is empty then
@@ -2260,14 +2263,6 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          
          // make sure we only copy the required helper process executable
          put revListFiles(tCEFResources) into tCEFFiles
-         filter lines of tCEFFiles not matching "*-cefprocess"
-         
-         // The following files need to be placed alongside the executable
-         local tCefTopLevelFiles = "icudtl.dat,natives_blob.bin,snapshot_blob.bin"
-         replace comma with return in tCefTopLevelFiles
-         repeat for each line tFile in tCefTopLevelFiles
-            filter lines of tCEFFiles not matching tFile
-         end repeat
          
          // Copy files to CEF resource folder.
          repeat for each line tCEFFile in tCEFFiles
@@ -2283,7 +2278,7 @@ private command revCopyCEFResources pPlatform, pStandalonePath, pCopyRevBrowserR
          end if
          
          // Copy files to standalone folder
-         put tCefTopLevelFiles & return into tCEFFiles
+         put empty into tCEFFiles
          if pCopyRevBrowserResources then
             put "revbrowser-cefprocess" & return after tCEFFiles
          end if

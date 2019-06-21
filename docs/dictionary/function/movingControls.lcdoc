@@ -32,8 +32,8 @@ window is still moving, or to perform an action on each <control> or
 window that is moving.
 
 References: move (command), function (control structure),
-command (glossary), return (glossary), control (keyword), line (keyword),
-control (object), properties (property), ID (property)
+command (glossary), control (glossary), return (glossary), control (keyword), 
+line (keyword), properties (property), ID (property)
 
 Tags: multimedia
 
