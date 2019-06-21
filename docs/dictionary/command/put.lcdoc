@@ -47,14 +47,14 @@ The result:
 >*Important:* If writing to a url container fails, an error is returned
 > in the result. For example: 
 
-    <put> the result into tResult.
+    <put> the result into tResult
 
 > *Note:* Unlike its use with the <file> and <binfile URL> types, the 
 > <put> <command>, when used with a <resfile>, does not create the <file>
 > if it doesn't exist. Instead, an error message is returned in the
 > <result>. To create a file, first use a statement like the following:
 
-    <open file> tFilepath
+    open file tFilepath
 
 > When used with an ftp <URL>, <upload|uploads> the <value> to an 
 > <FTP> <server>. If an error occurs during uploading, the

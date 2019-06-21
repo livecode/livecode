@@ -39,10 +39,11 @@ when any of following events occur:
 - The query is disconnected (typically on closeCard) 
 - The query is modified in the Query Builder 
 - The user clicks a button that has been set to refresh 
-  the query. The queryRecordChanged message is only sent to stacks that
-  contain query objects. For more information about query objects and
-  how to create and use them see section 8.5 of the LiveCode User's
-  Guide. 
+  the query. 
+
+The queryRecordChanged message is only sent to stacks that contain 
+query objects. For more information about query objects and how to 
+create and use them see section 8.5 of the LiveCode User's Guide. 
 
 References: revBrowserSet (command), revBrowserNavigate (command),
 browserDownloadRequest (message)

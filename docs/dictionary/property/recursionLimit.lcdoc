@@ -40,10 +40,11 @@ sets. To allow deeper levels of recursion than usual, increase the
 <recursionLimit>. 
 
 Recursion may also occur accidentally. In this case, the recursion is
-> usually infinite--that is, the function will keep recursing until it
-> reaches the limit and causes an execution error. To track down such
-> problems more quickly, reduce the recursionLimit. The lower the limit,
-> the more quickly a buggy routine will cause an execution error.
+usually infinite--that is, the function will keep recursing until it
+reaches the limit and causes an execution error. To track down such
+problems more quickly, reduce the recursionLimit. The lower the limit,
+the more quickly a buggy routine will cause an execution error.
+
 >*Note:* On Windows, as of version 4.5.1, the recursionLimit property is
 > bounded by the stackLimit. Attempts to set the recursionLimit greater
 > than the stackLimit will see it downwardly adjusted to the maximum
