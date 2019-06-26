@@ -2,7 +2,7 @@ Name: intersect
 
 Type: function
 
-Syntax: intersect(<object(glossary)>, <object> [, <threshold>] )
+Syntax: intersect(<object>, <object> [, <threshold>] )
 
 Summary:
 <return|Returns> true if two <object|objects> overlap, false otherwise.
