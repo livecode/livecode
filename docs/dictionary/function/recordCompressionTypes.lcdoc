@@ -67,7 +67,7 @@ property (glossary), loaded into memory (glossary), return (glossary),
 compress (glossary), QuickTime (glossary), command (glossary),
 codec (glossary), items (keyword), character (keyword), line (keyword),
 dontUseQT (property), dontUseQTEffects (property), 
-recordCompression (property), recordCompressionTypes (property)
+recordCompression (property)
 
 Tags: multimedia
 
