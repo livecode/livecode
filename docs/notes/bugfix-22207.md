@@ -1,1 +1,1 @@
-# Fixed garbled text in the documentation for selectedObjects
+# Fixed garbled text in the documentation for selectedObject
