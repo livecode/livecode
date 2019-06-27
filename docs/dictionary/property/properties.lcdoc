@@ -53,6 +53,7 @@ The key of each element in the array is the property name. Use the
 following statements to obtain a list of the properties for a particular
 object type:
 
+    local myArray
     put the properties of field "My Field" into myArray
     put the keys of myArray
 
@@ -69,6 +70,7 @@ to get the object's ID property:
 > If you want a list of properties and their values, use the
 > <combine> command to create a list:
 
+    local myArray
     put the properties of field "My Field" into myArray
     combine myArray using return and ": "
     put myArray
