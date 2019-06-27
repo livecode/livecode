@@ -47,6 +47,7 @@ The result:
 >*Important:* If writing to a url container fails, an error is returned
 > in the result. For example: 
 
+    local tResult
     <put> the result into tResult
 
 > *Note:* Unlike its use with the <file> and <binfile URL> types, the 
