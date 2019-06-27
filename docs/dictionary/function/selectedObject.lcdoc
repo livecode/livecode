@@ -29,7 +29,7 @@ repeat with x = 1 to the number of lines of the selectedObjects
 
 Returns:
 The <selectedObject> <function> <return|returns> a list with the long
-<ID> <property> of each selected <object>.
+<ID> <property> of each <selected> <object>.
 
 Description:
 Use the <selectedObject> <function> to perform an action on all the
