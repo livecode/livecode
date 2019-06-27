@@ -86,7 +86,9 @@ rectangle.
 > the rect of the given stack with its decorations and frame taken into 
 > account. The effective rect of a stack can also be set. Here, the
 > rect of the frame of the stack will be set appropriately before setting
-> the rect of the stack.
+> the rect of the stack. The effective rect of a stack only returns valid
+> values if the stack is open (visible or invisible) so that a window frame
+> applicable to the OS has been created for it.
 
 Changes:
 The use of the effective keyword with the rectangle property was 
