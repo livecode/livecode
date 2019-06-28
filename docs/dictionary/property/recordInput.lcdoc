@@ -37,7 +37,7 @@ sound.
 
 The value "dflt" indicates that the <record sound> <command> should use
 the sound input device chosen in the user's system settings. If a
-different <soundSource> is specified, that input device is used instead.
+different *soundSource* is specified, that input device is used instead.
 
 The possible soundSources vary, depending on the QuickTime version
 installed and on the system's hardware configuration. QuickTime 3.0 and
