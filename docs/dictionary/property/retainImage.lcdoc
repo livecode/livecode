@@ -37,8 +37,8 @@ This property is supported only on Unix systems with Display PostScript
 installed. 
 
 References: property (glossary), EPS (glossary), bitmap (glossary),
-Display PostScript (glossary), image (keyword), file (keyword),
-retainPostScript (property), postScript (property)
+Display PostScript (glossary), PostScript (gloassry), image (keyword),
+file (keyword), retainPostScript (property), postScript (property)
 
 Tags: multimedia
 
