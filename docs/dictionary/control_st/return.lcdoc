@@ -134,7 +134,7 @@ value can be processed to continue operation.
 >*Note:* The <return> <control structure> is implemented internally as a
 <command> and appears in the <commandNames>.
 
-References: return (constant), setProp (control structure),
+References: setProp (control structure),
 getProp (control structure), throw (control structure),
 if (control structure), pass (control structure),
 exit (control structure), on (control structure),
@@ -143,5 +143,5 @@ value (function), merge (function), object (glossary),
 message handler (glossary), call (glossary), property (glossary), 
 pass (glossary), execute (glossary), command (glossary), 
 control structure (glossary), message path (glossary), caller (glossary), 
-message (glossary), statement (glossary), handler (glossary)
+message (glossary), statement (glossary), handler (glossary), return (glossary)
 
