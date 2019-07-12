@@ -59,8 +59,8 @@ To use <VFW|Video for Windows> (on <Windows|Windows systems>), specify
 "VFW".
 
 To close the window and unload the video capture code, you should use
-the <revCloseVideoGrabber> <command> when you're done with <video
-capture>. 
+the <revCloseVideoGrabber> <command> when you're done with 
+<video capture>. 
 
 >*Important:*  The <revInitializeVideoGrabber> <command> is part of the 
 > <Video library>. To ensure that the <command> works in a 
@@ -87,9 +87,9 @@ revStopPreviewingVideo (command), stack window (glossary),
 video capture (glossary), Windows (glossary), VFW (glossary),
 Standalone Application Settings (glossary), video grabber (glossary),
 standalone application (glossary), function (glossary),
-command (glossary), LiveCode custom library (glossary), file (keyword),
-Video library (library), properties (property), dontUseQT (property),
-dontUseQTEffects (property)
+command (glossary), LiveCode custom library (glossary), 
+QuickTime (glossary), file (keyword), Video library (library), 
+properties (property), dontUseQT (property), dontUseQTEffects (property)
 
 Tags: multimedia
 
