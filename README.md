@@ -2,7 +2,7 @@
 
 ![LiveCode Community Logo](http://livecode.com/wp-content/uploads/2015/02/livecode-logo.png)
 
-Copyright © 2003-2016 LiveCode Ltd., Edinburgh, UK
+Copyright © 2003-2019 LiveCode Ltd., Edinburgh, UK
 
 ## Introduction
 
@@ -105,4 +105,4 @@ LiveCode Community is freely distributable under the GNU Public License (GPL), w
 
 The LiveCode Community engine, libraries, and associated files are, unless otherwise noted:
 
-Copyright © 2003-2015 LiveCode Ltd.
+Copyright © 2003-2019 LiveCode Ltd.
