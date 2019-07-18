@@ -2299,6 +2299,13 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 			put true into rTrimmed
 			return tWidth
 		end if
+		// case of invisible chars as in Nullbytes assume 
+		// that printables should at least be 2 pixel wide
+		if tCount > pSpace/2 then
+			put "\u{2026}" into rText
+			put true into rTrimmed
+			return tWidth
+		end if
 		
 		add 1 to tCount
 	end repeat
