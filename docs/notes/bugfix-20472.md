@@ -1,0 +1,1 @@
+# fullclipboarddata["image"] missing BMP
