@@ -26,11 +26,11 @@ By default, the <relayerGroupedControls> <property> is set to false.
 Description:
 Use the <relayerGroupedControls> <property> to change the <layer> of
 <grouped control|grouped controls> without being in 
-<group-editing mode>, or to move <control(object)|controls> out of a <group> by
-changing their <layer>.
+<group-editing mode>, or to move <control(glossary)|controls> out of a 
+<group> by changing their <layer>.
 
 The <layer> of a control is its order on the <card>. If two
-<control(object)|controls> overlap, the one whose <layer> is higher
+<control(glossary)|controls> overlap, the one whose <layer> is higher
 covers the one whose <layer> is lower.
 
 If the <relayerGroupedControls> is false, you can change the <layer> of
@@ -38,8 +38,8 @@ a <control(keyword)> that's part of a <group> only when editing the
 <group>. If the <relayerGroupedControls> is true, you can change the
 <layer> of a <grouped control> at any time.
 
->*Important:*  It is not possible for other <control(object)|controls>
-> to be interspersed between the <control(object)|controls> in a single
+>*Important:*  It is not possible for other <control(glossary)|controls>
+> to be interspersed between the <control(glossary)|controls> in a single
 > <group>, so changing a <grouped control|grouped control's> <layer> may
 > change its group membership if the <relayerGroupedControls> is true:
 
@@ -51,13 +51,13 @@ a <control(keyword)> that's part of a <group> only when editing the
 
 * Conversely, you can move a control into a group by setting the
   control's <layer> to a number between the bottom-most and topmost
-  <control(object)|controls> in the <group>.
+  <control(glossary)|controls> in the <group>.
 
 
-References: group (command), start editing (command), property (glossary),
-grouped control (glossary), group-editing mode (glossary), card (keyword),
-control (keyword), control (object), editBackground (property),
-layer (property)
+References: group (command), start editing (command), 
+control (glossary), property (glossary), grouped control (glossary), 
+group-editing mode (glossary), card (keyword), control (keyword), 
+editBackground (property), layer (property)
 
 Tags: ui
 

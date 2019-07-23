@@ -24,13 +24,13 @@ set the resizeQuality of the templateImage to "best"
 Description:
 The <resizeQuality> of an image takes one of three values:
 
-"normal": uses a "nearest" filter- i.e. no interpolation. This is the
-fastest scaling method and is the default for new images "good": uses a
-bilinear filter- i.e. interpolation is done between the four nearest
-pixels using bilinearity. "best" : uses a bicubic filter-
-i.e.interpolation is done using cubic approximation from near pixels.
-This is the slowest scaling method but produces the best quality
-scaling. 
+- "normal": uses a "nearest" filter- i.e. no interpolation. This is the
+fastest scaling method and is the default for new images 
+- "good": uses a bilinear filter- i.e. interpolation is done between the 
+four nearest pixels using bilinearity. 
+- "best" : uses a bicubic filter- i.e. interpolation is done using cubic 
+approximation from near pixels. This is the slowest scaling method but 
+produces the best quality scaling. 
 
 The default value of the <resizeQuality> for new images is "normal"
 

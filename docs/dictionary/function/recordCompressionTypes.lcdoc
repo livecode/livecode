@@ -66,7 +66,8 @@ function (control structure), compress (function), qtVersion (function),
 property (glossary), loaded into memory (glossary), return (glossary),
 compress (glossary), QuickTime (glossary), command (glossary),
 codec (glossary), items (keyword), character (keyword), line (keyword),
-dontUseQT (property), recordCompression (property)
+dontUseQT (property), dontUseQTEffects (property), 
+recordCompression (property)
 
 Tags: multimedia
 

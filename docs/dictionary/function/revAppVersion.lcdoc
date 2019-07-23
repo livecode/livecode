@@ -31,9 +31,10 @@ The <revAppVersion> <function> is different from the <version>
 <function>. The <revAppVersion> function returns the version of the
 <development environment>, while the <version> <function> returns the
 version of the underlying <engine>. For example, the contents of the
-LiveCode menu bar, the <LiveCode custom libraries>, and the <property
-inspector> depend on the <revAppVersion>, but the features of the
-<LiveCode> language depend on the <engine> <version>.
+LiveCode menu bar, the 
+<LiveCode custom library|LiveCode custom libraries>, and the 
+<property inspector> depend on the <revAppVersion>, but the features of 
+the <LiveCode> language depend on the <engine> <version>.
 
 >*Note:* In a standalone application the <Common library> is implemented
 > as a hidden <group> and made available when the <group> receives its
@@ -51,7 +52,7 @@ libURLVersion (function), buildNumber (function), LiveCode (glossary),
 return (glossary), main stack (glossary), handler (glossary),
 engine (glossary), development environment (glossary), group (glossary),
 message (glossary), application (glossary), property inspector (glossary),
-LiveCode custom libraries (glossary), string (keyword),
+LiveCode custom library (glossary), string (keyword),
 Common library (library), library (library), startup (message),
 openBackground (message), preOpenStack (message), openStack (message),
 preOpenCard (message)

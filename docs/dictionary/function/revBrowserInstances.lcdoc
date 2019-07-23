@@ -27,8 +27,6 @@ The <revBrowserInstances> function returns a comma-delimited list of
 integer browser ids, or empty if no browsers are open.
 
 Description:
-none
-
 Use the <revBrowserInstances> function to obtain a list of the ids of
 all the open browser objects.
 
