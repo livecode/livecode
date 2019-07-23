@@ -72,9 +72,8 @@ finishes <execute|executing>.
 
 References: find (command), on (control structure),
 return (control structure), function (control structure),
-sysError (function), value (function), return (glossary),
-variable (glossary), handler (glossary), return value (glossary),
-execute (glossary), statement (glossary), error (glossary),
-control structure (glossary), command (glossary), string (keyword),
-catch (keyword)
+sysError (function), value (function), variable (glossary), 
+handler (glossary), return value (glossary), execute (glossary), 
+statement (glossary), error (glossary), control structure (glossary), 
+command (glossary), string (keyword), catch (keyword)
 
