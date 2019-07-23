@@ -39,10 +39,10 @@ sendMessages (bool):
 
 Returns:
 The <revXMLCreateTreeWithNamespaces> <function(control structure)>
-returns a tree ID which can be used to refer to the tree in other <XML
-library> <command|commands> and <function(glossary)|functions>. The tree
-ID is always a positive <integer>. (If the <createTree> is false, the
-<function(control structure)> <return|returns> zero.) If the function
+returns a tree ID which can be used to refer to the tree in other 
+<XML library> <command|commands> and <function(glossary)|functions>. The 
+tree ID is always a positive <integer>. (If the <createTree> is false, 
+the <function(control structure)> <return|returns> zero.) If the function
 encounters an error while parsing the data, it returns an error message
 beginning with "xmlerr".
 
@@ -90,7 +90,7 @@ revXMLAppend (command), function (control structure),
 revXMLValidateDTD (function), revXMLTrees (function),
 revXMLCreateTree (function),
 revXMLCreateTreeFromFileWithNamespaces (function),
-LiveCode custom library (glossary), return (glossary),
+LiveCode custom library (glossary), return (glossary), string (glossary),
 XML tree (glossary), Standalone Application Settings (glossary),
 message (glossary), standalone application (glossary), XML (glossary),
 function (glossary), command (glossary), integer (keyword),
