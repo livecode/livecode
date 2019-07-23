@@ -311,18 +311,18 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       set the itemDelimiter to "."
       put item 1 to -2 of tSourceFile into tSourceName
       
-      if there is a file tLib then
-         put tSourceFile into tCopiedExternals[tSourceName]["location"]
-      else
-         create folder (pAppBundle & "/Frameworks")
-         put "Frameworks/" & tSourceFile into tCopiedExternals[tSourceName]["location"]
-      end if
-
       -- hack to uniquify modules
       -- tCopiedExternals should be changed to be keyed on file path
       -- however that has consequences for external mappings
       if tSourceFile ends with ".lcm" then
          put uuid() into tSourceName
+      end if
+      
+      if there is a file tLib then
+         put tSourceFile into tCopiedExternals[tSourceName]["location"]
+      else
+         create folder (pAppBundle & "/Frameworks")
+         put "Frameworks/" & tSourceFile into tCopiedExternals[tSourceName]["location"]
       end if
       
       if pTarget is "Device" then
