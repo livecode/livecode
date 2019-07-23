@@ -539,6 +539,10 @@
 							# Error in ../../thirdparty/libsqlite/include/qry_dat.h
 							'-Werror=return-type',
 						],
+                        'defines':
+                        [
+                            '_GLIBCXX_USE_CXX11_ABI=0',
+                        ],
 					},
 				],
 				[
@@ -652,6 +656,10 @@
 							'-lstdc++',
 							'-Wl,-Bdynamic',
 						],
+                     'defines':
+                     [
+                         '_GLIBCXX_USE_CXX11_ABI=0',
+                     ],
 					},
 				],
 			],
