@@ -437,6 +437,11 @@ private command __revSBCopyFile pSourceFile, pTargetFile, pCallback, pCallbackTa
       set the fileType to tOldFileType
    end if
    
+   /* WORKAROUND: BUG 22255 
+    *
+    * Multiple shell calls in a tight loop can cause a deadlock on macOS */
+   wait 0 with messages
+   
    return tResult
 end __revSBCopyFile
 
