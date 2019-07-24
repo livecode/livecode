@@ -36,10 +36,12 @@ public:
 	void SetEventHandler(MCBrowserEventHandler *p_handler);
 	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);
 	void SetProgressHandler(MCBrowserProgressHandler *p_handler);
+	void SetFileDialogHandler(MCBrowserFileDialogHandler *p_handler);
 
 	MCBrowserEventHandler *GetEventHandler(void);
 	MCBrowserJavaScriptHandler *GetJavaScriptHandler(void);
 	MCBrowserProgressHandler *GetProgressHandler(void);
+	MCBrowserFileDialogHandler *GetFileDialogHandler(void);
 
 	virtual void OnNavigationBegin(bool p_in_frame, const char *p_url);
 	virtual void OnNavigationComplete(bool p_in_frame, const char *p_url);
@@ -53,6 +55,20 @@ public:
 	virtual void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
 
 	virtual void OnProgressChanged(const char *p_url, uint32_t p_progress);
+
+	virtual void FileDialogClearResponse(void);
+	virtual bool FileDialogGetResponse(MCBrowserFileDialogResponse &r_response);
+	virtual void FileDialogCancel(void);
+	virtual void FileDialogSelectPaths(const char *p_paths, uindex_t p_selected_filter);
+
+	virtual bool OnFileDialog(
+		MCBrowserFileDialogType p_type,
+		MCBrowserFileDialogOptions p_options,
+		const char *p_title,
+		const char *p_default_path,
+		const char *p_filters,
+		uindex_t p_default_filter
+	);
 
 	static bool BrowserListAdd(MCBrowser *p_browser);
 	static void BrowserListRemove(MCBrowser *p_browser);
@@ -71,6 +87,10 @@ private:
 	MCBrowserEventHandler *m_event_handler;
 	MCBrowserJavaScriptHandler *m_javascript_handler;
 	MCBrowserProgressHandler *m_progress_handler;
+	MCBrowserFileDialogHandler *m_file_dialog_handler;
+
+	bool m_file_dialog_have_response;
+	MCBrowserFileDialogResponse m_file_dialog_response;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

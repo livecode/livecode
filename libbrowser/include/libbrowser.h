@@ -66,6 +66,35 @@ public:
 	virtual void OnProgressChanged(MCBrowser *p_browser, const char *p_url, uint32_t p_progress) = 0;
 };
 
+// File Dialog handler
+enum MCBrowserFileDialogType
+{
+	kMCBrowserFileDialogTypeOpen,
+	kMCBrowserFileDialogTypeOpenMultiple,
+	kMCBrowserFileDialogTypeOpenFolder,
+	kMCBrowserFileDialogTypeSave,
+};
+
+enum MCBrowserFileDialogOptions
+{
+	kMCBrowserFileDialogOptionOverwritePrompt = 1 << 0,
+	kMCBrowserFileDialogOptionHideReadOnly = 1 << 1,
+};
+
+class MCBrowserFileDialogHandler : public MCBrowserRefCounted
+{
+public:
+	virtual bool OnFileDialog(
+		MCBrowser *p_browser,
+		MCBrowserFileDialogType p_type,
+		MCBrowserFileDialogOptions p_options,
+		const char *p_title,
+		const char *p_default_path,
+		const char *p_filters,
+		uindex_t p_default_filter
+	) = 0;
+};
+
 // Properties
 enum MCBrowserProperty
 {
@@ -91,6 +120,14 @@ struct MCBrowserRect
 	int32_t left, top, right, bottom;
 };
 
+// File dialog response
+struct MCBrowserFileDialogResponse
+{
+	bool cancelled;
+	const char *selected_paths;
+	uindex_t selected_filter;
+};
+
 // Browser interface
 class MCBrowser : public MCBrowserRefCounted
 {
@@ -98,6 +135,7 @@ public:
 	virtual void SetEventHandler(MCBrowserEventHandler *p_handler) = 0;
 	virtual void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler) = 0;
 	virtual void SetProgressHandler(MCBrowserProgressHandler *p_handler) = 0;
+	virtual void SetFileDialogHandler(MCBrowserFileDialogHandler *p_handler) = 0;
 
 	virtual void *GetNativeLayer() = 0;
 	
@@ -114,6 +152,11 @@ public:
 	virtual bool GoForward() = 0;
 	virtual bool GoToURL(const char *p_url) = 0;
 	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result) = 0;
+
+	virtual void FileDialogClearResponse(void) = 0;
+	virtual bool FileDialogGetResponse(MCBrowserFileDialogResponse &r_response) = 0;
+	virtual void FileDialogCancel(void) = 0;
+	virtual void FileDialogSelectPaths(const char *p_paths, uindex_t p_selected_filter) = 0;
 };
 
 // Browser factory interface
@@ -271,6 +314,9 @@ MC_BROWSER_DLLEXPORT bool MCBrowserGoForward(MCBrowserRef p_browser);
 MC_BROWSER_DLLEXPORT bool MCBrowserGoToURL(MCBrowserRef p_browser, const char *p_url);
 MC_BROWSER_DLLEXPORT bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, char *&r_result);
 
+MC_BROWSER_DLLEXPORT void MCBrowserFileDialogCancel(MCBrowserRef p_browser);
+MC_BROWSER_DLLEXPORT void MCBrowserFileDialogSelectPaths(MCBrowserRef p_browser, const char *p_paths, uindex_t p_selected_filter);
+
 enum MCBrowserRequestType
 {
 	kMCBrowserRequestTypeNavigate,
@@ -288,10 +334,21 @@ enum MCBrowserRequestState
 typedef void (*MCBrowserRequestCallback)(void *p_context, MCBrowserRef p_browser, MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_in_frame, const char *p_url, const char *p_error);
 typedef void (*MCBrowserJavaScriptCallback)(void *p_context, MCBrowserRef p_browser, const char *p_handler, MCBrowserListRef p_params);
 typedef void (*MCBrowserProgressCallback)(void *p_context, MCBrowserRef p_browser, const char *p_url, uint32_t p_progress);
+typedef bool (*MCBrowserFileDialogCallback)(
+	void *p_context,
+	MCBrowserRef p_browser,
+	MCBrowserFileDialogType p_type,
+	MCBrowserFileDialogOptions p_options,
+	const char *p_title,
+	const char *p_default_path,
+	const char *p_filters,
+	uindex_t p_default_filter
+);
 
 MC_BROWSER_DLLEXPORT bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback p_callback, void *p_context);
 MC_BROWSER_DLLEXPORT bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCallback p_callback, void *p_context);
 MC_BROWSER_DLLEXPORT bool MCBrowserSetProgressHandler(MCBrowserRef p_browser, MCBrowserProgressCallback p_callback, void *p_context);
+MC_BROWSER_DLLEXPORT bool MCBrowserSetFileDialogHandler(MCBrowserRef p_browser, MCBrowserFileDialogCallback p_callback, void *p_context);
 
 }
 

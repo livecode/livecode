@@ -51,6 +51,8 @@ public type MCBrowserProperty is CInt
 public type MCBrowserValueType is CInt
 public type MCBrowserRequestType is CInt
 public type MCBrowserRequestState is CInt
+public type MCBrowserFileDialogType is CInt
+public type MCBrowserFileDialogOption is CInt
 
 --
 
@@ -111,10 +113,15 @@ public foreign handler MCBrowserDictionaryGetDictionary(in pDictionary as MCBrow
 public foreign handler type MCBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
 public foreign handler type MCBrowserJavaScriptCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pHandler as ZStringUTF8, in pParams as MCBrowserListRef) returns nothing
 public foreign handler type MCBrowserProgressCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pProgress as UInt32) returns nothing
+public foreign handler type MCBrowserFileDialogCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserFileDialogType, in pOptions as MCBrowserFileDialogOption, in pTitle as optional ZStringUTF8, in pDefaultPath as optional ZStringUTF8, in pFilters as optional ZStringUTF8, in pDefaultFilter as UInt32) returns CBool
 
 public foreign handler MCBrowserSetRequestHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserRequestCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserSetJavaScriptHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserJavaScriptCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserSetProgressHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserProgressCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserSetFileDialogHandler(in pBrowser as MCBrowserRef, in pCallback as optional MCBrowserFileDialogCallback, in pContext as optional Pointer) returns CBool binds to "<builtin>"
+
+public foreign handler MCBrowserFileDialogCancel(in pBrowser as MCBrowserRef) returns nothing binds to "<builtin>"
+public foreign handler MCBrowserFileDialogSelectPaths(in pBrowser as MCBrowserRef, in pPaths as ZStringUTF8, in pSelectedFilter as UInt32) returns nothing binds to "<builtin>"
 
 --------------------------------------------------------------------------------
 
@@ -156,6 +163,18 @@ public constant kMCBrowserRequestStateFailed is 2
 public constant kMCBrowserRequestStateUnhandled is 3
 
 public constant kMCBrowserRequestStateMap is ["begin", "complete", "failed", "unhandled"]
+
+--
+
+public constant kMCBrowserFileDialogTypeOpen is 0
+public constant kMCBrowserFileDialogTypeOpenMultiple is 1
+public constant kMCBrowserFileDialogTypeOpenFolder is 2
+public constant kMCBrowserFileDialogTypeSave is 3
+
+public constant kMCBrowserFileDialogTypeMap is ["open", "openMultiple", "openFolder", "save"]
+
+public constant kMCBrowserFileDialogOptionOverwritePrompt is 1
+public constant kMCBrowserFileDialogOptionHideReadOnly is 2
 
 --
 
