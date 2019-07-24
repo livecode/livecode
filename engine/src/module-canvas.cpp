@@ -5392,6 +5392,20 @@ void MCCanvasGetClipBounds(MCCanvasRef p_canvas, MCCanvasRectangleRef &r_bounds)
 
 //////////
 
+MC_DLLEXPORT_DEF
+void MCCanvasGetDeviceTransform(MCCanvasRef p_canvas, MCCanvasTransformRef &r_transform)
+{
+	__MCCanvasImpl *t_canvas;
+	t_canvas = MCCanvasGet(p_canvas);
+
+	MCGAffineTransform t_transform;
+	t_transform = MCGContextGetDeviceTransform(t_canvas->context);
+
+	/* UNCHECKED */ MCCanvasTransformCreateWithMCGAffineTransform(t_transform, r_transform);
+}
+
+//////////
+
 void MCCanvasCreateSolidPaint(__MCCanvasImpl &x_canvas, MCCanvasSolidPaintRef p_paint, MCGPaintRef& r_paint)
 {
     __MCCanvasColorImpl *t_color;

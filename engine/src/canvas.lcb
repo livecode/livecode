@@ -4009,6 +4009,7 @@ public foreign handler MCCanvasGetDashPhase(in pCanvas as Canvas, out rPhase as 
 public foreign handler MCCanvasSetDashPhase(in pPhase as CanvasFloat, in pCanvas as Canvas) returns nothing binds to "<builtin>"
 
 public foreign handler MCCanvasGetClipBounds(in pCanvas as Canvas, out rBounds as Rectangle) returns nothing binds to "<builtin>"
+public foreign handler MCCanvasGetDeviceTransform(in pCanvas as Canvas, out rTransform as Transform) returns nothing binds to "<builtin>"
 
 //////////
 
@@ -4377,6 +4378,32 @@ syntax CanvasPropertyClippingBounds is prefix operator with property precedence
 	"the" "clipping" "bounds" "of" <mCanvas: Expression>
 begin
 	MCCanvasGetClipBounds(mCanvas, output)
+end syntax
+
+//////////
+
+/**
+Summary:	The current device transform of the canvas.
+
+mCanvas:	An expression which evaluates to a canvas.
+
+Description:	The device transform of the canvas. Drawing operations on <mCanvas> will be modified by the transform before rendering to the underlying pixel buffer.
+
+Example:
+	// Modify the canvas transform
+	translate this canvas by [50, 100]
+
+	// Get the resulting transform
+	variable tTransform as Transform
+	put the device transform of this canvas into tTransform
+
+Tags:	Canvas
+*/
+
+syntax CanvasPropertyDeviceTransform is prefix operator with property precedence
+	"the" "device" "transform" "of" <mCanvas: Expression>
+begin
+	MCCanvasGetDeviceTransform(mCanvas, output)
 end syntax
 
 //////////
