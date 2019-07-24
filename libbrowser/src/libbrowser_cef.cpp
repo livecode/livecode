@@ -474,6 +474,14 @@ static bool __MCCefBuildPath(const char *p_library_path,
     return true;
 }
 
+static void __MCCefPathToNativeInline(char *p_path)
+{
+	uindex_t t_len = MCCStringLength(p_path);
+	for (uindex_t i = 0; i < t_len; i++)
+		if (p_path[i] == '/')
+			p_path[i] = kCefPathSeparator;
+}
+
 // IM-2014-03-13: [[ revBrowserCEF ]] Initialisation of the CEF library
 bool MCCefInitialise(void)
 {
@@ -828,6 +836,7 @@ public:
 	virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE { return this; }
+	virtual CefRefPtr<CefDialogHandler> GetDialogHandler() OVERRIDE { return this; }
 	
 	void AddIgnoreUrl(const CefString &p_url)
 	{
@@ -1253,6 +1262,105 @@ public:
 			p_model->Clear();
 	}
 	
+	// DialogHandler interface
+	// Methods called on UI thread
+
+	virtual bool OnFileDialog(CefRefPtr<CefBrowser> browser,
+		FileDialogMode mode,
+		const CefString& title,
+		const CefString& default_file_path,
+		const std::vector<CefString>& accept_filters,
+		int selected_accept_filter,
+		CefRefPtr<CefFileDialogCallback> callback) OVERRIDE
+	{
+		MCBrowserFileDialogType t_type;
+		unsigned int t_options;
+
+		switch (mode & FileDialogMode::FILE_DIALOG_TYPE_MASK)
+		{
+		case FileDialogMode::FILE_DIALOG_OPEN:
+			t_type = kMCBrowserFileDialogTypeOpen;
+			break;
+		case FileDialogMode::FILE_DIALOG_OPEN_FOLDER:
+			t_type = kMCBrowserFileDialogTypeOpenFolder;
+			break;
+		case FileDialogMode::FILE_DIALOG_OPEN_MULTIPLE:
+			t_type = kMCBrowserFileDialogTypeOpenMultiple;
+			break;
+		case FileDialogMode::FILE_DIALOG_SAVE:
+			t_type = kMCBrowserFileDialogTypeSave;
+			break;
+		}
+
+		t_options = 0;
+		if (mode & FileDialogMode::FILE_DIALOG_OVERWRITEPROMPT_FLAG)
+			t_options |= kMCBrowserFileDialogOptionOverwritePrompt;
+		if (mode & FileDialogMode::FILE_DIALOG_HIDEREADONLY_FLAG)
+			t_options |= kMCBrowserFileDialogOptionHideReadOnly;
+
+		char *t_title = nil;
+		/* UNCHECKED */ MCCefStringToUtf8String(title, t_title);
+
+		char *t_default_path = nil;
+		/* UNCHECKED */ MCCefStringToUtf8String(default_file_path, t_default_path);
+
+		char *t_filters = nil;
+		for (auto i = accept_filters.cbegin(); i != accept_filters.cend(); i++)
+		{
+			char *t_temp = nil;
+			/* UNCHECKED */ MCCefStringToUtf8String(*i, t_temp);
+			/* UNCHECKED */ MCCStringAppendFormat(t_filters, "%s/n", t_temp);
+			MCCStringFree(t_temp);
+		}
+
+		m_owner->FileDialogClearResponse();
+
+		bool t_handled;
+		t_handled = m_owner->OnFileDialog(t_type, (MCBrowserFileDialogOptions)t_options, t_title, t_default_path, t_filters, selected_accept_filter);
+
+		if (t_handled)
+		{
+			MCBrowserFileDialogResponse t_response;
+			while (!m_owner->FileDialogGetResponse(t_response))
+			{
+				MCBrowserRunloopWait();
+			}
+
+			if (t_response.cancelled)
+				callback->Cancel();
+			else
+			{
+				std::vector<CefString> t_file_paths;
+
+				char **t_paths = nil;
+				uint32_t t_path_count = 0;
+				/* UNCHECKED */ MCCStringSplit(t_response.selected_paths, '\n', t_paths, t_path_count);
+
+				for (uindex_t i = 0; i < t_path_count; i++)
+				{
+					CefString t_cef_string;
+					__MCCefPathToNativeInline(t_paths[i]);
+					/* UNCHECKED */ MCCefStringFromUtf8String(t_paths[i], t_cef_string);
+					t_file_paths.push_back(t_cef_string);
+					MCCStringFree(t_paths[i]);
+				}
+				callback->Continue(t_response.selected_filter, t_file_paths);
+
+				MCMemoryDeleteArray(t_paths);
+			}
+			m_owner->FileDialogClearResponse();
+		}
+
+		if (t_title)
+			MCCStringFree(t_title);
+		if (t_default_path)
+			MCCStringFree(t_default_path);
+		if (t_filters)
+			MCCStringFree(t_filters);
+
+		return t_handled;
+	}
+
 	IMPLEMENT_REFCOUNTING(MCCefBrowserClient);
 };
 
