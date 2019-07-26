@@ -42,6 +42,9 @@ on the same volume.
 > rename or move <files> and <folders> it didn't create without
 > obtaining explicit confirmation from the user.
 
+>*Warning:* If a file with the same file path as the newPath already exists, 
+> that file will be overwritten without confirmation.
+
 Changes:
 The ability to move a file or folder on Mac OS and Windows systems with
 the rename command was introduced in version 1.1.1. In previous

@@ -30,8 +30,9 @@ was opened.
 
 SQLStatement (string):
 A string in Structured Query Language. (Do not include a semicolon at
-the end of the SQLStatement.) >*Note:* Some database systems, such as
-Oracle, are capable of handling a multiple-line SQL statement.
+the end of the SQLStatement.) 
+> *Note:* Some database systems, such as
+> Oracle, are capable of handling a multiple-line SQL statement.
 
 variablesList:
 The variablesList consists of one or more variable names (or expressions
@@ -41,9 +42,10 @@ name may also be the name of an array element, for example
 
 arrayName (array):
 The name of a single array variable whose keys are sequential
-numbers.>*Note:* The variable names or arrayName must be enclosed in
-quotes; otherwise, the variable's value rather than its name is passed
-to the revExecuteSQL command.
+numbers.
+> *Note:* The variable names or arrayName must be enclosed in
+> quotes; otherwise, the variable's value rather than its name is passed
+> to the revExecuteSQL command.
 
 
 The result:
@@ -66,8 +68,7 @@ each of these placeholders. For example, if you have two
 <variable|variables> called "valueX" and "valueY", you can use a
 <SQLStatement> that includes placeholders as follows:
 
-revExecuteSQL myID, "insert into mytable values(:1,:2,:1)", "valueX"
-,"valueY" 
+    revExecuteSQL myID, "insert into mytable values(:1,:2,:1)", "valueX","valueY" 
 
 The content of the variable valueX is substituted for the ":1" in the
 SQLQuery (in both places where ":1" appears), and the content of valueY
@@ -78,17 +79,16 @@ is substituted for ":2".
 > syntax error to be returned by the database because a placeholder is
 > being used to represent a column name (:1).
 
--- Invalid, will cause SQL syntax error
-revExecuteSQL myID,
-"insert into mytable(:1, name, date) values (:2, :3, :2)",
-"tColumnName", "tValueX", "tValueY"
+    -- Invalid, will cause SQL syntax error
+    revExecuteSQL myID,
+    "insert into mytable(:1, name, date) values (:2, :3, :2)", "tColumnName", "tValueX", "tValueY"
 
 If you specify an <arrayName> rather than a list of ordinary
 <variable|variables>, the <revExecuteSQL> <command> substitutes the
 corresponding <element> of the <array> for each of the placeholders in
 the query:
 
-revExecuteSQL myID,"insert into mytable values(:1,:2,:1)","myArray"
+    revExecuteSQL myID,"insert into mytable values(:1,:2,:1)","myArray"
 
 The content of the element myArray[1] is substituted for the ":1" in the
 SQLQuery (in both places where ":1" appears), and the content of

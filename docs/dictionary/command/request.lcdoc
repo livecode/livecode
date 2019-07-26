@@ -5,8 +5,8 @@ Type: command
 Syntax: request <expression> {of | from} {program | application} <programAddress>
 
 Summary:
-The <request> data gets information from another application via <Apple
-Event|Apple events>.
+The <request> data gets information from another application via 
+<Apple Event|Apple Events>.
 
 Introduced: 1.0
 
@@ -34,10 +34,10 @@ omit the zone. If the other program is running on the same computer, you
 can omit both the zone and the computer name.
 
 It:
-If the program supports this <Apple event>, it evaluates the expression
+If the program supports this <Apple Event>, it evaluates the expression
 and sends the result back to LiveCode, which places it in the <it>
-<variable>. The <request> <command> sends aneval <Apple event> to the
-<programAddress>. If the program supports this <Apple event>, it
+<variable>. The <request> <command> sends aneval <Apple Event> to the
+<programAddress>. If the program supports this <Apple Event>, it
 evaluates the expression and sends the result back to LiveCode, which
 places it in the <it> <variable>.
 
@@ -49,11 +49,12 @@ the result <function>.
 
 Description:
 Use the <request> <command> to obtain data from another application via
-the eval <Apple event>.
+the eval <Apple Event>.
 
-For more information about Apple events, see Apple Computer's technical
-documentation, Inside Macintosh: Interapplication Communication, located
-at [Apple's developer site](https://developer.apple.com/library/archive/documentation/mac/IAC/IAC-2.html)
+For more information about Apple events, refer to the section entitled
+"Apple Events Sent by the Mac OS" in the technical documentation section
+located on [Apple's website]
+(https://developer.apple.com/documentation/coreservices/apple_events).
 
 References: send to program (command), function (control structure),
 command (glossary), variable (glossary), Apple Event (glossary),

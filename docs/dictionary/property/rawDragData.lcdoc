@@ -53,13 +53,13 @@ platform-specific, but can be summarised as:
    are used
 
 
->*Tip:*		All contents of the <rawDragData> are binary - use the
+>*Tip:*	All contents of the <rawDragData> are binary - use the
 > <textEncode>/<textDecode> functions to convert to/from the appropriate
 > encoding. 
 
-References: clipboard (glossary), drag and drop (glossary),
-dragData (property), fullDragData (property),
-rawClipboardData (property)
+References: textDecode (function), textEncode (function),
+clipboard (glossary), drag and drop (glossary), dragData (property), 
+fullDragData (property), rawClipboardData (property)
 
 Tags: ui, drag-and-drop
 

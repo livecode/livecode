@@ -8,13 +8,10 @@ Summary:
 The charDelimiter defaults to cr. If not specified then the items will
 be returned one per line. For example: 
 
-J. K. Rowling
-
-Harry Potter
-
-Cory Doctorow
-
-Little Brother
+    J. K. Rowling
+    Harry Potter
+    Cory Doctorow
+    Little Brother
 
 Introduced: 6.5
 
