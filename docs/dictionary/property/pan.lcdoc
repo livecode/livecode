@@ -27,8 +27,8 @@ Value:
 The <pan> is a number between zero and 360.
 
 Description:
-Use the <pan> <property> to find out where the user is in a <QuickTime
-VR> movie.
+Use the <pan> <property> to find out where the user is in a 
+<QuickTime VR> movie.
 
 The user can move the view of a QuickTime VR movie using the
 navigational controls in the player; a handler can change the view by
@@ -42,7 +42,7 @@ zero corresponds to the straight-ahead view of the scene. As the viewer
 turns clockwise, the <pan> increases.
 
 If you set the <pan> of a player to a number outside the range zero to
-360, no <error> results, but the <pan> is set tonumber mod 360. For
+360, no <error> results, but the <pan> is set to number mod 360. For
 example, if you attempt to set the <pan> of a <player(keyword)> to -20,
 its <pan> is actually set to 340.
 
