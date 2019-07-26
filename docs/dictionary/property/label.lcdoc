@@ -7,8 +7,8 @@ Type: property
 Syntax: set the label of <object> to <labelString>
 
 Summary:
-Specifies the <string> shown in a <stack window|stack window's> <title
-bar>, or a text label to be displayed on the specified
+Specifies the <string> shown in a <stack window|stack window's> 
+<title bar>, or a text label to be displayed on the specified
 <object(glossary)> if its <showName> <property> is true.
 
 Associations: stack, button, graphic
