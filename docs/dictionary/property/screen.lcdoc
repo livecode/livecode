@@ -28,7 +28,16 @@ The <screen> property of a <stack> is an integer.
 Description:
 Use the <screen> property to determine which monitor the stack appears
 on or the pixel density of the monitor it is on.
+The value of the screen property is determined by comparing the content rect
+(not the effective rect) of the stack to the working area of each screen and
+takes the screen with which it shares the most area (the intersection of the
+stack's rect and the working area rect of the screen is a rectangle. If the
+stack's rect has no intersection with any screen working area then it uses
+the screen which has the closest center point to the window's center as measure
+by the length of a line between those two points. Ties are by display index
+from the <screenRects> property. The screen value is updated before sending a
+<displayChanged> message.
 
 References: screenRects (function), screenPixelScales (function),
-stack (object),  (property)
+stack (object), displayChanged (message),  (property)
 
