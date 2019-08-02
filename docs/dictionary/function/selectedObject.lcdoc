@@ -38,5 +38,5 @@ Use the <selectedObject> <function> to perform an action on all the
 References: group (command), function (control structure),
 target (function), property (glossary), return (glossary),
 object (glossary), ID (property), selectGroupedControls (property),
- (property), selected (property)
+selected (property)
 
