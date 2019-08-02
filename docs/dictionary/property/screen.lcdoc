@@ -18,8 +18,8 @@ Platforms: desktop, server
 
 Example:
 on mouseUp
-  put line (the screen \
-        of stack "My Stack" ) of the screenRects into theRectOfScreenStackIsOn
+  put line (the screen of stack "My Stack" ) of \ 
+        the screenRects into theRectOfScreenStackIsOn
 end mouseUp
 
 Value (int):
@@ -29,6 +29,5 @@ Description:
 Use the <screen> property to determine which monitor the stack appears
 on or the pixel density of the monitor it is on.
 
-References: screenRects (function), screenPixelScales (function),
-stack (object),  (property)
-
+References: screenRect (function), stack (object),
+screenPixelScales (property)
