@@ -952,11 +952,10 @@ bool MCEventQueuePostWindowReshape(MCStack *p_stack, MCGFloat p_backing_scale)
 	t_event = nil;
 	for(MCEvent *t_new_event = s_first_event; t_new_event != nil; t_new_event = t_new_event -> next)
     {
-        MCStackHandle t_stack = t_new_event->window.stack;
-        if (t_stack.IsValid())
+        if (t_new_event -> type == kMCEventTypeWindowReshape)
         {
-            if (t_new_event -> type == kMCEventTypeWindowReshape
-                && t_stack == p_stack)
+            MCStackHandle t_stack = t_new_event->window.stack;
+            if (t_stack.IsValid() && t_stack == p_stack)
             {
                 t_event = t_new_event;
             }
