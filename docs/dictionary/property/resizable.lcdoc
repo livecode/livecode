@@ -33,10 +33,9 @@ Use the <resizable> <property> to control whether the user can change a
 window's size.
 
 References: modal (command), stacks (function), property (glossary),
-handler (glossary), command (glossary), stack window (glossary),
-rectangle (keyword), resizeStack (message), stack (object),
-control (object), minHeight (property), properties (property),
-maxWidth (property)
+handler (glossary), command (glossary), stack window (glossary), 
+rectangle (keyword), resizeStack (message), stack (object), 
+minHeight (property), properties (property), maxWidth (property)
 
 Tags: windowing
 

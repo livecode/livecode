@@ -31,7 +31,7 @@ Use the <printScale> <property> to control the size of printed
 
 The <printScale> specifies the ratio between the number of <pixels> in
 the <card(keyword)> and the number of <points> on the printed page. A
-<ratio> of 1 means the printed and screen <card(keyword)> should be the
+*ratio* of 1 means the printed and screen <card(keyword)> should be the
 same size, if the screen's resolution is 72 <pixels> per inch.
 
 For example, if a card is 360 pixels wide and you want its printed image

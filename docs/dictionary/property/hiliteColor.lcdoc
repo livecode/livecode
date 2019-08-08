@@ -64,8 +64,8 @@ depending on the <object type>:
   the <button(keyword)> when it is <highlight|highlighted>. If the
   <button(keyword)> is a <menu>, the <hiliteColor> is used to
   <highlight> the <button(keyword)>, but not the active menu choice. The
-  <hiliteColor> has no effect if the <button(keyword)> is a <tabbed
-  button>. The <hiliteColor> has no effect until the button is
+  <hiliteColor> has no effect if the <button(keyword)> is a 
+  <tabbed button>. The <hiliteColor> has no effect until the button is
   <highlight|highlighted>. 
 
 
