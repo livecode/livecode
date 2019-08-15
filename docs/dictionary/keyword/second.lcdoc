@@ -24,7 +24,7 @@ Use the <second> keyword in an object reference or chunk expression.
 
 The <second> keyword can be used to specify any object whose number
 property is 2. It can also be used to designate the second chunk in a
-chunk expressionl
+chunk expression.
 
 The word "the" is optional when using the <second> keyword
 
