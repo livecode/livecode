@@ -35,8 +35,8 @@ Set a player's <showController> <property> to false if you are providing
 these capabilities in the stack already, or if you do not want the user
 to be able to control playback of the movie or sound.
 
-References: property (glossary), controller bar (glossary),
-player (keyword), control (object), player (object),
+References: property (glossary), control (glossary),
+controller bar (glossary), player (keyword), player (object),
 movieControllerID (property), showSelection (property)
 
 Tags: multimedia

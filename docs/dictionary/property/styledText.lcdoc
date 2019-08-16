@@ -61,9 +61,9 @@ The <styledText> property returns a numerically-indexed array of
 paragraphs, each index representing each paragraph in the field in
 order: 
 
-tStyledTextArray[1] = &lt;first paragraph array&gt;
-...
-tStyledTextArray[&lt;n&gt;] = &lt;last paragraph array&gt; 
+   tStyledTextArray[1] = &lt;first paragraph array&gt;
+   ...
+   tStyledTextArray[&lt;n&gt;] = &lt;last paragraph array&gt; 
 
 Each paragraph array has up to two keys:
 
@@ -79,9 +79,9 @@ borderColor, hGrid, vGrid, dontWrap, padding and hidden.
 The paragraph content array is a numerically-indexed array of runs, each
 index representing each run in the paragraph in order:
 
-tParagraphContentArray[1] = &lt;first paragraph run array&gt;
-...
-tParagraphContentArray[&lt;n&gt;] = &lt;last paragraph run array&gt;
+   tParagraphContentArray[1] = &lt;first paragraph run array&gt;
+   ...
+   tParagraphContentArray[&lt;n&gt;] = &lt;last paragraph run array&gt;
 
 Each paragraph run array has up to three keys:
 
@@ -102,11 +102,12 @@ encoding.
 
 For example, take the following content consisting of two paragraphs:
 
-Centered Hello World
+<p style="text-align: center">Centered **Hello** World</p>
 
-Left-aligned Hello unicodeString
+Left-aligned <span style="color: rgb(255,0,0)">Hello</span> unicodeString
 
 This would transpire as the following array:
+
     1 =
       style = { textAlign = center }
       runs =
