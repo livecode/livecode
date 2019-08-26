@@ -558,6 +558,23 @@ metadata textHeight.label is "Text Height"
 metadata textHeight.default is "0"
 
 /**
+Syntax: set the iconHeight of <widget> to <pIconHeight>
+Syntax: get the iconHeight of <widget>
+
+Summary: Custom icon height for the widget
+
+Parameters:
+pIconHeight: Custom icon height for the widget
+
+Description:
+Use the <iconHeight> property to set a custom icon size for
+the widget.  The default value is 10.
+**/
+property iconHeight						get mIconHeight			set setIconHeight
+metadata iconHeight.label is "Icon Height"
+metadata iconHeight.default is "10"
+
+/**
 Name: vScrollbar
 Type: property
 
@@ -674,6 +691,7 @@ private variable mInspectItemPath as Path
 
 private variable mIconRect as Rectangle
 private variable mIconWidth as Real
+private variable mIconHeight as Integer
 
 private variable mReadOnly as Boolean
 private variable mArrayStyle as Boolean
@@ -696,6 +714,7 @@ constant kRowBuffer is 1000
 constant kItemPadding is 6
 constant kSeparatorWidth is 4
 constant kStrokeWidth is 1
+constant kIconHeight is 10
 --------------------------------------------------------------------------------
 --
 --		Message handlers
@@ -703,28 +722,12 @@ constant kStrokeWidth is 1
 --------------------------------------------------------------------------------
 
 public handler OnCreate() returns nothing
-	put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into mFoldedArrowPath
-	put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into mUnfoldedArrowPath
-	put path "M512 736L512 1312Q512 1326 503 1335 494 1344 480 1344L416 1344Q402 1344 393 1335 384 1326 384 1312L384 736Q384 722 393 713 402 704 416 704L480 704Q494 704 503 713 512 722 512 736ZM768 736L768 1312Q768 1326 759 1335 750 1344 736 1344L672 1344Q658 1344 649 1335 640 1326 640 1312L640 736Q640 722 649 713 658 704 672 704L736 704Q750 704 759 713 768 722 768 736ZM1024 736L1024 1312Q1024 1326 1015 1335 1006 1344 992 1344L928 1344Q914 1344 905 1335 896 1326 896 1312L896 736Q896 722 905 713 914 704 928 704L992 704Q1006 704 1015 713 1024 722 1024 736ZM1152 1460L1152 512 256 512 256 1460Q256 1482 263 1500.5 270 1519 277.5 1527.5 285 1536 288 1536L1120 1536Q1123 1536 1130.5 1527.5 1138 1519 1145 1500.5 1152 1482 1152 1460ZM480 384L928 384 880 267Q873 258 863 256L546 256Q536 258 529 267ZM1408 416L1408 480Q1408 494 1399 503 1390 512 1376 512L1280 512 1280 1460Q1280 1543 1233 1603.5 1186 1664 1120 1664L288 1664Q222 1664 175 1605.5 128 1547 128 1464L128 512 32 512Q18 512 9 503 0 494 0 480L0 416Q0 402 9 393 18 384 32 384L341 384 411 217Q426 180 465 154 504 128 544 128L864 128Q904 128 943 154 982 180 997 217L1067 384 1376 384Q1390 384 1399 393 1408 402 1408 416Z" into mDeleteItemPath
-	put path "M1408 608L1408 800Q1408 840 1380 868 1352 896 1312 896L896 896 896 1312Q896 1352 868 1380 840 1408 800 1408L608 1408Q568 1408 540 1380 512 1352 512 1312L512 896 96 896Q56 896 28 868 0 840 0 800L0 608Q0 568 28 540 56 512 96 512L512 512 512 96Q512 56 540 28 568 0 608 0L800 0Q840 0 868 28 896 56 896 96L896 512 1312 512Q1352 512 1380 540 1408 568 1408 608Z" into mAddItemPath
-	put path "M1408 928L1408 1248Q1408 1367 1323.5 1451.5 1239 1536 1120 1536L288 1536Q169 1536 84.5 1451.5 0 1367 0 1248L0 416Q0 297 84.5 212.5 169 128 288 128L992 128Q1006 128 1015 137 1024 146 1024 160L1024 224Q1024 238 1015 247 1006 256 992 256L288 256Q222 256 175 303 128 350 128 416L128 1248Q128 1314 175 1361 222 1408 288 1408L1120 1408Q1186 1408 1233 1361 1280 1314 1280 1248L1280 928Q1280 914 1289 905 1298 896 1312 896L1376 896Q1390 896 1399 905 1408 914 1408 928ZM1792 64L1792 576Q1792 602 1773 621 1754 640 1728 640 1702 640 1683 621L1507 445 855 1097Q845 1107 832 1107 819 1107 809 1097L695 983Q685 973 685 960 685 947 695 937L1347 285 1171 109Q1152 90 1152 64 1152 38 1171 19 1190 0 1216 0L1728 0Q1754 0 1773 19 1792 38 1792 64Z" into mInspectItemPath
-
-	// Make sure all the icons paths are 10 x 10, with centered at the origin
-	put rectangle [-5,-5,5,5] into mIconRect
-	
-	constrainPathToRect(mIconRect, mFoldedArrowPath)
-	constrainPathToRect(mIconRect, mUnfoldedArrowPath)
-	constrainPathToRect(mIconRect, mDeleteItemPath)
-	constrainPathToRect(mIconRect, mAddItemPath)
-	constrainPathToRect(mIconRect, mInspectItemPath)
-
-	variable tWidth as Real
-	put the width of mIconRect into mIconWidth
-
 	put 21 into mRowHeight
+	put kIconHeight into mIconHeight
+	UpdateIconRects()
+	
 	put 0 into mTextHeight
 	put true into mAlternateRowBackgrounds
-	put 15 into mIndentPixels
 	
 	put my height into mViewHeight
 	put my width into mViewWidth	
@@ -776,6 +779,7 @@ public handler OnSave(out rProperties as Array)
 	put mHiliteNewElement into rProperties["hilite new element"]
 	put mScrollHilitedElementIntoView into rProperties["scroll hilited element into view"]
 	put mTextHeight into rProperties["text height"]
+	put mIconHeight into rProperties["icon height"]
 	put mShowHover into rProperties["show hover row"]
 	put mVScrollbar into rProperties["vertical scrollbar"]
 	put mAlternateRowBackgrounds into rProperties["alternate row backgrounds"]
@@ -817,6 +821,14 @@ public handler OnLoad(in pProperties as Array)
 		put pProperties["text height"] into mTextHeight
 	end if
 
+	-- Prepare for being able to specify custom icons
+	variable tRecalculateIcons as Boolean
+	put false into tRecalculateIcons
+	if "icon height" is among the keys of pProperties then
+		put pProperties["icon height"] into mIconHeight
+		put mIconHeight is not kIconHeight into tRecalculateIcons
+	end if
+
 	if "show hover row" is among the keys of pProperties then
 		put pProperties["show hover row"] into mShowHover
 	end if
@@ -841,6 +853,9 @@ public handler OnLoad(in pProperties as Array)
 		put pProperties["separator ratio"] into mSeparatorRatio
 	end if
 
+	if tRecalculateIcons then
+		UpdateIconRects()
+	end if
 	setArrayData(pProperties["array"])
 end handler
 
@@ -858,6 +873,7 @@ public handler OnPaint() returns nothing
 	if tRowHeight is not mRowHeight then
 		put tRowHeight into mRowHeight
 		put true into mRecalculate
+		put true into mRecalculateFit
 	end if
 	
 	set the font of this canvas to my font
@@ -1049,10 +1065,10 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 		put rectangle [tLeft, pTop, valueRight(), pTop + mRowHeight] into tDisplayRect
 		paintText(pDataItem["display_value"], "left", tDisplayRect, true, pDataItem["selected"])
 
-        if mReadOnly and pDataItem["value_too_large"] then
-            put mInspectItemPath into tPath
-            translate tPath by [mViewWidth - scrollbarWidth() - kItemPadding - mIconWidth / 2, pTop + mRowHeight / 2]
-				paintIcon(tPath, tHover, pDataItem["selected"])
+		if mReadOnly and pDataItem["value_too_large"] then
+			put mInspectItemPath into tPath
+			translate tPath by [mViewWidth - scrollbarWidth() - kItemPadding - mIconWidth / 2, pTop + mRowHeight / 2]
+			paintIcon(tPath, tHover, pDataItem["selected"])
 		end if
 	end if
 
@@ -1364,6 +1380,27 @@ private handler SetHoverTooltip(in pIconString as String) returns nothing
         put mOldTooltip into tTooltip
     end if
     set property "tooltip" of my script object to tTooltip
+end handler
+
+private handler UpdateIconRects() returns nothing
+	put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into mFoldedArrowPath
+	put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into mUnfoldedArrowPath
+	put path "M512 736L512 1312Q512 1326 503 1335 494 1344 480 1344L416 1344Q402 1344 393 1335 384 1326 384 1312L384 736Q384 722 393 713 402 704 416 704L480 704Q494 704 503 713 512 722 512 736ZM768 736L768 1312Q768 1326 759 1335 750 1344 736 1344L672 1344Q658 1344 649 1335 640 1326 640 1312L640 736Q640 722 649 713 658 704 672 704L736 704Q750 704 759 713 768 722 768 736ZM1024 736L1024 1312Q1024 1326 1015 1335 1006 1344 992 1344L928 1344Q914 1344 905 1335 896 1326 896 1312L896 736Q896 722 905 713 914 704 928 704L992 704Q1006 704 1015 713 1024 722 1024 736ZM1152 1460L1152 512 256 512 256 1460Q256 1482 263 1500.5 270 1519 277.5 1527.5 285 1536 288 1536L1120 1536Q1123 1536 1130.5 1527.5 1138 1519 1145 1500.5 1152 1482 1152 1460ZM480 384L928 384 880 267Q873 258 863 256L546 256Q536 258 529 267ZM1408 416L1408 480Q1408 494 1399 503 1390 512 1376 512L1280 512 1280 1460Q1280 1543 1233 1603.5 1186 1664 1120 1664L288 1664Q222 1664 175 1605.5 128 1547 128 1464L128 512 32 512Q18 512 9 503 0 494 0 480L0 416Q0 402 9 393 18 384 32 384L341 384 411 217Q426 180 465 154 504 128 544 128L864 128Q904 128 943 154 982 180 997 217L1067 384 1376 384Q1390 384 1399 393 1408 402 1408 416Z" into mDeleteItemPath
+	put path "M1408 608L1408 800Q1408 840 1380 868 1352 896 1312 896L896 896 896 1312Q896 1352 868 1380 840 1408 800 1408L608 1408Q568 1408 540 1380 512 1352 512 1312L512 896 96 896Q56 896 28 868 0 840 0 800L0 608Q0 568 28 540 56 512 96 512L512 512 512 96Q512 56 540 28 568 0 608 0L800 0Q840 0 868 28 896 56 896 96L896 512 1312 512Q1352 512 1380 540 1408 568 1408 608Z" into mAddItemPath
+	put path "M1408 928L1408 1248Q1408 1367 1323.5 1451.5 1239 1536 1120 1536L288 1536Q169 1536 84.5 1451.5 0 1367 0 1248L0 416Q0 297 84.5 212.5 169 128 288 128L992 128Q1006 128 1015 137 1024 146 1024 160L1024 224Q1024 238 1015 247 1006 256 992 256L288 256Q222 256 175 303 128 350 128 416L128 1248Q128 1314 175 1361 222 1408 288 1408L1120 1408Q1186 1408 1233 1361 1280 1314 1280 1248L1280 928Q1280 914 1289 905 1298 896 1312 896L1376 896Q1390 896 1399 905 1408 914 1408 928ZM1792 64L1792 576Q1792 602 1773 621 1754 640 1728 640 1702 640 1683 621L1507 445 855 1097Q845 1107 832 1107 819 1107 809 1097L695 983Q685 973 685 960 685 947 695 937L1347 285 1171 109Q1152 90 1152 64 1152 38 1171 19 1190 0 1216 0L1728 0Q1754 0 1773 19 1792 38 1792 64Z" into mInspectItemPath
+
+	variable tSize as Integer
+	put the rounded of (mIconHeight / 2) into tSize
+	put rectangle [-tSize,-tSize,tSize,tSize] into mIconRect
+	
+	constrainPathToRect(mIconRect, mFoldedArrowPath)
+	constrainPathToRect(mIconRect, mUnfoldedArrowPath)
+	constrainPathToRect(mIconRect, mDeleteItemPath)
+	constrainPathToRect(mIconRect, mAddItemPath)
+	constrainPathToRect(mIconRect, mInspectItemPath)
+
+	put the width of mIconRect into mIconWidth
+	put mIconWidth + 5 into mIndentPixels
 end handler
 
 --------------------------------------------------------------------------------
@@ -2380,11 +2417,11 @@ private handler setReadOnly(in pReadOnly as Boolean)
 end handler
 
 private handler setArrayStyle(in pArrayStyle as Boolean)
-    if pArrayStyle is not mArrayStyle then
-        put pArrayStyle into mArrayStyle
-        put true into mRecalculateFit
-        redraw all
-    end if
+	if pArrayStyle is not mArrayStyle then
+		put pArrayStyle into mArrayStyle
+		put true into mRecalculateFit
+		redraw all
+	end if
 end handler
 
 constant kSortTypeNumeric is "numeric"
@@ -2465,6 +2502,14 @@ private handler setVScrollbar(in pEnabled as Boolean) returns nothing
 	if pEnabled is not mVScrollbar then
 		put pEnabled into mVScrollbar
 		redraw all
+	end if
+end handler
+
+private handler setIconHeight(in pIconHeight as Integer) returns nothing
+	if pIconHeight is not mIconHeight then
+		put pIconHeight into mIconHeight
+		UpdateIconRects()
+		put true into mRecalculateFit
 	end if
 end handler
 --------------------------------------------------------------------------------
@@ -2550,8 +2595,8 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 			// If we can't fit anything, just return the ellipsis.
 			if tCount is 0 then
 				put "\u{2026}" into rText
-			else		
-         	put (char 1 to tCount of tCurrentString) & "\u{2026}" into rText
+			else
+				put (char 1 to tCount of tCurrentString) & "\u{2026}" into rText
 			end if
 			put true into rTrimmed
 			return tWidth
