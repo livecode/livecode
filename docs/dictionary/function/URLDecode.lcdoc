@@ -43,8 +43,8 @@ number is converted to its <character> equivalent, using the
 
 >*Note:* Non-ASCII characters, such as Unicode, that appear in the URL 
 > string to be decoded will have been encoded as UTF-8 (as per standard 
-> convention) requiring the use of the <textDecode> <function> after 
-> urlDecode. For example, the following code:
+> convention), requiring the use of the <textDecode> <function(glossary)> 
+> after urlDecode. For example, the following code:
 
     local tEncodedText
     put "%D1%81%D0%BA%D0%BE%D1%80%D0%BE%D1%81%D1%88%D0%B8%D0" & \
