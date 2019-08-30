@@ -118,8 +118,10 @@ subject to change until the end of the RC cycle for 9. At present it is advised
 that SVG files be compiled as needed when developing in the IDE, and then
 compiled ahead-of-time when building a standalone.
 
+
 >*Note:* To use this function in a standalone, you must include the XML 
 extension.
+
 
 >*Note:* The <XML library> (and by extension, this function) can not load 
 > files from the resources folder on Android. You must either copy the 
@@ -237,7 +239,6 @@ The result:
 An error string if an error occurred.
 
 References: drawingSvgCompileFile (function)
-
 */
 function drawingSvgCompile pXmlText
 	/* Convert the XML file to the LiveCode array structure. */
