@@ -647,6 +647,8 @@ private variable mDataHeight as Real
 // The height of each row
 private variable mRowHeight as Real
 private variable mTextHeight as Real
+private variable mFontSize as Integer
+private variable mFontName as String
 
 // The height of the view area
 private variable mViewHeight as Real
@@ -692,6 +694,7 @@ private variable mInspectItemPath as Path
 private variable mIconRect as Rectangle
 private variable mIconWidth as Real
 private variable mIconHeight as Integer
+private variable mRightIconMargin as Real
 
 private variable mReadOnly as Boolean
 private variable mArrayStyle as Boolean
@@ -728,6 +731,8 @@ public handler OnCreate() returns nothing
 	
 	put 0 into mTextHeight
 	put true into mAlternateRowBackgrounds
+	put the size of my font into mFontSize
+	put the name of my font into mFontName
 	
 	put my height into mViewHeight
 	put my width into mViewWidth	
@@ -864,11 +869,29 @@ private handler elementIsProxyForMoreData(in pElement as Array) returns Boolean
 end handler
 
 public handler OnPaint() returns nothing
+	variable tFontSize as Integer
+	put the size of my font into tFontSize
+	if tFontSize is not mFontSize then
+		put tFontSize into mFontSize
+		put true into mRecalculate
+		put true into mRecalculateFit
+		put nothing into mEllipsisLength
+	end if
+
+	variable tFontName as String
+	put the name of my font into tFontName
+	if tFontName is not mFontName then
+		put tFontName into mFontName
+		put true into mRecalculate
+		put true into mRecalculateFit
+		put nothing into mEllipsisLength
+	end if
+	
 	variable tRowHeight as Integer
 	if mTextHeight > 0 then
 		put mTextHeight into tRowHeight
 	else
-		put the size of my font + 8 into tRowHeight
+		put tFontSize + 8 into tRowHeight
 	end if
 	if tRowHeight is not mRowHeight then
 		put tRowHeight into mRowHeight
@@ -988,7 +1011,7 @@ private handler keyRight() returns Real
 	if mShowSeparator then
 		return mSeparatorRatio * availableSeparatorSpace()
 	else
-		return mViewWidth - 3 * kItemPadding - 2 * mIconWidth
+		return mViewWidth - mRightIconMargin
 	end if
 end handler
 
@@ -1004,7 +1027,7 @@ private handler valueLeft(in pKeyLeft as Real) returns Real
 end handler
 
 private handler valueRight() returns Real
-	return mViewWidth - 3 * kItemPadding - 2 * mIconWidth
+	return mViewWidth - mRightIconMargin
 end handler
 
 // Utility for painting a row with top pTop
@@ -1487,9 +1510,16 @@ end handler
 -- mUpdateSeparator or mRecalculateFit is true.
 -- It calculates the portion of the value string that can be displayed 
 -- in the available space.
--- If mRecalculateFit is true, all values are recalculated - this should 
--- only happen when the separator is moved.
+-- If mRecalculateFit is true, all values are recalculated.
+-- This happens when the separator is moved, font/icon sizes change,
+-- and when the ReadOnly property changes.
 private handler updateSeparator() returns nothing
+	if mReadOnly then
+		put 2 * kItemPadding + mIconWidth into mRightIconMargin
+	else
+		put 3 * kItemPadding + 2 * mIconWidth into mRightIconMargin
+	end if
+
 	variable tValueSpace as Real
 	if mShowSeparator then
 		put valueRight() - valueLeft(keyRight()) into tValueSpace
@@ -1524,6 +1554,11 @@ private handler updateSeparator() returns nothing
 			end if
 			if mArrayStyle then
 				 put "[" & tKeyDisplay & "]" into tKeyDisplay
+			end if
+			if tElement["leaf"] then
+				if tElement["string_value"] is not "" then
+					subtract mEllipsisLength + 2 * kItemPadding from tKeySpace
+				end if
 			end if
 			put displayWidth(tKeyDisplay, tKeySpace, tElement["display_key"], tTrimmed) into tWidth
 			put tTrimmed into tElement["key_too_large"]
@@ -2407,6 +2442,7 @@ private handler setReadOnly(in pReadOnly as Boolean)
 	if pReadOnly is not mReadOnly then
 		put pReadOnly into mReadOnly
 		put true into mRecalculate
+		put true into mRecalculateFit
 		if pReadOnly then
 			subtract mRowHeight from mViewTopPosition
 		else
@@ -2557,22 +2593,23 @@ end handler
 private handler ensureEllipsis() returns nothing
 	if mEllipsisLength is nothing then
 		variable tEllipsis as Real
-        measure "  \u{2026}" on this canvas 
+        measure "\u{2026}" on this canvas 
         put the width of the result into mEllipsisLength
 	end if
 end handler
 
 -- Returns the display width of the string after fitting it in the space allowed, sets rText to 
 -- the portion of the string that can fit, and sets rTrimmed if the string was trimmed.
--- There should always be space for an ellipsis.
+-- There should always be space for an ellipsis after a key when there is a value.
 private handler displayWidth(in pText as String, in pSpace as Real, out rText as String, out rTrimmed as Boolean) returns Real		
 	ensureEllipsis()
 	
 	variable tCount as Number
 	variable tCurrentString as String
-   variable tChar as String
-   variable tWidth as Real
-   put 0 into tWidth
+	variable tChar as String
+	variable tWidth as Real
+	variable tLastWidth as Real
+	put mEllipsisLength into tWidth
 	put "" into tCurrentString
 	put 0 into tCount
 	repeat for each char tChar in pText
@@ -2584,6 +2621,7 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 			put true into rTrimmed
 			return tWidth
 		end if
+		put tWidth into tLastWidth
 		
 		// Otherwise measure and see if what we have so far fits in the space
 		put tChar after tCurrentString
@@ -2596,10 +2634,15 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 			if tCount is 0 then
 				put "\u{2026}" into rText
 			else
+				if (tCurrentString is pText) and (tWidth - mEllipsisLength <= pSpace) then
+					put pText into rText
+					put false into rTrimmed
+					return tWidth - mEllipsisLength
+				end if
 				put (char 1 to tCount of tCurrentString) & "\u{2026}" into rText
 			end if
 			put true into rTrimmed
-			return tWidth
+			return tLastWidth
 		end if
 		
 		add 1 to tCount
@@ -2607,7 +2650,7 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 
 	put pText into rText
 	put false into rTrimmed
-	return tWidth
+	return tWidth - mEllipsisLength
 end handler
 
 private handler setShowSeparator(in pShow as Boolean)
