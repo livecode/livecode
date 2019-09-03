@@ -48,6 +48,12 @@
 				'src/libbrowser_osx_webview.h',
 				'src/libbrowser_osx_webview.mm',
 				
+				'src/libbrowser_wkwebview.h',
+				'src/libbrowser_wkwebview.mm',
+
+				'src/libbrowser_nsvalue.h',
+				'src/libbrowser_nsvalue.mm',
+				
 				'src/libbrowser_android.cpp',
 				
 				'src/libbrowser_lnx_factories.cpp',
@@ -80,6 +86,17 @@
 							'src/libbrowser_osx_webview.mm',
 							
 							'src/libbrowser_osx_factories.cpp',
+						],
+					},
+				],
+				
+				[
+					'not toolset_os in ["mac", "ios"]',
+					{
+						'sources!':
+						[
+							'src/libbrowser_nsvalue.h',
+							'src/libbrowser_nsvalue.mm',
 						],
 					},
 				],
@@ -126,7 +143,12 @@
 					{
 						'sources!':
 						[
+							'src/libbrowser_uiwebview.h',
 							'src/libbrowser_uiwebview.mm',
+							
+							'src/libbrowser_wkwebview.h',
+							'src/libbrowser_wkwebview.mm',
+
 							'src/libbrowser_ios_factories.cpp',
 						],
 					},
@@ -154,6 +176,15 @@
 							[
 								'$(SDKROOT)/System/Library/Frameworks/WebKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/JavaScriptCore.framework',
+							],
+						},
+					],
+					[
+						'toolset_os == "ios"',
+						{
+							'libraries':
+							[
+								'$(SDKROOT)/System/Library/Frameworks/WebKit.framework',
 							],
 						},
 					],
