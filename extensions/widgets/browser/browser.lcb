@@ -406,7 +406,7 @@ metadata isSecure.user_visible is "false"
 Name: userAgent
 Type: property
 
-OS: mac,windows,linux,android
+OS: mac,windows,linux,android,ios
 
 Syntax:
 set the userAgent of <widget> to <pUserAgent>
