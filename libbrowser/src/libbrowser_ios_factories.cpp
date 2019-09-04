@@ -18,13 +18,11 @@
 
 #include "libbrowser_internal.h"
 
-extern bool MCUIWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 extern bool MCWKWebViewBrowserFactoryCreate(MCBrowserFactoryRef &r_factory);
 
 MCBrowserFactoryMap kMCBrowserFactoryMap[] =
 {
 	{ "WkWebView", nil, MCWKWebViewBrowserFactoryCreate },
-	{ "UIWebView", nil, MCUIWebViewBrowserFactoryCreate },
 	{ nil, nil, nil },
 };
 

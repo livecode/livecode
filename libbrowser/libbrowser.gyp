@@ -42,9 +42,6 @@
 				
 				'src/signal_restore_posix.cpp',
 
-				'src/libbrowser_uiwebview.h',
-				'src/libbrowser_uiwebview.mm',
-				
 				'src/libbrowser_osx_webview.h',
 				'src/libbrowser_osx_webview.mm',
 				
@@ -143,9 +140,6 @@
 					{
 						'sources!':
 						[
-							'src/libbrowser_uiwebview.h',
-							'src/libbrowser_uiwebview.mm',
-							
 							'src/libbrowser_wkwebview.h',
 							'src/libbrowser_wkwebview.mm',
 
