@@ -55,7 +55,7 @@ clicked control in the stack (for a stack menu). The button or stack
 menu handles the menu choice.
 
 If you use a button to hold the contents of the menu, the contents of
-the button's <menuItem Keyword> is displayed in the popup.
+the button's <menuItem> is displayed in the popup.
 
 **Important:**  If you use a button to hold the contents of the menu,
 the following properties must be set:
@@ -82,8 +82,8 @@ parameter of the <mouseDown(message)> message, as described above.
 References: pulldown (command), clickLoc (function), mouseLoc (function),
 menu item (glossary), popup menu (glossary), button (keyword),
 menuItem (keyword), popup (keyword), menuPick (message),
-mouseDown (message), mouseDown (message), mouseUp (message), message (glossary),
-stack (object), button (object), style property (property),
+mouseDown (message), mouseDown (message), mouseUp (message), 
+message (glossary), stack (object), button (object), style (property),
 toolTip (property), menuMode (property), visible (property),
 menuMouseButton (property)
 

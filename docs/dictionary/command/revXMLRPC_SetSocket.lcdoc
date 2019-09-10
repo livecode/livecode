@@ -52,6 +52,6 @@ revXMLRPC_CreateRequest (function), return (glossary),
 XML-RPC (glossary), Standalone Application Settings (glossary),
 socket (glossary), standalone application (glossary), function (glossary),
 command (glossary), LiveCode custom library (glossary),
-XML-RPC library (library), XML-RPC document (library)
+XML-RPC document (glossary), XML-RPC library (library) 
 
 Tags: networking
