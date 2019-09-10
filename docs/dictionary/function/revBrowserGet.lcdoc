@@ -101,8 +101,8 @@ Use the <revBrowserGet> function to obtain information about the browser
 object specified by the <instanceId> by returning the value of one of
 the browser properties.
 
->*Note:* The "advanced" callback messages are: <revBrowserClick>,
-> <revBrowserOver> and <revBrowserOut>. These messages are only sent
+>*Note:* The "advanced" callback messages are: <browserClick>,
+> <browserOver> and <browserOut>. These messages are only sent
 > when the "messages" property is set to true. Other callback messages
 > are always sent.
 
@@ -110,6 +110,6 @@ the browser properties.
 > notes in the <revBrowserOpen> <function> reference.
 
 References: revBrowserSet (command), revBrowserOpen (function), function (glossary),
-revBrowserOver (message), revBrowserOut (message),
-revBrowserClick (message)
+browserOver (message), browserOut (message),
+browserClick (message)
 

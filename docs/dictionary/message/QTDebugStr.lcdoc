@@ -45,7 +45,8 @@ not include 64 bit support and therefore can not be supported on OS X 64
 bit builds of LiveCode.
 
 References: QuickTime (glossary), message (glossary), player (glossary),
-player (keyword), hotspotClicked (message)
+player (keyword), hotspotClicked (message), dontUseQT (property),
+dontUseQTEffects (property)
 
 Tags: multimedia
 

@@ -34,9 +34,9 @@ setup.
 If the <pointerFocus> <property> is true, moving the <mouse pointer>
 into a window makes it the <active window>. Set the <pointerFocus> to
 true to work around problems in some <Unix> window managers
-(specifically, "olwm" and "fvwm" ) that prevent <explicit
-focus|active-focus> applications such as LiveCode from operating
-correctly. 
+(specifically, "olwm" and "fvwm" ) that prevent 
+<explicit focus|active-focus> applications such as LiveCode from 
+operating correctly. 
 
 If the application is started from a Unix command line, this property
 can be set to true on startup by using the -pointerfocus option.

@@ -7,7 +7,7 @@ Type: command
 Syntax: request appleEvent {class|ID|sender|returnID|data [with keyword <aeKey>]}
 
 Summary:
-Gets data about an <Apple event> that was sent to LiveCode.
+Gets data about an <Apple Event> that was sent to LiveCode.
 
 Introduced: 1.0
 
@@ -73,7 +73,7 @@ specify which pieces you want to get.
 For more information about Apple events, refer to the section entitled 
 "Apple Events Sent by the Mac OS" in the technical documentation section 
 located on [Apple's website]
-(https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ScriptableCocoaApplications/SApps_handle_AEs/SAppsHandleAEs.html#//apple_ref/doc/uid/20001239-1117769).
+(https://developer.apple.com/documentation/coreservices/apple_events).
 
 References: send to program (command), handler (glossary),
 Apple Event (glossary), variable (glossary), command (glossary),

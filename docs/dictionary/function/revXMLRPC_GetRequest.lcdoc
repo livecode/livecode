@@ -47,7 +47,7 @@ document.
 > library checkbox is checked.
 
 References: revXMLRPC_GetResponse (function),
-LiveCode custom library (glossary), revXMLRPC_Error (function)
+LiveCode custom library (glossary), revXMLRPC_Error (function),
 Standalone Application Settings (glossary),
 standalone application (glossary), function (glossary),
 XML-RPC (glossary), XML-RPC library (library),

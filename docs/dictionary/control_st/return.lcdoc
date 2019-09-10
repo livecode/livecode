@@ -9,7 +9,8 @@ Stops the current <handler> and <return|returns> a <value> to the
 <handler> that <call|called> the current <handler>.
 
 Introduced: 1.0
-Changed:8.1.0
+
+Changed: 8.1.0
 
 OS: mac, windows, linux, ios, android
 
@@ -89,19 +90,19 @@ remaining <statement|statements> in the <handler> are skipped. Hence,
 the <return> <control structure> is usually used either at the end of a
 <handler> or within an <if> <control structure>.
 
-The plain form of the <return> <control structure> always sets
-<the result> to <value>. Additionally, if it is used within a <function>
+The plain form of the <return> <control structure> always sets the 
+<result> to <value>. Additionally, if it is used within a <function>
 or <getProp> <handler> then <value> is passed to the calling handler as
 the return value of the <function>, or value of the property.
 
-The value form of the <return> <control structure> always sets
-<the result> to empty. If it is used within a <command> or <message>
+The value form of the <return> <control structure> always sets the
+<result> to empty. If it is used within a <command> or <message>
 handler then the <it> variable in the calling handler will be set to
 <value>. If it is used within a <function> handler, then <value> is
 passed to the calling handler as the return value of the <function>,
 or value of the property. 
 
-The error form of the <return> <control structure> sets <the result> to
+The error form of the <return> <control structure> sets the <result> to
 <value>. If it is used within a <command> or <message> handler, then the
 <it> variable in the calling handler will be set to empty. If it is used
 within a <function> handler, then the return value of the <function> or
@@ -133,15 +134,14 @@ value can be processed to continue operation.
 >*Note:* The <return> <control structure> is implemented internally as a
 <command> and appears in the <commandNames>.
 
-References: return (constant), setProp (control structure),
+References: setProp (control structure),
 getProp (control structure), throw (control structure),
 if (control structure), pass (control structure),
 exit (control structure), on (control structure),
 function (control structure), result (function), commandNames (function),
-value (function), merge (function), the result (function),
-object (glossary), message handler (glossary), return (glossary),
-call (glossary), property (glossary), pass (glossary), execute (glossary),
-command (glossary), control structure (glossary), message path (glossary),
-caller (glossary), message (glossary), statement (glossary),
-handler (glossary)
+value (function), merge (function), object (glossary), 
+message handler (glossary), call (glossary), property (glossary), 
+pass (glossary), execute (glossary), command (glossary), 
+control structure (glossary), message path (glossary), caller (glossary), 
+message (glossary), statement (glossary), handler (glossary), return (glossary)
 

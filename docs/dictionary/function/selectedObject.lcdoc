@@ -29,7 +29,7 @@ repeat with x = 1 to the number of lines of the selectedObjects
 
 Returns:
 The <selectedObject> <function> <return|returns> a list with the long
-<ID> <property> of each <operty)d.
+<ID> <property> of each <selected> <object>.
 
 Description:
 Use the <selectedObject> <function> to perform an action on all the
@@ -38,5 +38,5 @@ Use the <selectedObject> <function> to perform an action on all the
 References: group (command), function (control structure),
 target (function), property (glossary), return (glossary),
 object (glossary), ID (property), selectGroupedControls (property),
- (property), selected (property)
+selected (property)
 
