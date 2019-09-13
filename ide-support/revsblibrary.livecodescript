@@ -2848,7 +2848,7 @@ private command revSmartChecking pStackFilesList, @xSettings
       repeat for each line tStack in tStacksList
          if tNewSettings["inclusions"] is "search" then
             # OK-2009-09-07 : Value of password and passkey properties changed, the above test no longer works
-            if the password of stack tStack then
+            if __ScriptIsLocked(tStack) then
                revStandaloneAddWarning "Could not auto-detect inclusions or security categories because stack is password protected"
                exit revSmartChecking
             end if
@@ -2874,6 +2874,15 @@ private command revSmartChecking pStackFilesList, @xSettings
    put tNewSettings into xSettings
    unlock messages
 end revSmartChecking
+
+private function __ScriptIsLocked pStack
+   try
+      get the script of stack pStack
+   catch tError
+      return true
+   end try
+   return false
+end __ScriptIsLocked
 
 private command revCheckObject pObject,pUserLibraries, @xSettings, @xWidgetKinds
    
