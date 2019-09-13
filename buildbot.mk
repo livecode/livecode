@@ -98,7 +98,7 @@ buildtool_command = $(LIVECODE) -ui $(BUILDTOOL_STACK) \
 # Settings for upload
 RSYNC ?= rsync
 SHA1SUM ?= sha1sum
-UPLOAD_SERVER ?= meg.on-rev.com
+UPLOAD_SERVER ?= molly.livecode.com
 UPLOAD_PATH = staging/$(BUILD_LONG_VERSION)/$(GIT_VERSION)
 UPLOAD_MAX_RETRIES = 50
 

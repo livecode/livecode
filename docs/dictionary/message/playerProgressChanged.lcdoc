@@ -22,8 +22,8 @@ Description:
 Handle the <playerProgressChanged> message when the loadState of the
 player has changed.
 
-You should query the <loadState> to determine which of the states have
-changed: 
+You should query the loadState with the <mobileControlGet> function to 
+determine which of the states have changed: 
 
     * playable - enough data is available to start playing, but it may
       run out before playback finishes
@@ -35,7 +35,7 @@ changed:
 
 Zero or more of these are returned in a comma delimited string value.
 
-References: loadState (function), playerFinished (message),
+References: mobileControlGet (function), playerFinished (message),
 playerError (message), playerLeaveFullscreen (message),
 playerStopped (message), playerMovieChanged (message),
 playerPropertyAvailable (message), playerEnterFullscreen (message)

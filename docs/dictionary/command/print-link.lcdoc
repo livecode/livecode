@@ -30,24 +30,24 @@ Description:
 Use the print link command to define a hyperlink within a pdf printing
 loop. 
 
-If the url adjective is specified, then <link> is interpreted as a URL
+If the url adjective is specified, then *linkName* is interpreted as a URL
 and an external URL launching link is created in the PDF document. The
 given rectangle jumps to that URL when it is clicked.
 
-If the anchor adjective is specified, then <link> is interpreted as an
+If the anchor adjective is specified, then *linkName* is interpreted as an
 internal anchor name, as specified by the print anchor command, and an
 internal anchor link is created in the PDF document. Clicking the given
 rectangle jumps to that anchor.
 
-If no adjective is specified then <link> is interpreted as a URL if it
+If no adjective is specified then *linkName* is interpreted as a URL if it
 begins with (ASCII) letters followed by a colon. e.g. "mailto:foobar" is
 interpreted as a URL, whereas "mail-to-anchor:foo" is interpreted as an
 anchor name.
 
 When printing fields, any text that has its <linkText> property set
 together with the link <textStyle> is treated as if a print link command
-had been executed with the contents of the property as <link>, and the
-<formattedRect> of the text as <rectangle>.
+had been executed with the contents of the property as *linkName*, and the
+<formattedRect> of the text as *rectArea*.
 
 References: print bookmark (command), print anchor (command),
 open printing to pdf (command), cancel printing (command),

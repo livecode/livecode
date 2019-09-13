@@ -36,8 +36,8 @@ deleted once the <object(glossary)> has been drawn.
 This property is supported only on Unix systems with Display PostScript
 installed. 
 
-References: EPS (glossary), property (glossary), object (glossary),
-postScript (property), retainImage (property)
+References: EPS (glossary), PostScript (glossary), property (glossary), 
+object (glossary), postScript (property), retainImage (property)
 
 Tags: multimedia
 

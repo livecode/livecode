@@ -5,8 +5,7 @@ Type: command
 Syntax: revPrintReport
 
 Summary:
-Prints a report from the <report viewer|report viewers> on the 
-<current card>. 
+Prints a report from the report viewers on the <current card>. 
 
 Introduced: 2.0
 
@@ -21,22 +20,21 @@ revPrintReport
 
 Description:
 Use the <revPrintReport> <command> to print a report that you have set 
-up in the <Report Builder>.
+up in the Report Builder.
 
->*Note:* The <Report Builder> stack is no-longer supported but can
-> still 
-> be used by manually launching the tool.
+>*Note:* The Report Builder stack is no-longer supported but can
+> still  be used by manually launching the tool.
 
-When you use the <Report Builder> to create a set of report settings,
+When you use the Report Builder to create a set of report settings,
 the settings are stored with the card. The <revPrintReport> <command>
-uses the settings specified in the <Report Builder> for the 
+uses the settings specified in the Report Builder for the 
 <current card> to print the report. If you have never used the 
-<Report Builder> with the <current card> (and therefore there are no 
+Report Builder with the <current card> (and therefore there are no 
 report settings to use), the <revPrintReport> <command> causes a 
 <error|script error>.
 
 The <revPrintReport> <command> is equivalent to clicking "Print Report"
-in the <Report Builder>.
+in the Report Builder.
 
 >*Important:*  The <revPrintReport> <command> is part of the 
 > <Printing library>. To ensure that the <command> works in a 
