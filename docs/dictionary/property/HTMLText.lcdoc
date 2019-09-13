@@ -95,10 +95,12 @@ Encloses a line of text. (Blank lines are also enclosed in &lt;p&gt;
 * bgcolor="#NNNNNN" if a <backgroundColor> has been set for the line.
 * bordercolor="#NNNNNN" if a <borderColor> has been set for the line.
 
->*Note:* An <HTML>-style color definition consists of a hash mark (#)
-> followed by three 2-digit hexadecimal numbers,
-one each for red, green, and blue. E.g., "#FF9900" represents an orange
-color. 
+>*Note:* An <HTML>-style color definition can take one of the two forms.
+> The first consists of a hash mark (#) followed by three 2-digit 
+> hexadecimal numbers, one each for red, green, and blue. E.g., 
+> "#FF9900" represents an orange color. The second form consists of 
+> three comma delimited integers between 0 and 255. E.g. "255,153,0" 
+> represents an orange color. 
 
 &lt;sub&gt; &lt;/sub&gt;
 Encloses text whose <textShift> is a positive <integer>. 
