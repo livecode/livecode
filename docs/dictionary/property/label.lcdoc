@@ -55,6 +55,10 @@ of button reports the button's <name> <property>.
 To create a blank title bar, set the stack's <label> <property> to a
 space. 
 
+>*Note:* Card numbers will not be displayed in the <title bar> of a 
+> stack if its <label> <property> is not empty.
+
+
 References: constant (command), stacks (function), object (glossary),
 property (glossary), title bar (glossary), message (glossary),
 stack window (glossary), group (glossary), expression (glossary),
