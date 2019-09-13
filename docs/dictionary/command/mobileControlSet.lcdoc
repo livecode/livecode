@@ -191,6 +191,14 @@ directionalLockEnabled property). This is a boolean value.
 - "filename": The filename of URL of the media to play. Setting the
 filename of the player automatically 'prepares' the movie for playback.
 
+>*Note:* If the filename set for a player is invalid or the file is missing, 
+> the video controller will display incorrectly. To check if a player is 
+> set up correctly, the following code could be used:
+
+    if mobileControlGet(sPlayerID, "duration") < 0 then
+        answer "Player is not initialised correctly"
+    end if
+
 - "showController": Determines whether the controller is displayed over
 the content. This is a boolean value.
 
