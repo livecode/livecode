@@ -61,5 +61,6 @@ References: record sound (command), play (command), function (glossary),
 property (glossary), compress (glossary), audio clip (glossary),
 QuickTime (glossary), file path (glossary), command (glossary),
 codec (glossary), player (keyword), filename (property), 
-recordFormats (function), recordCompression (property)
+recordFormats (function), dontUseQT (property), 
+dontUseQTEffects (property), recordCompression (property)
 

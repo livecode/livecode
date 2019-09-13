@@ -75,11 +75,16 @@ If you call "myFunction" with the following statement:
 
     get myFunction("red","green","blue")
 
-the value returned by the <params> function is "myFunction("red","green","blue")".
+the value returned by the <params> function is 
+
+    "myFunction("red","green","blue")".
 
 LiveCode evaluates the parameters before passing them. So if you call
-myHandler with the following statement: myHandler 1+1,"A","Hello" &&
-"world" the value returned by the <params> <function> is
+myHandler with the following statement: 
+
+    myHandler 1+1,"A","Hello" && "world" 
+
+the value returned by the <params> <function> is 
 
     myHandler "2","A","Hello world"
 

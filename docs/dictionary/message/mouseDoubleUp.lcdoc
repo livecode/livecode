@@ -50,14 +50,13 @@ what LiveCode accepts as a <double-click|double click>.
 > the <mouseDoubleUp> <message> is sent to the <object(glossary)> behind
 > the <image>, not to the <image>.
 
-References: answer file (command), Browse tool (glossary), 
-card (glossary), click (command), clickLoc (function), 
+References: answer file (command), click (command), pass (control structure),
+Browse tool (glossary), card (glossary), clickLoc (function), 
 control (glossary), double-click (glossary), doubleClickDelta (property), 
 doubleClickInterval (property), field (glossary), image (glossary), 
 message (glossary), mouse (function), mouse button (glossary), 
 mouse pointer (glossary), mouseDoubleDown (message), object (glossary), 
-pass (command), pixel (glossary), properties (property), 
-unlock (glossary)
+pixel (glossary), properties (property), unlock (glossary)
 
 Tags: ui
 

@@ -5,7 +5,7 @@ Type: command
 Syntax: post <data> to URL <destinationURL>
 
 Summary:
-Sends data to a <web server> using the POST action of <HTTP>.
+Sends data to a <web server> using the POST action of <http|HTTP>.
 
 Associations: internet library
 
@@ -120,11 +120,13 @@ function (control structure), result (function), URLStatus (function),
 URLEncode (function), libURLFormData (function), URLDecode (function),
 libURLMultipartFormAddPart (function), libURLMultipartFormData (function),
 variable (glossary), command (glossary), 
-Livecode custom library (glossary), property (glossary),
+LiveCode custom library (glossary), property (glossary),
 standalone application (glossary), blocking (glossary), 
 web server (glossary), command (glossary), expression (glossary), 
 syntax (glossary), server (glossary), upload (glossary), 
-statement (glossary), handler (glossary), URL (keyword), ftp (keyword), 
+statement (glossary), handler (glossary), 
+Standalone Application Settings (glossary),
+URL (keyword), ftp (keyword), 
 http (keyword), Internet library (library), urlProgress (message), 
 httpHeaders (property), HTTPProxy (property)
 

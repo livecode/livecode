@@ -28,7 +28,7 @@ pYRate:
 the rate of acceleration around the y axis, in radians/second
 
 pZRate:
-the rate of acceleration around the x axis, in radians/second
+the rate of acceleration around the z axis, in radians/second
 
 Description:
 Handle the <rotationRateChanged> message if you want to perform an

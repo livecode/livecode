@@ -62,9 +62,13 @@ to assign it a name:
 
 
 LiveCode evaluates the parameters before passing them. So if you call
-myHandler with the following statement: myHandler 1+1,"A","Hello" &&
-"world" the parameters returned by the <param> <function> are 2, A,
-and "Hello World".
+myHandler with the following statement: 
+
+     myHandler 1+1,"A","Hello" && "world" 
+
+the parameters returned by the <param> <function> are 
+
+    2, A, and "Hello World".
 
 References: function (control structure), paramCount (function),
 pass (glossary), handler (glossary), parameter (glossary),

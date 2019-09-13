@@ -51,7 +51,7 @@ If the <revXMLRootNode> <function> encounters an error, it
 > checkbox is checked.
 
 References: revXMLDeleteNode (command), function (control structure),
-revXMLCreateFile (function), revXMLCreateFileFromTree (function),
+revXMLCreateTree (function), revXMLCreateTreeFromFile (function),
 revXMLNextSibling (function), revXMLPreviousSibling (function),
 revXMLParent (function), revXMLFirstChild (function),
 Standalone Application Settings (glossary), root node (glossary),

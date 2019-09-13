@@ -37,10 +37,10 @@ If you specify a container, the long <ID> of the <card> is placed in the
 change. 
 
 If the list is empty when you use the <pop> <command>, LiveCode goes to
-the Home <card>. If you are running in the LiveCode <development
-environment>, this is the first <card> of the "license.rev" <stack>,
-which is the splash screen that appears when you start up LiveCode.
-(Click this card to close the stack.) If you are running in a
+the Home <card>. If you are running in the LiveCode 
+<development environment>, this is the first <card> of the "license.rev" 
+<stack>, which is the splash screen that appears when you start up 
+LiveCode. (Click this card to close the stack.) If you are running in a
 <standalone application>, the Home <card> is the first <card> of the
 <standalone application|standalone's> <main stack>.
 

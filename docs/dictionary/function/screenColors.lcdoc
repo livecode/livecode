@@ -39,7 +39,7 @@ The expression
 
 is equal to
 
-    the screenDepth^2
+    2 ^ (the screenDepth)
 
 
 The value returned by the <screenColors> <function> is updated only when

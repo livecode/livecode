@@ -6,7 +6,7 @@ Syntax: request <expression> {of | from} {program | application} <programAddress
 
 Summary:
 The <request> data gets information from another application via 
-<Apple Event|Apple events>.
+<Apple Event|Apple Events>.
 
 Introduced: 1.0
 

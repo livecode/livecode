@@ -5,7 +5,7 @@ Type: message
 Syntax: mouseUpInBackdrop <pButtonNumber>
 
 Summary:
-Sent when the user releases the <mouse button>. while the 
+Sent when the user releases the <mouse button>, while the 
 <mouse pointer> is in the backdrop.
 
 Associations: card
