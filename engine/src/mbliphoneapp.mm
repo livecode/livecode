@@ -822,8 +822,8 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	t_info = [notification userInfo];
 	
     CGSize t_size;
-	t_size = [[t_info objectForKey:UIKeyboardFrameBeginUserInfoKey] CGRectValue].size;
-
+	t_size = [[t_info objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue].size;
+    
     // MM-2012-02-26: [[ Bug 10677 ]] Keyboard dimensions do not take into account orientation.
     //  We want height here, so assume the keyboard is always wider than it is taller and take the min of the two.
     CGFloat t_height = MCMin(t_size . height, t_size . width);
