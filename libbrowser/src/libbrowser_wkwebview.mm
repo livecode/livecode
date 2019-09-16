@@ -29,35 +29,47 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@interface MCWKWebViewNavigationRequest : NSObject
+typedef void (^MCWKNavigationDecisionHandler)(WKNavigationActionPolicy);
+@class com_livecode_libbrowser_MCWKWebViewNavigationDelegate;
+
+class MCWKWebViewBrowserNavigationRequest : public MCBrowserNavigationRequestBase
 {
-}
-
-@property (retain) NSString* urlString;
-@property BOOL frame;
-@property BOOL quiet;
-
-- (id)initWithURLString:(NSString*)urlString isFrame:(BOOL)isFrame isQuiet:(BOOL)isQuiet;
-- (void)dealloc;
-@end
+public:
+	MCWKWebViewBrowserNavigationRequest(WKNavigationAction *p_navigation_action, bool p_quiet, MCWKNavigationDecisionHandler p_decision_handler, com_livecode_libbrowser_MCWKWebViewNavigationDelegate *p_delegate);
+	virtual ~MCWKWebViewBrowserNavigationRequest();
+	void Continue(void);
+	void Cancel(void);
+	
+	bool IsQuiet(void);
+	
+private:
+	bool m_quiet;
+	MCWKNavigationDecisionHandler m_decision_handler;
+	com_livecode_libbrowser_MCWKWebViewNavigationDelegate *m_delegate;
+};
 
 @interface com_livecode_libbrowser_MCWKWebViewNavigationDelegate : NSObject <WKNavigationDelegate>
 {
 	MCWKWebViewBrowser *m_instance;
-	MCWKWebViewNavigationRequest *m_next_request;
-	NSMapTable<WKNavigation*, MCWKWebViewNavigationRequest*> *m_navigation_requests;
+	MCWKWebViewBrowserNavigationRequest *m_main_request;
+	NSMutableArray<NSValue*> *m_frame_requests;
 	bool m_pending_request;
+	bool m_delay_requests;
 }
 
 - (id)initWithInstance:(MCWKWebViewBrowser*)instance;
 - (void)dealloc;
 
 - (void)webView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation;
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation;
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation;
 - (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error;
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler;
 
 - (void)setPendingRequest: (bool)newValue;
+- (void)setDelayRequests: (bool)newValue;
+- (bool)getDelayRequests;
+- (void)continueRequest: (MCWKWebViewBrowserNavigationRequest *)request withDecisionHandler:(MCWKNavigationDecisionHandler)decisionHandler;
 
 @end
 
@@ -417,6 +429,27 @@ bool MCWKWebViewBrowser::SetAllowUserInteraction(bool p_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCWKWebViewBrowser::GetDelayRequests(bool &r_value)
+{
+	if (m_delegate == nil)
+		return false;
+	
+	r_value = [m_delegate getDelayRequests];
+	return true;
+}
+
+bool MCWKWebViewBrowser::SetDelayRequests(bool p_value)
+{
+	if (m_delegate == nil)
+		return false;
+	
+	[m_delegate setDelayRequests:p_value];
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCWKWebViewBrowser::SetBoolProperty(MCBrowserProperty p_property, bool p_value)
 {
 	switch (p_property)
@@ -430,6 +463,9 @@ bool MCWKWebViewBrowser::SetBoolProperty(MCBrowserProperty p_property, bool p_va
 		case kMCBrowserAllowUserInteraction:
 			return SetAllowUserInteraction(p_value);
 
+		case kMCBrowseriOSDelayRequests:
+			return SetDelayRequests(p_value);
+			
 		default:
 			break;
 	}
@@ -453,6 +489,9 @@ bool MCWKWebViewBrowser::GetBoolProperty(MCBrowserProperty p_property, bool &r_v
 		case kMCBrowserAllowUserInteraction:
 			return GetAllowUserInteraction(r_value);
 
+		case kMCBrowseriOSDelayRequests:
+			return GetDelayRequests(r_value);
+		
 		default:
 			break;
 	}
@@ -749,33 +788,67 @@ bool MCWKWebViewBrowser::Init(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCWKWebViewNavigationRequest
-
-@synthesize urlString;
-@synthesize frame;
-@synthesize quiet;
-
-- (id)initWithURLString:(NSString *)p_url isFrame:(BOOL)p_is_frame isQuiet:(BOOL)p_is_quiet
+MCBrowserNavigationType MCBrowserNavigationTypeFromWKNavigationType(WKNavigationType p_type)
 {
-	self = [super init];
-	if (self == nil)
-		return nil;
-	
-	self.urlString = p_url;
-	self.frame = p_is_frame;
-	self.quiet = p_is_quiet;
-
-	return self;
+	switch (p_type)
+	{
+		case WKNavigationTypeLinkActivated:
+			return kMCBrowserNavigationTypeFollowLink;
+		
+		case WKNavigationTypeFormSubmitted:
+			return kMCBrowserNavigationTypeSubmitForm;
+		
+		case WKNavigationTypeFormResubmitted:
+			return kMCBrowserNavigationTypeResubmitForm;
+		
+		case WKNavigationTypeReload:
+			return kMCBrowserNavigationTypeReload;
+		
+		case WKNavigationTypeBackForward:
+			return kMCBrowserNavigationTypeBackForward;
+		
+		case WKNavigationTypeOther:
+			return kMCBrowserNavigationTypeOther;
+	}
 }
 
-- (void)dealloc
+////////////////////////////////////////////////////////////////////////////////
+
+MCWKWebViewBrowserNavigationRequest::MCWKWebViewBrowserNavigationRequest(WKNavigationAction *p_action, bool p_quiet, MCWKNavigationDecisionHandler p_handler, com_livecode_libbrowser_MCWKWebViewNavigationDelegate* p_delegate)
+	: MCBrowserNavigationRequestBase(p_action.request.URL.absoluteString.UTF8String, !p_action.targetFrame.isMainFrame, MCBrowserNavigationTypeFromWKNavigationType(p_action.navigationType))
 {
-	[urlString release];
-	
-	[super dealloc];
+	m_quiet = p_quiet;
+	m_decision_handler = p_handler;
+
+	m_delegate = [p_delegate retain];
 }
 
-@end
+MCWKWebViewBrowserNavigationRequest::~MCWKWebViewBrowserNavigationRequest()
+{
+	if (m_delegate != nil)
+		[m_delegate release];
+}
+
+bool MCWKWebViewBrowserNavigationRequest::IsQuiet()
+{
+	return m_quiet;
+}
+
+void MCWKWebViewBrowserNavigationRequest::Continue()
+{
+	MCBrowserRunBlockOnMainFiber(^{
+		[m_delegate continueRequest:this withDecisionHandler:m_decision_handler];
+	});
+}
+
+void MCWKWebViewBrowserNavigationRequest::Cancel()
+{
+	MCBrowserRunBlockOnMainFiber(^{
+		m_decision_handler(WKNavigationActionPolicyCancel);
+	});
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 @implementation com_livecode_libbrowser_MCWKWebViewNavigationDelegate
 
@@ -787,19 +860,27 @@ bool MCWKWebViewBrowser::Init(void)
 	
 	m_instance = instance;
 	m_pending_request = false;
-	m_next_request = nil;
-	m_navigation_requests = [[NSMapTable strongToStrongObjectsMapTable] retain];
+	m_delay_requests = false;
+	m_main_request = nil;
+	m_frame_requests = [[NSMutableArray array] retain];
 
 	return self;
 }
 
 - (void)dealloc
 {
-	if (m_next_request != nil)
-		[m_next_request release];
+	if (m_main_request != nil)
+		m_main_request->Release();
 	
-	if (m_navigation_requests != nil)
-		[m_navigation_requests release];
+	if (m_frame_requests != nil)
+	{
+		for (NSValue *t_value in m_frame_requests)
+		{
+			MCWKWebViewBrowserNavigationRequest *t_request = (MCWKWebViewBrowserNavigationRequest*)[t_value pointerValue];
+			t_request->Release();
+		}
+		[m_frame_requests release];
+	}
 
 	[super dealloc];
 }
@@ -809,26 +890,28 @@ bool MCWKWebViewBrowser::Init(void)
 	NSString *t_url_string;
 	t_url_string = [[[navigationAction request] URL] absoluteString];
 	
-	bool t_is_frame;
-	t_is_frame = ![[navigationAction targetFrame] isMainFrame];
-	
-	MCWKWebViewNavigationRequest *t_request;
-	t_request = [[MCWKWebViewNavigationRequest alloc] initWithURLString:t_url_string isFrame:t_is_frame isQuiet:m_pending_request];
+	MCWKWebViewBrowserNavigationRequest *t_request;
+	t_request = new MCWKWebViewBrowserNavigationRequest(navigationAction, m_pending_request, [decisionHandler copy], self);
 	
 	if (m_pending_request || [NSURLConnection canHandleRequest: [navigationAction request]])
 	{
-		if (!t_is_frame && !t_request.quiet)
-			m_instance->OnNavigationBegin(false, [t_url_string UTF8String]);
-
-		m_pending_request = false;
-		m_next_request = t_request;
-		decisionHandler(WKNavigationActionPolicyAllow);
+		if (!m_pending_request && m_delay_requests)
+		{
+			if (m_instance->OnNavigationRequest(t_request))
+			{
+				t_request->Release();
+				return;
+			}
+		}
+		
+		t_request->Continue();
+		t_request->Release();
 	}
 	else
 	{
-		m_instance->OnNavigationRequestUnhandled(t_is_frame, [t_url_string UTF8String]);
+		m_instance->OnNavigationRequestUnhandled(t_request->IsFrame(), [t_url_string UTF8String]);
 		
-		[t_request release];
+		t_request->Release();
 		decisionHandler(WKNavigationActionPolicyCancel);
 	}
 	
@@ -836,68 +919,116 @@ bool MCWKWebViewBrowser::Init(void)
 
 - (void)webView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation
 {
-	MCWKWebViewNavigationRequest *t_request;
-	t_request = m_next_request;
-	m_next_request = nil;
-	
-	if (t_request == nil)
+	if (m_main_request == nil)
 		return;
 	
-	[m_navigation_requests setObject:t_request forKey:navigation];
-	
-	if (!t_request.quiet)
-		m_instance->OnDocumentLoadBegin(t_request.frame, [t_request.urlString UTF8String]);
-
-	[t_request release];
+	if (!m_main_request->IsQuiet())
+		m_instance->OnDocumentLoadBegin(false, m_main_request->GetURL());
 }
 
-
+- (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation
+{
+	if (m_main_request == nil)
+		return;
+	
+	if (!m_main_request->IsQuiet())
+		m_instance->OnNavigationBegin(false, m_main_request->GetURL());
+}
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation
 {
-	MCWKWebViewNavigationRequest *t_request;
-	t_request = [m_navigation_requests objectForKey:navigation];
-	
-	if (t_request == nil)
+	m_pending_request = false;
+
+	if (m_main_request == nil)
 		return;
 	
-	if (!t_request.frame)
-		m_instance->SyncJavaScriptHandlers();
+	m_instance->SyncJavaScriptHandlers();
 	
-	if (!t_request.quiet)
+	for (NSValue *t_value in m_frame_requests)
 	{
-		m_instance->OnDocumentLoadComplete(t_request.frame, [t_request.urlString UTF8String]);
-		if (!t_request.frame)
-			m_instance->OnNavigationComplete(false, [t_request.urlString UTF8String]);
+		MCWKWebViewBrowserNavigationRequest *t_frame_request;
+		t_frame_request = (MCWKWebViewBrowserNavigationRequest*)t_value.pointerValue;
+		if (!m_main_request->IsQuiet())
+			m_instance->OnDocumentLoadComplete(true, t_frame_request->GetURL());
+		t_frame_request->Release();
+	}
+	[m_frame_requests removeAllObjects];
+	
+	if (!m_main_request->IsQuiet())
+	{
+		m_instance->OnDocumentLoadComplete(false, m_main_request->GetURL());
+		m_instance->OnNavigationComplete(false, m_main_request->GetURL());
 	}
 
-	[m_navigation_requests removeObjectForKey:navigation];
+	m_main_request->Release();
+	m_main_request = nil;
 }
 
 - (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error
 {
-	MCWKWebViewNavigationRequest *t_request;
-	t_request = [m_navigation_requests objectForKey:navigation];
-	
-	if (t_request == nil)
+	m_pending_request = false;
+
+	if (m_main_request == nil)
 		return;
 	
-	if (!t_request.quiet)
-	{
-		const char *t_error;
-		t_error = [[error localizedDescription] UTF8String];
+	const char *t_error;
+	t_error = [[error localizedDescription] UTF8String];
 
-		m_instance->OnDocumentLoadFailed(t_request.frame, [t_request.urlString UTF8String], t_error);
-		if (!t_request.frame)
-			m_instance->OnNavigationFailed(false, [t_request.urlString UTF8String], t_error);
+	for (NSValue *t_value in m_frame_requests)
+	{
+		MCWKWebViewBrowserNavigationRequest *t_frame_request;
+		t_frame_request = (MCWKWebViewBrowserNavigationRequest*)t_value.pointerValue;
+		if (!m_main_request->IsQuiet())
+			m_instance->OnDocumentLoadFailed(true, t_frame_request->GetURL(), t_error);
+		t_frame_request->Release();
+	}
+	[m_frame_requests removeAllObjects];
+	
+	if (!m_main_request->IsQuiet())
+	{
+		m_instance->OnDocumentLoadFailed(false, m_main_request->GetURL(), t_error);
+		m_instance->OnNavigationFailed(false, m_main_request->GetURL(), t_error);
 	}
 
-	[m_navigation_requests removeObjectForKey:navigation];
+	m_main_request->Release();
+	m_main_request = nil;
+}
+
+- (void)continueRequest:(MCWKWebViewBrowserNavigationRequest *)request withDecisionHandler:(MCWKNavigationDecisionHandler)decisionHandler
+{
+	if (request->IsFrame())
+	{
+		[m_frame_requests addObject:[NSValue valueWithPointer:request]];
+		request->Retain();
+		decisionHandler(WKNavigationActionPolicyAllow);
+	}
+	else
+	{
+		if (m_main_request != nil)
+		{
+			// Redirect: replace current request with new one
+			m_main_request->Release();
+			m_main_request = nil;
+		}
+		m_main_request = request;
+		m_main_request->Retain();
+		decisionHandler(WKNavigationActionPolicyAllow);
+	}
 }
 
 - (void)setPendingRequest:(bool)p_new_value
 {
 	m_pending_request = p_new_value;
+}
+
+- (void)setDelayRequests:(bool)p_new_value
+{
+	m_delay_requests = p_new_value;
+}
+
+- (bool)getDelayRequests
+{
+	return m_delay_requests;
 }
 
 @end

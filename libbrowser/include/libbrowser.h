@@ -20,6 +20,16 @@
 ////////////////////////////////////////////////////////////////////////////////
 // C++ Implementation Class API
 
+enum MCBrowserNavigationType
+{
+	kMCBrowserNavigationTypeFollowLink,
+	kMCBrowserNavigationTypeSubmitForm,
+	kMCBrowserNavigationTypeBackForward,
+	kMCBrowserNavigationTypeReload,
+	kMCBrowserNavigationTypeResubmitForm,
+	kMCBrowserNavigationTypeOther,
+};
+
 class MCBrowserRefCounted
 {
 public:
@@ -35,8 +45,26 @@ private:
 	uint32_t m_ref_count;
 };
 
+class MCBrowserNavigationRequest : public MCBrowserRefCounted
+{
+public:
+	virtual const char *GetURL(void) = 0;
+	virtual bool IsFrame(void) = 0;
+	virtual MCBrowserNavigationType GetNavigationType(void) = 0;
+	
+	virtual void Continue(void) = 0;
+	virtual void Cancel(void) = 0;
+};
+
 class MCBrowser;
 typedef class MCBrowserList *MCBrowserListRef;
+
+// Navigation request handler interface
+class MCBrowserNavigationRequestHandler : public MCBrowserRefCounted
+{
+public:
+	virtual bool OnNavigationRequest(MCBrowser *p_browser, MCBrowserNavigationRequest *p_request) = 0;
+};
 
 // Event handler interface
 class MCBrowserEventHandler : public MCBrowserRefCounted
@@ -69,20 +97,18 @@ public:
 // Properties
 enum MCBrowserProperty
 {
-//	kMCBrowserRect,
-	// Boolean properties
-	kMCBrowserVerticalScrollbarEnabled,
-	kMCBrowserHorizontalScrollbarEnabled,
-	kMCBrowserAllowNewWindows,
-	kMCBrowserEnableContextMenu,
-	kMCBrowserAllowUserInteraction,
-	kMCBrowserIsSecure,
+	kMCBrowserVerticalScrollbarEnabled, /* BOOLEAN */
+	kMCBrowserHorizontalScrollbarEnabled, /* BOOLEAN */
+	kMCBrowserAllowNewWindows, /* BOOLEAN */
+	kMCBrowserEnableContextMenu, /* BOOLEAN */
+	kMCBrowserAllowUserInteraction, /* BOOLEAN */
+	kMCBrowserIsSecure, /* BOOLEAN */
+	kMCBrowserURL, /* STRING */
+	kMCBrowserHTMLText, /* STRING */
+	kMCBrowserUserAgent, /* STRING */
+	kMCBrowserJavaScriptHandlers, /* STRING */
 	
-	// String properties
-	kMCBrowserURL,
-	kMCBrowserHTMLText,
-	kMCBrowserUserAgent,
-	kMCBrowserJavaScriptHandlers,
+	kMCBrowseriOSDelayRequests, /* BOOLEAN */
 };
 
 // Convenience struct for rect properties
@@ -95,6 +121,7 @@ struct MCBrowserRect
 class MCBrowser : public MCBrowserRefCounted
 {
 public:
+	virtual void SetNavigationRequestHandler(MCBrowserNavigationRequestHandler *p_handler) = 0;
 	virtual void SetEventHandler(MCBrowserEventHandler *p_handler) = 0;
 	virtual void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler) = 0;
 	virtual void SetProgressHandler(MCBrowserProgressHandler *p_handler) = 0;
@@ -249,6 +276,19 @@ MC_BROWSER_DLLEXPORT bool MCBrowserDictionaryGetDictionary(MCBrowserDictionaryRe
 	
 //////////
 
+typedef class MCBrowserNavigationRequest *MCBrowserNavigationRequestRef;
+
+MC_BROWSER_DLLEXPORT MCBrowserNavigationRequestRef MCBrowserNavigationRequestRetain(MCBrowserNavigationRequestRef p_request);
+MC_BROWSER_DLLEXPORT void MCBrowserNavigationRequestRelease(MCBrowserNavigationRequestRef p_request);
+
+MC_BROWSER_DLLEXPORT bool MCBrowserNavigationRequestGetURL(MCBrowserNavigationRequestRef p_request, char* &r_url);
+MC_BROWSER_DLLEXPORT bool MCBrowserNavigationRequestGetNavigationType(MCBrowserNavigationRequestRef p_request, MCBrowserNavigationType &r_type);
+MC_BROWSER_DLLEXPORT bool MCBrowserNavigationRequestIsFrame(MCBrowserNavigationRequestRef p_request, bool &r_frame);
+MC_BROWSER_DLLEXPORT bool MCBrowserNavigationRequestContinue(MCBrowserNavigationRequestRef p_request);
+MC_BROWSER_DLLEXPORT bool MCBrowserNavigationRequestCancel(MCBrowserNavigationRequestRef p_request);
+
+//////////
+
 typedef class MCBrowser *MCBrowserRef;
 typedef class MCBrowserFactory *MCBrowserFactoryRef;
 
@@ -271,25 +311,27 @@ MC_BROWSER_DLLEXPORT bool MCBrowserGoForward(MCBrowserRef p_browser);
 MC_BROWSER_DLLEXPORT bool MCBrowserGoToURL(MCBrowserRef p_browser, const char *p_url);
 MC_BROWSER_DLLEXPORT bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, char *&r_result);
 
-enum MCBrowserRequestType
+enum MCBrowserNavigationEventType
 {
-	kMCBrowserRequestTypeNavigate,
-	kMCBrowserRequestTypeDocumentLoad,
+	kMCBrowserNavigationEventTypeNavigate,
+	kMCBrowserNavigationEventTypeDocumentLoad,
 };
 
-enum MCBrowserRequestState
+enum MCBrowserNavigationState
 {
-	kMCBrowserRequestStateBegin,
-	kMCBrowserRequestStateComplete,
-	kMCBrowserRequestStateFailed,
-	kMCBrowserRequestStateUnhandled,
+	kMCBrowserNavigationStateBegin,
+	kMCBrowserNavigationStateComplete,
+	kMCBrowserNavigationStateFailed,
+	kMCBrowserNavigationStateUnhandled,
 };
 
-typedef void (*MCBrowserRequestCallback)(void *p_context, MCBrowserRef p_browser, MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_in_frame, const char *p_url, const char *p_error);
+typedef bool (*MCBrowserNavigationRequestCallback)(void *p_context, MCBrowserRef p_browser, MCBrowserNavigationRequestRef p_request);
+typedef void (*MCBrowserNavigationCallback)(void *p_context, MCBrowserRef p_browser, MCBrowserNavigationEventType p_type, MCBrowserNavigationState p_state, bool p_in_frame, const char *p_url, const char *p_error);
 typedef void (*MCBrowserJavaScriptCallback)(void *p_context, MCBrowserRef p_browser, const char *p_handler, MCBrowserListRef p_params);
 typedef void (*MCBrowserProgressCallback)(void *p_context, MCBrowserRef p_browser, const char *p_url, uint32_t p_progress);
 
-MC_BROWSER_DLLEXPORT bool MCBrowserSetRequestHandler(MCBrowserRef p_browser, MCBrowserRequestCallback p_callback, void *p_context);
+MC_BROWSER_DLLEXPORT bool MCBrowserSetNavigationRequestHandler(MCBrowserRef p_browser, MCBrowserNavigationRequestCallback p_callback, void *p_context);
+MC_BROWSER_DLLEXPORT bool MCBrowserSetNavigationHandler(MCBrowserRef p_browser, MCBrowserNavigationCallback p_callback, void *p_context);
 MC_BROWSER_DLLEXPORT bool MCBrowserSetJavaScriptHandler(MCBrowserRef p_browser, MCBrowserJavaScriptCallback p_callback, void *p_context);
 MC_BROWSER_DLLEXPORT bool MCBrowserSetProgressHandler(MCBrowserRef p_browser, MCBrowserProgressCallback p_callback, void *p_context);
 

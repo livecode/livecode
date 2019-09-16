@@ -69,6 +69,9 @@ protected:
 
 	bool GetAllowUserInteraction(bool& r_value);
 	bool SetAllowUserInteraction(bool p_value);
+	
+	bool GetDelayRequests(bool& r_value);
+	bool SetDelayRequests(bool p_value);
 
 private:
 	bool GetView(WKWebView *&r_view);
