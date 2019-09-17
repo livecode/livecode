@@ -40,10 +40,11 @@ public:
 	
 	virtual bool GetBoolProperty(MCBrowserProperty p_property, bool &r_value);
 	virtual bool SetBoolProperty(MCBrowserProperty p_property, bool p_value);
-	
 	virtual bool GetStringProperty(MCBrowserProperty p_property, char *&r_utf8_string);
 	virtual bool SetStringProperty(MCBrowserProperty p_property, const char *p_utf8_string);
-	
+	virtual bool GetIntegerProperty(MCBrowserProperty p_property, int32_t &r_value);
+	virtual bool SetIntegerProperty(MCBrowserProperty p_property, int32_t p_value);
+
 	virtual bool GoBack();
 	virtual bool GoForward();
 	virtual bool GoToURL(const char *p_url);

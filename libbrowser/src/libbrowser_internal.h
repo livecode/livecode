@@ -184,6 +184,28 @@ inline void MCBrowserMemoryClear(T &p_struct)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+inline void MCBrowserCStringAssign(char *&x_variable, char *p_value)
+{
+	if (x_variable == p_value)
+		return;
+		
+	if (x_variable != nil)
+		MCCStringFree(x_variable);
+	x_variable = p_value;
+}
+
+inline bool MCBrowserCStringAssignCopy(char *&x_variable, const char *p_value)
+{
+	char *t_copy;
+	if (!MCCStringClone(p_value, t_copy))
+		return false;
+	
+	MCBrowserCStringAssign(x_variable, t_copy);
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 struct MCBrowserValue
 {
 	MCBrowserValueType type;

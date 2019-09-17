@@ -30,6 +30,39 @@ enum MCBrowserNavigationType
 	kMCBrowserNavigationTypeOther,
 };
 
+enum MCBrowserDataDetectorType
+{
+	kMCBrowserDataDetectorTypeNone = 0,
+	
+	kMCBrowserDataDetectorTypePhoneNumberBit = 0,
+	kMCBrowserDataDetectorTypeLinkBit = 1,
+	kMCBrowserDataDetectorTypeEmailAddressBit = 2,
+	kMCBrowserDataDetectorTypeMapAddressBit = 3,
+	kMCBrowserDataDetectorTypeCalendarEventBit = 4,
+	kMCBrowserDataDetectorTypeTrackingNumberBit = 5,
+	kMCBrowserDataDetectorTypeFlightNumberBit = 6,
+	kMCBrowserDataDetectorTypeLookupSuggestionBit = 7,
+	
+	kMCBrowserDataDetectorTypePhoneNumber = (1 << kMCBrowserDataDetectorTypePhoneNumberBit),
+	kMCBrowserDataDetectorTypeLink = (1 << kMCBrowserDataDetectorTypeLinkBit),
+	kMCBrowserDataDetectorTypeEmailAddress = (1 << kMCBrowserDataDetectorTypeEmailAddressBit),
+	kMCBrowserDataDetectorTypeMapAddress = (1 << kMCBrowserDataDetectorTypeMapAddressBit),
+	kMCBrowserDataDetectorTypeCalendarEvent = (1 << kMCBrowserDataDetectorTypeCalendarEventBit),
+	kMCBrowserDataDetectorTypeTrackingNumber = (1 << kMCBrowserDataDetectorTypeTrackingNumberBit),
+	kMCBrowserDataDetectorTypeFlightNumber = (1 << kMCBrowserDataDetectorTypeFlightNumberBit),
+	kMCBrowserDataDetectorTypeLookupSuggestion = (1 << kMCBrowserDataDetectorTypeLookupSuggestionBit),
+	
+	kMCBrowserDataDetectorTypeAll =
+		kMCBrowserDataDetectorTypePhoneNumber |
+		kMCBrowserDataDetectorTypeLink |
+		kMCBrowserDataDetectorTypeEmailAddress |
+		kMCBrowserDataDetectorTypeMapAddress |
+		kMCBrowserDataDetectorTypeCalendarEvent |
+		kMCBrowserDataDetectorTypeTrackingNumber |
+		kMCBrowserDataDetectorTypeFlightNumber |
+		kMCBrowserDataDetectorTypeLookupSuggestion,
+};
+
 class MCBrowserRefCounted
 {
 public:
@@ -109,6 +142,15 @@ enum MCBrowserProperty
 	kMCBrowserJavaScriptHandlers, /* STRING */
 	
 	kMCBrowseriOSDelayRequests, /* BOOLEAN */
+	kMCBrowseriOSAllowsInlineMediaPlayback, /* BOOLEAN */
+	kMCBrowseriOSMediaPlaybackRequiresUserAction, /* BOOLEAN */
+	kMCBrowseriOSAutoFit, /* BOOLEAN */
+
+	kMCBrowserCanGoForward, /* BOOLEAN */
+	kMCBrowserCanGoBack, /* BOOLEAN */
+	kMCBrowserDataDetectorTypes, /* INTEGER */
+	kMCBrowserScrollEnabled, /* BOOLEAN */
+	kMCBrowserScrollCanBounce, /* BOOLEAN */
 };
 
 // Convenience struct for rect properties
@@ -136,6 +178,9 @@ public:
 	
 	virtual bool GetStringProperty(MCBrowserProperty p_property, char *&r_utf8_string) = 0;
 	virtual bool SetStringProperty(MCBrowserProperty p_property, const char *p_utf8_string) = 0;
+	
+	virtual bool GetIntegerProperty(MCBrowserProperty p_property, int32_t &r_value) = 0;
+	virtual bool SetIntegerProperty(MCBrowserProperty p_property, int32_t p_value) = 0;
 	
 	virtual bool GoBack() = 0;
 	virtual bool GoForward() = 0;
@@ -305,6 +350,9 @@ MC_BROWSER_DLLEXPORT bool MCBrowserSetBoolProperty(MCBrowserRef p_browser, MCBro
 
 MC_BROWSER_DLLEXPORT bool MCBrowserGetStringProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, char *&r_utf8_string);
 MC_BROWSER_DLLEXPORT bool MCBrowserSetStringProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, const char *p_utf8_string);
+
+MC_BROWSER_DLLEXPORT bool MCBrowserGetIntegerProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, int32_t &r_value);
+MC_BROWSER_DLLEXPORT bool MCBrowserSetIntegerProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, int32_t p_value);
 
 MC_BROWSER_DLLEXPORT bool MCBrowserGoBack(MCBrowserRef p_browser);
 MC_BROWSER_DLLEXPORT bool MCBrowserGoForward(MCBrowserRef p_browser);

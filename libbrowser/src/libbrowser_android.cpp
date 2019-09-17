@@ -694,6 +694,28 @@ public:
 		return true;
 	}
 	
+	virtual bool SetIntegerProperty(MCBrowserProperty p_property, int32_t p_value)
+	{
+		switch (p_property)
+		{
+			default:
+				break;
+		}
+		
+		return true;
+	}
+
+	virtual bool GetIntegerProperty(MCBrowserProperty p_property, int32_t &r_value)
+	{
+		switch (p_property)
+		{
+			default:
+				break;
+		}
+		
+		return true;
+	}
+
 	virtual bool GoBack()
 	{
 		MCAndroidObjectRemoteCall(m_view, "goBack", "vi", nil, 1);

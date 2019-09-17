@@ -2006,6 +2006,28 @@ bool MCCefBrowserBase::GetStringProperty(MCBrowserProperty p_property, char *&r_
 	return true;
 }
 
+bool MCCefBrowserBase::SetIntegerProperty(MCBrowserProperty p_property, int32_t p_value)
+{
+	switch (p_property)
+	{
+		default:
+			break;
+	}
+	
+	return true;
+}
+
+bool MCCefBrowserBase::GetIntegerProperty(MCBrowserProperty p_property, int32_t &r_value)
+{
+	switch (p_property)
+	{
+		default:
+			break;
+	}
+	
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Cef browser factory
 

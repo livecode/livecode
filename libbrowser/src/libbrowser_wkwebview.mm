@@ -90,12 +90,66 @@ inline void MCBrowserRunBlockOnMainFiber(void (^p_block)(void))
 
 ////////////////////////////////////////////////////////////////////////////////
 
+WKDataDetectorTypes MCBrowserDataDetectorTypeToWKDataDetectorTypes(MCBrowserDataDetectorType p_type)
+{
+	WKDataDetectorTypes t_types;
+	t_types = WKDataDetectorTypeNone;
+	
+	if (p_type & kMCBrowserDataDetectorTypePhoneNumber)
+		t_types |= WKDataDetectorTypePhoneNumber;
+	if (p_type & kMCBrowserDataDetectorTypeMapAddress)
+		t_types |= WKDataDetectorTypeAddress;
+	if (p_type & kMCBrowserDataDetectorTypeLink)
+		t_types |= WKDataDetectorTypeLink;
+	if (p_type & kMCBrowserDataDetectorTypeEmailAddress)
+		t_types |= WKDataDetectorTypeLink;
+	if (p_type & kMCBrowserDataDetectorTypeCalendarEvent)
+		t_types |= WKDataDetectorTypeCalendarEvent;
+	if (p_type & kMCBrowserDataDetectorTypeFlightNumber)
+		t_types |= WKDataDetectorTypeFlightNumber;
+	if (p_type & kMCBrowserDataDetectorTypeLookupSuggestion)
+		t_types |= WKDataDetectorTypeLookupSuggestion;
+	
+	return t_types;
+}
+
+MCBrowserDataDetectorType MCBrowserDataDetectorTypeFromWKDataDetectorTypes(WKDataDetectorTypes p_types)
+{
+	int32_t t_types;
+	t_types = kMCBrowserDataDetectorTypeNone;
+	
+	if (p_types & WKDataDetectorTypePhoneNumber)
+		t_types |= kMCBrowserDataDetectorTypePhoneNumber;
+	if (p_types & WKDataDetectorTypeAddress)
+		t_types |= kMCBrowserDataDetectorTypeMapAddress;
+	if (p_types & WKDataDetectorTypeLink)
+		t_types |= kMCBrowserDataDetectorTypeLink | kMCBrowserDataDetectorTypeEmailAddress;
+	if (p_types & WKDataDetectorTypeCalendarEvent)
+		t_types |= kMCBrowserDataDetectorTypeCalendarEvent;
+	if (p_types & WKDataDetectorTypeFlightNumber)
+		t_types |= kMCBrowserDataDetectorTypeFlightNumber;
+	if (p_types & WKDataDetectorTypeLookupSuggestion)
+		t_types |= kMCBrowserDataDetectorTypeLookupSuggestion;
+
+	return (MCBrowserDataDetectorType)t_types;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCWKWebViewBrowser::MCWKWebViewBrowser()
 {
 	m_view = nil;
+	m_container_view = nil;
 	m_delegate = nil;
 	m_message_handler = nil;
+	m_content_controller = nil;
+	m_configuration = nil;
+
+	m_url = nil;
+	m_htmltext = nil;
 	m_js_handlers = nil;
+
+	m_autofit = false;
 }
 
 MCWKWebViewBrowser::~MCWKWebViewBrowser()
@@ -104,8 +158,12 @@ MCWKWebViewBrowser::~MCWKWebViewBrowser()
 		if (m_view != nil)
 		{
 			[m_view setNavigationDelegate: nil];
+			[m_view removeFromSuperview];
 			[m_view release];
 		}
+		
+		if (m_container_view != nil)
+			[m_container_view release];
 		
 		if (m_delegate != nil)
 			[m_delegate release];
@@ -113,8 +171,15 @@ MCWKWebViewBrowser::~MCWKWebViewBrowser()
 		if (m_message_handler != nil)
 			[m_message_handler release];
 		
-		if (m_js_handlers != nil)
-			MCCStringFree(m_js_handlers);
+		if (m_content_controller != nil)
+			[m_content_controller release];
+		
+		if (m_configuration != nil)
+			[m_configuration release];
+		
+		MCBrowserCStringAssign(m_url, nil);
+		MCBrowserCStringAssign(m_htmltext, nil);
+		MCBrowserCStringAssign(m_js_handlers, nil);
 	});
 }
 
@@ -123,7 +188,7 @@ MCWKWebViewBrowser::~MCWKWebViewBrowser()
 bool MCWKWebViewBrowser::GetUrl(char *&r_url)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	__block bool t_success;
@@ -139,7 +204,7 @@ bool MCWKWebViewBrowser::GetUrl(char *&r_url)
 bool MCWKWebViewBrowser::SetVerticalScrollbarEnabled(bool p_value)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	MCBrowserRunBlockOnMainFiber(^{
@@ -152,7 +217,7 @@ bool MCWKWebViewBrowser::SetVerticalScrollbarEnabled(bool p_value)
 bool MCWKWebViewBrowser::GetVerticalScrollbarEnabled(bool& r_value)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	MCBrowserRunBlockOnMainFiber(^{
@@ -165,7 +230,7 @@ bool MCWKWebViewBrowser::GetVerticalScrollbarEnabled(bool& r_value)
 bool MCWKWebViewBrowser::SetHorizontalScrollbarEnabled(bool p_value)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	MCBrowserRunBlockOnMainFiber(^{
@@ -178,11 +243,63 @@ bool MCWKWebViewBrowser::SetHorizontalScrollbarEnabled(bool p_value)
 bool MCWKWebViewBrowser::GetHorizontalScrollbarEnabled(bool& r_value)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	MCBrowserRunBlockOnMainFiber(^{
 		r_value = t_view.scrollView.showsHorizontalScrollIndicator;
+	});
+	
+	return true;
+}
+
+bool MCWKWebViewBrowser::SetScrollEnabled(bool p_value)
+{
+	WKWebView *t_view;
+	if (!GetWebView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		t_view.scrollView.scrollEnabled = p_value;
+	});
+	
+	return true;
+}
+
+bool MCWKWebViewBrowser::GetScrollEnabled(bool& r_value)
+{
+	WKWebView *t_view;
+	if (!GetWebView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		r_value = t_view.scrollView.scrollEnabled;
+	});
+	
+	return true;
+}
+
+bool MCWKWebViewBrowser::SetScrollCanBounce(bool p_value)
+{
+	WKWebView *t_view;
+	if (!GetWebView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		t_view.scrollView.bounces = p_value;
+	});
+	
+	return true;
+}
+
+bool MCWKWebViewBrowser::GetScrollCanBounce(bool& r_value)
+{
+	WKWebView *t_view;
+	if (!GetWebView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		r_value = t_view.scrollView.bounces;
 	});
 	
 	return true;
@@ -198,7 +315,7 @@ bool MCWKWebViewBrowser::GetHTMLText(char *&r_htmltext)
 bool MCWKWebViewBrowser::SetHTMLText(const char *p_htmltext)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	MCBrowserRunBlockOnMainFiber(^{
@@ -206,6 +323,9 @@ bool MCWKWebViewBrowser::SetHTMLText(const char *p_htmltext)
 		[t_view loadHTMLString: [NSString stringWithUTF8String: p_htmltext] baseURL: [NSURL URLWithString: [NSString stringWithUTF8String: LIBBROWSER_DUMMY_URL]]];
 	});
 	
+	/* UNCHECKED */ MCBrowserCStringAssignCopy(m_htmltext, p_htmltext);
+	/* UNCHECKED */ MCBrowserCStringAssignCopy(m_url, p_baseurl);
+
 	return true;
 }
 
@@ -224,14 +344,7 @@ bool MCWKWebViewBrowser::SetJavaScriptHandlers(const char *p_handlers)
 	if (!MCCStringIsEmpty(p_handlers) && !MCCStringClone(p_handlers, t_handlers))
 		return false;
 	
-	if (m_js_handlers != nil)
-	{
-		MCCStringFree(m_js_handlers);
-		m_js_handlers = nil;
-	}
-	
-	m_js_handlers = t_handlers;
-	t_handlers = nil;
+	MCBrowserCStringAssign(m_js_handlers, t_handlers);
 	
 	SyncJavaScriptHandlers();
 	return true;
@@ -355,7 +468,7 @@ bool MCWKWebViewBrowser::SyncJavaScriptHandlers(NSArray *p_handlers)
 bool MCWKWebViewBrowser::GetUserAgent(char *&r_useragent)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	__block bool t_success;
@@ -371,7 +484,7 @@ bool MCWKWebViewBrowser::GetUserAgent(char *&r_useragent)
 bool MCWKWebViewBrowser::SetUserAgent(const char *p_useragent)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	NSString *t_custom_useragent;
@@ -389,7 +502,7 @@ bool MCWKWebViewBrowser::SetUserAgent(const char *p_useragent)
 bool MCWKWebViewBrowser::GetIsSecure(bool &r_value)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	MCBrowserRunBlockOnMainFiber(^{
@@ -401,10 +514,38 @@ bool MCWKWebViewBrowser::GetIsSecure(bool &r_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCWKWebViewBrowser::GetCanGoForward(bool &r_value)
+{
+	WKWebView *t_view;
+	if (!GetWebView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		r_value = t_view.canGoForward;
+	});
+
+	return true;
+}
+
+bool MCWKWebViewBrowser::GetCanGoBack(bool &r_value)
+{
+	WKWebView *t_view;
+	if (!GetWebView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		r_value = t_view.canGoBack;
+	});
+
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCWKWebViewBrowser::GetAllowUserInteraction(bool &r_value)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 
 	MCBrowserRunBlockOnMainFiber(^{
@@ -417,7 +558,7 @@ bool MCWKWebViewBrowser::GetAllowUserInteraction(bool &r_value)
 bool MCWKWebViewBrowser::SetAllowUserInteraction(bool p_value)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 
 	MCBrowserRunBlockOnMainFiber(^{
@@ -450,6 +591,90 @@ bool MCWKWebViewBrowser::SetDelayRequests(bool p_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCWKWebViewBrowser::GetDataDetectorTypes(int32_t &r_types)
+{
+	r_types = MCBrowserDataDetectorTypeFromWKDataDetectorTypes(m_configuration.dataDetectorTypes);
+	return true;
+}
+
+bool MCWKWebViewBrowser::SetDataDetectorTypes(int32_t p_types)
+{
+	WKDataDetectorTypes t_types;
+	t_types = MCBrowserDataDetectorTypeToWKDataDetectorTypes((MCBrowserDataDetectorType)p_types);
+	
+	if (t_types == m_configuration.dataDetectorTypes)
+		return true;
+	
+	m_configuration.dataDetectorTypes = t_types;
+	return Reconfigure();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCWKWebViewBrowser::GetAllowsInlineMediaPlayback(bool &r_value)
+{
+	r_value = m_configuration.allowsInlineMediaPlayback;
+	return true;
+}
+
+bool MCWKWebViewBrowser::SetAllowsInlineMediaPlayback(bool p_value)
+{
+	if (p_value == m_configuration.allowsInlineMediaPlayback)
+		return true;
+	
+	m_configuration.allowsInlineMediaPlayback = p_value;
+	return Reconfigure();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCWKWebViewBrowser::GetMediaPlaybackRequiresUserAction(bool &r_value)
+{
+	r_value = m_configuration.mediaPlaybackRequiresUserAction;
+	return true;
+}
+
+bool MCWKWebViewBrowser::SetMediaPlaybackRequiresUserAction(bool p_value)
+{
+	if (p_value == m_configuration.mediaPlaybackRequiresUserAction)
+		return true;
+	
+	m_configuration.mediaPlaybackRequiresUserAction = p_value;
+	return Reconfigure();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCWKWebViewBrowser::GetAutoFit(bool &r_value)
+{
+	r_value = m_autofit;
+	return true;
+}
+
+bool MCWKWebViewBrowser::SetAutoFit(bool p_value)
+{
+	if (p_value == m_autofit)
+		return true;
+	
+	if (p_value)
+	{
+		NSString *t_script_string;
+		t_script_string = @"var meta = document.createElement('meta'); meta.setAttribute('name', 'viewport'); meta.setAttribute('content', 'width=device-width'); document.getElementsByTagName('head')[0].appendChild(meta);";
+
+		WKUserScript *t_script;
+		t_script = [[WKUserScript alloc] initWithSource:t_script_string injectionTime:WKUserScriptInjectionTimeAtDocumentEnd forMainFrameOnly:YES];
+		
+		[m_content_controller addUserScript:t_script];
+		[t_script release];
+	}
+	else
+		[m_content_controller removeAllUserScripts];
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCWKWebViewBrowser::SetBoolProperty(MCBrowserProperty p_property, bool p_value)
 {
 	switch (p_property)
@@ -460,11 +685,23 @@ bool MCWKWebViewBrowser::SetBoolProperty(MCBrowserProperty p_property, bool p_va
 		case kMCBrowserHorizontalScrollbarEnabled:
 			return SetHorizontalScrollbarEnabled(p_value);
 
+		case kMCBrowserScrollEnabled:
+			return SetScrollEnabled(p_value);
+			
+		case kMCBrowserScrollCanBounce:
+			return SetScrollCanBounce(p_value);
+			
 		case kMCBrowserAllowUserInteraction:
 			return SetAllowUserInteraction(p_value);
 
 		case kMCBrowseriOSDelayRequests:
 			return SetDelayRequests(p_value);
+			
+		case kMCBrowseriOSAllowsInlineMediaPlayback:
+			return SetAllowsInlineMediaPlayback(p_value);
+		
+		case kMCBrowseriOSMediaPlaybackRequiresUserAction:
+			return SetMediaPlaybackRequiresUserAction(p_value);
 			
 		default:
 			break;
@@ -483,15 +720,33 @@ bool MCWKWebViewBrowser::GetBoolProperty(MCBrowserProperty p_property, bool &r_v
 		case kMCBrowserHorizontalScrollbarEnabled:
 			return GetHorizontalScrollbarEnabled(r_value);
 			
+		case kMCBrowserScrollEnabled:
+			return GetScrollEnabled(r_value);
+			
+		case kMCBrowserScrollCanBounce:
+			return GetScrollCanBounce(r_value);
+			
 		case kMCBrowserIsSecure:
 			return GetIsSecure(r_value);
 
+		case kMCBrowserCanGoForward:
+			return GetCanGoForward(r_value);
+		
+		case kMCBrowserCanGoBack:
+			return GetCanGoBack(r_value);
+		
 		case kMCBrowserAllowUserInteraction:
 			return GetAllowUserInteraction(r_value);
 
 		case kMCBrowseriOSDelayRequests:
 			return GetDelayRequests(r_value);
 		
+		case kMCBrowseriOSAllowsInlineMediaPlayback:
+			return GetAllowsInlineMediaPlayback(r_value);
+		
+		case kMCBrowseriOSMediaPlaybackRequiresUserAction:
+			return GetMediaPlaybackRequiresUserAction(r_value);
+			
 		default:
 			break;
 	}
@@ -542,12 +797,40 @@ bool MCWKWebViewBrowser::GetStringProperty(MCBrowserProperty p_property, char *&
 	return true;
 }
 
+bool MCWKWebViewBrowser::SetIntegerProperty(MCBrowserProperty p_property, int32_t p_value)
+{
+	switch (p_property)
+	{
+		case kMCBrowserDataDetectorTypes:
+			return SetDataDetectorTypes(p_value);
+			
+		default:
+			break;
+	}
+	
+	return true;
+}
+
+bool MCWKWebViewBrowser::GetIntegerProperty(MCBrowserProperty p_property, int32_t &r_value)
+{
+	switch (p_property)
+	{
+		case kMCBrowserDataDetectorTypes:
+			return GetDataDetectorTypes(r_value);
+			
+		default:
+			break;
+	}
+	
+	return true;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCWKWebViewBrowser::GetRect(MCBrowserRect &r_rect)
 {
-	WKWebView *t_view;
-	if (!GetView(t_view))
+	UIView *t_view;
+	if (!GetContainerView(t_view))
 		return false;
 	
 	MCBrowserRunBlockOnMainFiber(^{
@@ -563,8 +846,8 @@ bool MCWKWebViewBrowser::GetRect(MCBrowserRect &r_rect)
 
 bool MCWKWebViewBrowser::SetRect(const MCBrowserRect &p_rect)
 {
-	WKWebView *t_view;
-	if (!GetView(t_view))
+	UIView *t_view;
+	if (!GetContainerView(t_view))
 		return false;
 	
 	CGRect t_rect;
@@ -582,7 +865,7 @@ bool MCWKWebViewBrowser::SetRect(const MCBrowserRect &p_rect)
 bool MCWKWebViewBrowser::GoToURL(const char *p_url)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	//[m_delegate setPendingRequest: true];
@@ -590,13 +873,16 @@ bool MCWKWebViewBrowser::GoToURL(const char *p_url)
 		[t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithUTF8String: p_url]]]];
 	});
 	
+	/* UNCHECKED */ MCBrowserCStringAssignCopy(m_url, p_url);
+	MCBrowserCStringAssign(m_htmltext, nil);
+	
 	return true;
 }
 
 bool MCWKWebViewBrowser::GoForward()
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	MCBrowserRunBlockOnMainFiber(^{
@@ -609,7 +895,7 @@ bool MCWKWebViewBrowser::GoForward()
 bool MCWKWebViewBrowser::GoBack()
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	MCBrowserRunBlockOnMainFiber(^{
@@ -658,7 +944,7 @@ void _SyncEvaluateJavaScript(WKWebView *p_view, NSString *p_javascript, id &r_re
 bool MCWKWebViewBrowser::EvaluateJavaScript(const char *p_script, char *&r_result)
 {
 	WKWebView *t_view;
-	if (!GetView(t_view))
+	if (!GetWebView(t_view))
 		return false;
 	
 	id t_result = nil;
@@ -686,7 +972,7 @@ bool MCWKWebViewBrowser::EvaluateJavaScript(const char *p_script, char *&r_resul
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCWKWebViewBrowser::GetView(WKWebView *&r_view)
+bool MCWKWebViewBrowser::GetWebView(WKWebView *&r_view)
 {
 	if (m_view == nil)
 		return false;
@@ -695,10 +981,19 @@ bool MCWKWebViewBrowser::GetView(WKWebView *&r_view)
 	return true;
 }
 
+bool MCWKWebViewBrowser::GetContainerView(UIView *&r_view)
+{
+	if (m_container_view == nil)
+		return false;
+	
+	r_view = m_container_view;
+	return true;
+}
+
 void *MCWKWebViewBrowser::GetNativeLayer()
 {
-	WKWebView *t_view;
-	if (!GetView(t_view))
+	UIView *t_view;
+	if (!GetContainerView(t_view))
 		return nil;
 	
 	return t_view;
@@ -712,13 +1007,29 @@ bool MCWKWebViewBrowser::Init(void)
 	t_success = true;
 	
 	MCBrowserRunBlockOnMainFiber(^{
+		UIView *t_container_view;
+		t_container_view = nil;
+		
+		if (t_success)
+		{
+			t_container_view = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 0, 0)];
+			t_success = t_container_view != nil;
+		}
+	
 		MCWKWebViewScriptMessageHandler *t_message_handler;
 		t_message_handler = nil;
-		
 		if (t_success)
 		{
 			t_message_handler = [[MCWKWebViewScriptMessageHandler alloc] initWithInstance:this];
 			t_success = t_message_handler != nil;
+		}
+		
+		com_livecode_libbrowser_MCWKWebViewNavigationDelegate *t_delegate;
+		t_delegate = nil;
+		if (t_success)
+		{
+			t_delegate = [[com_livecode_libbrowser_MCWKWebViewNavigationDelegate alloc] initWithInstance:this];
+			t_success = t_delegate != nil;
 		}
 		
 		WKUserContentController *t_content_controller;
@@ -737,14 +1048,6 @@ bool MCWKWebViewBrowser::Init(void)
 			t_success = t_config != nil;
 		}
 
-		com_livecode_libbrowser_MCWKWebViewNavigationDelegate *t_delegate;
-		t_delegate = nil;
-		if (t_success)
-		{
-			t_delegate = [[com_livecode_libbrowser_MCWKWebViewNavigationDelegate alloc] initWithInstance:this];
-			t_success = t_delegate != nil;
-		}
-		
 		if (t_success)
 		{
 			[t_content_controller addScriptMessageHandler:t_message_handler name:@"liveCode"];
@@ -762,25 +1065,104 @@ bool MCWKWebViewBrowser::Init(void)
 		if (t_success)
 		{
 			[t_view setNavigationDelegate: t_delegate];
-			[t_view setHidden: YES];
+			[t_view setHidden: NO];
+
+			[t_container_view setAutoresizesSubviews:YES];
+			[t_view setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
+			[t_container_view addSubview:t_view];
+			[t_container_view setHidden: YES];
+
 			m_view = t_view;
+			m_container_view = t_container_view;
 			m_delegate = t_delegate;
 			m_message_handler = t_message_handler;
+			m_content_controller = t_content_controller;
+			m_configuration = t_config;
 		}
 		else
 		{
-			if (t_delegate != nil)
-				[t_delegate release];
 		 	if (t_view != nil)
 				[t_view release];
+			if (t_container_view != nil)
+				[t_container_view release];
+			if (t_delegate != nil)
+				[t_delegate release];
 			if (t_message_handler != nil)
 				[t_message_handler release];
+			if (t_content_controller != nil)
+				[t_content_controller release];
+			if (t_config != nil)
+				[t_config release];
+		}
+	});
+	
+	return t_success;
+}
+
+bool MCWKWebViewBrowser::Reconfigure()
+{
+	__block bool t_success;
+	t_success = true;
+	
+	if (m_view == nil || m_container_view == nil)
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		/* Save webview properties */
+		bool t_vertical_scrollbar_enabled;
+		bool t_horizontal_scrollbar_enabled;
+		bool t_scroll_enabled;
+		bool t_scroll_can_bounce;
+		bool t_allow_user_interaction;
+		t_vertical_scrollbar_enabled = m_view.scrollView.showsVerticalScrollIndicator;
+		t_horizontal_scrollbar_enabled = m_view.scrollView.showsHorizontalScrollIndicator;
+		t_scroll_enabled = m_view.scrollView.scrollEnabled;
+		t_scroll_can_bounce = m_view.scrollView.bounces;
+		t_allow_user_interaction = m_view.userInteractionEnabled;
+		
+		NSString *t_useragent;
+		t_useragent = m_view.customUserAgent;
+		
+		WKWebView *t_view;
+		t_view = nil;
+		if (t_success)
+		{
+			t_view = [[WKWebView alloc] initWithFrame:m_container_view.bounds configuration:m_configuration];
+			t_success = t_view != nil;
 		}
 		
-		if (t_content_controller != nil)
-			[t_content_controller release];
-		if (t_config != nil)
-			[t_config release];
+		if (t_success)
+		{
+			// release current webview
+			[m_view removeFromSuperview];
+			[m_view release];
+			m_view = nil;
+			
+			[t_view setNavigationDelegate: m_delegate];
+			[t_view setHidden: NO];
+
+			[m_container_view addSubview:t_view];
+			
+			m_view = t_view;
+			
+			m_view.customUserAgent = t_useragent;
+			
+			m_view.scrollView.showsVerticalScrollIndicator = t_vertical_scrollbar_enabled;
+			m_view.scrollView.showsHorizontalScrollIndicator = t_horizontal_scrollbar_enabled;
+			m_view.scrollView.scrollEnabled = t_scroll_enabled;
+			m_view.scrollView.bounces = t_scroll_can_bounce;
+			m_view.userInteractionEnabled = t_allow_user_interaction;
+			
+			if (!MCCStringIsEmpty(m_htmltext))
+				/* UNCHECKED */ SetHTMLText(m_htmltext);
+			else if (!MCCStringIsEmpty(m_url))
+				GoToURL(m_url);
+		}
+		else
+		{
+		 	if (t_view != nil)
+				[t_view release];
+		}
 	});
 	
 	return t_success;

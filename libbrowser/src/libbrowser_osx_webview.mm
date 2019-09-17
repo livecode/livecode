@@ -757,6 +757,28 @@ bool MCWebViewBrowser::GetStringProperty(MCBrowserProperty p_property, char *&r_
 	return true;
 }
 
+bool MCWebViewBrowser::SetIntegerProperty(MCBrowserProperty p_property, int32_t p_value)
+{
+	switch (p_property)
+	{
+		default:
+			break;
+	}
+	
+	return true;
+}
+
+bool MCWebViewBrowser::GetIntegerProperty(MCBrowserProperty p_property, int32_t &r_value)
+{
+	switch (p_property)
+	{
+		default:
+			break;
+	}
+	
+	return true;
+}
+
 bool MCWebViewBrowser::GetRect(MCBrowserRect &r_rect)
 {
 	WebView *t_view;

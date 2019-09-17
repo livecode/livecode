@@ -530,6 +530,24 @@ bool MCBrowserSetStringProperty(MCBrowserRef p_browser, MCBrowserProperty p_prop
 }
 
 MC_BROWSER_DLLEXPORT_DEF
+bool MCBrowserGetIntegerProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, int32_t &r_value)
+{
+	if (p_browser == nil)
+		return false;
+	
+	return p_browser->GetIntegerProperty(p_property, r_value);
+}
+
+MC_BROWSER_DLLEXPORT_DEF
+bool MCBrowserSetIntegerProperty(MCBrowserRef p_browser, MCBrowserProperty p_property, int32_t p_value)
+{
+	if (p_browser == nil)
+		return false;
+	
+	return p_browser->SetIntegerProperty(p_property, p_value);
+}
+
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserGoBack(MCBrowserRef p_browser)
 {
 	if (p_browser == nil)
