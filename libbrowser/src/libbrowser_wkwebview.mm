@@ -312,7 +312,7 @@ bool MCWKWebViewBrowser::GetHTMLText(char *&r_htmltext)
 	return EvaluateJavaScript("document.documentElement.outerHTML", r_htmltext);
 }
 
-bool MCWKWebViewBrowser::SetHTMLText(const char *p_htmltext)
+bool MCWKWebViewBrowser::LoadHTMLText(const char *p_htmltext, const char *p_baseurl)
 {
 	WKWebView *t_view;
 	if (!GetWebView(t_view))
@@ -320,13 +320,18 @@ bool MCWKWebViewBrowser::SetHTMLText(const char *p_htmltext)
 	
 	MCBrowserRunBlockOnMainFiber(^{
 		[m_delegate setPendingRequest: true];
-		[t_view loadHTMLString: [NSString stringWithUTF8String: p_htmltext] baseURL: [NSURL URLWithString: [NSString stringWithUTF8String: LIBBROWSER_DUMMY_URL]]];
+		[t_view loadHTMLString: [NSString stringWithUTF8String: p_htmltext] baseURL: [NSURL URLWithString: [NSString stringWithUTF8String: p_baseurl]]];
 	});
 	
 	/* UNCHECKED */ MCBrowserCStringAssignCopy(m_htmltext, p_htmltext);
 	/* UNCHECKED */ MCBrowserCStringAssignCopy(m_url, p_baseurl);
 
 	return true;
+}
+
+bool MCWKWebViewBrowser::SetHTMLText(const char *p_htmltext)
+{
+	return LoadHTMLText(p_htmltext, LIBBROWSER_DUMMY_URL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -879,6 +884,32 @@ bool MCWKWebViewBrowser::GoToURL(const char *p_url)
 	return true;
 }
 
+bool MCWKWebViewBrowser::StopLoading()
+{
+	WKWebView *t_view;
+	if (!GetWebView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		[t_view stopLoading];
+	});
+	
+	return true;
+}
+
+bool MCWKWebViewBrowser::Reload()
+{
+	WKWebView *t_view;
+	if (!GetWebView(t_view))
+		return false;
+	
+	MCBrowserRunBlockOnMainFiber(^{
+		[t_view reload];
+	});
+	
+	return true;
+}
+
 bool MCWKWebViewBrowser::GoForward()
 {
 	WKWebView *t_view;
@@ -1154,7 +1185,7 @@ bool MCWKWebViewBrowser::Reconfigure()
 			m_view.userInteractionEnabled = t_allow_user_interaction;
 			
 			if (!MCCStringIsEmpty(m_htmltext))
-				/* UNCHECKED */ SetHTMLText(m_htmltext);
+				/* UNCHECKED */ LoadHTMLText(m_htmltext, m_url);
 			else if (!MCCStringIsEmpty(m_url))
 				GoToURL(m_url);
 		}

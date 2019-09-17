@@ -730,7 +730,25 @@ public:
 	
 	virtual bool GoToURL(const char *p_url)
 	{
-		MCAndroidObjectRemoteCall(m_view, "setUrl", "vs", nil, p_url);
+		MCAndroidObjectRemoteCall(m_view, "setUrl", "vt", nil, p_url);
+		return true;
+	}
+	
+	virtual bool LoadHTMLText(const char *p_htmltext, const char *p_base_url)
+	{
+		MCAndroidObjectRemoteCall(m_view, "loadHtml", "vtt", nil, p_base_url, p_htmltext);
+		return true;
+	}
+
+	virtual bool StopLoading(void)
+	{
+		MCAndroidObjectRemoteCall(m_view, "stopLoading", "v", nil);
+		return true;
+	}
+	
+	virtual bool Reload(void)
+	{
+		MCAndroidObjectRemoteCall(m_view, "reload", "v", nil);
 		return true;
 	}
 	
@@ -739,7 +757,7 @@ public:
 		if (m_js_tag != nil)
 			return false;
 			
-		MCAndroidObjectRemoteCall(m_view, "executeJavaScript", "ss", &m_js_tag, p_script);
+		MCAndroidObjectRemoteCall(m_view, "executeJavaScript", "tt", &m_js_tag, p_script);
 		
 		// wait for result, timeout after 30 seconds    
 		double t_current_time = MCBrowserTimeInSeconds();
@@ -809,7 +827,7 @@ private:
 		char *t_url;
 		t_url = nil;
 		
-		MCAndroidObjectRemoteCall(m_view, "getUrl", "s", &t_url);
+		MCAndroidObjectRemoteCall(m_view, "getUrl", "t", &t_url);
 		if (t_url == nil)
 			return MCCStringClone("", r_utf8_string);
 			
@@ -824,15 +842,14 @@ private:
 	
 	bool SetHTMLText(const char *p_utf8_string)
 	{
-		MCAndroidObjectRemoteCall(m_view, "loadHtml", "vst", nil, LIBBROWSER_DUMMY_URL, p_utf8_string);
-		return true;
+		return LoadHTMLText(p_utf8_string, LIBBROWSER_DUMMY_URL);
 	}
 	
 	bool GetUserAgent(char *&r_useragent)
 	{
 		char *t_useragent;
 		t_useragent = nil;
-		MCAndroidObjectRemoteCall(m_view, "getUserAgent", "s", &t_useragent);
+		MCAndroidObjectRemoteCall(m_view, "getUserAgent", "t", &t_useragent);
 
 		if (t_useragent == nil)
 			return false;
@@ -843,7 +860,7 @@ private:
 	
 	bool SetUserAgent(const char *p_useragent)
 	{
-		MCAndroidObjectRemoteCall(m_view, "setUserAgent", "vs", nil, p_useragent);
+		MCAndroidObjectRemoteCall(m_view, "setUserAgent", "vt", nil, p_useragent);
 		return true;
 	}
 	
@@ -851,7 +868,7 @@ private:
 	{
 		char *t_handlers;
 		t_handlers = nil;
-		MCAndroidObjectRemoteCall(m_view, "getJavaScriptHandlers", "s", &t_handlers);
+		MCAndroidObjectRemoteCall(m_view, "getJavaScriptHandlers", "t", &t_handlers);
 		
 		if (t_handlers == nil)
 			return false;
@@ -862,7 +879,7 @@ private:
 	
 	bool SetJavaScriptHandlers(const char *p_js_handlers)
 	{
-		MCAndroidObjectRemoteCall(m_view, "setJavaScriptHandlers", "vs", nil, p_js_handlers);
+		MCAndroidObjectRemoteCall(m_view, "setJavaScriptHandlers", "vt", nil, p_js_handlers);
 		return true;
 	}
 

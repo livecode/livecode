@@ -1572,20 +1572,29 @@ char *MCCefBrowserBase::GetSource(void)
 	return t_src_str;
 }
 
-void MCCefBrowserBase::SetSource(const char *p_source)
+bool MCCefBrowserBase::LoadHTMLText(const char *p_htmltext, const char *p_base_url)
 {
 	// IM-2014-06-25: [[ Bug 12701 ]] CEF will crash if given an empty source string,
 	// so replace here with the source of an empty page :)
-	if (p_source == nil || MCCStringLength(p_source) == 0)
-		p_source = "<html><head></head><body></body></html>";
+	if (p_htmltext == nil || MCCStringLength(p_htmltext) == 0)
+		p_htmltext = "<html><head></head><body></body></html>";
 	
-	CefString t_source;
-	/* UNCHECKED */ MCCefStringFromUtf8String(p_source, t_source);
+	CefString t_htmltext;
+	if (!MCCefStringFromUtf8String(p_htmltext, t_htmltext))
+		return false;
 	
-	// LoadString requires a valid url
-	CefString t_url(CEF_DUMMY_URL);
+	CefString t_base_url;
+	if (!MCCefStringFromUtf8String(p_base_url, t_base_url))
+		return false;
 	
-	m_browser->GetMainFrame()->LoadString(t_source, t_url);
+	m_browser->GetMainFrame()->LoadString(t_htmltext, t_base_url);
+	
+	return true;
+}
+
+void MCCefBrowserBase::SetSource(const char *p_source)
+{
+	/* UNCHECKED */ LoadHTMLText(p_source, CEF_DUMMY_URL);
 }
 
 #define MCCEF_VERTICAL_OVERFLOW_PROPERTY "document.body.style.overflowY"
@@ -1781,6 +1790,18 @@ bool MCCefBrowserBase::GoToURL(const char *p_url)
 		return false;
 	
 	t_frame->LoadURL(t_url);
+	return true;
+}
+
+bool MCCefBrowserBase::StopLoading(void)
+{
+	m_browser->StopLoad();
+	return true;
+}
+
+bool MCCefBrowserBase::Reload(void)
+{
+	m_browser->Reload();
 	return true;
 }
 

@@ -47,6 +47,9 @@ public:
 	virtual bool GoBack();
 	virtual bool GoForward();
 	virtual bool GoToURL(const char *p_url);
+	virtual bool LoadHTMLText(const char *p_htmltext, const char *p_base_url);
+	virtual bool StopLoading();
+	virtual bool Reload();
 	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result);
 
 	void SyncJavaScriptHandlers();

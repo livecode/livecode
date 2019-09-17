@@ -48,6 +48,9 @@ public:
 	virtual bool GoBack();
 	virtual bool GoForward();
 	virtual bool GoToURL(const char *p_url);
+	virtual bool LoadHTMLText(const char *p_htmltext, const char *p_base_url);
+	virtual bool StopLoading();
+	virtual bool Reload();
 	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result);
 	
 	void SyncJavaScriptHandlers();
@@ -75,10 +78,7 @@ protected:
 	bool SetAllowUserInteraction(bool p_value);
 
 	// Browser-specific actions
-	bool ExecReload();
-	bool ExecStop();
 	bool ExecExecute(const char * p_script, char *&r_result);
-	bool ExecLoad(const char *p_url, const char *p_html);
 	
 	//UIScrollView *GetScrollView(void);
 	

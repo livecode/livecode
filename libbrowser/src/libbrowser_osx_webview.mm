@@ -474,7 +474,7 @@ bool MCWebViewBrowser::GetHTMLText(char *&r_htmltext)
 
 bool MCWebViewBrowser::SetHTMLText(const char *p_htmltext)
 {
-	return ExecLoad(LIBBROWSER_DUMMY_URL, p_htmltext);
+	return LoadHTMLText(p_htmltext, LIBBROWSER_DUMMY_URL);
 }
 
 bool MCWebViewBrowser::GetUserAgent(char*& r_user_agent)
@@ -812,8 +812,7 @@ bool MCWebViewBrowser::SetRect(const MCBrowserRect &p_rect)
 	return true;
 }
 
-// Browser-specific actions
-bool MCWebViewBrowser::ExecStop()
+bool MCWebViewBrowser::StopLoading()
 {
 	WebView *t_view;
 	if (!GetView(t_view))
@@ -852,7 +851,7 @@ bool MCWebViewBrowser::GoBack()
 	return true;
 }
 
-bool MCWebViewBrowser::ExecReload()
+bool MCWebViewBrowser::Reload()
 {
 	WebView *t_view;
 	if (!GetView(t_view))
@@ -882,7 +881,7 @@ bool MCWebViewBrowser::EvaluateJavaScript(const char *p_script, char *&r_result)
 	return MCCStringClone([t_result cStringUsingEncoding:NSUTF8StringEncoding], r_result);
 }
 
-bool MCWebViewBrowser::ExecLoad(const char *p_url, const char *p_html)
+bool MCWebViewBrowser::LoadHTMLText(const char *p_html, const char *p_url)
 {
 	WebView *t_view;
 	if (!GetView(t_view))

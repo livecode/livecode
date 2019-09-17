@@ -185,6 +185,9 @@ public:
 	virtual bool GoBack() = 0;
 	virtual bool GoForward() = 0;
 	virtual bool GoToURL(const char *p_url) = 0;
+	virtual bool LoadHTMLText(const char *p_htmltext, const char *p_base_url) = 0;
+	virtual bool StopLoading() = 0;
+	virtual bool Reload() = 0;
 	virtual bool EvaluateJavaScript(const char *p_script, char *&r_result) = 0;
 };
 
@@ -357,6 +360,9 @@ MC_BROWSER_DLLEXPORT bool MCBrowserSetIntegerProperty(MCBrowserRef p_browser, MC
 MC_BROWSER_DLLEXPORT bool MCBrowserGoBack(MCBrowserRef p_browser);
 MC_BROWSER_DLLEXPORT bool MCBrowserGoForward(MCBrowserRef p_browser);
 MC_BROWSER_DLLEXPORT bool MCBrowserGoToURL(MCBrowserRef p_browser, const char *p_url);
+MC_BROWSER_DLLEXPORT bool MCBrowserLoadHTMLText(MCBrowserRef p_browser, const char *p_htmltext, const char *p_baseurl);
+MC_BROWSER_DLLEXPORT bool MCBrowserStopLoading(MCBrowserRef p_browser);
+MC_BROWSER_DLLEXPORT bool MCBrowserReload(MCBrowserRef p_browser);
 MC_BROWSER_DLLEXPORT bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, char *&r_result);
 
 enum MCBrowserNavigationEventType

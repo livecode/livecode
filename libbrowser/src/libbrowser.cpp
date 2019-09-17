@@ -575,6 +575,33 @@ bool MCBrowserGoToURL(MCBrowserRef p_browser, const char *p_url)
 }
 
 MC_BROWSER_DLLEXPORT_DEF
+bool MCBrowserLoadHTMLText(MCBrowserRef p_browser, const char *p_htmltext, const char *p_baseurl)
+{
+	if (p_browser == nil)
+		return false;
+	
+	return p_browser->LoadHTMLText(p_htmltext, p_baseurl);
+}
+
+MC_BROWSER_DLLEXPORT_DEF
+bool MCBrowserStopLoading(MCBrowserRef p_browser)
+{
+	if (p_browser == nil)
+		return false;
+	
+	return p_browser->StopLoading();
+}
+
+MC_BROWSER_DLLEXPORT_DEF
+bool MCBrowserReload(MCBrowserRef p_browser)
+{
+	if (p_browser == nil)
+		return false;
+	
+	return p_browser->Reload();
+}
+
+MC_BROWSER_DLLEXPORT_DEF
 bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, char *&r_result)
 {
 	if (p_browser == nil)
