@@ -552,7 +552,7 @@ private unsafe handler InitBrowserView()
 	// tell native layer that we can't render a snapshot of the browser view.
 	MCWidgetSetMyNativeLayerCanRenderToContext(false)
 
-	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
+	MCBrowserSetNavigationHandler(mBrowser, OnNavigationCallback, nothing)
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
 	MCBrowserSetProgressHandler(mBrowser, OnProgressCallback, nothing)
 
@@ -564,7 +564,7 @@ private unsafe handler FinalizeBrowserView()
 		set my native layer to nothing
 
         if mBrowser is not nothing then
-            MCBrowserSetRequestHandler(mBrowser, nothing, nothing)
+            MCBrowserSetNavigationHandler(mBrowser, nothing, nothing)
             MCBrowserSetJavaScriptHandler(mBrowser, nothing, nothing)
             MCBrowserSetProgressHandler(mBrowser, nothing, nothing)
 
@@ -618,15 +618,15 @@ private handler Capitalize(in pString as String) returns String
 end handler
 
 /* WORKAROUND - Need to retain foreign types in handler as conversion to those in the foreign handler type signature not yet implemented */
-//private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as Boolean, in pUrl as String, in pError as optional String) returns nothing
-private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserRequestType, in pState as MCBrowserRequestState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
+//private handler OnNavigationCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserNavigationEventType, in pState as MCBrowserNavigationState, in pFrame as Boolean, in pUrl as String, in pError as optional String) returns nothing
+private handler OnNavigationCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserNavigationEventType, in pState as MCBrowserNavigationState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
 	variable tType as String
-	put element (pType + 1) of kMCBrowserRequestTypeMap into tType
+	put element (pType + 1) of kMCBrowserNavigationEventTypeMap into tType
 
 	variable tState as String
-	put element (pState + 1) of kMCBrowserRequestStateMap into tState
+	put element (pState + 1) of kMCBrowserNavigationStateMap into tState
 
-	if pState is kMCBrowserRequestStateFailed then
+	if pState is kMCBrowserNavigationStateFailed then
 		log "Failed: %@" with [pError]
 	end if
 
@@ -643,13 +643,13 @@ private handler OnBrowserRequestCallback(in pContext as optional Pointer, in pBr
 	end if
 
 	variable tArgs as List
-	if pState is kMCBrowserRequestStateFailed then
+	if pState is kMCBrowserNavigationStateFailed then
 		put [pUrl, pError] into tArgs
 	else
 		put [pUrl] into tArgs
 	end if
 
-	if pType is kMCBrowserRequestTypeNavigate and pState is kMCBrowserRequestStateBegin and not pFrame then
+	if pType is kMCBrowserNavigationEventTypeNavigate and pState is kMCBrowserNavigationStateBegin and not pFrame then
 		updateUrlProperty(pUrl)
 	end if
 
