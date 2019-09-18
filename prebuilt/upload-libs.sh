@@ -9,7 +9,7 @@ PACKAGE_DIR="packaged"
 echo "Uploading packages"
 
 # Upload settings
-UPLOAD_SERVER="meg.on-rev.com"
+UPLOAD_SERVER="molly.livecode.com"
 UPLOAD_FOLDER="prebuilts/"
 UPLOAD_MAX_RETRIES=10
 

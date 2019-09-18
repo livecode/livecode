@@ -34,18 +34,14 @@ omit the zone. If the other program is running on the same computer, you
 can omit both the zone and the computer name.
 
 It:
-If the program supports this <Apple Event>, it evaluates the expression
-and sends the result back to LiveCode, which places it in the <it>
-<variable>. The <request> <command> sends aneval <Apple Event> to the
+The <request> <command> sends an eval <Apple Event> to the
 <programAddress>. If the program supports this <Apple Event>, it
 evaluates the expression and sends the result back to LiveCode, which
 places it in the <it> <variable>.
 
 The result:
-If the program supports this <Apple event>, it evaluates the expression
-and sends the result back to LiveCode, which places it in the <it>
-<variable>. If the program sends back an error message, it is placed in
-the result <function>.
+If the program sends back an error message, it is placed in the result 
+<function>.
 
 Description:
 Use the <request> <command> to obtain data from another application via

@@ -1,0 +1,1 @@
+# Fix graphical artefacts after removing focus from a group when using acceleratedRendering on mobile

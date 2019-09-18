@@ -24,7 +24,7 @@ Use the <segment> keyword to refer to one or more <words> in a container.
 
 A <segment> is <delimit|delimited> by one or more <space|spaces>, <tab|tabs>, 
 or <return(constant)|returns>, or enclosed by <double quote|double quotes>. 
-A single <segment> can contain multiple <char|characters> and multiple <item|items>, 
+A single <segment> can contain multiple <characters> and multiple <item|items>, 
 but not multiple <line|lines>.
 
 >*Note:*  <segment|Segments> are <delimit|delimited> by <double quote|double quotes> ("), 
@@ -33,7 +33,7 @@ but not multiple <line|lines>.
 
 References: quoted (glossary), chunk expression (glossary), double quote (glossary), 
 delimit (glossary), string (keyword), item (keyword), character (keyword),
-chars (keyword), lines (keyword), segments (keyword),
+characters (keyword), lines (keyword), segments (keyword),
 sentence (keyword), trueWord (keyword), line (keyword), words (keyword),
 token (keyword), paragraph (keyword), space (constant), tab (constant),
 return (constant)

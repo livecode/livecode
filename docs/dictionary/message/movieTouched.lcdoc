@@ -27,13 +27,12 @@ The <movieTouched> message is sent to the object whose script started
 the movie playing.
 
 The principal purpose of the <movieTouched> message is to allow the
-<play stop> command to be used to stop the movie when the screen is
-touched. 
+<play|play stop> command to be used to stop the movie when the screen is touched. 
 
 >*Note:* The <movieTouched> message is not sent if the video is played
 > with the <showController> property set to true.
 
-References: play stop (command), play video (command),
+References: play (command), play video (command),
 showController (property)
 
 Tags: ui

@@ -67,8 +67,6 @@ Android is "date"
 
 - "datetime" (default on iOS) (iOS only): display a native picker to
   choose the date and time
-
-
 -   "date" (default on Android): display a native picker to choose the
     date 
 -   "time": display a native picker to choose the time

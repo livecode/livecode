@@ -41,7 +41,7 @@ The <dragData> is an <array> with one or more of the following
   current application is acting as source and target for the current 
   drag-drop operation). The private dragData array element holds binary
   (single byte) data only. To place Unicode text in dragData["private"]
-  use <textEncoded> and <textDecode> as UTF-8. To place array data use
+  use <textEncode> and <textDecode> as UTF-8. To place array data use
   <arrayEncode> and <arrayDecode>
 
 Description:
@@ -87,7 +87,9 @@ sets the dragData["text"].
 >*Note:*  From 7.0, the string in <dragData> ["text"] can also contain
 > the Unicode characters
 
-References: property (glossary), handler (glossary), array (glossary),
+References: arrayDecode (function), arrayEncode (function),
+textDecode (function), textEncode (function),
+property (glossary), handler (glossary), array (glossary),
 list field (glossary), element (glossary), element (keyword),
 dragDrop (message), dragEnter (message), dragMove (message),
 mouseDown (message), dragLeave (message), message (glossary), dragStart (message),

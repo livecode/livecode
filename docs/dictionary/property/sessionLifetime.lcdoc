@@ -33,7 +33,7 @@ for which session data is retained. The <sessionLifetime> specifies how
 long a session will remain active, accessing the session data resets the
 countdown to expiry to the <sessionLifetime>.
 
-For example if the <sessionLifetime> is 360 seconds (10 minutes) and 10
+For example if the <sessionLifetime> is 360 seconds (6 minutes) and 6
 minutes pass without the session being used the session will expire. A
 session can last indefinitely as long as the session data is accessed at
 regular intervals no further apart than the <sessionLifetime>.

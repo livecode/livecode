@@ -51,5 +51,16 @@ Description:
 Sent when updates on ongoing url requests are communicated. This message
 is periodically sent to the object whose script initiated the operation.
 
-References: put (command), post (command), load (command)
+>*Warning:* The <urlProgress> <message> is not part of the libUrl or tsNet 
+> libraries. It is instead implemented in the mobile engine, whose
+> network-related functionality can not be used together with those
+> libraries in a standalone. Adding either of the "Internet" or "tsNet"
+> Inclusions will result in them overriding/replacing any network-related 
+> functionality that is implemented in the mobile engine, including the 
+> <urlProgress> <message>.
+> To use the <urlProgress> <message> in a mobile standalone, ensure that 
+> the "Internet" and "tsNet" Inclusions are not added in the standalone
+> settings.
+
+References: put (command), post (command), load (command), message (glossary)
 
