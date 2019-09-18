@@ -956,6 +956,12 @@ Boolean MCGroup::doubleup(uint2 which)
 	return False;
 }
 
+uint2 MCGroup::gettransient(void) const
+{
+	// OVERRIDE - groups do not have a transient focus border
+	return 0;
+}
+
 void MCGroup::applyrect(const MCRectangle &nrect)
 {
 	bool t_size_changed;

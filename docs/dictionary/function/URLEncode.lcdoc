@@ -62,7 +62,13 @@ appears in the formString, it is converted to "%7E".
         return pString
     end urlEncodeRFC
 
+>*Note:* Non-ASCII characters, such as Unicode, that appear in the string
+> to be encoded must first be encoded as UTF-8 (as per standard 
+> convention), requiring the use of the <textEncode> <function(glossary)>.
+> The code example given above can perform this task.
+
 References: post (command), function (control structure),
+textEncode (function), function (glossary),
 hexadecimal (glossary), encode (glossary), ASCII (glossary), 
 return (glossary), server (glossary), URL (keyword), 
 character (keyword), http (keyword), string (keyword)

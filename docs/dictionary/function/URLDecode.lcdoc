@@ -41,13 +41,25 @@ the next two characters as <hexadecimal> digits. (If one of the
 number is converted to its <character> equivalent, using the 
 <character set> currently in use.
 
+>*Note:* Non-ASCII characters, such as Unicode, that appear in the URL 
+> string to be decoded will have been encoded as UTF-8 (as per standard 
+> convention), requiring the use of the <textDecode> <function(glossary)> 
+> after urlDecode. For example, the following code:
+
+    local tEncodedText
+    put "%D1%81%D0%BA%D0%BE%D1%80%D0%BE%D1%81%D1%88%D0%B8%D0" & \
+          "%B2%D0%B0%D1%82%D0%B5%D0%BB%D1%8C" into tCodedText
+    put textDecode(urlDecode(tEncodedText),"UTF-8")
+
+> produces the word "скоросшиватель".
+
 References: post (command), function (control structure),
 decompress (function), macToISO (function), arrayDecode (function),
-charToNum (function), baseConvert (function), decode (glossary),
-return (glossary), sign (glossary), encode (glossary),
+charToNum (function), baseConvert (function), textDecode (function),
+decode (glossary), return (glossary), sign (glossary), encode (glossary),
 character set (glossary), hexadecimal (glossary), server (glossary),
-URL (keyword), characters (keyword), character (keyword), http (keyword),
-httpHeaders (property)
+function (glossary), URL (keyword), characters (keyword), 
+character (keyword), http (keyword), httpHeaders (property)
 
 Tags: networking
 

@@ -64,7 +64,7 @@ References: hide (command), answer effect (command),
 show groups (command), show cards (command), show taskbar (command),
 visual effect (command), object (glossary), command (glossary), 
 property (glossary), QuickTime (glossary), black (keyword), 
-dontUserQT (property), dontUseQTEffects(property), showPict (property), 
+dontUseQT (property), dontUseQTEffects(property), showPict (property), 
 toolTip (property), imageSource (property), showInvisibles (property), 
 visible (property)
 

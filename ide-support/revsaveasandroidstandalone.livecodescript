@@ -1145,7 +1145,7 @@ private command generateResourceClasses pBuildFolder, pResBuildFolder, \
    repeat with x = 1 to the number of lines in xSettings["aarFiles"]
       put pBuildFolder & "/" & x & "/AndroidManifest.xml" into tManifest
       executeShellCommand pathToAapt(), "package", "-f", "-M", tManifest, \
-            "-I", pathToRootClasses(), "-S", pBuildFolder & slash & x & "/res/", "-J", \
+            "-I", pathToRootClasses(), "-S", pBuildFolder & slash & x & "/res", "-J", \
             tOutputFolder & "/", "-m"
       put the result into tAaptResult
       processAaptResult tAaptResult

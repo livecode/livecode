@@ -50,25 +50,25 @@ positive <integer>. If the function encounters an error while parsing
 the data, it returns an error message beginning with "xmlrpcerr".
 
 Description:
-Use the <revXMLRPC_CreateRequest> <function> to create an <XML-RPC
-document> that you can use with other <XML-RPC library>
+Use the <revXMLRPC_CreateRequest> <function> to create an 
+<XML-RPC document> that you can use with other <XML-RPC library>
 <command|commands> and <function|functions>. <XML-RPC> is a
 remote procedure call (RPC) protocol which uses XML to encode its
 calls via a <HTTP> transport mechanism.
 
-If the <host> is empty, the <revXMLRPC_CreateRequest> <function>
+If the <RPChost> is empty, the <revXMLRPC_CreateRequest> <function>
 defaults the request host to be the computer running the application,
 also known as "localhost"
 
-If the <port> is empty, the <revXMLRPC_CreateRequest> <function>
+If the <RPCport> is empty, the <revXMLRPC_CreateRequest> <function>
 defaults the request port to 80, which is the default port for <HTTP>
 connections.
 
-If the <path> is empty, the <revXMLRPC_CreateRequest> <function>
+If the <filePath> is empty, the <revXMLRPC_CreateRequest> <function>
 defaults the request path to "RPC2", which is the standard path for
 <XML-RPC> server resources.
 
-If the <protocol> is empty, the <revXMLRPC_CreateRequest> <function>
+If the <connProtocol> is empty, the <revXMLRPC_CreateRequest> <function>
 defaults the request protocol to <HTTP> connections.
 
 If the <revXMLRPC_CreateRequest> <function> encounters an error, it

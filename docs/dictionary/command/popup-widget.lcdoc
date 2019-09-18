@@ -34,18 +34,28 @@ end mouseDown
 
 Parameters:
 kind: The unique identifier of the widget to use for the popup.
-location: A point or expression that evaluates to a point. Two integers separated by a comma.
-properties:	An expression that evaluates to an array. For each key of the array, the popup widget will be initialized by setting that property to the value for that key.
+location: A point or expression that evaluates to a point. Two integers 
+separated by a comma.
+properties: An expression that evaluates to an array. For each key of the 
+array, the popup widget will be initialized by setting that property to 
+the value for that key.
 
-The result: If the user dismisses the popup, the it variable is set to empty, and the result function returns "Cancel".
+The result: If the user dismisses the popup, the it variable is set to 
+empty, and the result function returns "Cancel".
 
-It: The <popup widget> command places the widget return value in the it variable.
+It: The <popup widget> command places the widget return value in the it 
+variable.
 
 Description:
-Use to display a widget within a popup window, for example as a tooltip or picker dialog.
+Use to display a widget within a popup window, for example as a tooltip 
+or picker dialog.
 
-The popup appears with its top left corner at the <location>. If no <location> is specified, the popup's top left corner is at the <mouse location>. While the popup widget is displayed, the handler pauses.
+The popup appears with its top left corner at the <location>. If no 
+<location> is specified, the popup's top left corner is at the 
+<mouseLoc|mouse location>. While the popup widget is displayed, the 
+handler pauses.
 
-References: mouseDown (message), mouseDown message (message), mouseUp message (message), popup (keyword), clickLoc (function), mouse location (function), result (function), it (keyword)
+References: mouseDown (message), mouseUp (message), popup (keyword), 
+clickLoc (function), mouseLoc (function), result (function), it (keyword)
 
 Tags: widget
