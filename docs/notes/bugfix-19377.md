@@ -1,1 +1,1 @@
-# Changed an example in the version entry to not operate on alphabetical comparison.
+# Updated example in the version dictionary entry
