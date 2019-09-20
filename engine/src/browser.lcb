@@ -509,20 +509,10 @@ end handler
 
 ----------
 
+public foreign handler MCEngineBrowserLibrarySetupRunloop() returns CBool binds to "<builtin>"
+public foreign handler MCEngineBrowserLibraryTeardownRunloop() returns nothing binds to "<builtin>"
+
 private variable mInitialized as optional Boolean
-
-private variable mRunloopAction as MCRunloopActionRef
-private variable mWaitHandler
-
-/* TODO - need to provide a wrapper handler here as we can't (yet) get a pointer to a foreign native handler */
-private unsafe handler doWait() returns CBool
-	MCEngineRunloopWait()
-	return true
-end handler
-
-private unsafe handler doBreakWait() returns nothing
-	MCEngineRunloopBreakWait()
-end handler
 
 public handler libbrowserInit() returns nothing
 	if mInitialized is not nothing then
@@ -530,18 +520,7 @@ public handler libbrowserInit() returns nothing
 	end if
 
 	unsafe
-		if not MCBrowserLibraryInitialize() then
-			return
-		end if
-
-		MCBrowserLibrarySetWaitFunction(doWait)
-		MCBrowserLibrarySetBreakWaitFunction(doBreakWait)
-
-		variable tCallback as MCRunloopActionCallback
-		variable tContext as optional Pointer
-		if MCBrowserLibraryGetRunloopCallback(tCallback, tContext) then
-			MCEngineAddRunloopAction(tCallback, tContext, mRunloopAction)
-		end if
+		MCEngineBrowserLibrarySetupRunloop()
 	end unsafe
 
 	put true into mInitialized
