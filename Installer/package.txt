@@ -822,7 +822,7 @@ component Runtime.iOS
 		file ios:iphoneos12.1/fontmap as "fontmap"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-13_0" place
 		executable ios:iphoneos13.0/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
-		executable ios:iphoneos/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
+		executable ios:iphoneos13.0/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
 		executable ios:iphoneos13.0/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.ios-extension
 		executable ios:iphoneos13.0/revzip.ios-extension as RevZip base ios:iphoneos9.2/revzip.ios-extension
 		executable ios:iphoneos13.0/revxml.ios-extension as RevXml base ios:iphoneos9.2/revxml.ios-extension
