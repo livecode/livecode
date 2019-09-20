@@ -36,7 +36,7 @@ Handle the <browserLoadRequested> message to perform an action when a
 URL has been requested.
 
 The <browserLoadRequested> message is sent to the object containing the
-script that created the UIWebView browser control after a url has been
+script that created the mobile browser control after a url has been
 requested and passed for loading.
 
 If <delayRequests(command)> has been set to false,
