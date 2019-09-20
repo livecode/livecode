@@ -26,7 +26,7 @@ The mechanism to be used used for moving the cursor in a field
 -   "visual": moves the cursor in visual order
 -   "logical": moves the cursor to the next character in logical
     (reading) order
--   "empty": moves the cursor using the default behavior on the current
+-   "default": moves the cursor using the default behavior on the current
     platform 
 
 
