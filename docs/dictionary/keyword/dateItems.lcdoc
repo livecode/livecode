@@ -40,6 +40,18 @@ The <dateItems> does not change depending on the user's settings, so you
 can use it (or the <seconds> format) to store a date and time in an 
 invariant form that won't change.
 
+>*Note:* A list in <dateItems> format can have values beyond the expected 
+range for any given item (e.g. a day of the month of less than 1 or greater 
+than the number of days in that month) without causing issues when converting 
+it again later, outputting a date adjusted for such an irregularity. For 
+example, the date 4 weeks from today can be determined by adding 28 to the
+third item (i.e. the day of the month) and then re-converting.
+
+    put the date into foo           -- 9/19/19, for example
+    convert foo to dateItems        -- 2019,9,19,0,0,0,5
+    add 28 to the item 3 of foo     -- 2019,9,47,0,0,0,5
+    convert foo to date             -- 10/17/19
+
 References: convert (command), date (function),  
 seconds (function), time (function), command (glossary), 
 keyword (glossary)
