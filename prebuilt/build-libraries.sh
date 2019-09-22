@@ -30,26 +30,11 @@ export CUSTOM_EMMAKE="${EMMAKE}"
 export CUSTOM_EMCONFIGURE="${EMCONFIGURE}"
 
 # Set which libs to build for the target platform
-case "${PLATFORM}" in
-	android)
-		PREBUILT_LIBS="openssl icu thirdparty externals"
-		;;
-	mac)
-		PREBUILT_LIBS="openssl icu thirdparty externals"
-		;;
-	ios)
-		PREBUILT_LIBS="openssl icu thirdparty externals"
-		;;
-	win32)
-		PREBUILT_LIBS="openssl curl icu cef thirdparty externals"
-		;;
-	linux)
-		PREBUILT_LIBS="openssl curl icu cef thirdparty externals"
-		;;
-	emscripten)
-		PREBUILT_LIBS="icu thirdparty"
-		;;
-esac
+if [ "${PLATFORM}" == "emscripten" ] ; then
+	PREBUILT_LIBS=""
+else
+	PREBUILT_LIBS="externals"
+fi
 
 # Build all of the libraries that the target platform depends on
 for t_lib in ${PREBUILT_LIBS} ; do

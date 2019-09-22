@@ -22,7 +22,7 @@ IF "%2"=="" (
 	SET ARCH=%2
 )
 
-SET PREBUILT_LIBS=OpenSSL Curl ICU CEF thirdparty externals
+SET PREBUILT_LIBS=externals
 
 ECHO Building Libs %PREBUILT_LIBS%
 

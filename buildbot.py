@@ -80,7 +80,7 @@ def get_buildtype():
     return os.environ.get('BUILDTYPE', 'Debug')
 
 def get_build_edition():
-    return os.environ.get('BUILD_EDITION', 'community')
+    return 'community' #os.environ.get('BUILD_EDITION', 'community')
 
 def check_target_triple():
     # Check that this branch can actually be built for the specified platform
