@@ -20,7 +20,6 @@ readVersion ICU
 readVersion Curl
 readVersion CEF
 readVersion CEFChromium
-
 readVersion Thirdparty
 
 # extract hash from start of submodule status
@@ -44,3 +43,7 @@ Thirdparty_LIBS_win32="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE $Thirdparty
 Thirdparty_LIBS_ios="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE libcairo"
 Thirdparty_LIBS_emscripten="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_FONTS"
 Thirdparty_LIBS_android="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE $Thirdparty_LIBS_FONTS libexpat libcairo"
+
+readVersion mergJSON
+readVersion mergMarkdown
+readVersion blur

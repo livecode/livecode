@@ -28,20 +28,25 @@ case "${ANDROID_ARCH}" in
 		ANDROID_TRIPLE=arm-linux-androideabi
 		if [ "${ANDROID_ARCH}" == "armv7" ] ; then
 			BUILD_ARCH=armv7a
+			ANDROID_ABI=armeabi-v7a
 		else
 			BUILD_ARCH=armv6
+			ANDROID_ABI=armeabi
 		fi
 		ANDROID_TARGET_FLAGS="-target ${ANDROID_TRIPLE} -march=${BUILD_ARCH} -mthumb"
 		;;
 	arm64)
+		ANDROID_ABI=arm64-v8a
 		ANDROID_TRIPLE=aarch64-linux-android
 		ANDROID_TARGET_FLAGS="-target ${ANDROID_TRIPLE}"
 		;;
 	x86)
+		ANDROID_ABI=x86
 		ANDROID_TRIPLE=i686-linux-android
 		ANDROID_TARGET_FLAGS="-target ${ANDROID_TRIPLE} -march=i686"
 		;;
 	x86_64)
+		ANDROID_ABI=x86_64
 		ANDROID_TRIPLE=x86_64-linux-android
 		ANDROID_TARGET_FLAGS="-target ${ANDROID_TRIPLE}"
 		;;
@@ -85,6 +90,7 @@ else
 	
 	# ICU needs to know the Android triple being targeted.
 	export ANDROID_TRIPLE
+	export ANDROID_ABI
 fi
 
 }

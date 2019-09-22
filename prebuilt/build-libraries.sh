@@ -32,19 +32,19 @@ export CUSTOM_EMCONFIGURE="${EMCONFIGURE}"
 # Set which libs to build for the target platform
 case "${PLATFORM}" in
 	android)
-		PREBUILT_LIBS="openssl icu thirdparty"
+		PREBUILT_LIBS="openssl icu thirdparty externals"
 		;;
 	mac)
-		PREBUILT_LIBS="openssl icu thirdparty"
+		PREBUILT_LIBS="openssl icu thirdparty externals"
 		;;
 	ios)
-		PREBUILT_LIBS="openssl icu thirdparty"
+		PREBUILT_LIBS="openssl icu thirdparty externals"
 		;;
 	win32)
-		PREBUILT_LIBS="openssl curl icu cef thirdparty"
+		PREBUILT_LIBS="openssl curl icu cef thirdparty externals"
 		;;
 	linux)
-		PREBUILT_LIBS="openssl curl icu cef thirdparty"
+		PREBUILT_LIBS="openssl curl icu cef thirdparty externals"
 		;;
 	emscripten)
 		PREBUILT_LIBS="icu thirdparty"

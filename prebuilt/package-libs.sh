@@ -27,6 +27,42 @@ function generateTarFileName {
 	eval ${LIBNAME}_TAR='"${TAR_FILE}"'
 }
 
+function packageExternal {
+	local EXTERNAL_NAME=$1
+	local LIBPATH=$2
+	local SUFFIX=$3
+	
+	generateTarFileName "${EXTERNAL_NAME}" "${SUFFIX}"
+
+	local EXTERNAL_TAR_VAR=${EXTERNAL_NAME}_TAR
+	local EXTERNAL_TAR=${!EXTERNAL_TAR_VAR}
+
+	if [ -f "${LIBPATH}/${EXTERNAL_NAME}/${EXTERNAL_NAME}-x64.so" ] ; then
+		tar -cf "${EXTERNAL_TAR}" "${LIBPATH}/${EXTERNAL_NAME}/${EXTERNAL_NAME}-x64.so"
+	elif [ -f "${LIBPATH}/${EXTERNAL_NAME}/${EXTERNAL_NAME}-x86.so" ] ; then
+		tar -cf "${EXTERNAL_TAR}" "${LIBPATH}/${EXTERNAL_NAME}/${EXTERNAL_NAME}-x86.so"
+	elif [ -d "${LIBPATH}/${EXTERNAL_NAME}/iOS" ] ; then
+		tar -cf "${EXTERNAL_TAR}" "${LIBPATH}/${EXTERNAL_NAME}/iOS"
+	elif [ -d "${LIBPATH}/${EXTERNAL_NAME}/Android" ] ; then
+		tar -cf "${EXTERNAL_TAR}" "${LIBPATH}/${EXTERNAL_NAME}/Android"
+	else
+		local MAC_FILES=
+		if [ -d "${LIBPATH}/${EXTERNAL_NAME}/${EXTERNAL_NAME}.bundle" ] ; then
+			MAC_FILES+="${LIBPATH}/${EXTERNAL_NAME}/${EXTERNAL_NAME}.bundle "
+		fi
+		if [ -f "${LIBPATH}/${EXTERNAL_NAME}/${EXTERNAL_NAME}.dylib" ] ; then
+			MAC_FILES+="${LIBPATH}/${EXTERNAL_NAME}/${EXTERNAL_NAME}.dylib "
+		fi
+		if [ ! -z "${MAC_FILES}" ] ; then
+			tar -cf "${EXTERNAL_TAR}" ${MAC_FILES}
+		fi
+	fi
+
+	if [ -f "${EXTERNAL_TAR}" ] ; then
+		bzip2 -zf --best "${EXTERNAL_TAR}"
+	fi
+}
+
 # Packager function
 function doPackage {
 	local PLATFORM=$1
@@ -145,6 +181,10 @@ function doPackage {
 	if [ ! -z "${Thirdparty_FILES}" ] ; then
 		tar -cf "${Thirdparty_TAR}" ${Thirdparty_FILES}
 	fi
+
+	for EXTERNAL_NAME in mergJSON mergMarkdown blur; do
+		packageExternal "${EXTERNAL_NAME}" "${LIBPATH}" "${SUFFIX}"
+	done
 
 	# Compress the packages
 	if [ -f "${OpenSSL_TAR}" ] ; then

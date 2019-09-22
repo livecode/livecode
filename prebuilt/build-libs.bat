@@ -63,7 +63,7 @@ IF NOT DEFINED MODE (
 )
 
 IF NOT DEFINED TOOL (
-	SET TOOL=14
+	SET TOOL=15
 )
 
 REM Check variable values
@@ -200,6 +200,10 @@ IF %1=="" (
 
   REM Build CEF
 	CALL "scripts\build-cef.bat"
+	IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
+
+	REM Build Externals
+	CALL "scripts\build-externals.bat"
 	IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 ) ELSE (
 	CALL "scripts\build-%1.bat" %2
