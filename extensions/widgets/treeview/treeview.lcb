@@ -785,6 +785,7 @@ public handler OnSave(out rProperties as Array)
 	put mScrollHilitedElementIntoView into rProperties["scroll hilited element into view"]
 	put mTextHeight into rProperties["text height"]
 	put mIconHeight into rProperties["icon height"]
+	put mFrameBorder into rProperties["show border"]
 	put mShowHover into rProperties["show hover row"]
 	put mVScrollbar into rProperties["vertical scrollbar"]
 	put mAlternateRowBackgrounds into rProperties["alternate row backgrounds"]
@@ -832,6 +833,10 @@ public handler OnLoad(in pProperties as Array)
 	if "icon height" is among the keys of pProperties then
 		put pProperties["icon height"] into mIconHeight
 		put mIconHeight is not kIconHeight into tRecalculateIcons
+	end if
+
+	if "show border" is among the keys of pProperties then
+		put pProperties["show border"] into mFrameBorder
 	end if
 
 	if "show hover row" is among the keys of pProperties then
