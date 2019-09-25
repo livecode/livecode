@@ -598,6 +598,24 @@ metadata vScrollbar.default is "true"
 metadata vScrollbar.label is "Vertical scrollbar"
 
 /**
+Syntax: set the showValues of <widget> to {true|false}
+Syntax: get the showValues of <widget>
+
+Summary: Whether the values are displayed or not
+
+Description:
+Use the <showValues> property to display or hide the values of the <arrayData>  
+of the tree view widget.  This setting will be useful when using the
+widget as a menu for navigation purposes.
+
+Hiding values effectively hides the separator as well.
+
+Related: showSeparator (property)
+**/
+property showValues		get mShowValues		set setShowValues
+metadata showValues.label is "Show values"
+
+/**
 Syntax: set the showSeparator of <widget> to {true|false}
 Syntax: get the showSeparator of <widget>
 
@@ -706,6 +724,7 @@ private variable mPathDelimiter as String
 
 private variable mCharsToTrimFromKey as Integer
 
+private variable mShowValues as Boolean
 private variable mShowSeparator as Boolean
 private variable mSeparatorRatio as Number
 private variable mSeparatorDragging as Boolean
@@ -762,6 +781,7 @@ public handler OnCreate() returns nothing
 	
 	put 0 into mCharsToTrimFromKey
 	
+	put true into mShowValues
 	put false into mShowSeparator
 	put 0.5 into mSeparatorRatio
 	put false into mSeparatorDragging
@@ -791,6 +811,7 @@ public handler OnSave(out rProperties as Array)
 	put mAlternateRowBackgrounds into rProperties["alternate row backgrounds"]
 
 	put mCharsToTrimFromKey into rProperties["chars to trim from key"]
+	put mShowValues into rProperties["show values"]
 	put mShowSeparator into rProperties["show separator"]
 	put mSeparatorRatio into rProperties["separator ratio"]
 	return rProperties
@@ -853,6 +874,10 @@ public handler OnLoad(in pProperties as Array)
 
 	if "chars to trim from key" is among the keys of pProperties then
 		put pProperties["chars to trim from key"] into mCharsToTrimFromKey
+	end if
+
+	if "show values" is among the keys of pProperties then
+		put pProperties["show values"] into mShowValues
 	end if
 
 	if "show separator" is among the keys of pProperties then
@@ -951,7 +976,7 @@ public handler OnPaint() returns nothing
 		add mRowHeight to tTop
 	end repeat
 	
-	if mShowSeparator then
+	if mShowValues and mShowSeparator then
 		paintSeparator()
 	end if	
 
@@ -1013,7 +1038,7 @@ private handler paintFirstRow(in pTop as Real)
 end handler
 
 private handler keyRight() returns Real
-	if mShowSeparator then
+	if mShowValues and mShowSeparator then
 		return mSeparatorRatio * availableSeparatorSpace()
 	else
 		return mViewWidth - mRightIconMargin
@@ -1065,7 +1090,7 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 		save state of this canvas
 		translate tPath by [tLeft + mIconWidth / 2, pTop + mRowHeight / 2]
 		paintIcon(tPath, false, pDataItem["selected"])
-		if mShowSeparator then
+		if mShowValues and mShowSeparator then
 			clip to rectangle [tLeft, pTop, mSeparatorRatio * availableSeparatorSpace(), pTop + mRowHeight] on this canvas
 		end if	
 		fill tPath on this canvas
@@ -1089,7 +1114,7 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 	paintText(pDataItem["display_key"], "left", tDisplayRect, true, pDataItem["selected"])
 	
 	// Draw the value if it is a 'leaf' (i.e. if it does not contain a sub-array)
-	if pDataItem["leaf"] then
+	if mShowValues and pDataItem["leaf"] then
 		put rectangle [tLeft, pTop, valueRight(), pTop + mRowHeight] into tDisplayRect
 		paintText(pDataItem["display_value"], "left", tDisplayRect, true, pDataItem["selected"])
 
@@ -1122,7 +1147,7 @@ public handler OnMouseDown() returns nothing
 	checkScrollbarMouseDown()
 	
 	// If there is a separator, check whether the mousedown was within kSeparatorWidth of the middle of it
-	if mShowSeparator then		
+	if mShowValues and mShowSeparator then		
 		if the mouse position is within separatorRectangle() then
 			put true into mSeparatorDragging
 		end if
@@ -1234,7 +1259,7 @@ public handler OnClick() returns nothing
 	end if
 
 	// Click on the separator does nothing
-	if mShowSeparator then
+	if mShowValues and mShowSeparator then
 		if mSeparatorDragging then
 			put false into mSeparatorDragging
 			return
@@ -1299,7 +1324,7 @@ public handler OnClick() returns nothing
 		
 		if tX > tLeft and tX < tLeft + mIconWidth + 2 * kItemPadding then
 			// Only register a click on the arrow if it is showing in front of the separator
-			if not mShowSeparator or tX < the left of separatorRectangle() then
+			if not (mShowValues and mShowSeparator) or tX < the left of separatorRectangle() then
 				if tData["folded"] is true then
 					unfoldPath(tData["path"])
 				else
@@ -1526,7 +1551,7 @@ private handler updateSeparator() returns nothing
 	end if
 
 	variable tValueSpace as Real
-	if mShowSeparator then
+	if mShowValues and mShowSeparator then
 		put valueRight() - valueLeft(keyRight()) into tValueSpace
 	end if
 	
@@ -1560,7 +1585,7 @@ private handler updateSeparator() returns nothing
 			if mArrayStyle then
 				 put "[" & tKeyDisplay & "]" into tKeyDisplay
 			end if
-			if tElement["leaf"] then
+			if mShowValues and tElement["leaf"] then
 				if tElement["string_value"] is not "" then
 					subtract mEllipsisLength + 2 * kItemPadding from tKeySpace
 				end if
@@ -1571,23 +1596,25 @@ private handler updateSeparator() returns nothing
 			put tElement["key_too_large"] into tTrimmed
 		end if
 		
-		if not mShowSeparator then
-			if tTrimmed then
-				put true into tElement["value_too_large"]
-				put "" into tElement["display_value"]
-				put 0 into tValueSpace
-			else
-				put valueRight() - valueLeft(tKeyLeft + tWidth) into tValueSpace
+		if mShowValues then
+			if not mShowSeparator then
+				if tTrimmed then
+					put true into tElement["value_too_large"]
+					put "" into tElement["display_value"]
+					put 0 into tValueSpace
+				else
+					put valueRight() - valueLeft(tKeyLeft + tWidth) into tValueSpace
+				end if
 			end if
-		end if
 
-		// AL-2015-07-26: [[ Bug 15752 ]] Only draw specified amount of value string
-		if tElement["leaf"] then
-			// Only calculate fit if we are forcing recalculation or it hasn't previously been calculated.
-			if mRecalculateFit or "value_too_large" is not among the keys of tElement then
-					put displayWidth(tElement["string_value"], tValueSpace, tElement["display_value"], tTrimmed) into tWidth
-					put tTrimmed into tElement["value_too_large"]
-			end if	
+			// AL-2015-07-26: [[ Bug 15752 ]] Only draw specified amount of value string
+			if tElement["leaf"] then
+				// Only calculate fit if we are forcing recalculation or it hasn't previously been calculated.
+				if mRecalculateFit or "value_too_large" is not among the keys of tElement then
+						put displayWidth(tElement["string_value"], tValueSpace, tElement["display_value"], tTrimmed) into tWidth
+						put tTrimmed into tElement["value_too_large"]
+				end if	
+			end if
 		end if
 		put tElement into mDataList[tCount]
 	end repeat
@@ -2658,10 +2685,20 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 	return tWidth - mEllipsisLength
 end handler
 
+private handler setShowValues(in pShow as Boolean)
+	if pShow is not mShowValues then
+		put pShow into mShowValues
+		put true into mUpdateSeparator
+		put true into mRecalculateFit
+		redraw all
+	end if
+end handler
+
 private handler setShowSeparator(in pShow as Boolean)
 	if pShow is not mShowSeparator then
 		put pShow into mShowSeparator
 		put true into mUpdateSeparator
+		put true into mRecalculateFit
 		redraw all
 	end if
 end handler

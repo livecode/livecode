@@ -10,6 +10,7 @@ Enhance the Tree View Widget to support use on the mobile platform.
     * Width was being reported with extra space for an ellipsis when not needed
     * Remove padding from ellipsis width, only add padding when needed
 * Save `alternate row backgrounds` property
+* Save `show border` property
 
 New properties:
 
@@ -21,6 +22,7 @@ New properties:
 * `vScrollBar` - control visibility of scroll bar
 * `showHover` - allow hover to be disabled, useful on mobile
 * `iconHeight` - allow configuration of icon size
+* `showValues` - allow the values to be hidden
 
 # Signals
 
