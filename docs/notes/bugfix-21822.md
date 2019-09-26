@@ -1,1 +1,0 @@
-# Added a note mentioning that drawingSvgCompileFile() can not read from the resources folder on Android
