@@ -26,7 +26,7 @@ Handle the <playStopped> <message> if you want to perform a task when a
 movie or sound finishes playing.
 
 The <playStopped> <message> is sent when the movie or sound reaches its
-end when playing forwards, the movie of sound reaches its beginning if it 
+end when playing forwards, the movie or sound reaches its beginning if it 
 is playing backwards, or when a play stop <command> <execute|executes>. 
 If the user pauses the movie or sound, the <playPaused> <message> is sent 
 instead.
