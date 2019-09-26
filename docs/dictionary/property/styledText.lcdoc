@@ -102,9 +102,9 @@ encoding.
 
 For example, take the following content consisting of two paragraphs:
 
-<p style="text-align: center">Centered **Hello** World</p>
+Centered Hello World
 
-Left-aligned <span style="color: rgb(255,0,0)">Hello</span> unicodeString
+Left-aligned Hello unicodeString
 
 This would transpire as the following array:
 
