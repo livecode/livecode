@@ -724,7 +724,7 @@ component Runtime.iOS
 		file ios:iphonesimulator12.1/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphonesimulator12.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator12.1/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Simulator-13_0" place
+	into "[[ToolsFolder]]/Runtime/iOS/Simulator-13_1" place
 		executable ios:iphonesimulator13.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator8.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
 		executable ios:iphonesimulator13.1/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator8.2/revsecurity.dylib
 		executable ios:iphonesimulator13.1/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphonesimulator8.2/revpdfprinter.dylib
@@ -820,7 +820,7 @@ component Runtime.iOS
 		file ios:iphoneos12.1/mobile-disable-ats-template.plist as "DisableATS.plist"
 		file ios:iphoneos12.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos12.1/fontmap as "fontmap"
-	into "[[ToolsFolder]]/Runtime/iOS/Device-13_0" place
+	into "[[ToolsFolder]]/Runtime/iOS/Device-13_1" place
 		executable ios:iphoneos13.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos9.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
 		executable ios:iphoneos13.1/revsecurity.ios-extension as RevSecurity base ios:iphoneos9.2/revsecurity.ios-extension
 		executable ios:iphoneos13.1/revpdfprinter.ios-extension as RevPdfPrinter base ios:iphoneos9.2/revpdfprinter.ios-extension
