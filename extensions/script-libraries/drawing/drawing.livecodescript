@@ -113,12 +113,20 @@ Finally if the width and height are not specified, or are percentages and there
 is no viewBox attribute then the intrinsic width and height are taken to be
 256.
 
-Note: The drawing binary format is not currently considered stable and is
+>*Note:* The drawing binary format is not currently considered stable and is
 subject to change until the end of the RC cycle for 9. At present it is advised
 that SVG files be compiled as needed when developing in the IDE, and then
 compiled ahead-of-time when building a standalone.
 
-Note: To use this function in a standalone, you must include the XML extension.
+
+>*Note:* To use this function in a standalone, you must include the XML 
+extension.
+
+
+>*Note:* The <XML library> (and by extension, this function) can not load 
+> files from the resources folder on Android. You must either copy the 
+> resources to the documents folder or use the <drawingSvgCompile>
+> function instead.
 
 Parameters:
 
@@ -132,7 +140,7 @@ of an image directly.
 The result:
 An error string if an error occurred.
 
-References: drawingSvgCompile (function)
+References: drawingSvgCompile (function), XML library (library)
 */
 function drawingSvgCompileFile pXmlFile
 	/* Convert the XML file to the LiveCode array structure. */
@@ -208,12 +216,16 @@ Finally if the width and height are not specified, or are percentages and there
 is no viewBox attribute then the intrinsic width and height are taken to be
 256.
 
-Note: The drawing binary format is not currently considered stable and is
-subject to change until the end of the RC cycle for 9. At present it is advised
-that SVG files be compiled as needed when developing in the IDE, and then
-compiled ahead-of-time when building a standalone.
+>*Note:* The drawing binary format is not currently considered stable and is
+> subject to change until the end of the RC cycle for 9. At present it is advised
+> that SVG files be compiled as needed when developing in the IDE, and then
+> compiled ahead-of-time when building a standalone.
 
-Note: To use this function in a standalone, you must include the XML extension.
+
+>*Note:* To use this function in a standalone, you must include the XML 
+> extension.
+
+
 Parameters:
 
 pXmlText (string):
