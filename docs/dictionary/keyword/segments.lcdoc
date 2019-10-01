@@ -23,12 +23,12 @@ put the number of segments in tText -- returns 3
 
 Description:
 Use the <segments> keyword together with the <number> <function> to 
-refer to one or more <words> or group of <char|characters> in a container.
+refer to one or more <words> or group of <characters> in a container.
 
 A <segment> is <delimit|delimited> by one or more <space|spaces>, 
 <tab|tabs>, or <return(constant)|returns>, or enclosed by 
 <double quote|double quotes>. A single <segment> can contain 
-multiple <char|characters> and multiple <item|items> or <word|words>, but 
+multiple <characters> and multiple <item|items> or <word|words>, but 
 not multiple <line|lines>.
 
 >*Note:*  <segment|Segments> are delimited by <double quote|double quotes> ("), 
@@ -36,7 +36,7 @@ not multiple <line|lines>.
 > quotes as <quote|quotes>.
 
 References: number (function), segment (keyword), words (keyword),
-items (keyword), chars (keyword), lines (keyword),
+items (keyword), characters (keyword), lines (keyword),
 delimit (glossary), double quote (glossary), 
 space (constant), tab (constant), quote (constant), return (constant)
 

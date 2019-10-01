@@ -59,9 +59,10 @@ sent instead of <mouseUp>. If the click is the second click of a
 > example, if the user clicks an "Increase" button that increases a
 > number by 1), some of the clicks may send a <mouseDoubleUp> <message>
 > instead of <mouseUp>. If your <script> only handles the <mouseUp>
-> <message>, these accidental double-click|double-clicks> will be lost. One way to
-> prevent this is to install a <handler> in an <object(glossary)> that's
-> further in the <message path>, to re-send double-click|double-clicks>:
+> <message>, these accidental <double-click|double-clicks> will be lost. 
+> One way to prevent this is to install a <handler> in an 
+> <object(glossary)> that's further in the <message path>, to re-send 
+> double-click|double-clicks>:
 
     on mouseDoubleUp
       if "on mouseUp" is in the script of the target and \

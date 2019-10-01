@@ -18,18 +18,14 @@ local sDeviceSDKs
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
 function deployUsableIosSdk
-   return "8.2,9.2,10.2,11.2,12.1"
+   return "8.2,9.2,10.2,11.2,12.1,13.1"
 end deployUsableIosSdk
 
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
 function deployGetIphoneOSes
    local tList, tMacVersion
    put deploySanitizeSystemVersion() into tMacVersion
-   if tMacVersion < 100800 then
-      put "6.1,4.6" into tList[1]
-   else if tMacVersion < 100900 then
-      put "7.1,5.1" into tList[1]
-   else if tMacVersion < 101000 then
+   if tMacVersion < 101000 then
       put "8.2,6.2" into tList[1]
    else if tMacVersion < 101100 then
       put "8.2,6.2" into tList[1]
@@ -44,19 +40,24 @@ function deployGetIphoneOSes
       answer error "To use Xcode 9.2, you need to upgrade your Mac to MacOS Sierra 10.12.6"
    else if tMacVersion < 101300 then
       put "11.2,9.2" into tList[1]
-   else if tMacVersion < 101302 then
+   else if tMacVersion < 101304 then
       put empty into tList[1]
       answer error "To use Xcode 10.1, you need to upgrade your Mac to MacOS High Sierra 10.13.4"
-   else
-      // Xcode 10.1 requires a Mac running Mac OS 10.13.4 or later
+   else if tMacVersion < 101400 then
       put "12.1,10.1" into tList[1]
+   else if tMacVersion < 101403 then
+      put empty into tList[1]
+      answer error "To use Xcode 11.0, you need to upgrade your Mac to MacOS Mojave 10.14.3"
+   else
+      // Xcode 11.1 requires a Mac running Mac OS 10.14.3 or later
+      put "13.1,11.1" into tList[1]
    end if
    
    return tList
 end deployGetIphoneOSes
 
 function deployGetIosMinimumVersions
-   return "8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2,10.3,11.0,11.1,11.2,11.3,11.4,12.0,12.1"
+   return "8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2,10.3,11.0,11.1,11.2,11.3,11.4,12.0,12.1,13.0,13.1"
 end deployGetIosMinimumVersions
 
 ////////////////////////////////////////////////////////////////////////////////

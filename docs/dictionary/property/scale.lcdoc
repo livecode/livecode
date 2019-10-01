@@ -28,8 +28,8 @@ or <video clip|video clips>.
 
 The <scale> is the natural size of the <object|object's> content divided
 by the size of the rectangle the content is placed in. For example, if
-the <ratio> is 1, a <video clip> plays at the movie's normal size; if
-the <ratio> is 2, the <video clip> is blown up by a <factor> of 2.
+the *ratio* is 1, a <video clip> plays at the movie's normal size; if
+the *ratio* is 2, the <video clip> is blown up by a <factor> of 2.
 
 For EPS objects, this property is supported only on Unix systems with
 Display PostScript installed.

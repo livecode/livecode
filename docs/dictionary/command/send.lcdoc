@@ -117,10 +117,10 @@ It is a parse error to specify a time when using the `script` form.
 > <message> is sent.
 
 >*Note:*  Using the <send> <command> is slower than directly
-> <execute|executing> the <command|commands> using the normal <message
-> path>. For best efficiency, use the <send> <command> only when you
-> want to delay the <message> or when the <handler> you want to execute
-> is not in the <message path>.
+> <execute|executing> the <command|commands> using the normal 
+> <message path>. For best efficiency, use the <send> <command> only when 
+> you want to delay the <message> or when the <handler> you want to 
+> execute is not in the <message path>.
 
 References: debugDo (command), dispatch (command), call (command),
 cancel (command), function (control structure), result (function),

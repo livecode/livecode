@@ -50,8 +50,8 @@ Pattern images can be color or black-and-white.
 > be used as a fully cross-platform pattern, both an image's dimensions
 > should be one of 8, 16, 32, 64, or 128.
 
-The <shadowPattern> of <control(object)|controls> is drawn starting at
-the <control(object)|control's> upper right corner: if the
+The <shadowPattern> of <control(glossary)|controls> is drawn starting at
+the <control(glossary)|control's> upper right corner: if the
 <control(keyword)> is moved, the pattern does not shift.
 
 Setting the <shadowPattern> of an <object(glossary)> to empty allows the
@@ -97,11 +97,12 @@ References: group (command), stacks (function), object (glossary),
 property (glossary), EPS (glossary), audio clip (glossary),
 tabbed button (glossary), Windows (glossary), object type (glossary),
 Mac OS (glossary), keyword (glossary), Unix (glossary),
-video clip (glossary), current stack (glossary), effective (keyword),
+video clip (glossary), current stack (glossary), control (glossary),
+effective (keyword),
 field (keyword), image (keyword), button (keyword), shadow (keyword),
 player (keyword), control (keyword), card (keyword), scrollbar (keyword),
 graphic (keyword), button (object), field (object), stack (object),
-control (object), pixels (property), backgroundPattern (property),
+pixels (property), backgroundPattern (property),
 height (property), style (property), shadow (property), owner (property),
 borderPattern (property), width (property), shadowColor (property),
 bottomPattern (property)

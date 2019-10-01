@@ -52,7 +52,7 @@ References: function (control structure), within (function),
 mouseCharChunk (function), property (glossary), mouse pointer (glossary),
 return (glossary), string (keyword), control (keyword), graphic (keyword),
 mouseEnter (message), mouseLeave (message), stack (object),
-control (object), graphic (object), filled (property), layer (property)
+graphic (object), filled (property), layer (property)
 
 Tags: ui
 

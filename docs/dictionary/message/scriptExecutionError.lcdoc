@@ -33,7 +33,7 @@ Description:
 The <scriptExecutionError> message is sent to the global script (home
 stack) when an uncaught error is encountered.
 
-<ScriptExecutionError> is only available when running in CGI mode
+<scriptExecutionError> is only available when running in CGI mode
 (Server). 
 
 References: errorMode (property)

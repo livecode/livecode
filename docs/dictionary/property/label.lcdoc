@@ -7,8 +7,8 @@ Type: property
 Syntax: set the label of <object> to <labelString>
 
 Summary:
-Specifies the <string> shown in a <stack window|stack window's> <title
-bar>, or a text label to be displayed on the specified
+Specifies the <string> shown in a <stack window|stack window's> 
+<title bar>, or a text label to be displayed on the specified
 <object(glossary)> if its <showName> <property> is true.
 
 Associations: stack, button, graphic
@@ -54,6 +54,10 @@ of button reports the button's <name> <property>.
 
 To create a blank title bar, set the stack's <label> <property> to a
 space. 
+
+>*Note:* Card numbers will not be displayed in the <title bar> of a 
+> stack if its <label> <property> is not empty.
+
 
 References: constant (command), stacks (function), object (glossary),
 property (glossary), title bar (glossary), message (glossary),
