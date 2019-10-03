@@ -5519,6 +5519,7 @@ struct MCDeletedObjectPool
 static MCDeletedObjectPool *MCsparedeletedobjectpool = nil;
 static MCDeletedObjectPool *MCdeletedobjectpool = nil;
 static MCDeletedObjectPool *MCrootdeletedobjectpool = nil;
+static uint32_t MCdeletedobjectpoolfreezedepth = 0;
 
 static bool MCDeletedObjectPoolCreate(MCDeletedObjectPool*& r_pool)
 {
@@ -5604,8 +5605,22 @@ void MCDeletedObjectsTeardown(void)
     }
 }
 
+void MCDeletedObjectsFreezePool(void)
+{
+    MCdeletedobjectpoolfreezedepth += 1;
+}
+
+void MCDeletedObjectsThawPool(void)
+{    
+    MCdeletedobjectpoolfreezedepth -= 1;
+}
+
 void MCDeletedObjectsEnterWait(bool p_dispatching)
 {
+    // If the current pool is frozen, do nothing
+    if (MCdeletedobjectpoolfreezedepth > 0)
+        return;
+    
     // If this isn't a dispatching wait, then no objects can be created.
     if (!p_dispatching)
         return;
@@ -5632,6 +5647,10 @@ void MCDeletedObjectsEnterWait(bool p_dispatching)
 
 void MCDeletedObjectsLeaveWait(bool p_dispatching)
 {
+    // If the current pool is frozen, do nothing
+    if (MCdeletedobjectpoolfreezedepth > 0)
+        return;
+    
     // If this isn't a dispatching wait, then no objects can be created.
     if (!p_dispatching)
         return;

@@ -506,6 +506,8 @@ struct MCExecValue;
 struct MCDeletedObjectPool;
 void MCDeletedObjectsSetup(void);
 void MCDeletedObjectsTeardown(void);
+void MCDeletedObjectsFreezePool(void);
+void MCDeletedObjectsThawPool(void);
 void MCDeletedObjectsEnterWait(bool p_dispatching);
 void MCDeletedObjectsLeaveWait(bool p_dispatching);
 void MCDeletedObjectsOnObjectCreated(MCObject *object);
