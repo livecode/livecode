@@ -733,6 +733,7 @@ private variable mOldTooltip as optional String
 
 constant kRowBuffer is 1000
 
+constant kRowTextPadding is 4
 constant kItemPadding is 6
 constant kSeparatorWidth is 4
 constant kStrokeWidth is 1
@@ -921,7 +922,7 @@ public handler OnPaint() returns nothing
 	if mTextHeight > 0 then
 		put mTextHeight into tRowHeight
 	else
-		put tFontSize + 8 into tRowHeight
+		put tFontSize + 2 * kRowTextPadding into tRowHeight
 	end if
 	if tRowHeight is not mRowHeight then
 		put tRowHeight into mRowHeight
@@ -1576,7 +1577,7 @@ private handler updateSeparator() returns nothing
 			variable tKeyDisplay as String
 			put tElement["key"] into tKeyDisplay
 			if mCharsToTrimFromKey > 0 then
-				if the number of chars in tKeyDisplay < mCharsToTrimFromKey then
+				if the number of chars in tKeyDisplay <= mCharsToTrimFromKey then
 					put "" into tKeyDisplay
 				else
 					delete char 1 to mCharsToTrimFromKey of tKeyDisplay
@@ -2376,7 +2377,7 @@ end handler
 
 private handler setFoldState(in pData as Array) returns nothing
 	if not checkFoldState(pData) then
-		throw "Invalid fold state"
+		throw "invalid fold state"
 	end if
 	put pData into mFoldState
 	put true into mUpdateDataList
@@ -2454,7 +2455,7 @@ private handler setSelectedElementFoldState(in pFoldState as String) returns not
 			unFoldPath(mSelectedElement)
 		end if
 	else
-		throw "Invalid fold state"
+		throw "invalid fold state"
 	end if
 end handler
 
@@ -2549,7 +2550,7 @@ end handler
 
 private handler setCharsToTrimFromKey(in pChars as Integer) returns nothing
 	if pChars < 0 then
-		throw "Leading Characters to Trim From Key must be >= 0"
+		throw "number of leading characters to trim from key must be non-negative"
 	else if pChars is not mCharsToTrimFromKey then
 		put true into mRecalculateFit
 		put pChars into mCharsToTrimFromKey
