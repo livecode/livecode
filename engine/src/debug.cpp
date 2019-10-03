@@ -284,7 +284,9 @@ void MCB_prepmessage(MCExecContext &ctxt, MCNameRef mess, uint2 line, uint2 pos,
 		p3.setnext(&p4);
 		p4.setvalueref_argument(p_info);
 	}
-	MCB_message(ctxt, mess, &p1);
+    MCDeletedObjectsFreezePool();
+    MCB_message(ctxt, mess, &p1);
+    MCDeletedObjectsThawPool();
 	if (id != 0)
 		MCeerror->clear();
 	if (added)
