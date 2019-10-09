@@ -90,9 +90,9 @@ The following <folderIdentifier> values are supported:
   * "temporary": The folder where temporary files can be placed
   * "engine": The folder containing the LiveCode engine and the
     executable files copied in the standalone application
-  * "resources": In development mode, the current stack's folder.  In a
-    standalone, the resources folder where files or folders specified
-    in the Standalone Builder are located.
+  * "resources": In development mode, the current stack's folder.  In
+    a <standalone application|standalone>, the resources folder where files 
+    or folders specified in the Standalone Builder are located.
 * Examples of common Windows CSIDL numbers:
   * 0x001a: Same as "support"
   * 0x0023: The application-specific data folder shared by all users
@@ -102,8 +102,13 @@ The following <folderIdentifier> values are supported:
   * 0x000a: The "Recycle Bin".
 
 
-**On Mac OS systems**, the following <folderIdentifier> values 
-are supported: 
+**On Mac OS systems**, when there are no user stacks loaded into memory or
+before a user stack has been saved, `specialFolderPath("resources")` will
+return the path to the Livecode application Contents/Tools/Toolset/ folder or
+similar. Once the user stack has been saved, the current stack's folder path
+is returned.
+
+The following <folderIdentifier> values are supported: 
 
 * "home": The current user's home folder
 * "desktop": The current user's desktop folder
@@ -196,9 +201,8 @@ are supported:
 * "temporary": The folder where temporary files can be placed
 * "engine": The folder containing the LiveCode engine and the executable
   files copied in the <standalone application>
-* "resources": In development mode, the current stack's folder.  
-
-In a <standalone application|standalone>, the resources folder where
+* "resources": In development mode, the current stack's folder. In 
+a <standalone application|standalone>, the resources folder where
 files or folders specified in the Standalone Builder are located.
 
 **In HTML5 standalones**, you can read and write files from anywhere,
