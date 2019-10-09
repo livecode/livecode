@@ -42,7 +42,7 @@ public:
     {
         if (m_handle == nullptr)
             return;
-        dlclose(m_handle);
+        //dlclose(m_handle);
     }
     
     bool IsDefined(void) const

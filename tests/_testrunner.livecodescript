@@ -121,22 +121,38 @@ private command runTestCommand pInfo, pScriptFile, pCommand
 
    put "invoke" && pScriptFile && pCommand after tCommandLine
 
-   -- Invoke the test in a subprocess.  This ensures that we can detect
-   -- if a crash occurs
-   local tTestOutput, tTestExitStatus
-   put shell(tCommandLine) into tTestOutput
-   put the result into tTestExitStatus
-   
-   -- The output from the subprocesses will be native encoded utf-8.
-   put textDecode(tTestOutput, "utf8") into tTestOutput
+   local tAttemptCount
+   put 0 into tAttemptCount
+   repeat while tAttemptCount < 3
+      -- Invoke the test in a subprocess.  This ensures that we can detect
+      -- if a crash occurs
+      local tTestOutput, tTestExitStatus
+      put shell("MallocStackLogging=1 MallocScribble=1 leaks -quiet --atExit -- " & tCommandLine) into tTestOutput
+      put the result into tTestExitStatus
+      
+      -- The output from the subprocesses will be native encoded utf-8.
+      put textDecode(tTestOutput, "utf8") into tTestOutput
 
-   -- Check the exit status.  If it suggests failure, add a "not ok" stanza
-   -- to the tail of the TAP output
-   if tTestExitStatus is not empty then
-      put return after tTestOutput
-      put "not ok # Subprocess exited with status" && \
-            tTestExitStatus & return after tTestOutput
-   end if
+      put "#" && tCommandLine & return before tTestOutput
+
+      -- Check the exit status.  If it suggests failure, add a "not ok" stanza
+      -- to the tail of the TAP output
+      if tTestExitStatus is not empty then
+         if the number of lines in tTestOutput > 5000 and \
+               (tTestOutput contains "NSMethodSignature" or \
+                  tTestOutput contains "block_invoke") then
+            add 1 to tAttemptCount
+            next repeat
+         end if
+
+         put return after tTestOutput
+         put "not ok # Subprocess exited with status" && \
+               tTestExitStatus & return after tTestOutput
+         exit repeat
+      else
+         exit repeat
+      end if
+   end repeat
 
    TestRunnerProcessOutput pScriptFile, pCommand, tTestOutput
    return the result
