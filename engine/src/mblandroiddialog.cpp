@@ -153,7 +153,7 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     if (s_in_popup_dialog)
         return false;
     
-    int32_t t_current, t_min, t_max;
+    real64_t t_current, t_min, t_max;
     bool t_use_min, t_use_max;
 
     // Avoid to leave t_min/t_max uninitialised, even though showDatePicker
@@ -170,7 +170,7 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     {
         MCAutoValueRef t_val;
 		MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_UNDEFINED, &t_val);
-		/* UNCHECKED */ ctxt.ConvertToInteger(*t_val, t_current);
+		/* UNCHECKED */ ctxt.ConvertToReal(*t_val, t_current);
     }
     else
         t_current = MCS_time();
@@ -179,20 +179,20 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     {
         MCAutoValueRef t_val;
 		MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_UNDEFINED, &t_val);
-        /* UNCHECKED */ ctxt.ConvertToInteger(*t_val, t_min);
+        /* UNCHECKED */ ctxt.ConvertToReal(*t_val, t_min);
     }
     if (t_use_max)
     {
         MCAutoValueRef t_val;
 		MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_UNDEFINED, &t_val);
-        /* UNCHECKED */ ctxt.ConvertToInteger(*t_val, t_max);
+        /* UNCHECKED */ ctxt.ConvertToReal(*t_val, t_max);
     }
 
     s_in_popup_dialog = true;
     s_dialog_result = kMCDialogResultUnknown;
 	// IM-2012-10-31 [[ BZ 10483 ]] - make sure we have the timezone bias for the date
 	MCS_getlocaldatetime(s_selected_date);
-    MCAndroidEngineRemoteCall("showDatePicker", "vbbiii", nil, t_use_min, t_use_max, t_min, t_max, t_current);
+    MCAndroidEngineRemoteCall("showDatePicker", "vbbjjj", nil, t_use_min, t_use_max, t_min, t_max, t_current);
     
     while(s_in_popup_dialog)
 		MCscreen -> wait(60.0, True, True);
@@ -243,7 +243,7 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     else
     {
         MCAutoNumberRef t_time;
-		/* UNCHECKED */ MCNumberCreateWithInteger(MCS_time(), &t_time);
+		/* UNCHECKED */ MCNumberCreateWithReal(MCS_time(), &t_time);
         MCD_convert_to_datetime(ctxt, *t_time, CF_SECONDS, CF_UNDEFINED, t_current);
     }
     

@@ -103,7 +103,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 // HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons
 // HC-2011-11-01 [[ BUG 9848 ]] Date Picker does not work with dates before the UNIX epoch. Changed r_current, p_start and p_end from uint to int.
-- (void) startDatePicker:(NSString *)p_style andCurrent: (int32_t)r_current andStart: (int32_t)p_start andEnd: (int32_t)p_end andStep: (uint32_t)p_step andCancel: (bool)p_use_cancel andDone: (bool)p_use_done andButtonRect: (MCRectangle) p_button_rect
+- (void) startDatePicker:(NSString *)p_style andCurrent: (real64_t)p_current andStart: (real64_t)p_start andEnd: (real64_t)p_end andStep: (uint32_t)p_step andCancel: (bool)p_use_cancel andDone: (bool)p_use_done andButtonRect: (MCRectangle) p_button_rect
 {	
 	// set up the wait status
 	m_running = true;
@@ -142,8 +142,8 @@ UIViewController *MCIPhoneGetViewController(void);
 		
 		// set up the current date of the datePicker display
 		// HC-2011-11-01 [[ BUG 9848 ]] Date Picker does not work with dates before the UNIX epoch. Changed if condition to allow for values other than 0.
-        if (r_current != 0)
-            [datePicker setDate:[NSDate dateWithTimeIntervalSince1970:r_current] animated:YES];
+        if (p_current != 0)
+            [datePicker setDate:[NSDate dateWithTimeIntervalSince1970:p_current] animated:YES];
 		
 		// set up the start date of the datePicker display
 		// HC-2011-11-01 [[ BUG 9848 ]] Date Picker does not work with dates before the UNIX epoch. Changed if condition to allow for values other than 0.
@@ -263,8 +263,8 @@ UIViewController *MCIPhoneGetViewController(void);
 		
 		// set up the current date of the datePicker display
 		// HC-2011-11-01 [[ BUG 9848 ]] Date Picker does not work with dates before the UNIX epoch. Changed if condition to allow for values other than 0.
-        if (r_current != 0)
-            [datePicker setDate:[NSDate dateWithTimeIntervalSince1970:r_current] animated:YES];
+        if (p_current != 0)
+            [datePicker setDate:[NSDate dateWithTimeIntervalSince1970:p_current] animated:YES];
 
 		// set up the start date of the datePicker display
 		// HC-2011-11-01 [[ BUG 9848 ]] Date Picker does not work with dates before the UNIX epoch. Changed if condition to allow for values other than 0.
@@ -291,7 +291,7 @@ UIViewController *MCIPhoneGetViewController(void);
 		NSMutableArray *t_toolbar_items;
 		t_toolbar_items = [[NSMutableArray alloc] init];
 		// HC-2011-09-28 [[ Picker Buttons ]] Enable cancel button on request.
-		if (r_current == 0 || p_use_cancel) 
+		if (p_current == 0 || p_use_cancel) 
 			[t_toolbar_items addObject: [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemCancel target: self action: @selector(cancelDatePickWheel:)]];
 		[t_toolbar_items addObject: [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemFlexibleSpace target: self action: nil]];
 		[t_toolbar_items addObject: [[UIBarButtonItem alloc] initWithBarButtonSystemItem: UIBarButtonSystemItemDone target: self action: @selector(dismissDatePickWheel:)]];
@@ -558,9 +558,9 @@ static com_runrev_livecode_MCIPhonePickDateWheelDelegate *s_pick_date_wheel_dele
 struct datepicker_t
 {
 	NSString *style;
-	int32_t current;
-	int32_t min;
-	int32_t max;
+	real64_t current;
+	real64_t min;
+	real64_t max;
 	int32_t step;
 	bool use_cancel;
 	bool use_done;
@@ -599,21 +599,21 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     t_style = [NSString stringWithCString: "date" encoding: NSMacOSRomanStringEncoding];
     
     // Convert the current datatime to seconds
-    int32_t r_current;
+    real64_t t_current;
     if (p_current == nil)
-        r_current = 0;
+        t_current = 0;
     else
     {
         MCAutoValueRef t_date;
 		if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_date))
             return false;
 		
-		if (!ctxt.ConvertToInteger(*t_date, r_current))
+		if (!ctxt.ConvertToReal(*t_date, t_current))
 			return false;
     }
 
     // Convert the min datatime to seconds
-    int32_t t_min;
+    real64_t t_min;
     if (p_min == nil)
         t_min = 0;
     else
@@ -622,12 +622,12 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
 		if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
             return false;
 		
-		if (!ctxt.ConvertToInteger(*t_min_val, t_min))
+		if (!ctxt.ConvertToReal(*t_min_val, t_min))
 			return false;
     }
     
     // Convert the max datatime to seconds
-    int32_t t_max;
+    real64_t t_max;
     if (p_max == nil)
         t_max = 0;
     else
@@ -636,13 +636,13 @@ bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
 		if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
             return false;
         
-		if (!ctxt.ConvertToInteger(*t_max_val, t_max))
+		if (!ctxt.ConvertToReal(*t_max_val, t_max))
 			return false;
     } 
 
 	datepicker_t date_ctxt;
 	date_ctxt . style = t_style;
-	date_ctxt . current = r_current;
+	date_ctxt . current = t_current;
 	date_ctxt . min = t_min;
 	date_ctxt . max = t_max;
 	date_ctxt . step = 0;
@@ -682,50 +682,50 @@ bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_ma
     t_style = [NSString stringWithCString: "time" encoding: NSMacOSRomanStringEncoding];
 
     // Convert the current datatime to seconds
-    int32_t r_current;
+    real64_t t_current;
     if (p_current == nil)
-        r_current = 0;
+        t_current = 0;
     else
     {
-        MCAutoValueRef t_current;
-		if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_current))
+        MCAutoValueRef t_date;
+        if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_date))
             return false;
         
-		if (!ctxt.ConvertToInteger(*t_current, r_current))
-			return false;
+        if (!ctxt.ConvertToReal(*t_date, t_current))
+            return false;
     }
     
     // Convert the min datatime to seconds
-    int32_t t_min;
+    real64_t t_min;
     if (p_min == nil)
         t_min = 0;
     else
     {
         MCAutoValueRef t_min_val;
-		if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
-			return false;
-		
-		if (!ctxt.ConvertToInteger(*t_min_val, t_min))
-			return false;
+        if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
+            return false;
+        
+        if (!ctxt.ConvertToReal(*t_min_val, t_min))
+            return false;
     }
     
     // Convert the max datatime to seconds
-    int32_t t_max;
+    real64_t t_max;
     if (p_max == nil)
         t_max = 0;
     else
     {
         MCAutoValueRef t_max_val;
-		if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
-			return false;
-		
-		if (!ctxt.ConvertToInteger(*t_max_val, t_max))
-			return false;
-    } 
+        if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
+            return false;
+        
+        if (!ctxt.ConvertToReal(*t_max_val, t_max))
+            return false;
+    }
     
 	datepicker_t date_ctxt;
 	date_ctxt . style = t_style;
-	date_ctxt . current = r_current;
+	date_ctxt . current = t_current;
 	date_ctxt . min = t_min;
 	date_ctxt . max = t_max;
 	date_ctxt . step = p_step;
@@ -765,50 +765,50 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
     t_style = [NSString stringWithCString: "dateTime" encoding: NSMacOSRomanStringEncoding];
 
     // Convert the current datatime to seconds
-    int32_t r_current;
+    real64_t t_current;
     if (p_current == nil)
-        r_current = 0;
+        t_current = 0;
     else
     {
-        MCAutoValueRef t_current;
-		if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_current))
+        MCAutoValueRef t_date;
+        if (!MCD_convert_from_datetime(ctxt, *p_current, CF_SECONDS, CF_SECONDS, &t_date))
             return false;
         
-		if (!ctxt.ConvertToInteger(*t_current, r_current))
-			return false;
+        if (!ctxt.ConvertToReal(*t_date, t_current))
+            return false;
     }
     
     // Convert the min datatime to seconds
-    int32_t t_min;
+    real64_t t_min;
     if (p_min == nil)
         t_min = 0;
     else
     {
         MCAutoValueRef t_min_val;
-		if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
-			return false;
-		
-		if (!ctxt.ConvertToInteger(*t_min_val, t_min))
-			return false;
+        if (!MCD_convert_from_datetime(ctxt, *p_min, CF_SECONDS, CF_SECONDS, &t_min_val))
+            return false;
+        
+        if (!ctxt.ConvertToReal(*t_min_val, t_min))
+            return false;
     }
     
     // Convert the max datatime to seconds
-    int32_t t_max;
+    real64_t t_max;
     if (p_max == nil)
         t_max = 0;
     else
     {
         MCAutoValueRef t_max_val;
-		if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
-			return false;
-		
-		if (!ctxt.ConvertToInteger(*t_max_val, t_max))
-			return false;
-    } 
+        if (!MCD_convert_from_datetime(ctxt, *p_max, CF_SECONDS, CF_SECONDS, &t_max_val))
+            return false;
+        
+        if (!ctxt.ConvertToReal(*t_max_val, t_max))
+            return false;
+    }
     
 	datepicker_t date_ctxt;
 	date_ctxt . style = t_style;
-	date_ctxt . current = r_current;
+	date_ctxt . current = t_current;
 	date_ctxt . min = t_min;
 	date_ctxt . max = t_max;
 	date_ctxt . step = p_step;
