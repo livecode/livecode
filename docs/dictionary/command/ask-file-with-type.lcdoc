@@ -44,7 +44,7 @@ the file name box.
 types:
 Use the types parameter to specify which files should appear and to
 prompt the user for the desired format to save in. Each set of types is
-a return-delimited list of values of the form
+a pipe-delimited list of values of the form
 "tag|extensions|filetypes". 
 
 It:
@@ -75,13 +75,15 @@ to true on <Mac OS> and <Windows|Windows systems>, and always on
 > COM5, COM6, COM7, COM8, COM9, LPT1, LPT2, LPT3, LPT4, LPT5, LPT6,
 > LPT7, LPT8 and LPT9. Also do not use these names followed by an
 > extension, for example, NUL.tx7.
+
 If more than one type is specified, a drop-down list containing the tags
 will be displayed allowing the user to select which types of files to
-display. (This list is always displayed on Windows systems). If the as
-sheet form is used, the dialog box appears as a sheet on OS X systems.
-On other systems, the as sheet form has no effect and the dialog box
-appears normally. Attempting to open a sheet from within another sheet
-displays the second stack as a <modal dialog box> instead.
+display. (This list is always displayed on Windows systems).
+
+If the as sheet form is used, the dialog box appears as a sheet on OS X
+systems. On other systems, the as sheet form has no effect and the
+<dialog box> appears normally. Attempting to open a sheet from within
+another sheet displays the second stack as a <modal dialog box> instead.
 
 If the systemFileSelector <property> is set to false, LiveCode's
 built-in <dialog box> is used instead of the operating system's 
