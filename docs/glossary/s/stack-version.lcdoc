@@ -36,7 +36,7 @@ When saving in the **5.5 format**, all <Unicode> text will be lost
 unless it is stored in a container that has a Unicode variant. For
 example, this means that Unicode text in <field|fields> and <button>
 labels will be saved, but any Unicode text in <script|scripts> or
-<custom properties> will be lost.
+<custom property|custom properties> will be lost.
 
 When saving in the **2.7 format**, the following properties or property
 aspects will also be lost:
@@ -63,7 +63,7 @@ lost or altered:
 References: save (command), version (function), stack file (glossary),
 stack (glossary), Unicode (glossary), field (glossary), button (glossary),
 script (glossary), custom property (glossary), card (glossary),
-widget (object), blendLevel (property), ink (property), 
+command (glossary), widget (object), blendLevel (property), ink (property), 
 textFont (property), textStyle (property), textSize (property),
 unicodeToolTip (property), antialiased (property), opaque (property),
 minStackFileVersion (property)
