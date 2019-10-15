@@ -301,6 +301,7 @@
 							'<@(thirdparty_libs_native)',
 							'<@(thirdparty_libs_fonts)',
 							'thirdparty/libexpat/libexpat.gyp:libexpat',
+							'thirdparty/libcairo/libcairo.gyp:libcairo',
 						],
 					},
 				],
