@@ -111,7 +111,7 @@
 					},
 				],
 				[
-					'OS != "android" and OS != "emscripten"',
+					'OS != "emscripten"',
 					{
 						'dependencies':
 						[
