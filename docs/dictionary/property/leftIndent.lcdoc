@@ -2,7 +2,7 @@ Name: leftIndent
 
 Type: property
 
-Syntax: set the leftIndent of <line> of <field> to <pixels>
+Syntax: set the leftIndent [of <line>] of <field> to <pixels>
 
 Summary:
 Determines the indentation of a paragraph in a <field>.
@@ -16,6 +16,9 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
+set the leftIndent of field 1 to 10
+
+Example:
 set the leftIndent of line 1 of field 1 to 15
 
 Parameters:
@@ -23,7 +26,7 @@ pixels (integer):
 The number of pixels to indent the left of a paragraph of text.
 
 Value:
-The <leftIndent> of a line of text in a field returns an integer.
+The <leftIndent> of a field or line of text in a field returns an integer.
 
 Description:
 Use the <leftIndent> property to indent the left side of whole

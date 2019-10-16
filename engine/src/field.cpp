@@ -93,7 +93,11 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_AUTO_HILITE, Bool, MCField, AutoHilite)
 	DEFINE_RW_OBJ_PROPERTY(P_AUTO_ARM, Bool, MCField, AutoArm)
 	DEFINE_RW_OBJ_PROPERTY(P_FIRST_INDENT, Int16, MCField, FirstIndent)
-	DEFINE_RW_OBJ_PROPERTY(P_WIDE_MARGINS, Bool, MCField, WideMargins)
+    DEFINE_RW_OBJ_PROPERTY(P_LEFT_INDENT, Int16, MCField, LeftIndent)
+    DEFINE_RW_OBJ_PROPERTY(P_RIGHT_INDENT, Int16, MCField, RightIndent)
+    DEFINE_RW_OBJ_PROPERTY(P_SPACE_ABOVE, Int16, MCField, SpaceAbove)
+    DEFINE_RW_OBJ_PROPERTY(P_SPACE_BELOW, Int16, MCField, SpaceBelow)
+    DEFINE_RW_OBJ_PROPERTY(P_WIDE_MARGINS, Bool, MCField, WideMargins)
 	DEFINE_RW_OBJ_PROPERTY(P_HSCROLL, Int32, MCField, HScroll)
 	DEFINE_RW_OBJ_PROPERTY(P_VSCROLL, Int32, MCField, VScroll)
 	DEFINE_RW_OBJ_PROPERTY(P_HSCROLLBAR, Bool, MCField, HScrollbar)
@@ -245,7 +249,11 @@ MCField::MCField()
 	fixeda = fixedd = fixedheight = 0;
 	leftmargin = rightmargin = topmargin = bottommargin = narrowmargin;
 	indent = 0;
-	cury = focusedy = firsty = topmargin;
+    leftindent = 0;
+    rightindent = 0;
+    spaceabove = 0;
+    spacebelow = 0;
+    cury = focusedy = firsty = topmargin;
 	firstparagraph = lastparagraph = NULL;
 	foundlength = 0;
 	vscrollbar = hscrollbar = NULL;
@@ -274,7 +282,11 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 	textheight = textwidth = 0;
 	fixeda = fixedd = fixedheight = 0;
 	indent = fref.indent;
-	cury = focusedy = firsty = topmargin;
+    leftindent = fref.leftindent;
+    rightindent = fref.rightindent;
+    spaceabove = fref.spaceabove;
+    spacebelow = fref.spacebelow;
+    cury = focusedy = firsty = topmargin;
 	firstparagraph = lastparagraph = NULL;
 	foundlength = 0;
     cursor_movement = fref.cursor_movement;
@@ -2570,7 +2582,11 @@ void MCField::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool p
 // SN-2015-04-30: [[ Bug 15175 ]] TabAlignment flag added
 #define FIELD_EXTRA_TABALIGN        (1 << 1)
 #define FIELD_EXTRA_KEYBOARDTYPE    (1 << 2)
-#define FIELD_EXTRA_RETURNKEYTYPE    (1 << 3)
+#define FIELD_EXTRA_RETURNKEYTYPE   (1 << 3)
+#define FIELD_EXTRA_LEFTINDENT      (1 << 4)
+#define FIELD_EXTRA_RIGHTINDENT     (1 << 5)
+#define FIELD_EXTRA_SPACEABOVE      (1 << 6)
+#define FIELD_EXTRA_SPACEBELOW      (1 << 7)
 
 IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint32_t p_version)
 {
@@ -2605,6 +2621,30 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint
         t_flags |= FIELD_EXTRA_RETURNKEYTYPE;
         t_size += sizeof(int8_t);
     }
+    
+    if (leftindent != 0)
+    {
+        t_flags |= FIELD_EXTRA_LEFTINDENT;
+        t_size += sizeof(uint16_t);
+    }
+    
+    if (rightindent != 0)
+    {
+        t_flags |= FIELD_EXTRA_RIGHTINDENT;
+        t_size += sizeof(uint16_t);
+    }
+    
+    if (spaceabove != 0)
+    {
+        t_flags |= FIELD_EXTRA_SPACEABOVE;
+        t_size += sizeof(uint16_t);
+    }
+    
+    if (spacebelow != 0)
+    {
+        t_flags |= FIELD_EXTRA_SPACEBELOW;
+        t_size += sizeof(uint16_t);
+    }
 
 	IO_stat t_stat;
 	t_stat = p_stream . WriteTag(t_flags, t_size);
@@ -2628,6 +2668,26 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint
     if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_RETURNKEYTYPE))
     {
         t_stat = p_stream . WriteS8((int8_t)return_key_type);
+    }
+    
+    if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_LEFTINDENT))
+    {
+        t_stat = p_stream . WriteU16(leftindent);
+    }
+    
+    if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_RIGHTINDENT))
+    {
+        t_stat = p_stream . WriteU16(rightindent);
+    }
+    
+    if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_SPACEABOVE))
+    {
+        t_stat = p_stream . WriteU16(spaceabove);
+    }
+    
+    if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_SPACEBELOW))
+    {
+        t_stat = p_stream . WriteU16(spacebelow);
     }
     
     if (t_stat == IO_NORMAL)
@@ -2709,6 +2769,46 @@ IO_stat MCField::extendedload(MCObjectInputStream& p_stream, uint32_t p_version,
             }
         }
         
+        if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_LEFTINDENT) != 0)
+        {
+            uint16_t t_value;
+            t_stat = checkloadstat(p_stream . ReadU16(t_value));
+            if (t_stat == IO_NORMAL)
+            {
+                leftindent =  t_value;
+            }
+        }
+        
+        if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_RIGHTINDENT) != 0)
+        {
+            uint16_t t_value;
+            t_stat = checkloadstat(p_stream . ReadU16(t_value));
+            if (t_stat == IO_NORMAL)
+            {
+                rightindent =  t_value;
+            }
+        }
+        
+        if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_SPACEABOVE) != 0)
+        {
+            uint16_t t_value;
+            t_stat = checkloadstat(p_stream . ReadU16(t_value));
+            if (t_stat == IO_NORMAL)
+            {
+                spaceabove =  t_value;
+            }
+        }
+        
+        if (t_stat == IO_NORMAL && (t_flags & FIELD_EXTRA_SPACEBELOW) != 0)
+        {
+            uint16_t t_value;
+            t_stat = checkloadstat(p_stream . ReadU16(t_value));
+            if (t_stat == IO_NORMAL)
+            {
+                spacebelow =  t_value;
+            }
+        }
+        
         if (t_stat == IO_NORMAL)
             t_stat = checkloadstat(p_stream . Skip(t_length));
         
@@ -2737,7 +2837,11 @@ IO_stat MCField::save(IO_handle stream, uint4 p_part, bool p_force_ext, uint32_t
     t_has_extension = text_direction != kMCTextDirectionAuto ||
                       nalignments != 0 ||
                       keyboard_type != kMCInterfaceKeyboardTypeNone ||
-                      return_key_type != kMCInterfaceReturnKeyTypeNone;
+                      return_key_type != kMCInterfaceReturnKeyTypeNone ||
+                      leftindent != 0 ||
+                      rightindent != 0 ||
+                      spaceabove != 0 ||
+                      spacebelow != 0;
     
     if ((stat = MCObject::save(stream, p_part, t_has_extension || p_force_ext, p_version)) != IO_NORMAL)
 		return stat;
