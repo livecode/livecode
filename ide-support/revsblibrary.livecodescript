@@ -1792,7 +1792,7 @@ private function revSBAvailableResources
       put "resource" into tInclusion["type"]
       put revSBAllDesktopPlatforms() into tInclusion["platforms"]
       if tTitle is "PDF Printer" then
-         put comma & kiOSPlatform after tInclusion["platforms"]
+         put comma & kiOSPlatform & comma & kAndroidPlatform after tInclusion["platforms"]
       end if
       addToList tInclusion, tInclusions
    end repeat
