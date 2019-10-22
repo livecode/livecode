@@ -68,7 +68,7 @@ comments, which begin with `/*` and end with `*/`, and can span
 multiple lines.
 
 - **Single-line comment**: (--|//)[^\n\r]*
-- **Block comment**: /\*([^*](\*[^/])?)*\*/
+- **Block comment**: /\*(\[^\*]\(\*\[^/])?)\*\*/
 
 > **Note:** A block comment that spans multiple lines terminates the
 > line of code that it begins on.
