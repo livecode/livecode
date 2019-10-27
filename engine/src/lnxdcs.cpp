@@ -1091,6 +1091,10 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
         gdk_gc_set_subwindow(t_gc, GDK_INCLUDE_INFERIORS);
         int16_t t_start_x = 0;
         int16_t t_start_y = 0;
+        gint t_x = 0;
+        gint t_y = 0;
+        gint t_width = 0;
+        gint t_height = 0;
         bool t_drawing = false;
         bool t_done = false;
         
@@ -1186,14 +1190,21 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
                     break;
 
 				default:
-					/* Ignore this event */
+                    // 2019-10-26 MDW [[ bugfix_17257 ]]
+                    // compute the screen rect here
+                    gdk_window_get_geometry(t_root, &t_x, &t_y, &t_width, &t_height, NULL);
+                    t_start_x = (int16_t)t_x;
+                    t_start_y = (int16_t)t_y;
+                    r = MCU_compute_rect(t_start_x, t_start_y, t_width, t_height);
+                    if (r.width < 4 && r.height < 4)
+                        r.width = r.height = 0;
+                    t_done = true;
 					break;
             }
             
             // The event needs to be released
             gdk_event_free(t_event);
         }
-        
         // Release the grabs and other resources that were acquired
         gdk_display_pointer_ungrab(dpy, GDK_CURRENT_TIME);
         gdk_cursor_unref(t_cursor);
