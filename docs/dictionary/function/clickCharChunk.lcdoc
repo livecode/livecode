@@ -32,7 +32,7 @@ Use the <clickCharChunk> <function> within a <mouseDown>, <mouseUp>, or
 clicked, in order to provide <hypertext> (clickable text) or take some
 action based on the click.
 
-The <clickCharChunk> <function> is cleared at the next mouse click, as
+The <clickCharChunk> <function> is cleared at the next mouse click,
 as after some editing actions such as deleting text. If the last click
 was not in a <field>, the <clickCharChunk> <function> <return|returns>
 empty. 
