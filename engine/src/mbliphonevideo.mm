@@ -49,7 +49,6 @@ UIView *MCIPhoneGetView(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool g_movie_player_in_use = false;
 MPMoviePlayerViewController *g_movie_player = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,9 +204,7 @@ static void play_fullscreen_movie_prewait(void *p_context)
 	ctxt = (play_fullscreen_t *)p_context;
 	
     // MM-2011-12-09: [[ Bug 9892 ]] Destroy previous movie player.  Fixes bug with iOS 5 where 
-	//		showController is ignored on second running.  Since g_movie_player is only used for native players
-    //      in iOS 4.2 or earlier, we can use g_movie_player_in_use to make sure we aren't releasing
-    //      a controller that is already in use.
+	//		showController is ignored on second running.
     if (g_movie_player != nil)
 	{
         [g_movie_player release];
@@ -215,12 +212,7 @@ static void play_fullscreen_movie_prewait(void *p_context)
     }
     
 	// Make sure we have a movie player view controller with correct url
-	if (g_movie_player == nil)	
-		g_movie_player = [[MPMoviePlayerViewController alloc] initWithContentURL: ctxt -> url];
-	else
-		[[g_movie_player moviePlayer] setContentURL: ctxt -> url];
-	
-	g_movie_player_in_use = true;
+	g_movie_player = [[MPMoviePlayerViewController alloc] initWithContentURL: ctxt -> url];
 	
 	ctxt -> movie_player = [g_movie_player moviePlayer];
 	
@@ -265,16 +257,10 @@ static void play_fullscreen_movie_postwait(void *p_context)
 	// Make sure we reset the movie player to nothing.
 	[ctxt -> movie_player stop];
 	[ctxt -> movie_player setContentURL: [NSURL URLWithString: @""]];
-	
-	g_movie_player_in_use = false;
 }
 
 static bool play_fullscreen_movie_new(NSURL *p_movie, bool p_looping, bool p_with_controller)
 {
-	// If on iOS < 4.2 don't allow this if there is a native player control
-	if (MCmajorosversion < 420 && g_movie_player_in_use)
-		return false;
-	
 	// Don't allow nested play calls
 	if (s_movie_player_delegate != nil)
 		return false;

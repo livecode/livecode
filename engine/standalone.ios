@@ -3,6 +3,7 @@ framework CoreMedia
 framework CoreGraphics
 framework QuartzCore
 framework AVFoundation
+framework AVKit
 framework CoreLocation
 framework MediaPlayer
 framework MessageUI

@@ -193,6 +193,7 @@
 								'$(SDKROOT)/System/Library/Frameworks/AddressBook.framework',
 								'$(SDKROOT)/System/Library/Frameworks/AddressBookUI.framework',
 								'$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
+								'$(SDKROOT)/System/Library/Frameworks/AVKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CFNetwork.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CoreLocation.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',
