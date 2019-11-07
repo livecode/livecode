@@ -6276,7 +6276,8 @@ static MCValueCustomCallbacks kMCCanvasEffectCustomValueCallbacks =
     nil,
 };
 
-static MCValueCustomCallbacks kMCCanvasFontCustumValueCallbacks =
+// 2019-11-05 mdw [[ font_callback ]] fixed typo
+static MCValueCustomCallbacks kMCCanvasFontCustomValueCallbacks =
 {
 	false,
 	__MCCanvasFontDestroy,
@@ -6326,7 +6327,8 @@ bool MCCanvasTypesInitialize()
 		return false;
 	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Effect"), kMCNullTypeInfo, &kMCCanvasEffectCustomValueCallbacks, kMCCanvasEffectTypeInfo))
 		return false;
-	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Font"), kMCNullTypeInfo, &kMCCanvasFontCustumValueCallbacks, kMCCanvasFontTypeInfo))
+// 2019-11-05 mdw [[ font_callback ]] fixed typo
+	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Font"), kMCNullTypeInfo, &kMCCanvasFontCustomValueCallbacks, kMCCanvasFontTypeInfo))
 		return false;
 	if (!MCNamedCustomTypeInfoCreate(MCNAME("com.livecode.canvas.Canvas"), kMCNullTypeInfo, &kMCCanvasCustomValueCallbacks, kMCCanvasTypeInfo))
 		return false;
