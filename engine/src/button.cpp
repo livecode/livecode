@@ -734,7 +734,7 @@ Boolean MCButton::kdown(MCStringRef p_string, KeySym key)
 				else
 				{
 					if (!(state & CS_IGNORE_MENU))
-						docascade(*t_pick);
+						docascade(*t_pick, nil);
 				}
 			}
 			else
@@ -1271,11 +1271,13 @@ Boolean MCButton::mdown(uint2 which)
 	return True;
 }
 
+// 2019-11-08 MDW [[ bugfix_195 ]] added t_orig to handle original menu selection
 Boolean MCButton::mup(uint2 which, bool p_release)
 {
 	if (state & CS_MENU_ATTACHED)
 		return MCObject::mup(which, p_release);
-	MCAutoStringRef t_pick;
+	MCAutoStringRef t_pick, t_orig;
+    t_orig = getlabeltext(); // store original selection
 	if (state & CS_SUBMENU
 	        && (which == 0 || menubutton == 0 || (uint1)which == menubutton))
 	{
@@ -1366,7 +1368,7 @@ Boolean MCButton::mup(uint2 which, bool p_release)
 					if (entry != NULL)
 						entry->settext(0, *t_pick, False);
 				}
-				docascade(*t_pick);
+				docascade(*t_pick, *t_orig); // report both original and new selections
 			}
 			else
             {
@@ -2879,7 +2881,8 @@ void MCButton::freemenu(Boolean force)
 	}
 }
 
-void MCButton::docascade(MCStringRef p_pick)
+// 2019-11-08 [[ bugfix_195 ]] added second argument to handle original menu selection
+void MCButton::docascade(MCStringRef p_pick, MCStringRef p_orig)
 {
 	MCAutoStringRef t_pick;
 	MCButton *pptr = this;
@@ -2925,7 +2928,8 @@ void MCButton::docascade(MCStringRef p_pick)
 	}
 	else
 	{
-		Exec_stat es = pptr->handlemenupick(*t_pick, nil);
+//		Exec_stat es = pptr->handlemenupick(*t_pick, nil);
+		Exec_stat es = pptr->handlemenupick(*t_pick, p_orig); // affects combo, option, pulldown
 		if (es == ES_NOT_HANDLED || es == ES_PASS)
 			pptr->message_with_args(MCM_mouse_up, menubutton);
 	}

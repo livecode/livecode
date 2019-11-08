@@ -305,7 +305,8 @@ public:
 	void openmenu(Boolean grab);
 	void freemenu(Boolean force);
 	MCRange getmenurange();
-	void docascade(MCStringRef t_pick);
+    // 2019-11-08 MDW [[ bugfix_195 ]] add second argument to report original and new selections
+	void docascade(MCStringRef t_pick, MCStringRef t_orig);
 	void setupmenu();
 	
 	bool menuisopen();
