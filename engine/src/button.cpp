@@ -2928,7 +2928,6 @@ void MCButton::docascade(MCStringRef p_pick, MCStringRef p_orig)
 	}
 	else
 	{
-//		Exec_stat es = pptr->handlemenupick(*t_pick, nil);
 		Exec_stat es = pptr->handlemenupick(*t_pick, p_orig); // affects combo, option, pulldown
 		if (es == ES_NOT_HANDLED || es == ES_PASS)
 			pptr->message_with_args(MCM_mouse_up, menubutton);
