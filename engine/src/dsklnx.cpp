@@ -995,6 +995,8 @@ public:
             return MCStringFormat(r_folder, "%@/Desktop", *t_home);
         else if (MCNameIsEqualToCaseless(p_type, MCN_home))
             return MCStringCopy(*t_home, r_folder);
+        else if (MCNameIsEqualToCaseless(p_type, MCN_documents))
+            return MCStringFormat(r_folder, "%@/Documents", *t_home);
         else if (MCNameIsEqualToCaseless(p_type, MCN_temporary))
             return MCStringCreateWithCString("/tmp", r_folder);
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
