@@ -354,6 +354,7 @@
     Error_IllegalNumberOfArgumentsForOpcode
     Error_BytecodeNotAllowedInSafeContext
     Error_UnsafeHandlerCallNotAllowedInSafeContext
+    Error_UnsafePublicHandlerDefinitionNotAllowedInLibraryModule
     Error_InvalidNameForNamespace
     Error_VariadicParametersOnlyAllowedInForeignHandlers
     Error_VariadicParameterMustBeLast
@@ -786,6 +787,7 @@
 
 'action' Error_BytecodeNotAllowedInSafeContext(Position: POS)
 'action' Error_UnsafeHandlerCallNotAllowedInSafeContext(Position: POS, Identifier: NAME)
+'action' Error_UnsafePublicHandlerDefinitionNotAllowedInLibraryModule(Position: POS, Identifier: NAME)
 
 'action' Error_VariadicParametersOnlyAllowedInForeignHandlers(Position: POS)
 'action' Error_VariadicParameterMustBeLast(Position: POS)

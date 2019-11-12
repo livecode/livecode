@@ -152,3 +152,21 @@ end module
 %EXPECT PASS
 %SUCCESS
 %ENDTEST
+
+%TEST PublicUnsafeLibraryHandlerDefinition
+library compiler_test
+public unsafe %{BEFORE_DEFINITION}handler PublicUnsafeHandler()
+end handler
+end library
+%EXPECT PASS
+%ERROR "Public library handler 'PublicUnsafeHandler' cannot be unsafe" AT BEFORE_DEFINITION
+%ENDTEST
+
+%TEST PublicUnsafeModuleHandlerDefinition
+module compiler_test
+public unsafe handler PublicUnsafeHandler()
+end handler
+end module
+%EXPECT PASS
+%SUCCESS
+%ENDTEST

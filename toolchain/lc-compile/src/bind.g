@@ -40,7 +40,7 @@
 'action' DoBind(MODULE, MODULELIST)
 
     'rule' DoBind(Module:module(Position, Kind, Name, Definitions), ImportedModules):
-        DefineModuleId(Name)
+        DefineModuleId(Name, Kind)
 
         -- Make sure all the imported modules are bound
         BindImports(Definitions, ImportedModules)
@@ -87,7 +87,7 @@
             (|
                 QueryId(ModuleId -> module(Info))
             ||
-                DefineModuleId(ModuleId)
+                DefineModuleId(ModuleId, import)
                 DoBind(Module, Imports)
             |)
         ||
@@ -728,12 +728,13 @@
 
 --------------------------------------------------------------------------------
 
-'action' DefineModuleId(ID)
+'action' DefineModuleId(ID, MODULEKIND)
 
-    'rule' DefineModuleId(Id):
+    'rule' DefineModuleId(Id, Kind):
         Info::MODULEINFO
         Info'Index <- -1
         Info'Generator <- -1
+        Info'Kind <- Kind
         Id'Meaning <- module(Info)
 
 'action' DefineSymbolId(ID, ID, ACCESS, SYMBOLKIND, TYPE)

@@ -323,7 +323,7 @@
 
 'table' ID(Position: POS, Name: NAME, Meaning: MEANING, Namespace: OPTIONALID)
 
-'table' MODULEINFO(Index: INT, Generator: INT)
+'table' MODULEINFO(Index: INT, Generator: INT, Kind: MODULEKIND)
 'table' SYMBOLINFO(Index: INT, Generator: INT, Parent: ID, Access: ACCESS, Safety: SYMBOLSAFETY, Kind: SYMBOLKIND, Type: TYPE)
 'table' SYNTAXINFO(Index: INT, Parent: ID, Class: SYNTAXCLASS, Syntax: SYNTAX, Methods: SYNTAXMETHODLIST, Prefix: SYNTAXTERM, Suffix: SYNTAXTERM)
 'table' SYNTAXMARKINFO(Index: INT, RMode: MODE, LMode: MODE, Type: SYNTAXMARKTYPE)
