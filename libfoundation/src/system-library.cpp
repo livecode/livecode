@@ -82,7 +82,26 @@ public:
     bool CreateWithNativePath(MCStringRef p_native_path)
     {
         MCAssert(!IsDefined());
-        return m_handle.CreateWithNativePath(p_native_path);
+        
+        uindex_t t_sep;
+        if (!MCStringLastIndexOfChar(p_native_path,
+                                     '/',
+                                     UINDEX_MAX,
+                                     kMCStringOptionCompareExact,
+                                     t_sep))
+        {
+            t_sep = 0;
+        }
+        
+        uindex_t t_ext;
+        bool t_has_extension =
+                    MCStringFirstIndexOfChar(p_native_path,
+                                        '.',
+                                        t_sep,
+                                        kMCStringOptionCompareExact,
+                                        t_ext);
+        
+        return m_handle.CreateWithNativePath(p_native_path, t_has_extension);
     }
     
     bool CreateWithAddress(void *p_address)

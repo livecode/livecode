@@ -52,7 +52,7 @@ public:
         return MCHashPointer(m_handle);
     }
     
-    bool CreateWithNativePath(MCStringRef p_native_path)
+    bool CreateWithNativePath(MCStringRef p_native_path, bool p_has_extension)
     {
         for(MCSLibraryStaticInfo *t_info = s_chain;
             t_info != nullptr;
@@ -161,7 +161,7 @@ class __MCSLibraryHandleStatic
         return MCHashPointer(m_handle);
     }
     
-    bool CreateWithNativePath(MCStringRef p_native_path)
+    bool CreateWithNativePath(MCStringRef p_native_path, bool p_has_extension)
     {
         // First process the native path to remove the engine folder prefix
         // and extension - all static libs are compiled in with just the

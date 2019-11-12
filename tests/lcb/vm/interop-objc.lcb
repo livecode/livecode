@@ -558,4 +558,16 @@ public handler TestDelegateRequiredMethod()
                                 "Creating delegate throws error when required protocol method is not mapped")
 end handler
 
+foreign handler AVURLAssetAlloc() returns ObjcRetainedId \
+	binds to "objc:AVFoundation>AVURLAsset.+alloc"
+
+public handler TestBindingToFrameworkWithoutExtension()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc framework loads without .framework extension" \
+			because "not implemented on" && the operating system
+		return
+	end if
+	test "objc framework loads without .framework extension" when AVURLAssetAlloc is not nothing
+end handler
+
 end module
