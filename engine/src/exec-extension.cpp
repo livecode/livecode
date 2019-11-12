@@ -185,7 +185,7 @@ MCEngineCheckModulesHaveNamePrefix(MCNameRef p_prefix,
     return true;
 }
 
-void MCEngineAddExtensionsFromModulesArray(MCAutoScriptModuleRefArray& p_modules, MCStringRef p_resource_path, MCStringRef& r_error)
+bool MCEngineAddExtensionsFromModulesArray(MCAutoScriptModuleRefArray& p_modules, MCStringRef p_resource_path)
 {
     MCScriptModuleRef t_main = p_modules[0];
     
@@ -204,20 +204,25 @@ void MCEngineAddExtensionsFromModulesArray(MCAutoScriptModuleRefArray& p_modules
         MCAutoErrorRef t_error;
         if (MCErrorCatch(&t_error))
         {
-            r_error = MCValueRetain(MCErrorGetMessage(*t_error));
+            MCresult -> setvalueref(MCErrorGetMessage(*t_error));
         }
         else
         {
-            r_error = MCValueRetain(*t_message);
+            MCresult -> setvalueref(*t_message);
         }
-        return;
+        return false;
     }
     
     /* Only the head module is registered as an extension */
-    MCEngineAddExtensionFromModule(t_main);
+    if (!MCEngineAddExtensionFromModule(t_main))
+        return false;
     
     if (p_resource_path != nullptr)
-        MCEngineAddResourcePathForModule(t_main, p_resource_path);
+    {
+        if (!MCEngineAddResourcePathForModule(t_main, p_resource_path))
+            return false;
+    }
+    return true;
 }
 
 void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_data, MCStringRef p_resource_path)
@@ -233,12 +238,7 @@ void MCEngineLoadExtensionFromData(MCExecContext& ctxt, MCDataRef p_extension_da
         return;
     }
 
-    MCAutoStringRef t_error;
-    MCEngineAddExtensionsFromModulesArray(t_modules, p_resource_path, &t_error);
-    if (*t_error != nullptr)
-    {
-        ctxt.SetTheResultToValue(*t_error);
-    }
+    MCEngineAddExtensionsFromModulesArray(t_modules, p_resource_path);
 }
 
 // This is the callback given to libscript so that it can resolve the absolute

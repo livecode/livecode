@@ -458,15 +458,10 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 #endif
         }
         
-        extern void MCEngineAddExtensionsFromModulesArray(MCAutoScriptModuleRefArray&, MCStringRef, MCStringRef&);
-        
-        MCAutoStringRef t_error;
-        MCEngineAddExtensionsFromModulesArray(t_modules, *t_resolved_path, &t_error);
-        if (*t_error != nullptr)
-        {
-            MCresult->setvalueref(*t_error);
+        extern bool MCEngineAddExtensionsFromModulesArray(MCAutoScriptModuleRefArray&, MCStringRef);
+
+        if (!MCEngineAddExtensionsFromModulesArray(t_modules, *t_resolved_path))
             return false;
-        }
     }
     break;
 
