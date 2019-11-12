@@ -32,6 +32,10 @@ Example:
 put "Hello World" into URL "file:/Users/myuser/Documents/sample.txt"
 
 Example:
+put "http://www.example.org/current.txt" into myVar
+get URL myVar
+
+Example:
 -- Writing the contents of a field to an external file, preserving text encoding
 on textSave
    put "всем привет" into field "russiantext"
