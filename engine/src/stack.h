@@ -212,7 +212,7 @@ protected:
 	MCStackfile *stackfiles;
 	Linkatts *linkatts;
 	MCStringRef externalfiles;
-	MCStringRef filename;
+	MCNameRef filename;
 	MCNameRef _menubar;
 	void (*idlefunc)();
 	
@@ -839,7 +839,7 @@ public:
 	}
 	MCStringRef getfilename(void)
 	{
-		return filename;
+		return MCNameGetString(filename);
 	}
 	MCStringRef gettitletext(void)
 	{

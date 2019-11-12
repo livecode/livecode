@@ -272,7 +272,7 @@ MCStack::MCStack()
 	nstackfiles = 0;
 	stackfiles = NULL;
 	linkatts = NULL;
-	filename = MCValueRetain(kMCEmptyString);
+	filename = MCValueRetain(kMCEmptyName);
     _menubar = MCValueRetain(kMCEmptyName);
 	menuy = menuheight = 0;
 	menuwindow = False;
@@ -493,7 +493,7 @@ MCStack::MCStack(const MCStack &sref)
 	}
 	else
 		linkatts = NULL;
-	filename = MCValueRetain(kMCEmptyString);
+	filename = MCValueRetain(kMCEmptyName);
     _menubar = MCValueRetain(sref._menubar);
 	menuy = menuheight = 0;
 

@@ -750,11 +750,9 @@ MCStack *MCStack::findname(Chunk_term type, MCNameRef p_name)
 		if (MCU_matchname(p_name, CT_STACK, getname()))
 			return this;
 		
-		if (!MCStringIsEmpty(filename))
+		if (!MCNameIsEmpty(filename))
 		{
-			MCNewAutoNameRef t_filename_name;
-			/* UNCHECKED */ MCNameCreate(filename, &t_filename_name);
-			if (MCU_matchname(p_name, CT_STACK, *t_filename_name))
+			if (MCU_matchname(p_name, CT_STACK, filename))
 				return this;
 		}
 	}
@@ -2719,21 +2717,21 @@ void MCStack::getstackfile(MCStringRef p_name, MCStringRef &r_name)
 		for (i = 0 ; i < nstackfiles ; i++)
 			if (MCStringIsEqualTo(stackfiles[i].stackname, p_name, kMCStringOptionCompareCaseless))
 			{
-				if (MCStringIsEmpty(filename) || MCStringGetCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetCharAtIndex(stackfiles[i].filename, 1) == ':')
+				if (MCNameIsEmpty(filename) || MCStringGetCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetCharAtIndex(stackfiles[i].filename, 1) == ':')
 				{
 					r_name = MCValueRetain(stackfiles[i].filename);
 					return;
 				}
 
 				uindex_t t_index;
-				if (!MCStringLastIndexOfChar(filename, PATH_SEPARATOR, -1, kMCStringOptionCompareExact, t_index))
+				if (!MCStringLastIndexOfChar(MCNameGetString(filename), PATH_SEPARATOR, -1, kMCStringOptionCompareExact, t_index))
 				{
-					r_name = MCValueRetain(filename);
+					r_name = MCValueRetain(MCNameGetString(filename));
 					return;
 				}
 				
 				MCStringRef t_filename;
-				/* UNCHECKED */ MCStringMutableCopySubstring(filename, MCRangeMake(0, t_index + 1), t_filename);
+				/* UNCHECKED */ MCStringMutableCopySubstring(MCNameGetString(filename), MCRangeMake(0, t_index + 1), t_filename);
 				/* UNCHECKED */ MCStringAppend(t_filename, stackfiles[i].filename);
 				/* UNCHECKED */ MCStringCopyAndRelease(t_filename, r_name);
 				return;
@@ -2746,7 +2744,8 @@ void MCStack::setfilename(MCStringRef f)
 {
 	MCAutoStringRef out_filename_string;
 	MCU_fix_path(f, &out_filename_string);
-	MCValueAssign(filename, *out_filename_string);
+	MCValueRelease(filename);
+	MCNameCreate(*out_filename_string, filename);
 }
 
 void MCStack::loadwindowshape()
