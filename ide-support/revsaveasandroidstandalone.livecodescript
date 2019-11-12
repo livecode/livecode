@@ -1684,16 +1684,19 @@ command MergeManifestArray @xManifestArrayA, pAdditionalsA
                   tData["@children"]
             break
          case "uses-sdk"
-            -- ensure the maximum min sdk is used
+            -- ensure the maximum min and target sdks are used
             -- Find the index of the uses-sdk element
             local tUsesSDKIndex
             put FindIndex(xManifestArrayA, "uses-sdk") into tUsesSDKIndex
-            local tExisting, tNew
-            put xManifestArrayA[tUsesSDKIndex]["@attributes"]["android:minSDKVersion"] \
-                  into tExisting
-            put tData["@attributes"]["android:minSDKVersion"] into tNew
-            put max(tExisting, tNew) into \
-                  xManifestArrayA[tUsesSDKIndex]["@attributes"]["android:minSDKVersion"]
+            local tExisting, tNew, tAttribute
+            repeat for each item tVersion in "minSDKVersion,targetSDKVersion"
+               put "android:" & tVersion into tAttribute
+               put xManifestArrayA[tUsesSDKIndex]["@attributes"][tAttribute] \
+                     into tExisting
+               put tData["@attributes"][tAttribute] into tNew
+               put max(tExisting, tNew) into \
+                     xManifestArrayA[tUsesSDKIndex]["@attributes"][tAttribute]
+            end repeat
             break
          default
             insertIntoList tData, xManifestArrayA, tEndOfBlock
