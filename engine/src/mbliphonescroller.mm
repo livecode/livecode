@@ -16,6 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
+#include "mbldc.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -33,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mbliphonecontrol.h"
 #include "mblcontrol.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -709,6 +711,7 @@ void MCiOSScrollerControl::HandleEvent(MCNameRef p_message)
 	{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
+        
 		t_target->message(p_message);
 		ChangeTarget(t_old_target);
 	}
@@ -722,6 +725,7 @@ void MCiOSScrollerControl::HandleEndDragEvent(bool p_decelerate)
 	{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
+        
 		t_target->message_with_valueref_args(MCM_scroller_end_drag, p_decelerate ? kMCTrue : kMCFalse);
 		ChangeTarget(t_old_target);
 	}
@@ -745,6 +749,7 @@ void MCiOSScrollerControl::HandleScrollEvent(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 
 UIView *MCiOSScrollerControl::CreateView(void)
 {
@@ -774,8 +779,8 @@ UIView *MCiOSScrollerControl::CreateView(void)
         // to the opposite of CanCancelContentTouches to allow scrolling on iOS7
         [t_view setCanCancelContentTouches: YES];
     }
-	
-	return t_view;
+
+    return t_view;
 }
 
 void MCiOSScrollerControl::DeleteView(UIView *p_view)
@@ -883,7 +888,7 @@ private:
 		return nil;
 	
 	m_instance = instance;
-	
+    
 	return self;
 }
 
@@ -891,13 +896,24 @@ private:
 {
 	MCCustomEvent *t_event;
 	t_event = new MCiOSScrollerEvent(m_instance, MCM_scroller_begin_drag);
+    
+    CGPoint touchPoint = [scrollView.panGestureRecognizer locationInView:scrollView];
+
+    MCscreen -> device_updatemouse((int32_t)touchPoint.x,(int32_t)touchPoint.y);
+    
 	MCEventQueuePostCustom(t_event);
 }
+
 
 - (void)scrollViewDidEndDragging: (UIScrollView*)scrollView willDecelerate:(BOOL)decelerate
 {
 	MCCustomEvent *t_event;
 	t_event = new MCiOSScrollerEndDragEvent(m_instance, decelerate);
+    
+    CGPoint touchPoint = [scrollView.panGestureRecognizer locationInView:scrollView];
+    
+    MCscreen -> device_updatemouse((int)touchPoint.x,(int)touchPoint.y);
+    
 	MCEventQueuePostCustom(t_event);
 
 	m_instance->UpdateForwarderBounds();
@@ -940,6 +956,8 @@ private:
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
 
 bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 {

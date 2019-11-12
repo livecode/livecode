@@ -471,6 +471,9 @@ public:
 	// IM-2013-09-30: [[ FullscreenMode ]] Returns true if windows on this display are 
 	// always fullscreen (i.e. on mobile devices)
 	virtual bool fullscreenwindows(void);
+    
+    virtual void device_updatemouse(int32_t p_x, int32_t p_y);
+
 
 	// IM-2013-09-30: [[ FullscreenMode ]] Return the rect that will be occupied by
 	// fullscreen windows on the given display

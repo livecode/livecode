@@ -504,26 +504,32 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doS
     }
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollBeginDrag(JNIEnv *env, jobject object) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollBeginDrag(JNIEnv *env, jobject object)
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollBeginDrag(JNIEnv *env, jobject object, jint x, jint y) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollBeginDrag(JNIEnv *env, jobject object, jint x, jint y)
 {
     MCLog("scrollViewBeginDrag");
     MCAndroidControl *t_control = nil;
     char *t_url = nil;
     
     if (MCAndroidControl::FindByView(object, t_control))
+    {
+        MCscreen -> device_updatemouse(x,y);
         t_control->PostNotifyEvent(MCM_scroller_begin_drag);
+    }
 }
 
-extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollEndDrag(JNIEnv *env, jobject object) __attribute__((visibility("default")));
-JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollEndDrag(JNIEnv *env, jobject object)
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollEndDrag(JNIEnv *env, jobject object, jint x, jint y) __attribute__((visibility("default")));
+JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_ScrollerControl_doScrollEndDrag(JNIEnv *env, jobject object, jint x, jint y)
 {
     MCLog("scrollViewEndDrag");
     MCAndroidControl *t_control = nil;
     char *t_url = nil;
     
     if (MCAndroidControl::FindByView(object, t_control))
+    {
+        MCscreen -> device_updatemouse(x,y);
         t_control->PostNotifyEvent(MCM_scroller_end_drag);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
