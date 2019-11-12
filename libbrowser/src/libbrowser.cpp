@@ -53,8 +53,15 @@ void MCBrowserRefCounted::Destroy()
 MCBrowserBase::MCBrowserBase(void)
     : m_event_handler(nil),
       m_javascript_handler(nil),
-      m_progress_handler(nil)
+      m_progress_handler(nil),
+	  m_file_dialog_handler(nil),
+	  m_download_request_handler(nil),
+	  m_download_progress_handler(nil),
+	  m_file_dialog_have_response(false),
+	  m_download_request_have_response(false)
 {
+	MCBrowserMemoryClear(m_file_dialog_response);
+	MCBrowserMemoryClear(m_download_request_response);
 }
 
 MCBrowserBase::~MCBrowserBase(void)
@@ -67,6 +74,18 @@ MCBrowserBase::~MCBrowserBase(void)
 
 	if (m_progress_handler)
 		m_progress_handler->Release();
+
+	if (m_file_dialog_handler)
+		m_file_dialog_handler->Release();
+
+	if (m_download_request_handler)
+		m_download_request_handler->Release();
+
+	if (m_download_progress_handler)
+		m_download_progress_handler->Release();
+
+	FileDialogClearResponse();
+	DownloadClearResponse();
 }
 
 void MCBrowserBase::SetEventHandler(MCBrowserEventHandler *p_handler)
@@ -171,6 +190,189 @@ void MCBrowserBase::OnProgressChanged(const char *p_url, uint32_t p_progress)
 {
 	if (m_progress_handler != nil)
 		m_progress_handler->OnProgressChanged(this, p_url, p_progress);
+}
+
+//////////
+
+void MCBrowserBase::SetFileDialogHandler(MCBrowserFileDialogHandler *p_handler)
+{
+	if (p_handler != nil)
+		p_handler->Retain();
+
+	if (m_file_dialog_handler != nil)
+		m_file_dialog_handler->Release();
+
+	m_file_dialog_handler = p_handler;
+}
+
+MCBrowserFileDialogHandler *MCBrowserBase::GetFileDialogHandler(void)
+{
+	return m_file_dialog_handler;
+}
+
+bool MCBrowserBase::OnFileDialog(
+	MCBrowserFileDialogType p_type,
+	MCBrowserFileDialogOptions p_options,
+	const char *p_title,
+	const char *p_default_path,
+	const char *p_filters,
+	uindex_t p_default_filter
+)
+{
+	if (m_file_dialog_handler)
+		return m_file_dialog_handler->OnFileDialog(this, p_type, p_options, p_title, p_default_path, p_filters, p_default_filter);
+
+	return false;
+}
+
+//////////
+
+void MCBrowserBase::SetDownloadRequestHandler(MCBrowserDownloadRequestHandler *p_handler)
+{
+	if (p_handler != nil)
+		p_handler->Retain();
+
+	if (m_download_request_handler != nil)
+		m_download_request_handler->Release();
+
+	m_download_request_handler = p_handler;
+}
+
+MCBrowserDownloadRequestHandler *MCBrowserBase::GetDownloadRequestHandler(void)
+{
+	return m_download_request_handler;
+}
+
+bool MCBrowserBase::OnDownloadRequest(const char *p_url, const char *p_suggested_name)
+{
+	if (m_download_request_handler != nil)
+		return m_download_request_handler->OnDownloadRequest(this, p_url, p_suggested_name);
+
+	return false;
+}
+
+//////////
+
+void MCBrowserBase::SetDownloadProgressHandler(MCBrowserDownloadProgressHandler *p_handler)
+{
+	if (p_handler != nil)
+		p_handler->Retain();
+
+	if (m_download_progress_handler != nil)
+		m_download_progress_handler->Release();
+
+	m_download_progress_handler = p_handler;
+}
+
+MCBrowserDownloadProgressHandler *MCBrowserBase::GetDownloadProgressHandler(void)
+{
+	return m_download_progress_handler;
+}
+
+void MCBrowserBase::OnDownloadProgress(const char *p_url, MCBrowserDownloadState p_state, uint32_t p_bytes_received, int32_t p_total_bytes)
+{
+	if (m_download_progress_handler != nil)
+		m_download_progress_handler->OnDownloadProgress(this, p_url, p_state, p_bytes_received, p_total_bytes);
+}
+
+//////////
+
+void MCBrowserBase::FileDialogClearResponse(void)
+{
+	if (!m_file_dialog_have_response)
+		return;
+
+	m_file_dialog_response.cancelled = false;
+	if (m_file_dialog_response.selected_paths != nil)
+		MCCStringFree(const_cast<char*>(m_file_dialog_response.selected_paths));
+	m_file_dialog_response.selected_paths = nil;
+	m_file_dialog_response.selected_filter = 0;
+
+	m_file_dialog_have_response = false;
+}
+
+bool MCBrowserBase::FileDialogGetResponse(MCBrowserFileDialogResponse &r_response)
+{
+	if (!m_file_dialog_have_response)
+		return false;
+
+	r_response = m_file_dialog_response;
+	return true;
+}
+
+void MCBrowserBase::FileDialogCancel(void)
+{
+	if (m_file_dialog_have_response)
+		return;
+
+	m_file_dialog_response.cancelled = true;
+	m_file_dialog_have_response = true;
+}
+
+void MCBrowserBase::FileDialogSelectPaths(const char *p_paths, uindex_t p_selected_filter)
+{
+	if (m_file_dialog_have_response)
+		return;
+
+	char *t_paths = nil;
+	/* UNCHECKED */ MCCStringClone(p_paths, t_paths);
+	m_file_dialog_response.selected_paths = t_paths;
+	m_file_dialog_response.selected_filter = p_selected_filter;
+	m_file_dialog_have_response = true;
+}
+
+//////////
+
+void MCBrowserBase::DownloadClearResponse()
+{
+	if (!m_download_request_have_response)
+		return;
+
+	m_download_request_response.cancelled = false;
+	if (m_download_request_response.save_path)
+		MCCStringFree(const_cast<char*>(m_download_request_response.save_path));
+	m_download_request_response.save_path = nil;
+
+	m_download_request_have_response = false;
+}
+
+bool MCBrowserBase::DownloadGetResponse(MCBrowserDownloadRequestResponse &r_response)
+{
+	if (!m_download_request_have_response)
+		return false;
+
+	r_response = m_download_request_response;
+	return true;
+}
+
+void MCBrowserBase::DownloadCancel()
+{
+	if (m_download_request_have_response)
+		return;
+
+	m_download_request_response.cancelled = true;
+
+	m_download_request_have_response = true;
+}
+
+void MCBrowserBase::DownloadContinueWithSavePath(const char *p_save_path)
+{
+	if (m_download_request_have_response)
+		return;
+
+	char *t_save_path = nil;
+	/* UNCHECKED */ MCCStringClone(p_save_path, t_save_path);
+	m_download_request_response.save_path = t_save_path;
+
+	m_download_request_have_response = true;
+}
+
+void MCBrowserBase::DownloadContinueWithSaveDialog(void)
+{
+	if (m_download_request_have_response)
+		return;
+
+	m_download_request_have_response = true;
 }
 
 //////////
@@ -435,6 +637,51 @@ bool MCBrowserEvaluateJavaScript(MCBrowserRef p_browser, const char *p_script, c
 	return p_browser->EvaluateJavaScript(p_script, r_result);
 }
 
+MC_BROWSER_DLLEXPORT_DEF
+void MCBrowserFileDialogCancel(MCBrowserRef p_browser)
+{
+	if (p_browser == nil)
+		return;
+
+	p_browser->FileDialogCancel();
+}
+
+MC_BROWSER_DLLEXPORT_DEF
+void MCBrowserFileDialogSelectPaths(MCBrowserRef p_browser, const char *p_paths, uindex_t p_selected_filter)
+{
+	if (p_browser == nil)
+		return;
+
+	p_browser->FileDialogSelectPaths(p_paths, p_selected_filter);
+}
+
+MC_BROWSER_DLLEXPORT_DEF
+void MCBrowserDownloadCancel(MCBrowserRef p_browser)
+{
+	if (p_browser == nil)
+		return;
+
+	p_browser->DownloadCancel();
+}
+
+MC_BROWSER_DLLEXPORT_DEF
+void MCBrowserDownloadContinueWithSavePath(MCBrowserRef p_browser, const char *p_save_path)
+{
+	if (p_browser == nil)
+		return;
+
+	p_browser->DownloadContinueWithSavePath(p_save_path);
+}
+
+MC_BROWSER_DLLEXPORT_DEF
+void MCBrowserDownloadContinueWithSaveDialog(MCBrowserRef p_browser)
+{
+	if (p_browser == nil)
+		return;
+
+	p_browser->DownloadContinueWithSaveDialog();
+}
+
 //////////
 
 // Event handler c++ wrapper
@@ -608,6 +855,159 @@ bool MCBrowserSetProgressHandler(MCBrowserRef p_browser, MCBrowserProgressCallba
 		return false;
 
 	p_browser->SetProgressHandler(t_wrapper);
+
+	t_wrapper->Release();
+
+	return true;
+}
+
+//////////
+
+class MCBrowserFileDialogHandlerWrapper : public MCBrowserFileDialogHandler
+{
+public:
+	MCBrowserFileDialogHandlerWrapper(MCBrowserFileDialogCallback p_callback, void *p_context)
+	{
+		m_callback = p_callback;
+		m_context = p_context;
+	}
+
+	virtual bool OnFileDialog(
+		MCBrowser *p_browser,
+		MCBrowserFileDialogType p_type,
+		MCBrowserFileDialogOptions p_options,
+		const char *p_title,
+		const char *p_default_path,
+		const char *p_filters,
+		uindex_t p_default_filter
+	)
+	{
+		if (m_callback)
+			return m_callback(m_context, p_browser, p_type, p_options, p_title, p_default_path, p_filters, p_default_filter);
+
+		return false;
+	}
+
+private:
+	MCBrowserFileDialogCallback m_callback;
+	void *m_context;
+};
+
+MC_BROWSER_DLLEXPORT_DEF
+bool MCBrowserSetFileDialogHandler(MCBrowserRef p_browser, MCBrowserFileDialogCallback p_callback, void *p_context)
+{
+	if (p_browser == nil)
+		return false;
+
+	if (p_callback == nil)
+	{
+		p_browser->SetFileDialogHandler(nil);
+		return true;
+	}
+
+	MCBrowserFileDialogHandlerWrapper *t_wrapper;
+	t_wrapper = new (nothrow) MCBrowserFileDialogHandlerWrapper(p_callback, p_context);
+
+	if (t_wrapper == nil)
+		return false;
+
+	p_browser->SetFileDialogHandler(t_wrapper);
+
+	t_wrapper->Release();
+
+	return true;
+}
+
+//////////
+
+class MCBrowserDownloadRequestWrapper : public MCBrowserDownloadRequestHandler
+{
+public:
+	MCBrowserDownloadRequestWrapper(MCBrowserDownloadRequestCallback p_callback, void *p_context)
+	{
+		m_callback = p_callback;
+		m_context = p_context;
+	}
+
+	virtual bool OnDownloadRequest(MCBrowser *p_browser, const char *p_url, const char *p_suggested_name)
+	{
+		if (m_callback)
+			return m_callback(m_context, p_browser, p_url, p_suggested_name);
+
+		return false;
+	}
+
+private:
+	MCBrowserDownloadRequestCallback m_callback;
+	void *m_context;
+};
+
+MC_BROWSER_DLLEXPORT_DEF
+bool MCBrowserSetDownloadRequestHandler(MCBrowserRef p_browser, MCBrowserDownloadRequestCallback p_callback, void *p_context)
+{
+	if (p_browser == nil)
+		return false;
+
+	if (p_callback == nil)
+	{
+		p_browser->SetDownloadRequestHandler(nil);
+		return true;
+	}
+
+	MCBrowserDownloadRequestWrapper *t_wrapper;
+	t_wrapper = new (nothrow) MCBrowserDownloadRequestWrapper(p_callback, p_context);
+
+	if (t_wrapper == nil)
+		return false;
+
+	p_browser->SetDownloadRequestHandler(t_wrapper);
+
+	t_wrapper->Release();
+
+	return true;
+}
+
+//////////
+
+class MCBrowserDownloadProgressWrapper : public MCBrowserDownloadProgressHandler
+{
+public:
+	MCBrowserDownloadProgressWrapper(MCBrowserDownloadProgressCallback p_callback, void *p_context)
+	{
+		m_callback = p_callback;
+		m_context = p_context;
+	}
+
+	virtual void OnDownloadProgress(MCBrowser *p_browser, const char *p_url, MCBrowserDownloadState p_state, uint32_t p_bytes_downloaded, int32_t p_total_bytes)
+	{
+		if (m_callback)
+			m_callback(m_context, p_browser, p_url, p_state, p_bytes_downloaded, p_total_bytes);
+	}
+
+private:
+	MCBrowserDownloadProgressCallback m_callback;
+	void *m_context;
+};
+
+MC_BROWSER_DLLEXPORT_DEF
+bool MCBrowserSetDownloadProgressHandler(MCBrowserRef p_browser, MCBrowserDownloadProgressCallback p_callback, void *p_context)
+{
+	if (p_browser == nil)
+		return false;
+
+	if (p_callback == nil)
+	{
+		p_browser->SetDownloadProgressHandler(nil);
+		return true;
+	}
+
+	MCBrowserDownloadProgressWrapper *t_wrapper;
+	t_wrapper = new (nothrow) MCBrowserDownloadProgressWrapper(p_callback, p_context);
+
+	if (t_wrapper == nil)
+		return false;
+
+	p_browser->SetDownloadProgressHandler(t_wrapper);
 
 	t_wrapper->Release();
 

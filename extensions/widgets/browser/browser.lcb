@@ -203,6 +203,23 @@ The <browserProgressChanged> message is sent to the widget's script
 object when a the loading progress of the current document changes. The <pUrl>
 parameter contains the URL of the loading document. The <pProgress> parameter
 contains the percentage (between 0 and 100) of the document loaded.
+
+
+Name: browserDownloadProgressChanged
+Type: message
+Syntax: browserDownloadProgressChanged <pUrl>, <pState>, <pBytesReceived>, <pTotalBytes>
+
+Summary: Sent when the load progress of a file download changes.
+
+Parameters:
+pUrl (string): The URL of the downloading file.
+pState (string): The current status of the download. one of 'inProgress', 'complete', 'cancelled', 'failed'
+pBytesReceived (number): The number of bytes already downloaded.
+pTotalBytes (number): The total size of the download file. This will be -1 if the size is unknown.
+
+Description:
+The <browserDownloadProgressChanged> message is sent to the widget's script
+object when progress of a file download changes.
 */
 
 -- declaring extension as widget, followed by identifier
@@ -380,6 +397,29 @@ metadata allowUserInteraction.default is "true"
 metadata allowUserInteraction.label is "Allow user interaction"
 
 /**
+Name: enableDragDrop
+Type: property
+
+Syntax:
+set the enableDragDrop of <widget> to <enableDragDrop>
+get the enableDragDrop of <widget>
+
+Summary: Controls whether the browser responds to drag 'n drop interactions.
+
+Value (boolean):
+`true` if the browser should respond to drag 'n drop interaction;
+`false` otherwise.
+
+Description:
+Use the <enableDragDrop> property to control if the browser should respond
+to drag 'n drop interaction.
+*/
+property enableDragDrop get getEnableDragDrop set setEnableDragDrop
+metadata enableDragDrop is "com.livecode.pi.boolean"
+metadata enableDragDrop.default is "true"
+metadata enableDragDrop.label is "Enable drag 'n drop within the browser"
+
+/**
 Name: isSecure
 Type: property
 
@@ -496,7 +536,7 @@ variable mScriptObject as ScriptObject
 
 --------------------------------------------------------------------------------
 
-constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "userAgent", "javaScriptHandlers", "allowUserInteraction", "isSecure"]
+constant kPersistentProps is ["verticalScrollbarEnabled", "horizontalScrollbarEnabled", "allowNewWindows", "enableContextMenu", "enableDragDrop", "userAgent", "javaScriptHandlers", "allowUserInteraction", "isSecure"]
 
 --------------------------------------------------------------------------------
 
@@ -555,6 +595,9 @@ private unsafe handler InitBrowserView()
 	MCBrowserSetRequestHandler(mBrowser, OnBrowserRequestCallback, nothing)
 	MCBrowserSetJavaScriptHandler(mBrowser, OnJavaScriptCallback, nothing)
 	MCBrowserSetProgressHandler(mBrowser, OnProgressCallback, nothing)
+	MCBrowserSetFileDialogHandler(mBrowser, OnFileDialogCallback, nothing)
+	MCBrowserSetDownloadRequestHandler(mBrowser, OnDownloadRequestCallback, nothing)
+	MCBrowserSetDownloadProgressHandler(mBrowser, OnDownloadProgressCallback, nothing)
 
 	applyProperties(mProperties)
 end handler
@@ -567,6 +610,9 @@ private unsafe handler FinalizeBrowserView()
             MCBrowserSetRequestHandler(mBrowser, nothing, nothing)
             MCBrowserSetJavaScriptHandler(mBrowser, nothing, nothing)
             MCBrowserSetProgressHandler(mBrowser, nothing, nothing)
+			MCBrowserSetFileDialogHandler(mBrowser, nothing, nothing)
+			MCBrowserSetDownloadRequestHandler(mBrowser, nothing, nothing)
+			MCBrowserSetDownloadProgressHandler(mBrowser, nothing, nothing)
 
 			MCBrowserRelease(mBrowser)
 			put nothing into mBrowser
@@ -668,6 +714,54 @@ end handler
 
 private handler OnProgressCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pProgress as UInt32) returns nothing
 	post "browserProgressChanged" to mScriptObject with [pUrl, pProgress]
+end handler
+
+private handler OnFileDialogCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserFileDialogType, in pOptions as MCBrowserFileDialogOption, in pTitle as optional ZStringUTF8, in pDefaultPath as optional ZStringUTF8, in pFilters as optional ZStringUTF8, in pDefaultFilter as UInt32) returns CBool
+	if pTitle is nothing then
+		put the empty string into pTitle
+	end if
+
+	variable tScript
+	if pType is kMCBrowserFileDialogTypeOpen then
+		put "answer file param(1)" into tScript
+	else if pType is kMCBrowserFileDialogTypeOpenMultiple then
+		put "answer files param(1)" into tScript
+	else if pType is kMCBrowserFileDialogTypeOpenFolder then
+		put "answer folder param(1)" into tScript
+	else if pType is kMCBrowserFileDialogTypeSave then
+		put "ask file param(1)" into tScript
+	end if
+
+	variable tParams
+	put [ pTitle ] into tParams
+
+	if pDefaultPath is not nothing then
+		put " with param(2)" after tScript
+		push pDefaultPath onto tParams
+	end if
+
+	put "\nif the result is empty then return it else return empty" after tScript
+
+	variable tResult
+	execute script tScript with tParams
+	put the result into tResult
+	log tResult
+	if tResult is empty then
+		MCBrowserFileDialogCancel(pBrowser)
+	else
+		MCBrowserFileDialogSelectPaths(pBrowser, tResult, pDefaultFilter)
+	end if
+
+	return true
+end handler
+
+private handler OnDownloadRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pSuggestedName as optional ZStringUTF8) returns CBool
+	MCBrowserDownloadContinueWithSaveDialog(pBrowser)
+	return true
+end handler
+
+private handler OnDownloadProgressCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pUrl as ZStringUTF8, in pState as MCBrowserDownloadState, in pBytesReceived as UInt32, in pTotalBytes as Int32) returns nothing
+	post "browserDownloadProgressChanged" to mScriptObject with [ pUrl, kMCBrowserDownloadStateMap[pState + 1], pBytesReceived, pTotalBytes ]
 end handler
 
 ----------
@@ -804,6 +898,16 @@ end handler
 
 private handler getIsSecure() returns Boolean
 	return getProperty("isSecure")
+end handler
+
+--
+
+private handler getEnableDragDrop() returns Boolean
+	return getProperty("enableDragDrop")
+end handler
+
+private handler setEnableDragDrop(in pEnableDragDrop as Boolean)
+	setProperty("enableDragDrop", pEnableDragDrop)
 end handler
 
 ----------

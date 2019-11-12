@@ -36,10 +36,16 @@ public:
 	void SetEventHandler(MCBrowserEventHandler *p_handler);
 	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);
 	void SetProgressHandler(MCBrowserProgressHandler *p_handler);
+	void SetFileDialogHandler(MCBrowserFileDialogHandler *p_handler);
+	void SetDownloadRequestHandler(MCBrowserDownloadRequestHandler *p_handler);
+	void SetDownloadProgressHandler(MCBrowserDownloadProgressHandler *p_handler);
 
 	MCBrowserEventHandler *GetEventHandler(void);
 	MCBrowserJavaScriptHandler *GetJavaScriptHandler(void);
 	MCBrowserProgressHandler *GetProgressHandler(void);
+	MCBrowserFileDialogHandler *GetFileDialogHandler(void);
+	MCBrowserDownloadRequestHandler *GetDownloadRequestHandler(void);
+	MCBrowserDownloadProgressHandler *GetDownloadProgressHandler(void);
 
 	virtual void OnNavigationBegin(bool p_in_frame, const char *p_url);
 	virtual void OnNavigationComplete(bool p_in_frame, const char *p_url);
@@ -53,6 +59,29 @@ public:
 	virtual void OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
 
 	virtual void OnProgressChanged(const char *p_url, uint32_t p_progress);
+
+	virtual void FileDialogClearResponse(void);
+	virtual bool FileDialogGetResponse(MCBrowserFileDialogResponse &r_response);
+	virtual void FileDialogCancel(void);
+	virtual void FileDialogSelectPaths(const char *p_paths, uindex_t p_selected_filter);
+
+	virtual bool OnFileDialog(
+		MCBrowserFileDialogType p_type,
+		MCBrowserFileDialogOptions p_options,
+		const char *p_title,
+		const char *p_default_path,
+		const char *p_filters,
+		uindex_t p_default_filter
+	);
+
+	virtual void DownloadClearResponse(void);
+	virtual bool DownloadGetResponse(MCBrowserDownloadRequestResponse &r_response);
+	virtual void DownloadCancel(void);
+	virtual void DownloadContinueWithSavePath(const char *p_save_path);
+	virtual void DownloadContinueWithSaveDialog(void);
+
+	virtual bool OnDownloadRequest(const char *p_url, const char *p_suggested_name);
+	virtual void OnDownloadProgress(const char *p_url, MCBrowserDownloadState p_state, uint32_t p_bytes_recieved, int32_t p_total_bytes);
 
 	static bool BrowserListAdd(MCBrowser *p_browser);
 	static void BrowserListRemove(MCBrowser *p_browser);
@@ -71,6 +100,15 @@ private:
 	MCBrowserEventHandler *m_event_handler;
 	MCBrowserJavaScriptHandler *m_javascript_handler;
 	MCBrowserProgressHandler *m_progress_handler;
+	MCBrowserFileDialogHandler *m_file_dialog_handler;
+	MCBrowserDownloadRequestHandler *m_download_request_handler;
+	MCBrowserDownloadProgressHandler *m_download_progress_handler;
+
+	bool m_file_dialog_have_response;
+	MCBrowserFileDialogResponse m_file_dialog_response;
+
+	bool m_download_request_have_response;
+	MCBrowserDownloadRequestResponse m_download_request_response;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

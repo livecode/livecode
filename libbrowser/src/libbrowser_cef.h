@@ -73,6 +73,7 @@ private:
 	
 	bool m_show_context_menu;
 	bool m_allow_new_window;
+	bool m_enable_drag_drop;
 	bool m_send_advanced_messages;
 	int m_instance_id;
 	
@@ -129,6 +130,9 @@ public:
 
 	virtual bool GetAllowUserInteraction(void);
 	virtual void SetAllowUserInteraction(bool p_allow);
+
+	virtual bool GetEnableDragDrop(void);
+	virtual void SetEnableDragDrop(bool p_enable_drag_drop);
 
 	// Browser Actions
 	
