@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 
 #include "w32dc.h"
+#include "w32compat.h"
 
 #include <strsafe.h>
 
@@ -145,8 +146,10 @@ static HICON create_status_icon(uint32_t p_icon_id)
 	t_icon = nil;
 
 	int t_width, t_height;
-	t_width = GetSystemMetrics(SM_CXICON);
-	t_height = GetSystemMetrics(SM_CYICON);
+	// TODO: Determine target monitor to so proper dpi can be applied
+	UINT dpi = 144;
+	t_width = MCWin32GetSystemMetricsForDpi(SM_CXICON, dpi);
+	t_height = MCWin32GetSystemMetricsForDpi(SM_CYICON, dpi);
 
 	bool t_success = true;
 

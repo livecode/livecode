@@ -268,7 +268,9 @@ Boolean MCScreenDC::open()
 	input_default_keyboard = GetKeyboardLayout(0);
 
 	// Make sure we initialize the dragDelta property
-	MCdragdelta = MCU_max(GetSystemMetrics(SM_CYDRAG), GetSystemMetrics(SM_CXDRAG));
+	// TODO: Determine target monitor to so proper dpi can be applied
+	UINT dpi = 144;
+	MCdragdelta = MCU_max(MCWin32GetSystemMetricsForDpi(SM_CYDRAG, dpi), MCWin32GetSystemMetricsForDpi(SM_CXDRAG, dpi));
 
 	// MW-2009-12-10: Colorspace support
 	PROFILE t_profile_info;

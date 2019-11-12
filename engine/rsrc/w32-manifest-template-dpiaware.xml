@@ -1,5 +1,6 @@
 <asmv3:application>
 	<asmv3:windowsSettings xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">
+		<dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
 		<dpiAware>true</dpiAware>
 	</asmv3:windowsSettings>
 </asmv3:application>

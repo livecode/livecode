@@ -50,6 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32dc.h"
 #include "w32text.h"
 #include "w32dnd.h"
+#include "w32compat.h"
 
 #include "resolution.h"
 
@@ -234,7 +235,10 @@ static RECT getwrect(MCRectangle rect, DWORD wstyle, DWORD exstyle)
 	wrect.top = rect.y;
 	wrect.right = rect.x + rect.width;
 	wrect.bottom = rect.y + rect.height;
-	AdjustWindowRectEx(&wrect, wstyle, False, exstyle);
+	// TODO: Determine target monitor to so proper dpi can be applied
+	UINT r_dpi;
+	MCWin32GetDpiForWindow(r_dpi, (HWND)window -> handle . window);
+	MCWin32AdjustWindowRectExForDpi(&wrect, wstyle, False, exstyle, r_dpi);
 	return wrect;
 }
 

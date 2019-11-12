@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 
 #include "w32dc.h"
+#include "w32compat.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -180,7 +181,9 @@ void MCScreenDC::resetcursors(void)
 	}
 	else
 	{
-		MCcursormaxsize = GetSystemMetrics(SM_CXCURSOR);
+		// TODO: Determine target monitor to so proper dpi can be applied
+		UINT dpi = 144;
+		MCcursormaxsize = MCWin32GetSystemMetricsForDpi(SM_CXCURSOR, dpi);
 		MCcursorcanbealpha = False;
 	}
 

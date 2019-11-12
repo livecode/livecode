@@ -25,6 +25,9 @@ structures and weak-linked functions required to use those newer features.
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifndef W32COMPAT_H
+#define W32COMPAT_H
+
 #include "foundation.h"
 
 typedef enum __MCWin32ProcessDpiAwareness
@@ -65,9 +68,16 @@ bool MCWin32GetProcessDpiAwareness(HRESULT &r_result, HANDLE p_hprocess,
 bool MCWin32GetDpiForMonitor(HRESULT &r_result, HMONITOR p_monitor,
 							 MCWin32MonitorDpiType p_dpi_type,
 							 UINT *r_dpi_x, UINT *r_dpi_y);
+bool MCWin32GetDpiForWindow(UINT &r_dpi, HWND p_hwnd);
+
+// Windows 10, user32.dll
+bool MCWin32AdjustWindowRectExForDpi(LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle, UINT dpi);
+int MCWin32GetSystemMetricsForDpi(int nIndex, UINT dpi);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 // Convienience functions
 
 bool MCWin32QueryActCtxSettings(const unichar_t *p_settings_name, unichar_t *&r_value);
+
+#endif
