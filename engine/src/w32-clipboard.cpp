@@ -19,6 +19,7 @@
 #include "osspec.h"
 
 #include "globdefs.h"
+#include "globals.h"
 #include "filedefs.h"
 #include "mcio.h"
 #include "imagebitmap.h"
@@ -1101,6 +1102,130 @@ MCStringRef MCWin32RawClipboardItemRep::CopyTypeString() const
 	return MCWin32RawClipboardCommon::CopyTypeForAtom(m_format.cfFormat);
 }
 
+MCDataRef MCWin32RawClipboardItemRep::CopyGlobalData(STGMEDIUM *p_medium) const
+{
+	MCDataRef t_data = nullptr;
+	// The data is passed via an HGLOBAL handle
+	HGLOBAL t_handle = p_medium->hGlobal;
+
+	// Lock the memory buffer
+	void* t_memory = GlobalLock(t_handle);
+	if (t_memory != NULL)
+	{
+		// Copy the data out of the buffer and release it
+		MCDataCreateWithBytes((const byte_t*)t_memory, GlobalSize(t_handle), t_data);
+		GlobalUnlock(t_handle);
+	}
+
+	return t_data;
+}
+
+MCDataRef MCWin32RawClipboardItemRep::CopyIStreamData(STGMEDIUM *p_medium) const
+{
+	MCDataRef t_data = nullptr;
+
+	// The data is available via an IStream interface
+	IStream* t_stream = p_medium->pstm;
+
+	// Find the size of the data represented by the stream
+	STATSTG t_statstg;
+	if (t_stream->Stat(&t_statstg, STATFLAG_NONAME) == S_OK)
+	{
+		// Allocate memory for the data
+		MCAutoArray<byte_t> t_bytes;
+		if (t_statstg.cbSize.QuadPart <= UINDEX_MAX && t_bytes.Extend(t_statstg.cbSize.QuadPart))
+		{
+			// Loop until all the data has been read
+			uindex_t t_cursor = 0;
+			while (t_cursor < t_bytes.Size())
+			{
+				// Read the next block of data
+				ULONG t_read = 0;
+				HRESULT t_result = t_stream->Read(t_bytes.Ptr(), t_bytes.Size() - t_cursor, &t_read);
+
+				// If the result is S_OK, then all data was sucessfully
+				// read. If it was S_FALSE, we only had a partial read.
+				// Otherwise, an error occurred.
+				if (t_result == S_OK)
+					break;
+				else if (t_result == S_FALSE)
+					t_cursor += t_read;
+				else
+					break;
+			}
+		}
+
+		// If all data was read successfully, turn the bytes into a
+		// DataRef.
+		if (t_bytes.Size() == t_statstg.cbSize.QuadPart)
+		{
+			// Take the storage from the autoarray and hand it directly
+			// to the dataref to save a reallocation of (what is likely
+			// to be) a large chunk of memory.
+			byte_t* t_pointer;
+			uindex_t t_length;
+			t_bytes.Take(t_pointer, t_length);
+			if (!MCDataCreateWithBytesAndRelease(t_pointer, t_length, t_data))
+				MCMemoryDelete(t_pointer);
+		}
+	}
+
+	return t_data;
+}
+
+MCDataRef MCWin32RawClipboardItemRep::CopyBitmapData(STGMEDIUM *p_medium) const
+{
+	HDC t_device_context = CreateCompatibleDC(nullptr);
+	HBITMAP t_bitmap = p_medium->hBitmap;
+
+	BITMAPINFO t_bitmapInfo = { 0 };
+	t_bitmapInfo.bmiHeader.biSize = sizeof(t_bitmapInfo.bmiHeader);
+
+	if (0 == GetDIBits(t_device_context, t_bitmap, 0, 0, nullptr, &t_bitmapInfo, DIB_RGB_COLORS))
+	{
+		// The handle is corrupted
+		return nullptr;
+	}
+
+	MCDataRef t_data = nullptr;
+	MCAutoArray<byte_t> t_bytes;
+	if (t_bytes.Extend(t_bitmapInfo.bmiHeader.biSizeImage))
+	{
+		t_bitmapInfo.bmiHeader.biBitCount = 32;
+		t_bitmapInfo.bmiHeader.biCompression = BI_RGB; 
+		t_bitmapInfo.bmiHeader.biHeight = abs(t_bitmapInfo.bmiHeader.biHeight);
+		
+		// We can fit the size of the image into memory
+		// so let us read the data
+		if (0 == GetDIBits(t_device_context, 
+							t_bitmap, 
+							0, 
+							t_bitmapInfo.bmiHeader.biHeight, 
+							t_bytes.Ptr(), 
+							&t_bitmapInfo, 
+							DIB_RGB_COLORS))
+		{
+			// The bitmap copy failed
+			return nullptr;
+		}
+
+		byte_t *t_pointer;
+		uindex_t t_length;
+		
+		t_bytes.Take(t_pointer, t_length);
+		if (!MCDataCreateWithBytesAndRelease(t_pointer, t_length, t_data))
+		{
+			MCMemoryDelete(t_pointer);
+		}
+	}
+
+	// Cleanup
+	DeleteDC(t_device_context);
+
+
+	return t_data;
+}
+
 MCDataRef MCWin32RawClipboardItemRep::CopyData() const
 {
 	// If we've already fetched the data, just return it
@@ -1123,88 +1248,26 @@ MCDataRef MCWin32RawClipboardItemRep::CopyData() const
 	{
 		case TYMED_HGLOBAL:
 		{
-			// The data is passed via an HGLOBAL handle
-			HGLOBAL t_handle = p_medium.hGlobal;
-
-			// Lock the memory buffer
-			void* t_memory = GlobalLock(t_handle);
-			if (t_memory != NULL)
-			{
-				// Copy the data out of the buffer and release it
-				MCDataCreateWithBytes((const byte_t*)t_memory, GlobalSize(t_handle), t_data);
-				GlobalUnlock(t_handle);
-			}
-
+			t_data = CopyGlobalData(&p_medium);
 			break;
 		}
 
 		case TYMED_ISTREAM:
 		{
-			// The data is available via an IStream interface
-			IStream* t_stream = p_medium.pstm;
-
-			// Find the size of the data represented by the stream
-			STATSTG t_statstg;
-			if (t_stream->Stat(&t_statstg, STATFLAG_NONAME) == S_OK)
-			{
-				// Allocate memory for the data
-				MCAutoArray<byte_t> t_bytes;
-				if (t_statstg.cbSize.QuadPart <= UINDEX_MAX && t_bytes.Extend(t_statstg.cbSize.QuadPart))
-				{
-					// Loop until all the data has been read
-					uindex_t t_cursor = 0;
-					while (t_cursor < t_bytes.Size())
-					{
-						// Read the next block of data
-						ULONG t_read = 0;
-						HRESULT t_result = t_stream->Read(t_bytes.Ptr(), t_bytes.Size()-t_cursor, &t_read);
-
-						// If the result is S_OK, then all data was sucessfully
-						// read. If it was S_FALSE, we only had a partial read.
-						// Otherwise, an error occurred.
-						if (t_result == S_OK)
-							break;
-						else if (t_result == S_FALSE)
-							t_cursor += t_read;
-						else
-							break;
-					}
-				}
-
-				// If all data was read successfully, turn the bytes into a
-				// DataRef.
-				if (t_bytes.Size() == t_statstg.cbSize.QuadPart)
-				{
-					// Take the storage from the autoarray and hand it directly
-					// to the dataref to save a reallocation of (what is likely
-					// to be) a large chunk of memory.
-					byte_t* t_pointer;
-					uindex_t t_length;
-					t_bytes.Take(t_pointer, t_length);
-					if (!MCDataCreateWithBytesAndRelease(t_pointer, t_length, t_data))
-						MCMemoryDelete(t_pointer);
-				}
-			}
-			
-			break;
-		}
-
-		case TYMED_FILE:
-		case TYMED_ISTORAGE:
-		{
-			// TODO: implement
+			t_data = CopyIStreamData(&p_medium);
 			break;
 		}
 
 		case TYMED_GDI:
+		{
+			t_data = CopyBitmapData(&p_medium);
+			break;
+		}
+		case TYMED_FILE:
+		case TYMED_ISTORAGE:
 		case TYMED_MFPICT:
 		case TYMED_ENHMF:
 		case TYMED_NULL:
-		{
-			// None of these types are currently supported
-			break;
-		}
-
 		default:
 		{
 			// Unknown storage type; can't do anything with it
@@ -1248,7 +1311,7 @@ MCDataRef MCWin32RawClipboardItemRep::CopyData() const
     }
     
 	// Update the data cache and return it
-	m_bytes = t_data;
+	m_bytes.Reset(t_data);
 	return t_data;
 }
 
