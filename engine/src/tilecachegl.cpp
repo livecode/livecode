@@ -566,6 +566,66 @@ bool MCTileCacheOpenGLCompositor_BeginLayer(void *p_context, const MCRectangle& 
         self -> is_blending = true;
         glEnable(GL_BLEND);
     }
+    
+    switch(p_ink)
+    {
+        case GXblendClear:
+        case GXclear:
+            glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+        case GXblendSrc:
+            glBlendFunc(GL_ONE, GL_ZERO);
+            break;
+        case GXblendDst:
+            glBlendFunc(GL_ZERO, GL_ONE);
+            break;
+        case GXblendDstOver:
+            glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+            break;
+        case GXblendSrcIn:
+            glBlendFunc(GL_DST_ALPHA, GL_ZERO);
+            break;
+        case GXblendDstIn:
+            glBlendFunc(GL_ZERO, GL_SRC_ALPHA);
+            break;
+        case GXblendSrcOut:
+            glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ZERO);
+            break;
+        case GXblendDstOut:
+            glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+        case GXblendSrcAtop:
+            glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+        case GXblendDstAtop:
+            glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_SRC_ALPHA);
+            break;
+        case GXblendXor:
+        case GXxor:
+            glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+        case GXblendPlus:
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
+        case GXblendScreen:
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+            break;
+        case GXblendMultiply:
+        case GXblendOverlay:
+        case GXblendDarken:
+        case GXblendLighten:
+        case GXblendDodge:
+        case GXblendBurn:
+        case GXblendSoftLight:
+        case GXblendHardLight:
+        case GXblendDifference:
+        case GXblendExclusion:
+        case GXblendSrcOver:
+        case GXcopy:
+        default:
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+    }
 		
 	self -> current_opacity = p_opacity;
 	

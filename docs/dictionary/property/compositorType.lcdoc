@@ -25,12 +25,26 @@ set the compositorType of this stack to tCompositorType
 Value (enum):
 A <string> containing the type of compositor to use, or <empty>.
 
--   none: Do not use <acceleratedRendering|accelerated rendering> (the default when empty).
--   software: Use the built-in rendering engine to composite (all platforms).
--   coregraphics: Use CoreGraphics to composite (Mac / iOS only)
-    (Recommended).
--   opengl: Use OpenGL to composite (iOS and Android only).
+- none: Do not use <acceleratedRendering|accelerated rendering> (the default when empty).
+- software: Use the built-in rendering engine to composite (all platforms).
+- coregraphics: Use CoreGraphics to composite (Mac / iOS only)
+  (Recommended).
+- opengl: Use OpenGL to composite (iOS and Android only). The OpenGL compositor
+  does not support a number of the blend modes available in the <ink> property
+  when compositing layers.
+  
+  The following are not supported:
 
+  - blendMultiply
+  - blendOverlay
+  - blendDarken
+  - blendLighten
+  - blendDodge
+  - blendBurn
+  - blendSoftLight
+  - blendHardLight
+  - blendDifference
+  - blendExclusion
 
 Description:
 Use the compositorType property to specify which compositor is used when
@@ -44,7 +58,7 @@ carry through from card to card.
 
 References: empty (constant), compositorCacheLimit (property),
 compositorTileSize (property), layerMode (property),
-acceleratedRendering (property), string (keyword)
+acceleratedRendering (property), string (keyword), ink (property)
 
 Tags: windowing
 
