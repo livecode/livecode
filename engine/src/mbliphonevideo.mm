@@ -39,7 +39,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <AVFoundation/AVFoundation.h>
 #import <AVKit/AVKit.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED < 100000
+	typedef NSString *NSKeyValueChangeKey;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
