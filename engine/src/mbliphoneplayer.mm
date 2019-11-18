@@ -42,7 +42,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphoneapp.h"
 #include "mbliphonecontrol.h"
 
+#import <AVFoundation/AVFoundation.h>
 #import <AVKit/AVKit.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED < 100000
+	typedef NSString *NSKeyValueChangeKey;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1160,33 +1167,38 @@ static void MCiOSPlayerPostNotifyEvent(MCiOSPlayerControl *p_target, MCNameRef p
 
 void MCiOSPlayerControl::OnPlayerTimeControlStatusChanged()
 {
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
 	if (m_player == nil)
 		return;
 	
-	MCiOSPlayerStatus t_old_status;
-	t_old_status = m_status;
-
-	switch (m_player.timeControlStatus)
+	if (@available(iOS 10.0, *))
 	{
-		case AVPlayerTimeControlStatusWaitingToPlayAtSpecifiedRate:
-			m_status = kMCiOSPlayerStatusWaiting;
-			break;
-			
-		case AVPlayerTimeControlStatusPaused:
-			if (m_pending_status == kMCiOSPlayerStatusStopped)
-				m_status = kMCiOSPlayerStatusStopped;
-			else
-				m_status = kMCiOSPlayerStatusPaused;
-			break;
-			
-		case AVPlayerTimeControlStatusPlaying:
-			m_status = kMCiOSPlayerStatusPlaying;
-			break;
+		MCiOSPlayerStatus t_old_status;
+		t_old_status = m_status;
+
+		switch (m_player.timeControlStatus)
+		{
+			case AVPlayerTimeControlStatusWaitingToPlayAtSpecifiedRate:
+				m_status = kMCiOSPlayerStatusWaiting;
+				break;
+				
+			case AVPlayerTimeControlStatusPaused:
+				if (m_pending_status == kMCiOSPlayerStatusStopped)
+					m_status = kMCiOSPlayerStatusStopped;
+				else
+					m_status = kMCiOSPlayerStatusPaused;
+				break;
+				
+			case AVPlayerTimeControlStatusPlaying:
+				m_status = kMCiOSPlayerStatusPlaying;
+				break;
+		}
+		
+		// notify on status change
+		if (m_status != t_old_status)
+			MCiOSPlayerPostNotifyEvent(this, MCM_player_state_changed);
 	}
-	
-	// notify on status change
-	if (m_status != t_old_status)
-		MCiOSPlayerPostNotifyEvent(this, MCM_player_state_changed);
+#endif
 }
 
 void MCiOSPlayerControl::OnPlayerDidPlayToEndTime()
@@ -1270,11 +1282,18 @@ static NSString* s_player_asset_async_keys[] =
 };
 #define s_player_asset_async_key_count (sizeof(s_player_asset_async_keys) / sizeof(s_player_asset_async_keys[0]))
 
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
 static NSString* s_player_keys[] =
 {
 	@"timeControlStatus",
 };
 #define s_player_key_count (sizeof(s_player_keys) / sizeof(s_player_keys[0]))
+#else
+static NSString* s_player_keys[] =
+{
+};
+#define s_player_key_count (0)
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
