@@ -203,7 +203,7 @@ filename of the player automatically 'prepares' the movie for playback.
 the content. This is a boolean value.
 
 - "currentTime": The current position of the playhead, measured in
-milliseconds (maps to the native currentPlaybackTime property). This is
+milliseconds. This is
 an integer value.
 
 - "looping": Determines whether the playback of the movie should loop
@@ -217,38 +217,33 @@ should preserve its aspect ratio when scaled to fit within the control's
 bounds. This is a boolean value.
 
 - "useApplicationAudioSession" (iOS Only): Determines whether the movie
-uses a system-supplied audio session or not (maps to the native
-useApplicationAudioSession property). This is a boolean value.
+uses a system-supplied audio session or not. This is a boolean value.
 
-- "shouldAutoplay" (iOS Only): Determines whether the playback of
+- ~~"shouldAutoplay" (iOS Only): Determines whether the playback of
 network-based content begins automatically when there is enough buffered
-data to ensure uninterrupted playback (maps to the native shouldAutoplay
-property). This is a boolean value.
+data to ensure uninterrupted playback. This is a boolean value.~~
+*Note*: removed in LiveCode 9.6
 
 - "allowsAirPlay" (iOS Only): Determines whether a control should be
 presented to allow the user to choose AirPlay-enabled hardware for
-playback (maps to the native allowsAirPlay property). This is a boolean
-value. This property is only supported on iOS 4.3 and later.
+playback. This is a boolean value. This property is only supported
+on iOS 4.3 and later.
 
 - "playableDuration" (iOS Only): The amount of currently playable
-content, measured in milliseconds (maps to the native playableDuration
-property). This is an integer value.
+content, measured in milliseconds. This is an integer value.
 
 - "startTime" (iOS Only): The position at which playback should start,
-measured in milliseconds (maps to the native initialPlaybackTime
-property). This is an integer value.
+measured in milliseconds. This is an integer value.
 
 - "endTime" (iOS Only): The position at which playback should end,
-measured in milliseconds (maps to the native endPlaybackTime property).
-This is an integer value. Set to -1 to make the video to play to the
-end.
+measured in milliseconds. This is an integer value. Set to -1 to make
+the video to play to the end.
 
-- "playRate" (iOS Only): The current playback rate for the player (maps
-to the native currentPlaybackRate property). This represents a
-multiplier for the default playback rate of the current content. A value
-of 0.0 indicates playback is stopped, while a value of 1.0 indicates
-normal speed. Positive values indicate forward playback, while negative
-values indicate reverse playback. This is a real value.
+- "playRate" (iOS Only): The current playback rate for the player. This
+represents a multiplier for the default playback rate of the current
+content. A value of 0.0 indicates playback is stopped, while a value of
+1.0 indicates normal speed. Positive values indicate forward playback,
+while negative values indicate reverse playback. This is a real value.
 
 
 **Text Input Specific Properties**

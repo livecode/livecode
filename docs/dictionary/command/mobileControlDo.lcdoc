@@ -82,12 +82,12 @@ momentarily.
 - "stop": Stop playing the content of the player.
 - "prepareToPlay" (iOS Only): Make the content ready to play, but
 don't actually commence playback.
-- "begin seeking forward" (iOS Only): Start seeking forward through
-the content of the player.
-- "begin seeking backward" (iOS Only): Start seeking backward through
-the content of the player.
-- "end seeking" (iOS Only): Stop seeking through the content of the
-player. 
+- ~~"begin seeking forward" (iOS Only): Start seeking forward through
+the content of the player.~~ *Note*: removed in LiveCode 9.6
+- ~~"begin seeking backward" (iOS Only): Start seeking backward through
+the content of the player.~~ *Note*: removed in LiveCode 9.6
+- ~~"end seeking" (iOS Only): Stop seeking through the content of the
+player.~~ *Note*: removed in LiveCode 9.6
 - "snapshot" | "snapshot exactly", *time*, [ *maxWidth*, *maxHeight* ]
 (iOS Only): Take a snapshot of the movie at time milliseconds from the
 beginning. If the 'exactly' form is specified the frame produced is
