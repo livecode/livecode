@@ -21,3 +21,4 @@ framework AddressBookUI
 framework EventKit
 framework EventKitUI
 framework Security
+framework WebKit

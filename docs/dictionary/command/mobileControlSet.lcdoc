@@ -73,18 +73,14 @@ control is no longer on the current view.
 
 - "URL": the URL to be loaded into the web-view.
 - "autoFit" (iOS Only): set to true or false to determine whether the
-page is scaled to fit the rect of the control (wraps the scalesPageToFit
-property of UIWebView).
+page is scaled to fit the rect of the control.
 
 - "delayRequests" (iOS Only): set to true to cause the loadRequest
-message to be sent. Note: In this mode, web-pages that trigger
-sub-document loads (such as those containing iframes) do not load
-correctly.
+message to be sent.
 
 - "dataDetectorTypes" (iOS Only): Use this property to specify the types
 of data that should be automatically converted to clickable URLs in the
-web-view. This property wraps the dataDetectorTypes property of
-UIWebView. It is specified as a comma-delimited list of one or more of
+web-view. It is specified as a comma-delimited list of one or more of
 the following properties:
 
  - "phone number": 
@@ -94,14 +90,10 @@ the following properties:
 
 
 - "allowsInlinePlayback" (iOS Only): set to true if the web-view should
-allow media files to be played 'inline' in the page (wraps the
-allowsInlineMediaPlayback property of the UIWebView). This property is
-only available on iOS4.0 and later
+allow media files to be played 'inline' in the page.
 
 - "mediaPlaybackRequiresUserAction" (iOS Only): set to false to allow
-media files to play automatically in the webview (wraps the
-mediaPlaybackRequiresUserAction property of the UIWebView). This
-property is only available on iOS4.0 and later.
+media files to play automatically in the webview.
 
 - "scrollingEnabled": specifies whether or not the browser can be
 scrolled (boolean).
