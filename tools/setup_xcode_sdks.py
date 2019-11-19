@@ -2,7 +2,7 @@
 
 # Update these lists if you need different SDK versions!
 iphoneos_versions = ["13.1", "12.1", "11.2", "10.2", "9.2"]
-iphonesimulator_versions = ["13.1", "12.1", "11.2", "10.2","9.2", "8.2"]
+iphonesimulator_versions = ["13.1", "12.1", "11.2", "10.2", "9.2"]
 macosx_versions = ["10.9"]
 
 

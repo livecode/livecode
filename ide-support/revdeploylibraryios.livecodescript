@@ -18,21 +18,18 @@ local sDeviceSDKs
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
 function deployUsableIosSdk
-   return "8.2,9.2,10.2,11.2,12.1,13.1"
+   return "9.2,10.2,11.2,12.1,13.1"
 end deployUsableIosSdk
 
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
 function deployGetIphoneOSes
    local tList, tMacVersion
    put deploySanitizeSystemVersion() into tMacVersion
-   if tMacVersion < 101000 then
-      put "8.2,6.2" into tList[1]
+   // Xcode 7.2 can be installed from Mac OSX 10.10.5 onwards
+   if tMacVersion < 101005 then
+      answer error "To deploy to an iOS device or simulator, you need to upgrade your Mac to at least Mac OSX 10.10.5"
    else if tMacVersion < 101100 then
-      put "8.2,6.2" into tList[1]
-      // Xcode 7.2 can be installed from Mac OSX 10.10.5 onwards
-      if tMacVersion >= 101005 then
-         put "9.2,7.2" into tList[2]
-      end if
+      put "9.2,7.2" into tList[1]
    else if tMacVersion < 101200 then
       put "10.2,8.2" into tList[1]
    else if tMacVersion < 101206 then

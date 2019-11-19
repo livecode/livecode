@@ -26,8 +26,8 @@ EMMAKE ?= emmake
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
 IPHONEOS_VERSIONS ?= 9.2 10.2 11.2 12.1 13.1
-IPHONESIMULATOR_VERSIONS ?= 8.2 9.2 10.2 11.2 12.1 13.1
-SKIP_IPHONESIMULATOR_VERSIONS ?= 6.1 7.1
+IPHONESIMULATOR_VERSIONS ?= 9.2 10.2 11.2 12.1 13.1
+SKIP_IPHONESIMULATOR_VERSIONS ?= 6.1 7.1 8.2
 
 IOS_SDKS ?= \
 	$(addprefix iphoneos,$(IPHONEOS_VERSIONS)) \

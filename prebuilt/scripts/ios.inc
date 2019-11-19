@@ -68,7 +68,6 @@ else
 fi
 
 # Detect iOS variants
-checkiOS iphonesimulator8.2 6_2_0 iPhoneSimulator 8.2 "i386 x86_64"
 checkiOS iphonesimulator9.2 7_2_1 iPhoneSimulator 9.2 "i386 x86_64"
 checkiOS iphoneos9.2 7_2_1 iPhoneOS 9.2 "armv7 arm64"
 checkiOS iphonesimulator10.2 8_2_0 iPhoneSimulator 10.2 "i386 x86_64"
