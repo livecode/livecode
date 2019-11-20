@@ -25,9 +25,11 @@ EMMAKE ?= emmake
 
 # Some magic to control which versions of iOS we try to build.  N.b. you may
 # also need to modify the buildbot configuration
-IPHONEOS_VERSIONS ?= 9.2 10.2 11.2 12.1 13.1
-IPHONESIMULATOR_VERSIONS ?= 9.2 10.2 11.2 12.1 13.1
-SKIP_IPHONESIMULATOR_VERSIONS ?= 6.1 7.1 8.2
+IPHONEOS_VERSIONS ?= 10.2 11.2 12.1 13.1
+IPHONESIMULATOR_VERSIONS ?= 10.2 11.2 12.1 13.1
+SKIP_IPHONEOS_VERSIONS ?= 9.2
+SKIP_IPHONESIMULATOR_VERSIONS ?= 6.1 7.1 8.2 9.2
+
 
 IOS_SDKS ?= \
 	$(addprefix iphoneos,$(IPHONEOS_VERSIONS)) \
@@ -210,12 +212,19 @@ compile-ios-%:
 check-ios-%:
 	$(XCODEBUILD) -project "build-ios-$*$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target check
 
-# Dummy targets to prevent our build system from building old iOS simulators
+# Dummy targets to prevent our build system from building old iOS simulators+devices
 $(addprefix config-ios-iphonesimulator,$(SKIP_IPHONESIMULATOR_VERSIONS)):
 	@echo "Skipping $@ (no longer supported)"
 $(addprefix compile-ios-iphonesimulator,$(SKIP_IPHONESIMULATOR_VERSIONS)):
 	@echo "Skipping $@ (no longer supported)"
 $(addprefix check-ios-iphonesimulator,$(SKIP_IPHONESIMULATOR_VERSIONS)):
+	@echo "Skipping $@ (no longer supported)"
+	
+$(addprefix config-ios-iphonesimulator,$(SKIP_IPHONEOS_VERSIONS)):
+	@echo "Skipping $@ (no longer supported)"
+$(addprefix compile-ios-iphonesimulator,$(SKIP_IPHONEOS_VERSIONS)):
+	@echo "Skipping $@ (no longer supported)"
+$(addprefix check-ios-iphonesimulator,$(SKIP_IPHONEOS_VERSIONS)):
 	@echo "Skipping $@ (no longer supported)"
 
 # Provide some synonyms for "latest iOS SDK"
