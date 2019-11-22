@@ -31,8 +31,9 @@ The <controlAtLoc> function returns the control at the given location.
 The function returns the number of the control, below are examples of
 getting the name or long id of the control
 
-  get the name of (controlAtLoc(<coordinates>))
-  get the long ID of (controlAtLoc(<coordinates>))
+    get the name of (controlAtLoc(<coordinates>))
+    
+    get the long ID of (controlAtLoc(<coordinates>))
 
 References: mouseLoc (function), controlAtScreenLoc (function),
 control (keyword), location (property)

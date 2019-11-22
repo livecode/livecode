@@ -40,10 +40,14 @@ Use the <fullClipboardData> to gain access to the system
   - "rtftext": LiveCode rich text format data
   - "htmltext": LiveCode HTML text
   - "styledtext": array of LiveCode styled text
-  - "image": any of PNG, GIF or JPEG image
+  - "image": any of PNG, GIF or JPEG image. If on Windows, 
+  additionally BMP image.
   - "png": PNG image
   - "gif": GIF image
   - "jpeg": JPEG image
+  - "windows bitmap": BMP image (Windows only)
+  - "windows metafile": Windows native vector graphics image (Windows 
+  only)
   - "rtf": Rich Text Format data
   - "html": HTML
   - "styles": LiveCode styled text data
