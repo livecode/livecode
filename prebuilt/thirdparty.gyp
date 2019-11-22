@@ -962,6 +962,15 @@
 						},
 					],
 					[
+						'toolset_os == "linux"',
+						{
+							'libraries':
+							[
+								'-lcairo',
+							],
+						},
+					],
+					[
  						'toolset_os == "android"',
  						{
  							'conditions':
@@ -978,15 +987,6 @@
  							],
  						},
  					],
-					[
-						'toolset_os == "linux"',
-						{
-							'libraries':
-							[
-								'-lcairo',
-							],
-						},
-					],
 					[
 						'toolset_os == "win"',
 						{						
