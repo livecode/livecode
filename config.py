@@ -31,17 +31,6 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'x86-android-ndk16r15',
     'x86_64-android-ndk16r15',
     'universal-mac-macosx10.9', # Minimum deployment target
-    'universal-ios-iphoneos13.1',
-    'universal-ios-iphoneos12.1',
-    'universal-ios-iphoneos11.2',
-    'universal-ios-iphoneos10.2',
-    'universal-ios-iphoneos9.2',
-    'universal-ios-iphonesimulator13.1',
-    'universal-ios-iphonesimulator12.1',
-    'universal-ios-iphonesimulator11.2',
-    'universal-ios-iphonesimulator10.2',
-    'universal-ios-iphonesimulator9.2',
-    'universal-ios-iphonesimulator8.2',
     'x86-win32', # TODO[2017-03-23] More specific ABI
     'x86_64-win32',
     'js-emscripten-sdk1.35',
