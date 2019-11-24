@@ -81,6 +81,7 @@
 						[
 							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_skia',
 							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_freetype',
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_harfbuzz',
 						],
 
 						'link_settings':

@@ -43,4 +43,4 @@ Thirdparty_LIBS_linux="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE $Thirdparty
 Thirdparty_LIBS_win32="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE $Thirdparty_LIBS_DESKTOP"
 Thirdparty_LIBS_ios="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE libcairo"
 Thirdparty_LIBS_emscripten="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_FONTS"
-Thirdparty_LIBS_android="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE $Thirdparty_LIBS_FONTS libexpat"
+Thirdparty_LIBS_android="$Thirdparty_LIBS_CORE $Thirdparty_LIBS_NATIVE $Thirdparty_LIBS_FONTS libexpat libcairo"
