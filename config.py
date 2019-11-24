@@ -24,6 +24,8 @@ import shutil
 
 # The set of platforms for which this branch supports automated builds
 BUILDBOT_PLATFORM_TRIPLES = (
+    'x86-linux-debian8',
+    'x86_64-linux-debian8',
     'armv7-android-ndk16r15',
     'arm64-android-ndk16r15',
     'x86-android-ndk16r15',
