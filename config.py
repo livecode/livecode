@@ -24,16 +24,10 @@ import shutil
 
 # The set of platforms for which this branch supports automated builds
 BUILDBOT_PLATFORM_TRIPLES = (
-    'x86-linux-debian8',
-    'x86_64-linux-debian8',
     'armv7-android-ndk16r15',
     'arm64-android-ndk16r15',
     'x86-android-ndk16r15',
     'x86_64-android-ndk16r15',
-    'universal-mac-macosx10.9', # Minimum deployment target
-    'x86-win32', # TODO[2017-03-23] More specific ABI
-    'x86_64-win32',
-    'js-emscripten-sdk1.35',
 )
 
 KNOWN_PLATFORMS = (
