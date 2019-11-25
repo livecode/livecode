@@ -640,6 +640,7 @@ component Runtime.Android.Arch
 		executable android-[[TargetArchitecture]]:DbSqlite
 		executable android-[[TargetArchitecture]]:DbMysql
 		executable android-[[TargetArchitecture]]:RevSecurity
+		executable android-[[TargetArchitecture]]:RevPdfPrinter
 
 //////////
 
