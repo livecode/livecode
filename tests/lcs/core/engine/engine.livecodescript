@@ -89,18 +89,19 @@ put "value" into gEvalGlobalsTest
 TestAssert "global variable added in the globals", "gEvalGlobalsTest" is among the items of the globals
 end TestGlobals
 
-
 on TestMachine
+   constant kIphoneMachines = "iPod Touch,iPhone,iPhone Simulator,iPad,iPad Simulator"
    TestSkipIf "platform", "HTML5"
-if the platform is "win32" then
-TestAssert "Machine is x86", the machine is "x86"
-else if the platform is "iphone" then
-TestAssert "iPhone machine", the machine is "iPod Touch" or the machine is "iPhone" or the machine is "iPhone Simulator" or the machine is "iPad" or the machine is "iPad Simulator"
-else
-TestAssert "the machine is not empty", the machine is not empty
-end if
+   if the platform is "win32" then
+      TestAssert "Windows machine", \
+         the machine is among the items of "x86,x86_64"
+   else if the platform is "iphone" then
+      TestAssert "iPhone machine", \
+         the machine is among the items of kIphoneMachines
+   else
+      TestAssert "the machine is not empty", the machine is not empty
+   end if
 end TestMachine
-
 
 on TestCustomProperty
 create field "tf"
@@ -142,22 +143,19 @@ end TestPlatform
 
 on TestProcessor
    TestSkipIf "platform", "HTML5"
-local tProcessors
+   local tProcessors
+   if the platform is "android" then
+      put "arm,i386" into tProcessors
+   else if the platform is "iphone" then
+      put "arm,arm64,i386,x86_64" into tProcessors
+   else if the platform is among the items of "MacOS,Linux,Win32" then
+      // Mac and Linux
+      put "x86,x86_64" into tProcessors
+   else
+      -- Unknown platform for "the processor"
+   end if
 
-if the platform is "Win32" then
-put "x86" into tProcessors
-else if the platform is "android" then
-put "arm,i386" into tProcessors
-else if the platform is "iphone" then
-put "arm,arm64,i386,x86_64" into tProcessors
-else if the platform is among the items of "MacOS,Linux" then
-   // Mac and Linux
-   put "x86,x86_64" into tProcessors
-else
-   -- Unknown platform for "the processor"
-end if
-
-TestAssert "the processor is correct", the processor is among the items of tProcessors
+   TestAssert "the processor is correct", the processor is among the items of tProcessors
 end TestProcessor
 
 

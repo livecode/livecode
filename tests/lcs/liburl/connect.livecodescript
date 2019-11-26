@@ -1,10 +1,11 @@
 ﻿script "TestLibUrlCONNECT"
 
 on TestSetup
-   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIf "platform", "win32"
+   TestSkipIfNot "desktop"
    TestSkipIf "stack", "StandaloneTestRunnerMainstack"
    TestSkipIf "environment", "server"
-         
+
    local tLibURl
    put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
    send "extensionInitialize" to stack tLibUrl

@@ -25,10 +25,8 @@ on TestSetup
    TestSkipIfNot "docs"
    
    -- Only run these tests on desktop platforms
-   if the platform is not among the items of "MacOS,Windows,Linux" then
-      return "SKIP Tests are not runnable on" && the platform
-   end if
-   
+   TestSkipIfNot "desktop"
+
    local tDocsParser
    put TestGetEngineRepositoryPath() & "/ide-support/revdocsparser.livecodescript" into tDocsParser
    start using stack tDocsParser

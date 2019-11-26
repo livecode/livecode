@@ -3,7 +3,7 @@
 local sLogField
 
 on TestSetup
-   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIfNot "desktop"
    TestSkipIf "stacks loaded", "tsNetLibURL"
    TestSkipIf "environment", "server"
    

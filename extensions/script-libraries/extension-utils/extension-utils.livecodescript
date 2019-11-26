@@ -1058,9 +1058,11 @@ function extensionFetchFolderDetails pFolder, pParseManifest
    else
       put pFolder into tAPIFolder
    end if
-   
-   put tAPIFolder & slash & "api.lcdoc" into tDetailsA[kApiFileKey]
-   
+
+   if there is a file (tAPIFolder & slash & "api.lcdoc") then
+      put tAPIFolder & slash & "api.lcdoc" into tDetailsA[kApiFileKey]
+   end if
+
    if there is a file (pFolder & slash & "support" & slash & "icon.png") then
       put (pFolder & slash & "support" & slash & "icon.png") into tDetailsA[kIconKey]
    else if there is a file  (pFolder & slash & "icon.png") then
