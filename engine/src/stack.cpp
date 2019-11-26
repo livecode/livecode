@@ -2160,3 +2160,16 @@ bool MCStack::geteffectiveshowinvisibleobjects()
 			return false;
 	}
 }
+
+void MCStack::startparsingscript(MCObject *p_object, MCDataRef& r_data)
+{
+    unichar_t *t_unicode_string;
+    uint32_t t_length;
+    /* UNCHECKED */ MCStringConvertToUnicode(p_object->_getscript(), t_unicode_string, t_length);
+    /* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_unicode_string, (t_length + 1) * 2, r_data);
+}
+
+void MCStack::stopparsingscript(MCObject *p_object, MCDataRef p_data)
+{
+    MCValueRelease(p_data);
+}

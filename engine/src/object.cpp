@@ -2507,14 +2507,22 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			hashandlers = 0;
 			if (hlist == NULL)
 				hlist = new (nothrow) MCHandlerlist;
-			
-			getstack() -> unsecurescript(this);
-			
-			Parse_stat t_stat;
-			t_stat = hlist -> parse(this, _script);
-			
-			getstack() -> securescript(this);
-			
+            
+            Parse_stat t_stat;
+            if (_getscript() != nullptr)
+            {
+                MCDataRef t_utf8_script;
+                getstack()->startparsingscript(this, t_utf8_script);
+                
+                t_stat = hlist->parse(this, t_utf8_script);
+            
+                getstack()->stopparsingscript(this, t_utf8_script);
+            }
+            else
+            {
+                t_stat = hlist->parse(this, kMCEmptyString);
+            }
+            
 			if (t_stat != PS_NORMAL)
 			{
 				hashandlers |= HH_DEAD_SCRIPT;

@@ -637,6 +637,8 @@ public:
 	virtual bool iskeyed() { return true; }
 	virtual void securescript(MCObject *) { }
 	virtual void unsecurescript(MCObject *) { }
+    virtual void startparsingscript(MCObject*, MCDataRef&);
+    virtual void stopparsingscript(MCObject*, MCDataRef);
 	
 	Boolean islocked();
 	Boolean isiconic();
