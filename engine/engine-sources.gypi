@@ -50,6 +50,7 @@
 			'src/tilecache.cpp',
 			'src/tilecachecg.cpp',
 			'src/tilecachegl.cpp',
+			'src/tilecachegl3.x.cpp',
 			'src/tilecachesw.cpp',
 			'src/mcsemaphore.h',
 			'src/mctristate.h',
@@ -1153,6 +1154,7 @@
 					[
 						'src/fiber.cpp',
 						'src/tilecachegl.cpp',
+						'src/tilecachegl3.x.cpp',
 						'src/glcontext.cpp',
 						'src/player-legacy.cpp',
 						
@@ -1178,6 +1180,7 @@
 						'src/sysunxrandom.cpp',
 						'src/sysunxregion.cpp',
 						'src/tilecachegl.cpp',
+						'src/tilecachegl3.x.cpp',
 						'src/glcontext.cpp',
 					],
 				},
@@ -1209,6 +1212,7 @@
 					[
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
+						'src/tilecachegl3.x.cpp',
 						'src/glcontext.cpp',
 						
 						'src/desktop.cpp',
@@ -1231,6 +1235,7 @@
 					[
 						'src/player-platform.cpp',
 						'src/sysunxnetwork.cpp',
+						'src/tilecachegl.cpp',
 
 						'src/desktop.cpp',
 						'src/desktop-ans.cpp',
@@ -1254,6 +1259,7 @@
 						'src/stacke.cpp',
 						'src/sysunxdate.cpp',
 						'src/sysunxrandom.cpp',
+						'src/tilecachegl.cpp',
 						
 						'src/mbliphoneembedded.mm',
 						'src/mbliphoneembeddedtest.mm',
@@ -1288,6 +1294,7 @@
 						'src/notify.cpp',
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
+						'src/tilecachegl3.x.cpp',
 						'src/glcontext.cpp',
 						
 						'src/desktop.cpp',
