@@ -46,8 +46,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 #import <AudioToolbox/AudioToolbox.h>
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
 #import <MediaPlayer/MPMoviePlayerViewController.h>
 
 #include "mbliphoneapp.h"
@@ -56,6 +54,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "resolution.h"
 
 #include <objc/message.h>
+
+#import <OpenGLES/ES3/gl.h>
+#import <OpenGLES/ES3/glext.h>
+#include "glcontext.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1132,15 +1134,23 @@ MCUIDC *MCCreateScreenDC(void)
 
 static bool s_ensure_opengl = false;
 static bool s_is_opengl_display = false;
+static MCGLContextRef s_opengl_context = nil;
 
-void MCIPhoneSwitchToOpenGL(void)
+void MCPlatformEnableOpenGLMode(void)
 {
+	if (s_opengl_context == nil)
+		MCGLContextCreate(s_opengl_context);
 	s_ensure_opengl = true;
 }
 
-void MCIPhoneSwitchToUIKit(void)
+void MCPlatformDisableOpenGLMode(void)
 {
 	s_ensure_opengl = false;
+}
+
+MCGLContextRef MCPlatformGetOpenGLContext(void)
+{
+	return s_opengl_context;
 }
 
 void MCIPhoneSyncDisplayClass(void)
@@ -1159,6 +1169,8 @@ void MCIPhoneSyncDisplayClass(void)
 		s_is_opengl_display = false;
 		// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 		MCIPhoneRunBlockOnMainFiber(^(void) {
+			MCGLContextDestroy(s_opengl_context);
+			s_opengl_context = nil;
 			MCIPhoneSwitchViewToUIKit();
 		});
 	}

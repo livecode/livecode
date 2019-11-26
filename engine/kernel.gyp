@@ -236,7 +236,7 @@
 						{
 							'libraries':
 							[
-								'-lGLESv1_CM',
+								'-lGLESv3',
 								'-lEGL',
 								'-ljnigraphics',
 								'-llog',

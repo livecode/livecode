@@ -26,8 +26,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <QuartzCore/QuartzCore.h>
 #import <OpenGLES/EAGL.h>
 #import <OpenGLES/EAGLDrawable.h>
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
+#import <OpenGLES/ES3/gl.h>
+#import <OpenGLES/ES3/glext.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
