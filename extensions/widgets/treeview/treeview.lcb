@@ -520,22 +520,19 @@ property formattedHeight	get mDataHeight
 metadata formattedHeight.user_visible is "false"
 
 /**
-Syntax: set the viewTopPosition of <widget> to <pViewTopPosition>
-Syntax: get the viewTopPosition of <widget>
+Syntax: set the scroll of <widget> to <pScroll>
 Syntax: get the scroll of <widget>
 Syntax: get the vScroll of <widget>
 
 Summary: Vertical scroll position of the widget
 
 Parameters:
-pViewTopPosition: Vertical scroll position of the widget
+pScroll: Vertical scroll position of the widget
 
 Description:
-Use the <viewTopPosition> property to get or set the scroll position of
+Use the <scroll> property to get or set the scroll position of
 the widget.
 **/
-property viewTopPosition				get mViewTopPosition		set setViewTopPosition
-metadata viewTopPosition.user_visible is "false"
 property scroll							get mViewTopPosition		set setViewTopPosition
 metadata scroll.user_visible is "false"
 

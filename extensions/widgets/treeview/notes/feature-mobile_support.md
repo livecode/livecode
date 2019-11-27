@@ -17,7 +17,7 @@ New properties:
 * `charsToTrimFromKey` - allow a sorting value to be added to the front of the key that is trimmed for display
 * `hilitedElementIsFolded` - adjust the fold state of the selected element
 * `formattedHeight` - content height for scroller support
-* `viewTopPosition`, `scroll`, and `vScroll` - scroll position
+* `scroll` and `vScroll` - scroll position
 * `textHeight` - custom row height
 * `vScrollBar` - control visibility of scroll bar
 * `showHover` - allow hover to be disabled, useful on mobile
