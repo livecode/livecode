@@ -1382,12 +1382,12 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCAutoNativeCharArray
+template <typename T, MCStringEncoding ENCODING> class MCAutoCharArray
 {
 public:
-    constexpr MCAutoNativeCharArray() = default;
+    constexpr MCAutoCharArray() = default;
 
-	~MCAutoNativeCharArray(void)
+	~MCAutoCharArray(void)
 	{
 		if (m_chars != nil)
 			MCMemoryDeleteArray(m_chars);
@@ -1395,7 +1395,7 @@ public:
 
 	//////////
 
-	char_t *Chars(void) const
+	T *Chars(void) const
 	{
 		return m_chars;
 	}
@@ -1407,7 +1407,7 @@ public:
 
 	//////////
 	
-	void Give(char_t *p_chars, uindex_t p_char_count)
+	void Give(T *p_chars, uindex_t p_char_count)
 	{
 		MCAssert(m_chars == nil);
 		m_chars = p_chars;
@@ -1452,12 +1452,12 @@ public:
 
 	bool CreateString(MCStringRef& r_string)
 	{
-		return MCStringCreateWithNativeChars(m_chars, m_char_count, r_string);
+		return MCStringCreateWithBytes(m_chars, m_char_count * sizeof(T), ENCODING, false, r_string);
 	}
 
 	bool CreateStringAndRelease(MCStringRef& r_string)
 	{
-		if (MCStringCreateWithNativeChars(m_chars, m_char_count, r_string))
+		if (MCStringCreateWithBytes(m_chars, m_char_count * sizeof(T), ENCODING, false, r_string))
 		{
             MCMemoryDeleteArray(m_chars);
 			m_chars = nil;
@@ -1468,9 +1468,14 @@ public:
 	}
 
 private:
-	char_t *m_chars = nullptr;
+	T *m_chars = nullptr;
 	uindex_t m_char_count = 0;
 };
+
+typedef MCAutoCharArray<char_t, kMCStringEncodingNative> MCAutoNativeCharArray;
+typedef MCAutoCharArray<char_t, kMCStringEncodingUTF8> MCAutoUTF8CharArray;
+
+//////////
 
 class MCAutoByteArray
 {

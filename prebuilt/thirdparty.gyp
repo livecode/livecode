@@ -962,6 +962,23 @@
 						},
 					],
 					[
+						'toolset_os == "android"',
+						{
+							'conditions':
+							[
+								[
+									'OS == "android"',
+									{
+										'libraries':
+										[
+											'-lcairo',
+										],
+									},
+								],
+							],
+						},
+					],
+					[
 						'toolset_os == "linux"',
 						{
 							'libraries':

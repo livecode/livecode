@@ -70,7 +70,7 @@ private:
 	bool CreateMessageWindow();
 	bool DestroyMessageWindow();
 
-	bool PostBrowserEvent(MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_frame, const char *p_url, const char *p_error);
+	bool PostBrowserNavigationEvent(MCBrowserNavigationEventType p_type, MCBrowserNavigationState p_state, bool p_frame, const char *p_url, const char *p_error);
 	bool PostJavaScriptCall(const char *p_handler, MCBrowserListRef p_params);
 
 	HWND m_parent_window;
@@ -226,37 +226,37 @@ bool MCCefWin32Browser::PlatformSetAllowUserInteraction(bool p_value)
 
 void MCCefWin32Browser::OnNavigationBegin(bool p_in_frame, const char *p_url)
 {
-	PostBrowserEvent(kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateBegin, p_in_frame, p_url, nil);
+	PostBrowserNavigationEvent(kMCBrowserNavigationEventTypeNavigate, kMCBrowserNavigationStateBegin, p_in_frame, p_url, nil);
 }
 
 void MCCefWin32Browser::OnNavigationComplete(bool p_in_frame, const char *p_url)
 {
-	PostBrowserEvent(kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateComplete, p_in_frame, p_url, nil);
+	PostBrowserNavigationEvent(kMCBrowserNavigationEventTypeNavigate, kMCBrowserNavigationStateComplete, p_in_frame, p_url, nil);
 }
 
 void MCCefWin32Browser::OnNavigationFailed(bool p_in_frame, const char *p_url, const char *p_error)
 {
-	PostBrowserEvent(kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
+	PostBrowserNavigationEvent(kMCBrowserNavigationEventTypeNavigate, kMCBrowserNavigationStateFailed, p_in_frame, p_url, p_error);
 }
 
 void MCCefWin32Browser::OnDocumentLoadBegin(bool p_in_frame, const char *p_url)
 {
-	PostBrowserEvent(kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateBegin, p_in_frame, p_url, nil);
+	PostBrowserNavigationEvent(kMCBrowserNavigationEventTypeDocumentLoad, kMCBrowserNavigationStateBegin, p_in_frame, p_url, nil);
 }
 
 void MCCefWin32Browser::OnDocumentLoadComplete(bool p_in_frame, const char *p_url)
 {
-	PostBrowserEvent(kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateComplete, p_in_frame, p_url, nil);
+	PostBrowserNavigationEvent(kMCBrowserNavigationEventTypeDocumentLoad, kMCBrowserNavigationStateComplete, p_in_frame, p_url, nil);
 }
 
 void MCCefWin32Browser::OnDocumentLoadFailed(bool p_in_frame, const char *p_url, const char *p_error)
 {
-	PostBrowserEvent(kMCBrowserRequestTypeDocumentLoad, kMCBrowserRequestStateFailed, p_in_frame, p_url, p_error);
+	PostBrowserNavigationEvent(kMCBrowserNavigationEventTypeDocumentLoad, kMCBrowserNavigationStateFailed, p_in_frame, p_url, p_error);
 }
 
 void MCCefWin32Browser::OnNavigationRequestUnhandled(bool p_in_frame, const char *p_url)
 {
-	PostBrowserEvent(kMCBrowserRequestTypeNavigate, kMCBrowserRequestStateUnhandled, p_in_frame, p_url, nil);
+	PostBrowserNavigationEvent(kMCBrowserNavigationEventTypeNavigate, kMCBrowserNavigationStateUnhandled, p_in_frame, p_url, nil);
 }
 
 void MCCefWin32Browser::OnJavaScriptCall(const char *p_handler, MCBrowserListRef p_params)
@@ -269,7 +269,7 @@ void MCCefWin32Browser::OnJavaScriptCall(const char *p_handler, MCBrowserListRef
 HINSTANCE MCWin32BrowserGetHINSTANCE();
 
 #define MCCEFWIN32_MSGWNDCLASS "MCCEFWIN32MSGWINDOW"
-#define MCCEFWIN32_MESSAGE_BROWSER_REQUEST (WM_USER + 0)
+#define MCCEFWIN32_MESSAGE_BROWSER_NAVIGATION_EVENT (WM_USER + 0)
 #define MCCEFWIN32_MESSAGE_JAVASCRIPT_CALL (WM_USER + 1)
 
 LRESULT CALLBACK MCCefWin32MessageWndProc(HWND p_hwnd, UINT p_message, WPARAM p_wparam, LPARAM p_lparam);
@@ -308,10 +308,10 @@ bool MCCefWin32Browser::DestroyMessageWindow()
 	return true;
 }
 
-struct MCCefBrowserRequestEvent
+struct MCCefBrowserNavigationEvent
 {
-	MCBrowserRequestType type;
-	MCBrowserRequestState state;
+	MCBrowserNavigationEventType type;
+	MCBrowserNavigationState state;
 	bool frame;
 	char *url;
 	char *error;
@@ -323,7 +323,7 @@ struct MCCefBrowserJavaScriptCallEvent
 	MCBrowserListRef params;
 };
 
-void MCCefBrowserRequestEventDestroy(MCCefBrowserRequestEvent *p_event)
+void MCCefBrowserNavigationEventDestroy(MCCefBrowserNavigationEvent *p_event)
 {
 	if (p_event != nil)
 	{
@@ -336,12 +336,12 @@ void MCCefBrowserRequestEventDestroy(MCCefBrowserRequestEvent *p_event)
 	}
 }
 
-bool MCCefBrowserRequestEventCreate(MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_frame, const char *p_url, const char *p_error, MCCefBrowserRequestEvent *&r_event)
+bool MCCefBrowserNavigationEventCreate(MCBrowserNavigationEventType p_type, MCBrowserNavigationState p_state, bool p_frame, const char *p_url, const char *p_error, MCCefBrowserNavigationEvent *&r_event)
 {
 	bool t_success;
 	t_success = true;
 
-	MCCefBrowserRequestEvent *t_event;
+	MCCefBrowserNavigationEvent *t_event;
 	t_event = nil;
 
 	t_success = MCBrowserMemoryNew(t_event);
@@ -361,7 +361,7 @@ bool MCCefBrowserRequestEventCreate(MCBrowserRequestType p_type, MCBrowserReques
 		r_event = t_event;
 	}
 	else
-		MCCefBrowserRequestEventDestroy(t_event);
+		MCCefBrowserNavigationEventDestroy(t_event);
 
 	return t_success;
 }
@@ -403,16 +403,16 @@ bool MCCefBrowserJavaScriptCallEventCreate(const char *p_handler, MCBrowserListR
 	return t_success;
 }
 
-bool MCCefWin32Browser::PostBrowserEvent(MCBrowserRequestType p_type, MCBrowserRequestState p_state, bool p_frame, const char *p_url, const char *p_error)
+bool MCCefWin32Browser::PostBrowserNavigationEvent(MCBrowserNavigationEventType p_type, MCBrowserNavigationState p_state, bool p_frame, const char *p_url, const char *p_error)
 {
-	MCCefBrowserRequestEvent *t_event;
+	MCCefBrowserNavigationEvent *t_event;
 	t_event = nil;
-	if (!MCCefBrowserRequestEventCreate(p_type, p_state, p_frame, p_url, p_error, t_event))
+	if (!MCCefBrowserNavigationEventCreate(p_type, p_state, p_frame, p_url, p_error, t_event))
 		return false;
 
-	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_BROWSER_REQUEST, (WPARAM)t_event, 0))
+	if (!PostMessage(m_message_window, MCCEFWIN32_MESSAGE_BROWSER_NAVIGATION_EVENT, (WPARAM)t_event, 0))
 	{
-		MCCefBrowserRequestEventDestroy(t_event);
+		MCCefBrowserNavigationEventDestroy(t_event);
 		return false;
 	}
 
@@ -442,10 +442,10 @@ LRESULT CALLBACK MCCefWin32MessageWndProc(HWND p_hwnd, UINT p_message, WPARAM p_
 
 	switch (p_message)
 	{
-	case MCCEFWIN32_MESSAGE_BROWSER_REQUEST:
+	case MCCEFWIN32_MESSAGE_BROWSER_NAVIGATION_EVENT:
 		{
-			MCCefBrowserRequestEvent *t_event;
-			t_event = reinterpret_cast<MCCefBrowserRequestEvent*>(p_wparam);
+			MCCefBrowserNavigationEvent *t_event;
+			t_event = reinterpret_cast<MCCefBrowserNavigationEvent*>(p_wparam);
 
 			MCBrowserEventHandler *t_event_handler;
 			t_event_handler = t_browser->GetEventHandler();
@@ -454,39 +454,39 @@ LRESULT CALLBACK MCCefWin32MessageWndProc(HWND p_hwnd, UINT p_message, WPARAM p_
 			{
 				switch (t_event->type)
 				{
-				case kMCBrowserRequestTypeNavigate:
+				case kMCBrowserNavigationEventTypeNavigate:
 					switch (t_event->state)
 					{
-					case kMCBrowserRequestStateBegin:
+					case kMCBrowserNavigationStateBegin:
 						t_event_handler->OnNavigationBegin(t_browser, t_event->frame, t_event->url);
 						break;
 
-					case kMCBrowserRequestStateComplete:
+					case kMCBrowserNavigationStateComplete:
 						t_event_handler->OnNavigationComplete(t_browser, t_event->frame, t_event->url);
 						break;
 
-					case kMCBrowserRequestStateFailed:
+					case kMCBrowserNavigationStateFailed:
 						t_event_handler->OnNavigationFailed(t_browser, t_event->frame, t_event->url, t_event->error);
 						break;
 
-					case kMCBrowserRequestStateUnhandled:
+					case kMCBrowserNavigationStateUnhandled:
 						t_event_handler->OnNavigationRequestUnhandled(t_browser, t_event->frame, t_event->url);
 						break;
 					}
 					break;
 
-				case kMCBrowserRequestTypeDocumentLoad:
+				case kMCBrowserNavigationEventTypeDocumentLoad:
 					switch (t_event->state)
 					{
-					case kMCBrowserRequestStateBegin:
+					case kMCBrowserNavigationStateBegin:
 						t_event_handler->OnDocumentLoadBegin(t_browser, t_event->frame, t_event->url);
 						break;
 
-					case kMCBrowserRequestStateComplete:
+					case kMCBrowserNavigationStateComplete:
 						t_event_handler->OnDocumentLoadComplete(t_browser, t_event->frame, t_event->url);
 						break;
 
-					case kMCBrowserRequestStateFailed:
+					case kMCBrowserNavigationStateFailed:
 						t_event_handler->OnDocumentLoadFailed(t_browser, t_event->frame, t_event->url, t_event->error);
 						break;
 					}
@@ -494,7 +494,7 @@ LRESULT CALLBACK MCCefWin32MessageWndProc(HWND p_hwnd, UINT p_message, WPARAM p_
 				}
 			}
 
-			MCCefBrowserRequestEventDestroy(t_event);
+			MCCefBrowserNavigationEventDestroy(t_event);
 		}
 		break;
 

@@ -53,23 +53,16 @@ are defined in the <action> listing section below.
 **<action> listing: **
 
 **Browser Specific Actions** 
-- "advance": Move forward through the history (wraps the goForward
-method of UIWebView).
-- "retreat": Move backward through the history (wraps the goBack
-method of UIWebView).
-- "reload": Reload the current page (wraps the reload method of
-UIWebView). 
-- "stop": Stop loading the current page (wraps the stopLoading method
-of UIWebView).
+- "advance": Move forward through the history.
+- "retreat": Move backward through the history.
+- "reload": Reload the current page. 
+- "stop": Stop loading the current page.
 - "load", *baseUrl*, *htmlText*: Loads as page consisting of the given
-    htmlText with the given baseUrl (wraps theloadHtmlString method of
-    UIWebView). Takes the following additional parameters:
+    htmlText with the given baseUrl. Takes the following additional parameters:
   - *baseUrl*
   - "*htmlText*
 - "execute", *script*: <evaluate|Evaluates> the given JavaScript script in the
-context of the current page (wraps the
-stringByEvaluationJavaScriptFromString method of UIWebView). Takes
-the following additional parameter:
+context of the current page. Takes the following additional parameter:
   - *script*
 
 **Scroller Specific Actions (iOS Only)**
@@ -82,12 +75,12 @@ momentarily.
 - "stop": Stop playing the content of the player.
 - "prepareToPlay" (iOS Only): Make the content ready to play, but
 don't actually commence playback.
-- "begin seeking forward" (iOS Only): Start seeking forward through
-the content of the player.
-- "begin seeking backward" (iOS Only): Start seeking backward through
-the content of the player.
-- "end seeking" (iOS Only): Stop seeking through the content of the
-player. 
+- ~~"begin seeking forward" (iOS Only): Start seeking forward through
+the content of the player.~~ *Note*: removed in LiveCode 9.6
+- ~~"begin seeking backward" (iOS Only): Start seeking backward through
+the content of the player.~~ *Note*: removed in LiveCode 9.6
+- ~~"end seeking" (iOS Only): Stop seeking through the content of the
+player.~~ *Note*: removed in LiveCode 9.6
 - "snapshot" | "snapshot exactly", *time*, [ *maxWidth*, *maxHeight* ]
 (iOS Only): Take a snapshot of the movie at time milliseconds from the
 beginning. If the 'exactly' form is specified the frame produced is

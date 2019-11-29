@@ -1144,7 +1144,7 @@ private command _svgCompileEllipse @xContext, pElement
 	put pElement["features"]["cx"] into tCx
 	put pElement["features"]["cy"] into tCy
 	put pElement["features"]["rx"] into tRx
-	put pElement["features"]["rx"] into tRy
+	put pElement["features"]["ry"] into tRy
 	_svgCompileShape xContext, "ellipse", _svgBoxEllipse(tCx, tCy, tRx, tRy), tCx, tCy, tRx, tRy
 end _svgCompileEllipse
 

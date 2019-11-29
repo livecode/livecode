@@ -1,0 +1,1 @@
+# Fix incorrect stack size on Android for fullscreen mode `showAll` when the device has a soft button bar
