@@ -72,6 +72,17 @@ pPath: The path to the clicked element
 Description:
 The actionDoubleClick message is sent to the widget's script object when a row of the widget
 is double-clicked. The <pPath> parameter contains the path to the element whose row was clicked.
+
+Name: formattedHeightChanged
+Type: message
+Syntax: formattedHeightChanged
+
+Summary: Sent when the formatted height of the displayed data changes.
+
+Description:
+The formattedHeightChanged message is sent to the widget's script object when
+the formatted height of the displayed data changes.  This is useful when
+using a mobileScroller to control the widget view.
 **/
 
 widget com.livecode.widget.treeview
@@ -83,7 +94,7 @@ use com.livecode.library.widgetutils
 use com.livecode.foreign
 
 metadata author is "LiveCode"
-metadata version is "2.2.2"
+metadata version is "2.4.1"
 metadata title is "Tree View"
 metadata svgicon is "M152.4,249.7c-6.4,0-11.8,4.3-13.5,10.1h-10v-26.7h10c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1s-6.3-14.1-14.1-14.1c-6.4,0-11.8,4.3-13.5,10.1h-10v-16.1c8.4-1.8,14.8-9.3,14.8-18.3c0-10.4-8.4-18.8-18.8-18.8s-18.8,8.4-18.8,18.8c0,9,6.3,16.5,14.7,18.3v58.8h18c1.7,5.8,7.1,10.1,13.5,10.1c7.8,0,14.1-6.3,14.1-14.1S160.2,249.7,152.4,249.7z M128.7,202h-7.5v-7.5h-7.5V187h7.5v-7.5h7.5v7.5h7.5v7.5h-7.5V202z"
 metadata _ide is "true"
@@ -117,6 +128,7 @@ The foldState is the fold state currently being displayed by the tree view widge
 
 The fold state array only contains elements of the data array where the
 value is a subarray.  The value for each `folded` key must be a boolean.
+Only the unfolded keys need to be specified.
 
 ```
 	[key1]
@@ -127,6 +139,8 @@ value is a subarray.  The value for each `folded` key must be a boolean.
 	[key2]
 		["folded"]
 ```
+
+Setting the foldState to empty will fold all keys.
 **/
 
 property foldState 					get getFoldState 				set setFoldState
@@ -173,6 +187,23 @@ effect.  Setting the fold state when no element is selected has no effect.
 
 property hilitedElementFoldState			get getSelectedElementFoldState			set setSelectedElementFoldState
 metadata hilitedElementFoldState.user_visible is "false"
+
+/**
+Syntax: set the hilitedElementIsFolded of <widget> to {true|false}
+Syntax: get the hilitedElementIsFolded of <widget>
+
+Summary: Determine if the selected element is folded
+
+Description:
+Value is true if the selected element is folded.  False is returned in
+all other cases including when nothing is selected and when a leaf node is
+selected.  When setting the fold state, attempts to set the value for a leaf 
+node will have no effect.  Setting the fold state when no element is selected 
+has no effect.
+**/
+
+property hilitedElementIsFolded			get getSelectedElementIsFolded			set setSelectedElementIsFolded
+metadata hilitedElementIsFolded.user_visible is "false"
 
 /**
 Syntax: set the hiliteNewElement of <widget> to {true|false}
@@ -411,6 +442,20 @@ property showBorder			get mFrameBorder				set setFrameBorder
 metadata showBorder.label is "Show border"
 
 /**
+Syntax: set the showHover of <widget> to {true|false}
+Syntax: get the showHover of <widget>
+
+Summary: Whether the widget has a hover row displayed or not.
+
+Description:
+Use the <showHover> property to show or hide the hover row of the widget 
+object.
+**/
+
+property showHover			get mShowHover				set setShowHover
+metadata showHover.label is "Show hover row"
+
+/**
 Syntax: set the readOnly of <widget> to {true|false}
 Syntax: get the readOnly of <widget>
 
@@ -441,6 +486,145 @@ References: arrayData (property)
 
 property arrayStyle                 get mArrayStyle                 set setArrayStyle
 metadata arrayStyle.label is "Array style"
+
+/**
+Syntax: set the charsToTrimFromKey of <widget> to <pChars>
+Syntax: get the charsToTrimFromKey of <widget>
+
+Summary: The number of leading characters to trim from the key for display.
+
+Parameters:
+pChars: Number of leading characters to trim from the key.
+
+Description:
+The <charsToTrimFromKey> property controls the number of leading characters that 
+are removed from the keys of the <arrayData> of the widget.  This allows
+a custom sort where the sort portion of the key is not displayed.
+
+With <charsToTrimFromKey> set to 2, the following array:
+```
+	[1 CCC]
+	[2 BBB]
+	[3 AAA]
+```
+
+Would display in the widget as:
+```
+[CCC]
+[BBB]
+[AAA]
+```
+
+References: arrayData (property)
+**/
+
+property charsToTrimFromKey                 get mCharsToTrimFromKey                 set setCharsToTrimFromKey
+metadata charsToTrimFromKey.label is "Key chars to trim"
+
+/**
+Syntax: get the formattedHeight of <widget>
+
+Summary: Height of the data displayed by the widget
+
+Description:
+Use the <formattedHeight> property to get the height of the data displayed
+by the widget in the current fold state.
+**/
+property formattedHeight	get mDataHeight
+metadata formattedHeight.user_visible is "false"
+
+/**
+Syntax: set the scroll of <widget> to <pScroll>
+Syntax: get the scroll of <widget>
+Syntax: get the vScroll of <widget>
+
+Summary: Vertical scroll position of the widget
+
+Parameters:
+pScroll: Vertical scroll position of the widget
+
+Description:
+Use the <scroll> property to get or set the scroll position of
+the widget.
+**/
+property scroll							get mViewTopPosition		set setViewTopPosition
+metadata scroll.user_visible is "false"
+
+/**
+Syntax: set the textHeight of <widget> to <pTextHeight>
+Syntax: get the textHeight of <widget>
+
+Summary: Custom text height for the widget
+
+Parameters:
+pTextHeight: Custom text height for the widget
+
+Description:
+Use the <textHeight> property to set a custom text (row) height for
+the widget.  The default value is 0 which will use the calculated height
+based on the currently selected font and size.
+**/
+property textHeight						get mTextHeight			set mTextHeight
+metadata textHeight.label is "Text Height"
+metadata textHeight.default is "0"
+
+/**
+Syntax: set the iconHeight of <widget> to <pIconHeight>
+Syntax: get the iconHeight of <widget>
+
+Summary: Custom icon height for the widget
+
+Parameters:
+pIconHeight: Custom icon height for the widget
+
+Description:
+Use the <iconHeight> property to set a custom icon size for
+the widget.  The default value is 10.
+**/
+property iconHeight						get mIconHeight			set setIconHeight
+metadata iconHeight.label is "Icon Height"
+metadata iconHeight.default is "10"
+
+/**
+Name: vScrollbar
+Type: property
+
+Syntax:
+set the vScrollbar of <widget> to <pEnabled>
+get the vScrollbar of <widget>
+
+Summary: Controls the visibility of the browser's vertical scrollbar.
+
+Value (boolean): 
+`true` if the vertical scrollbar should be enabled and displayed; 
+`false` otherwise.
+
+Description:
+Use the <vScrollbar> property to control the visibility of the widget's
+vertical scrollbar
+*/
+property vScrollbar get mVScrollbar set setVScrollbar
+metadata vScrollbar.editor is "com.livecode.pi.boolean"
+metadata vScrollbar.default is "true"
+metadata vScrollbar.label is "Vertical scrollbar"
+
+/**
+Syntax: set the showValues of <widget> to {true|false}
+Syntax: get the showValues of <widget>
+
+Summary: Whether the values are displayed or not
+
+Description:
+Use the <showValues> property to display or hide the values of the <arrayData>  
+of the tree view widget.  This setting will be useful when using the
+widget as a menu for navigation purposes.
+
+Hiding values effectively hides the separator as well.
+
+Related: showSeparator (property)
+**/
+property showValues		get mShowValues		set setShowValues
+metadata showValues.label is "Show values"
 
 /**
 Syntax: set the showSeparator of <widget> to {true|false}
@@ -491,6 +675,9 @@ private variable mDataCount as Integer
 private variable mDataHeight as Real
 // The height of each row
 private variable mRowHeight as Real
+private variable mTextHeight as Real
+private variable mFontSize as Integer
+private variable mFontName as String
 
 // The height of the view area
 private variable mViewHeight as Real
@@ -510,6 +697,7 @@ private variable mRedraw as Boolean
 private variable mFoldChanged as Boolean
 
 private variable mAlternateRowBackgrounds as Boolean
+private variable mVScrollbar as Boolean
 
 private variable mIndentPixels as Integer
 private variable mHoverRow as Integer
@@ -517,6 +705,7 @@ private variable mHoverIcon as String
 private variable mMouseDownRow as Integer
 
 private variable mFrameBorder as Boolean
+private variable mShowHover as Boolean
 
 private variable mSelectedElement as optional List
 private variable mFoldState as Array
@@ -533,6 +722,8 @@ private variable mInspectItemPath as Path
 
 private variable mIconRect as Rectangle
 private variable mIconWidth as Real
+private variable mIconHeight as Integer
+private variable mRightIconMargin as Real
 
 private variable mReadOnly as Boolean
 private variable mArrayStyle as Boolean
@@ -543,6 +734,9 @@ private variable mSortCaseSensitive as Boolean
 
 private variable mPathDelimiter as String
 
+private variable mCharsToTrimFromKey as Integer
+
+private variable mShowValues as Boolean
 private variable mShowSeparator as Boolean
 private variable mSeparatorRatio as Number
 private variable mSeparatorDragging as Boolean
@@ -551,9 +745,11 @@ private variable mOldTooltip as optional String
 
 constant kRowBuffer is 1000
 
+constant kRowTextPadding is 4
 constant kItemPadding is 6
 constant kSeparatorWidth is 4
 constant kStrokeWidth is 1
+constant kIconHeight is 10
 --------------------------------------------------------------------------------
 --
 --		Message handlers
@@ -561,27 +757,14 @@ constant kStrokeWidth is 1
 --------------------------------------------------------------------------------
 
 public handler OnCreate() returns nothing
-	put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into mFoldedArrowPath
-	put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into mUnfoldedArrowPath
-	put path "M512 736L512 1312Q512 1326 503 1335 494 1344 480 1344L416 1344Q402 1344 393 1335 384 1326 384 1312L384 736Q384 722 393 713 402 704 416 704L480 704Q494 704 503 713 512 722 512 736ZM768 736L768 1312Q768 1326 759 1335 750 1344 736 1344L672 1344Q658 1344 649 1335 640 1326 640 1312L640 736Q640 722 649 713 658 704 672 704L736 704Q750 704 759 713 768 722 768 736ZM1024 736L1024 1312Q1024 1326 1015 1335 1006 1344 992 1344L928 1344Q914 1344 905 1335 896 1326 896 1312L896 736Q896 722 905 713 914 704 928 704L992 704Q1006 704 1015 713 1024 722 1024 736ZM1152 1460L1152 512 256 512 256 1460Q256 1482 263 1500.5 270 1519 277.5 1527.5 285 1536 288 1536L1120 1536Q1123 1536 1130.5 1527.5 1138 1519 1145 1500.5 1152 1482 1152 1460ZM480 384L928 384 880 267Q873 258 863 256L546 256Q536 258 529 267ZM1408 416L1408 480Q1408 494 1399 503 1390 512 1376 512L1280 512 1280 1460Q1280 1543 1233 1603.5 1186 1664 1120 1664L288 1664Q222 1664 175 1605.5 128 1547 128 1464L128 512 32 512Q18 512 9 503 0 494 0 480L0 416Q0 402 9 393 18 384 32 384L341 384 411 217Q426 180 465 154 504 128 544 128L864 128Q904 128 943 154 982 180 997 217L1067 384 1376 384Q1390 384 1399 393 1408 402 1408 416Z" into mDeleteItemPath
-	put path "M1408 608L1408 800Q1408 840 1380 868 1352 896 1312 896L896 896 896 1312Q896 1352 868 1380 840 1408 800 1408L608 1408Q568 1408 540 1380 512 1352 512 1312L512 896 96 896Q56 896 28 868 0 840 0 800L0 608Q0 568 28 540 56 512 96 512L512 512 512 96Q512 56 540 28 568 0 608 0L800 0Q840 0 868 28 896 56 896 96L896 512 1312 512Q1352 512 1380 540 1408 568 1408 608Z" into mAddItemPath
-    put path "M1408 928L1408 1248Q1408 1367 1323.5 1451.5 1239 1536 1120 1536L288 1536Q169 1536 84.5 1451.5 0 1367 0 1248L0 416Q0 297 84.5 212.5 169 128 288 128L992 128Q1006 128 1015 137 1024 146 1024 160L1024 224Q1024 238 1015 247 1006 256 992 256L288 256Q222 256 175 303 128 350 128 416L128 1248Q128 1314 175 1361 222 1408 288 1408L1120 1408Q1186 1408 1233 1361 1280 1314 1280 1248L1280 928Q1280 914 1289 905 1298 896 1312 896L1376 896Q1390 896 1399 905 1408 914 1408 928ZM1792 64L1792 576Q1792 602 1773 621 1754 640 1728 640 1702 640 1683 621L1507 445 855 1097Q845 1107 832 1107 819 1107 809 1097L695 983Q685 973 685 960 685 947 695 937L1347 285 1171 109Q1152 90 1152 64 1152 38 1171 19 1190 0 1216 0L1728 0Q1754 0 1773 19 1792 38 1792 64Z" into mInspectItemPath
-
-	// Make sure all the icons paths are 10 x 10, with centered at the origin
-	put rectangle [-5,-5,5,5] into mIconRect
-	
-	constrainPathToRect(mIconRect, mFoldedArrowPath)
-	constrainPathToRect(mIconRect, mUnfoldedArrowPath)
-	constrainPathToRect(mIconRect, mDeleteItemPath)
-	constrainPathToRect(mIconRect, mAddItemPath)
-	constrainPathToRect(mIconRect, mInspectItemPath)
-
-	variable tWidth as Real
-	put the width of mIconRect into mIconWidth
-
 	put 21 into mRowHeight
+	put kIconHeight into mIconHeight
+	UpdateIconRects()
+	
+	put 0 into mTextHeight
 	put true into mAlternateRowBackgrounds
-	put 15 into mIndentPixels
+	put the size of my font into mFontSize
+	put the name of my font into mFontName
 	
 	put my height into mViewHeight
 	put my width into mViewWidth	
@@ -589,7 +772,9 @@ public handler OnCreate() returns nothing
 	put 0 into mHoverRow
 	put "" into mHoverIcon
 	put 0 into mViewTopPosition
-	put true into mFrameBorder	
+	put true into mFrameBorder
+	put true into mShowHover
+	put true into mVScrollbar
 	initialiseScrollbar()	
 	
 	put false into mReadOnly
@@ -599,7 +784,7 @@ public handler OnCreate() returns nothing
     put true into mSortAscending
     put true into mSortCaseSensitive
 
-    put "," into mPathDelimiter
+	put "," into mPathDelimiter
 
 	put true into mRecalculate
 	put true into mUpdateDataList
@@ -608,6 +793,9 @@ public handler OnCreate() returns nothing
 	put true into mRedraw
 	put false into mFoldChanged
 	
+	put 0 into mCharsToTrimFromKey
+	
+	put true into mShowValues
 	put false into mShowSeparator
 	put 0.5 into mSeparatorRatio
 	put false into mSeparatorDragging
@@ -630,7 +818,15 @@ public handler OnSave(out rProperties as Array)
 	put mAutoFoldStateReset into rProperties["auto fold state reset"]
 	put mHiliteNewElement into rProperties["hilite new element"]
 	put mScrollHilitedElementIntoView into rProperties["scroll hilited element into view"]
+	put mTextHeight into rProperties["text height"]
+	put mIconHeight into rProperties["icon height"]
+	put mFrameBorder into rProperties["show border"]
+	put mShowHover into rProperties["show hover row"]
+	put mVScrollbar into rProperties["vertical scrollbar"]
+	put mAlternateRowBackgrounds into rProperties["alternate row backgrounds"]
 
+	put mCharsToTrimFromKey into rProperties["chars to trim from key"]
+	put mShowValues into rProperties["show values"]
 	put mShowSeparator into rProperties["show separator"]
 	put mSeparatorRatio into rProperties["separator ratio"]
 	return rProperties
@@ -639,16 +835,16 @@ end handler
 public handler OnLoad(in pProperties as Array)
 	put pProperties["read only"] into mReadOnly
 
-   if "array style" is among the keys of pProperties then
-      put pProperties["array style"] into mArrayStyle
-   end if
+	if "array style" is among the keys of pProperties then
+		put pProperties["array style"] into mArrayStyle
+	end if
 
 	if "sort ascending" is among the keys of pProperties then
-	  put pProperties["sort ascending"] into mSortAscending
+		put pProperties["sort ascending"] into mSortAscending
 	end if
 
 	if "sort numeric" is among the keys of pProperties then
-	  put pProperties["sort numeric"] into mSortNumeric
+		put pProperties["sort numeric"] into mSortNumeric
 	end if
 
     if "sort case sensitive" is among the keys of pProperties then
@@ -667,14 +863,53 @@ public handler OnLoad(in pProperties as Array)
 		put pProperties["scroll hilited element into view"] into mScrollHilitedElementIntoView
 	end if
 
-	if "show separator" is among the keys of pProperties then
-	  put pProperties["show separator"] into mShowSeparator
+	if "text height" is among the keys of pProperties then
+		put pProperties["text height"] into mTextHeight
 	end if
-	 
+
+	-- Prepare for being able to specify custom icons
+	variable tRecalculateIcons as Boolean
+	put false into tRecalculateIcons
+	if "icon height" is among the keys of pProperties then
+		put pProperties["icon height"] into mIconHeight
+		put mIconHeight is not kIconHeight into tRecalculateIcons
+	end if
+
+	if "show border" is among the keys of pProperties then
+		put pProperties["show border"] into mFrameBorder
+	end if
+
+	if "show hover row" is among the keys of pProperties then
+		put pProperties["show hover row"] into mShowHover
+	end if
+
+	if "vertical scrollbar" is among the keys of pProperties then
+		put pProperties["vertical scrollbar"] into mVScrollbar
+	end if
+
+	if "alternate row backgrounds" is among the keys of pProperties then
+		put pProperties["alternate row backgrounds"] into mAlternateRowBackgrounds
+	end if
+
+	if "chars to trim from key" is among the keys of pProperties then
+		put pProperties["chars to trim from key"] into mCharsToTrimFromKey
+	end if
+
+	if "show values" is among the keys of pProperties then
+		put pProperties["show values"] into mShowValues
+	end if
+
+	if "show separator" is among the keys of pProperties then
+		put pProperties["show separator"] into mShowSeparator
+	end if
+
 	if "separator ratio" is among the keys of pProperties then
 		put pProperties["separator ratio"] into mSeparatorRatio
 	end if
-	  
+
+	if tRecalculateIcons then
+		UpdateIconRects()
+	end if
 	setArrayData(pProperties["array"])
 end handler
 
@@ -683,6 +918,36 @@ private handler elementIsProxyForMoreData(in pElement as Array) returns Boolean
 end handler
 
 public handler OnPaint() returns nothing
+	variable tFontSize as Integer
+	put the size of my font into tFontSize
+	if tFontSize is not mFontSize then
+		put tFontSize into mFontSize
+		put true into mRecalculate
+		put true into mRecalculateFit
+		put nothing into mEllipsisLength
+	end if
+
+	variable tFontName as String
+	put the name of my font into tFontName
+	if tFontName is not mFontName then
+		put tFontName into mFontName
+		put true into mRecalculate
+		put true into mRecalculateFit
+		put nothing into mEllipsisLength
+	end if
+	
+	variable tRowHeight as Integer
+	if mTextHeight > 0 then
+		put mTextHeight into tRowHeight
+	else
+		put tFontSize + 2 * kRowTextPadding into tRowHeight
+	end if
+	if tRowHeight is not mRowHeight then
+		put tRowHeight into mRowHeight
+		put true into mRecalculate
+		put true into mRecalculateFit
+	end if
+	
 	set the font of this canvas to my font
 	if mUpdateDataList then
 		updateDataList()
@@ -705,11 +970,11 @@ public handler OnPaint() returns nothing
 	
 	variable tTopOffset
 	put mViewTopPosition mod mRowHeight into tTopOffset
-	subtract tTopOffset from tTop	
+	subtract tTopOffset from tTop
 	
-	// Iterate from the first data item drawing each row until 
-	// we can't display any more items	
-	repeat with tX from mFirstDataItem up to mDataCount	
+	// Iterate from the first data item drawing each row until
+	// we can't display any more items
+	repeat with tX from mFirstDataItem up to mDataCount
 		if tX is 1 then
 			paintFirstRow(tTop)
 		else
@@ -722,7 +987,7 @@ public handler OnPaint() returns nothing
 				put mDataList[tX] into tElement
 			end if
 			
-			paintDataItem(tElement, tTop, tX)		
+			paintDataItem(tElement, tTop, tX)
 		end if
 		if tTop > mViewHeight then
 			exit repeat
@@ -730,12 +995,14 @@ public handler OnPaint() returns nothing
 		add mRowHeight to tTop
 	end repeat
 	
-	if mShowSeparator then
-		paintSeparator()	
+	if mShowValues and mShowSeparator then
+		paintSeparator()
 	end if	
-    
-    // Paint the scrollbar
-	paintScrollbar(this canvas)
+
+	// Paint the scrollbar
+	if mVScrollbar then
+		paintScrollbar(this canvas)
+	end if
 	
 	// Draw the frame
 	if mFrameBorder is true then
@@ -769,7 +1036,7 @@ private handler paintFirstRow(in pTop as Real)
 	put "" into tStyle
 
 	variable tHover as Boolean
-	put mHoverRow is 1 into tHover
+	put (mHoverRow is 1) and mShowHover into tHover
 		
 	variable tPath as Path	
 	put rectangle path of rectangle [0,pTop,mViewWidth,pTop+mRowHeight] into tPath
@@ -790,10 +1057,10 @@ private handler paintFirstRow(in pTop as Real)
 end handler
 
 private handler keyRight() returns Real
-	if mShowSeparator then
+	if mShowValues and mShowSeparator then
 		return mSeparatorRatio * availableSeparatorSpace()
 	else
-		return mViewWidth - 3 * kItemPadding - 2 * mIconWidth
+		return mViewWidth - mRightIconMargin
 	end if
 end handler
 
@@ -809,14 +1076,14 @@ private handler valueLeft(in pKeyLeft as Real) returns Real
 end handler
 
 private handler valueRight() returns Real
-	return mViewWidth - 3 * kItemPadding - 2 * mIconWidth
+	return mViewWidth - mRightIconMargin
 end handler
 
 // Utility for painting a row with top pTop
 private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as Integer)
 	// Apply any style to this data item
 	variable tHover as Boolean
-	put pRow is mHoverRow into tHover
+	put (pRow is mHoverRow) and mShowHover into tHover
 	
 	variable tAlternate as Boolean
 	if mAlternateRowBackgrounds and pRow mod 2 is 0 then
@@ -842,7 +1109,7 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 		save state of this canvas
 		translate tPath by [tLeft + mIconWidth / 2, pTop + mRowHeight / 2]
 		paintIcon(tPath, false, pDataItem["selected"])
-		if mShowSeparator then
+		if mShowValues and mShowSeparator then
 			clip to rectangle [tLeft, pTop, mSeparatorRatio * availableSeparatorSpace(), pTop + mRowHeight] on this canvas
 		end if	
 		fill tPath on this canvas
@@ -866,14 +1133,14 @@ private handler paintDataItem(in pDataItem as Array, in pTop as Real, in pRow as
 	paintText(pDataItem["display_key"], "left", tDisplayRect, true, pDataItem["selected"])
 	
 	// Draw the value if it is a 'leaf' (i.e. if it does not contain a sub-array)
-	if pDataItem["leaf"] then
+	if mShowValues and pDataItem["leaf"] then
 		put rectangle [tLeft, pTop, valueRight(), pTop + mRowHeight] into tDisplayRect
 		paintText(pDataItem["display_value"], "left", tDisplayRect, true, pDataItem["selected"])
 
-        if mReadOnly and pDataItem["value_too_large"] then
-            put mInspectItemPath into tPath
-            translate tPath by [mViewWidth - scrollbarWidth() - kItemPadding - mIconWidth / 2, pTop + mRowHeight / 2]
-				paintIcon(tPath, tHover, pDataItem["selected"])
+		if mReadOnly and pDataItem["value_too_large"] then
+			put mInspectItemPath into tPath
+			translate tPath by [mViewWidth - scrollbarWidth() - kItemPadding - mIconWidth / 2, pTop + mRowHeight / 2]
+			paintIcon(tPath, tHover, pDataItem["selected"])
 		end if
 	end if
 
@@ -899,7 +1166,7 @@ public handler OnMouseDown() returns nothing
 	checkScrollbarMouseDown()
 	
 	// If there is a separator, check whether the mousedown was within kSeparatorWidth of the middle of it
-	if mShowSeparator then		
+	if mShowValues and mShowSeparator then		
 		if the mouse position is within separatorRectangle() then
 			put true into mSeparatorDragging
 		end if
@@ -1011,7 +1278,7 @@ public handler OnClick() returns nothing
 	end if
 
 	// Click on the separator does nothing
-	if mShowSeparator then
+	if mShowValues and mShowSeparator then
 		if mSeparatorDragging then
 			put false into mSeparatorDragging
 			return
@@ -1076,7 +1343,7 @@ public handler OnClick() returns nothing
 		
 		if tX > tLeft and tX < tLeft + mIconWidth + 2 * kItemPadding then
 			// Only register a click on the arrow if it is showing in front of the separator
-			if not mShowSeparator or tX < the left of separatorRectangle() then
+			if not (mShowValues and mShowSeparator) or tX < the left of separatorRectangle() then
 				if tData["folded"] is true then
 					unfoldPath(tData["path"])
 				else
@@ -1187,6 +1454,27 @@ private handler SetHoverTooltip(in pIconString as String) returns nothing
     set property "tooltip" of my script object to tTooltip
 end handler
 
+private handler UpdateIconRects() returns nothing
+	put path "M0,7.421V0.21c0-0.168,0.188-0.268,0.327-0.174l5.351,3.605c0.124,0.083,0.124,0.265,0,0.348L0.327,7.595 C0.188,7.689,0,7.589,0,7.421z" into mFoldedArrowPath
+	put path "M0.221,0l7.565,0c0.177,0,0.281,0.188,0.183,0.327L4.186,5.679c-0.087,0.124-0.278,0.124-0.366,0L0.038,0.327 C-0.061,0.188,0.044,0,0.221,0z" into mUnfoldedArrowPath
+	put path "M512 736L512 1312Q512 1326 503 1335 494 1344 480 1344L416 1344Q402 1344 393 1335 384 1326 384 1312L384 736Q384 722 393 713 402 704 416 704L480 704Q494 704 503 713 512 722 512 736ZM768 736L768 1312Q768 1326 759 1335 750 1344 736 1344L672 1344Q658 1344 649 1335 640 1326 640 1312L640 736Q640 722 649 713 658 704 672 704L736 704Q750 704 759 713 768 722 768 736ZM1024 736L1024 1312Q1024 1326 1015 1335 1006 1344 992 1344L928 1344Q914 1344 905 1335 896 1326 896 1312L896 736Q896 722 905 713 914 704 928 704L992 704Q1006 704 1015 713 1024 722 1024 736ZM1152 1460L1152 512 256 512 256 1460Q256 1482 263 1500.5 270 1519 277.5 1527.5 285 1536 288 1536L1120 1536Q1123 1536 1130.5 1527.5 1138 1519 1145 1500.5 1152 1482 1152 1460ZM480 384L928 384 880 267Q873 258 863 256L546 256Q536 258 529 267ZM1408 416L1408 480Q1408 494 1399 503 1390 512 1376 512L1280 512 1280 1460Q1280 1543 1233 1603.5 1186 1664 1120 1664L288 1664Q222 1664 175 1605.5 128 1547 128 1464L128 512 32 512Q18 512 9 503 0 494 0 480L0 416Q0 402 9 393 18 384 32 384L341 384 411 217Q426 180 465 154 504 128 544 128L864 128Q904 128 943 154 982 180 997 217L1067 384 1376 384Q1390 384 1399 393 1408 402 1408 416Z" into mDeleteItemPath
+	put path "M1408 608L1408 800Q1408 840 1380 868 1352 896 1312 896L896 896 896 1312Q896 1352 868 1380 840 1408 800 1408L608 1408Q568 1408 540 1380 512 1352 512 1312L512 896 96 896Q56 896 28 868 0 840 0 800L0 608Q0 568 28 540 56 512 96 512L512 512 512 96Q512 56 540 28 568 0 608 0L800 0Q840 0 868 28 896 56 896 96L896 512 1312 512Q1352 512 1380 540 1408 568 1408 608Z" into mAddItemPath
+	put path "M1408 928L1408 1248Q1408 1367 1323.5 1451.5 1239 1536 1120 1536L288 1536Q169 1536 84.5 1451.5 0 1367 0 1248L0 416Q0 297 84.5 212.5 169 128 288 128L992 128Q1006 128 1015 137 1024 146 1024 160L1024 224Q1024 238 1015 247 1006 256 992 256L288 256Q222 256 175 303 128 350 128 416L128 1248Q128 1314 175 1361 222 1408 288 1408L1120 1408Q1186 1408 1233 1361 1280 1314 1280 1248L1280 928Q1280 914 1289 905 1298 896 1312 896L1376 896Q1390 896 1399 905 1408 914 1408 928ZM1792 64L1792 576Q1792 602 1773 621 1754 640 1728 640 1702 640 1683 621L1507 445 855 1097Q845 1107 832 1107 819 1107 809 1097L695 983Q685 973 685 960 685 947 695 937L1347 285 1171 109Q1152 90 1152 64 1152 38 1171 19 1190 0 1216 0L1728 0Q1754 0 1773 19 1792 38 1792 64Z" into mInspectItemPath
+
+	variable tSize as Integer
+	put the rounded of (mIconHeight / 2) into tSize
+	put rectangle [-tSize,-tSize,tSize,tSize] into mIconRect
+	
+	constrainPathToRect(mIconRect, mFoldedArrowPath)
+	constrainPathToRect(mIconRect, mUnfoldedArrowPath)
+	constrainPathToRect(mIconRect, mDeleteItemPath)
+	constrainPathToRect(mIconRect, mAddItemPath)
+	constrainPathToRect(mIconRect, mInspectItemPath)
+
+	put the width of mIconRect into mIconWidth
+	put mIconWidth + 5 into mIndentPixels
+end handler
+
 --------------------------------------------------------------------------------
 --
 --		Display calculations
@@ -1271,11 +1559,18 @@ end handler
 -- mUpdateSeparator or mRecalculateFit is true.
 -- It calculates the portion of the value string that can be displayed 
 -- in the available space.
--- If mRecalculateFit is true, all values are recalculated - this should 
--- only happen when the separator is moved.
+-- If mRecalculateFit is true, all values are recalculated.
+-- This happens when the separator is moved, font/icon sizes change,
+-- and when the ReadOnly property changes.
 private handler updateSeparator() returns nothing
+	if mReadOnly then
+		put 2 * kItemPadding + mIconWidth into mRightIconMargin
+	else
+		put 3 * kItemPadding + 2 * mIconWidth into mRightIconMargin
+	end if
+
 	variable tValueSpace as Real
-	if mShowSeparator then
+	if mShowValues and mShowSeparator then
 		put valueRight() - valueLeft(keyRight()) into tValueSpace
 	end if
 	
@@ -1299,8 +1594,20 @@ private handler updateSeparator() returns nothing
 		if mRecalculateFit or "key_too_large" is not among the keys of tElement then
 			variable tKeyDisplay as String
 			put tElement["key"] into tKeyDisplay
+			if mCharsToTrimFromKey > 0 then
+				if the number of chars in tKeyDisplay <= mCharsToTrimFromKey then
+					put "" into tKeyDisplay
+				else
+					delete char 1 to mCharsToTrimFromKey of tKeyDisplay
+				end if
+			end if
 			if mArrayStyle then
 				 put "[" & tKeyDisplay & "]" into tKeyDisplay
+			end if
+			if mShowValues and tElement["leaf"] then
+				if tElement["string_value"] is not "" then
+					subtract mEllipsisLength + 2 * kItemPadding from tKeySpace
+				end if
 			end if
 			put displayWidth(tKeyDisplay, tKeySpace, tElement["display_key"], tTrimmed) into tWidth
 			put tTrimmed into tElement["key_too_large"]
@@ -1308,23 +1615,25 @@ private handler updateSeparator() returns nothing
 			put tElement["key_too_large"] into tTrimmed
 		end if
 		
-		if not mShowSeparator then
-			if tTrimmed then
-				put true into tElement["value_too_large"]
-				put "" into tElement["display_value"]
-				put 0 into tValueSpace
-			else
-				put valueRight() - valueLeft(tKeyLeft + tWidth) into tValueSpace
+		if mShowValues then
+			if not mShowSeparator then
+				if tTrimmed then
+					put true into tElement["value_too_large"]
+					put "" into tElement["display_value"]
+					put 0 into tValueSpace
+				else
+					put valueRight() - valueLeft(tKeyLeft + tWidth) into tValueSpace
+				end if
 			end if
-		end if
 
-		// AL-2015-07-26: [[ Bug 15752 ]] Only draw specified amount of value string
-		if tElement["leaf"] then
-			// Only calculate fit if we are forcing recalculation or it hasn't previously been calculated.
-			if mRecalculateFit or "value_too_large" is not among the keys of tElement then
-					put displayWidth(tElement["string_value"], tValueSpace, tElement["display_value"], tTrimmed) into tWidth
-					put tTrimmed into tElement["value_too_large"]
-			end if	
+			// AL-2015-07-26: [[ Bug 15752 ]] Only draw specified amount of value string
+			if tElement["leaf"] then
+				// Only calculate fit if we are forcing recalculation or it hasn't previously been calculated.
+				if mRecalculateFit or "value_too_large" is not among the keys of tElement then
+						put displayWidth(tElement["string_value"], tValueSpace, tElement["display_value"], tTrimmed) into tWidth
+						put tTrimmed into tElement["value_too_large"]
+				end if	
+			end if
 		end if
 		put tElement into mDataList[tCount]
 	end repeat
@@ -1336,6 +1645,9 @@ end handler
 -- This is called before painting if the private variable mRecalculate
 -- is true.
 private handler updateParameters() returns nothing
+	variable tOldDataHeight as Real
+	put mDataHeight into tOldDataHeight
+
 	put the number of elements in mDataList into mDataCount
 	if mReadOnly then
 		put mRowHeight * (mDataCount - 1) into mDataHeight
@@ -1351,6 +1663,10 @@ private handler updateParameters() returns nothing
 	// Calculate scrollbar dimensions
 	updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition)
 	
+	if mDataHeight is not tOldDataHeight then
+		post "formattedHeightChanged"
+	end if
+
 	put false into mRecalculate
 end handler
 
@@ -2106,7 +2422,7 @@ end handler
 
 private handler setFoldState(in pData as Array) returns nothing
 	if not checkFoldState(pData) then
-		throw "Invalid fold state"
+		throw "invalid fold state"
 	end if
 	put pData into mFoldState
 	put true into mUpdateDataList
@@ -2116,6 +2432,13 @@ end handler
 private handler setFrameBorder(in pFrameBorder as Boolean) returns nothing
 	put pFrameBorder into mFrameBorder
 	redraw all
+end handler
+
+private handler setShowHover(in pShowHover as Boolean) returns nothing
+	if pShowHover is not mShowHover then
+		put pShowHover into mShowHover
+		redraw all
+	end if
 end handler
 
 private handler getSelectedElement() returns String
@@ -2177,7 +2500,19 @@ private handler setSelectedElementFoldState(in pFoldState as String) returns not
 			unFoldPath(mSelectedElement)
 		end if
 	else
-		throw "Invalid fold state"
+		throw "invalid fold state"
+	end if
+end handler
+
+private handler getSelectedElementIsFolded() returns Boolean
+	return getSelectedElementFoldState() is "folded"
+end handler
+
+private handler setSelectedElementIsFolded(in pFolded as Boolean) returns nothing
+	if pFolded then
+		setSelectedElementFoldState("folded")
+	else
+		setSelectedElementFoldState("unfolded")
 	end if
 end handler
 
@@ -2185,6 +2520,7 @@ private handler setReadOnly(in pReadOnly as Boolean)
 	if pReadOnly is not mReadOnly then
 		put pReadOnly into mReadOnly
 		put true into mRecalculate
+		put true into mRecalculateFit
 		if pReadOnly then
 			subtract mRowHeight from mViewTopPosition
 		else
@@ -2195,11 +2531,11 @@ private handler setReadOnly(in pReadOnly as Boolean)
 end handler
 
 private handler setArrayStyle(in pArrayStyle as Boolean)
-    if pArrayStyle is not mArrayStyle then
-        put pArrayStyle into mArrayStyle
-        put true into mRecalculateFit
-        redraw all
-    end if
+	if pArrayStyle is not mArrayStyle then
+		put pArrayStyle into mArrayStyle
+		put true into mRecalculateFit
+		redraw all
+	end if
 end handler
 
 private handler getSortCaseSensitive() returns Boolean
@@ -2266,9 +2602,41 @@ private handler setSortOrder(in pType as String) returns nothing
         put tSortAscending into mSortAscending
         setArrayData(mData)
     end if  
-
 end handler
 
+private handler setCharsToTrimFromKey(in pChars as Integer) returns nothing
+	if pChars < 0 then
+		throw "number of leading characters to trim from key must be non-negative"
+	else if pChars is not mCharsToTrimFromKey then
+		put true into mRecalculateFit
+		put pChars into mCharsToTrimFromKey
+	end if
+end handler
+
+private handler setViewTopPosition(in pViewTopPosition as Real) returns nothing
+	if pViewTopPosition is not mViewTopPosition then
+		put pViewTopPosition into mViewTopPosition
+		ensureViewTopPosition()
+		updateFirstDataItem()
+		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition)
+		redraw all
+	end if
+end handler
+
+private handler setVScrollbar(in pEnabled as Boolean) returns nothing
+	if pEnabled is not mVScrollbar then
+		put pEnabled into mVScrollbar
+		redraw all
+	end if
+end handler
+
+private handler setIconHeight(in pIconHeight as Integer) returns nothing
+	if pIconHeight is not mIconHeight then
+		put pIconHeight into mIconHeight
+		UpdateIconRects()
+		put true into mRecalculateFit
+	end if
+end handler
 --------------------------------------------------------------------------------
 --
 --		Movable divide
@@ -2314,22 +2682,23 @@ end handler
 private handler ensureEllipsis() returns nothing
 	if mEllipsisLength is nothing then
 		variable tEllipsis as Real
-        measure "  \u{2026}" on this canvas 
+        measure "\u{2026}" on this canvas 
         put the width of the result into mEllipsisLength
 	end if
 end handler
 
 -- Returns the display width of the string after fitting it in the space allowed, sets rText to 
 -- the portion of the string that can fit, and sets rTrimmed if the string was trimmed.
--- There should always be space for an ellipsis.
+-- There should always be space for an ellipsis after a key when there is a value.
 private handler displayWidth(in pText as String, in pSpace as Real, out rText as String, out rTrimmed as Boolean) returns Real		
 	ensureEllipsis()
 	
 	variable tCount as Number
 	variable tCurrentString as String
-   variable tChar as String
-   variable tWidth as Real
-   put 0 into tWidth
+	variable tChar as String
+	variable tWidth as Real
+	variable tLastWidth as Real
+	put mEllipsisLength into tWidth
 	put "" into tCurrentString
 	put 0 into tCount
 	repeat for each char tChar in pText
@@ -2341,6 +2710,7 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 			put true into rTrimmed
 			return tWidth
 		end if
+		put tWidth into tLastWidth
 		
 		// Otherwise measure and see if what we have so far fits in the space
 		put tChar after tCurrentString
@@ -2352,11 +2722,16 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 			// If we can't fit anything, just return the ellipsis.
 			if tCount is 0 then
 				put "\u{2026}" into rText
-			else		
-         	put (char 1 to tCount of tCurrentString) & "\u{2026}" into rText
+			else
+				if (tCurrentString is pText) and (tWidth - mEllipsisLength <= pSpace) then
+					put pText into rText
+					put false into rTrimmed
+					return tWidth - mEllipsisLength
+				end if
+				put (char 1 to tCount of tCurrentString) & "\u{2026}" into rText
 			end if
 			put true into rTrimmed
-			return tWidth
+			return tLastWidth
 		end if
 		
 		add 1 to tCount
@@ -2364,13 +2739,23 @@ private handler displayWidth(in pText as String, in pSpace as Real, out rText as
 
 	put pText into rText
 	put false into rTrimmed
-	return tWidth
+	return tWidth - mEllipsisLength
+end handler
+
+private handler setShowValues(in pShow as Boolean)
+	if pShow is not mShowValues then
+		put pShow into mShowValues
+		put true into mUpdateSeparator
+		put true into mRecalculateFit
+		redraw all
+	end if
 end handler
 
 private handler setShowSeparator(in pShow as Boolean)
 	if pShow is not mShowSeparator then
 		put pShow into mShowSeparator
 		put true into mUpdateSeparator
+		put true into mRecalculateFit
 		redraw all
 	end if
 end handler
