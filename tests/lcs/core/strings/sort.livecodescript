@@ -1,6 +1,6 @@
 ﻿script "CoreStringSort"
 /*
-Copyright (C) 2015 LiveCode Ltd.
+Copyright (C) 2019 LiveCode Ltd.
 
 This file is part of LiveCode.
 
@@ -26,3 +26,22 @@ on TestInterface95
    
    TestAssert "test", tContainer is "a,b,c,d,e,f,g,h" 
 end TestInterface95
+
+on TestSortMixedText
+   local tVar, tSorted
+   put "Chinese 中文" & return & \
+         "Georgian  ქართული" & return & \
+         "Arabic عربى" & return & \
+         "Greek Ελληνικά" & return & \
+         "Russian русский" & return & \
+         "Norwegian Norsk" into tVar
+   sort lines of tVar ascending text
+   
+   put "Arabic عربى" & return & \
+         "Chinese 中文" & return & \
+         "Georgian  ქართული" & return & \
+         "Greek Ελληνικά" & return & \
+         "Norwegian Norsk" & return & \
+         "Russian русский"into tSorted
+   TestAssert "Test sorting mixed text", tVar is tSorted
+end TestSortMixedText
