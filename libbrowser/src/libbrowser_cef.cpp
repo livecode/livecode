@@ -21,6 +21,7 @@
 #include "libbrowser_cef.h"
 
 #include <include/cef_app.h>
+#include <include/cef_parser.h>
 #include <include/wrapper/cef_scoped_temp_dir.h>
 #include <list>
 #include <set>
@@ -741,6 +742,15 @@ struct MCCefErrorInfo
 
 class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler, CefDragHandler
 {
+public:
+	enum PageOrigin
+	{
+		kNone,
+		kSetUrl,
+		kSetSource,
+		kBrowse,
+	};
+
 private:
 	int m_browser_id;
 	int m_popup_browser_id = 0;
@@ -755,6 +765,9 @@ private:
 	
 	CefString m_last_request_url;
 	
+	PageOrigin m_displayed_page_origin;
+	PageOrigin m_loading_page_origin;
+
 	// Error handling - we need to keep track of url that failed to load in a
 	// frame so we can send the correct url in onLoadEnd()
 	void AddLoadErrorFrame(int64_t p_id, const CefString &p_url, const CefString &p_error_msg, CefLoadHandler::ErrorCode p_error_code)
@@ -813,6 +826,7 @@ public:
 	{
 		m_owner = p_owner;
 		m_browser_id = 0;
+		m_displayed_page_origin = m_loading_page_origin = PageOrigin::kNone;
 	}
 	
 	// IM-2014-07-21: [[ Bug 12296 ]] Method to allow owner to notify client of its deletion
@@ -848,6 +862,16 @@ public:
 		return t_iter != m_ignore_urls.end();
 	}
 	
+	void SetLoadingPageOrigin(PageOrigin p_origin)
+	{
+		m_loading_page_origin = p_origin;
+	}
+
+	PageOrigin GetDisplayedPageOrigin()
+	{
+		return m_displayed_page_origin;
+	}
+
 	MCCefMessageResult &GetMessageResult()
 	{
 		return m_message_result;
@@ -1012,6 +1036,9 @@ public:
 		CefString t_url;
 		t_url = p_request->GetURL();
 		
+		if (p_user_gesture)
+			SetLoadingPageOrigin(PageOrigin::kBrowse);
+
 		if (IgnoreUrl(t_url))
 			return false;
 		
@@ -1142,15 +1169,18 @@ public:
 		if (!t_is_error)
 			t_url = p_frame->GetURL();
 		
-		if (IgnoreUrl(t_url))
+		bool t_frame;
+		t_frame = !p_frame->IsMain();
+
+		if (!t_frame && !t_is_error)
+			m_displayed_page_origin = m_loading_page_origin;
+
+		if ((!t_frame && m_loading_page_origin==PageOrigin::kSetSource) || IgnoreUrl(t_url))
 			return;
 		
 		char *t_url_str;
 		t_url_str = nil;
 		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
-		
-		bool t_frame;
-		t_frame = !p_frame->IsMain();
 		
 		if (!t_is_error)
 		{
@@ -1179,15 +1209,15 @@ public:
 		if (!t_is_error)
 			t_url = p_frame->GetURL();
 		
-		if (IgnoreUrl(t_url))
+		bool t_frame;
+		t_frame = !p_frame->IsMain();
+
+		if ((!t_frame && m_loading_page_origin == PageOrigin::kSetSource) || IgnoreUrl(t_url))
 			return CefLoadHandler::OnLoadEnd(p_browser, p_frame, p_http_status_code);
 		
 		char *t_url_str;
 		t_url_str = nil;
 		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
-		
-		bool t_frame;
-		t_frame = !p_frame->IsMain();
 		
 		if (t_is_error)
 		{
@@ -1266,10 +1296,13 @@ bool MCCefBrowserBase::Initialize()
 	
 	// IM-2014-05-06: [[ Bug 12384 ]] Browser must be created with non-empty URL or setting
 	// htmltext will not work
-	CefString t_url(CEF_DUMMY_URL);
+	
+	// Using a blank data url here forces the CEF render process to load,
+	// allowing subsequent calls to MCCefBrowserBase::LoadHTMLText to succeed
+	CefString t_url("data:text/html;charset=utf-8,");
 	
 	// IM-2014-05-06: [[ Bug 12384 ]] Prevent callback messages for dummy URL
-	m_client->AddIgnoreUrl(t_url);
+	m_client->SetLoadingPageOrigin(MCCefBrowserClient::PageOrigin::kSetSource);
 	PlatformConfigureWindow(t_window_info);
 
 	if (MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
@@ -1587,6 +1620,7 @@ bool MCCefBrowserBase::LoadHTMLText(const char *p_htmltext, const char *p_base_u
 	if (!MCCefStringFromUtf8String(p_base_url, t_base_url))
 		return false;
 	
+	m_client->SetLoadingPageOrigin(MCCefBrowserClient::PageOrigin::kSetSource);
 	m_browser->GetMainFrame()->LoadString(t_htmltext, t_base_url);
 	
 	return true;
@@ -1693,6 +1727,15 @@ void MCCefBrowserBase::SetUserAgent(const char *p_user_agent)
 
 char *MCCefBrowserBase::GetURL(void)
 {
+	if (m_client->GetDisplayedPageOrigin() == MCCefBrowserClient::PageOrigin::kSetSource)
+	{
+		// return empty string if page was loaded from source
+		char *t_url_string;
+		t_url_string = nil;
+		/* UNCHECKED */ MCCStringClone("", t_url_string);
+		return t_url_string;
+	}
+
 	CefString t_url;
 	t_url = m_browser->GetMainFrame()->GetURL();
 	
@@ -1789,6 +1832,8 @@ bool MCCefBrowserBase::GoToURL(const char *p_url)
 	if (!MCCefStringFromUtf8String(p_url, t_url))
 		return false;
 	
+	m_client->SetLoadingPageOrigin(MCCefBrowserClient::PageOrigin::kSetUrl);
+
 	t_frame->LoadURL(t_url);
 	return true;
 }
