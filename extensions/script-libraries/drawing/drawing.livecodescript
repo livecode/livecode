@@ -801,9 +801,9 @@ private command _svgCompileTransform @xContext, pTransform, pBBox, @rCompiledTra
 			put _svgTransformScale(tTransform[2], tTransform[3]) into tNextMatrix
 			break
 		case "rotate"
-			put _svgTransformTranslate(-tTransform[3], -tTransform[4]) into tNextMatrix
+			put _svgTransformTranslate(tTransform[3], tTransform[4]) into tNextMatrix
 			put _svgTransformConcat(tNextMatrix, _svgTransformRotate(tTransform[2])) into tNextMatrix
-			put _svgTransformConcat(tNextMatrix, _svgTransformTranslate(tTransform[3], tTransform[4])) into tNextMatrix
+			put _svgTransformConcat(tNextMatrix, _svgTransformTranslate(-tTransform[3], -tTransform[4])) into tNextMatrix
 			break
 		case "skewX"
 			put _svgTransformSkew(tTransform[2], 0) into tNextMatrix
