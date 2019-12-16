@@ -1770,9 +1770,8 @@ end handler
 
 public handler GetScrollingEnabled() returns Boolean
    if mNativeObj is not nothing then
-      put TextView_getMovementMethod(mNativeObj) into mScrollingEnabled
+      put (TextView_getMovementMethod(mNativeObj) is not nothing) into mScrollingEnabled
    end if
-
    return mScrollingEnabled
 end handler
 
