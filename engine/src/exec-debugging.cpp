@@ -330,9 +330,9 @@ void MCDebuggingGetExecutionContexts(MCExecContext& ctxt, MCStringRef& r_value)
             {
                 if (t_success)
                 {
-                    MCAutoValueRef t_stack_id;
-                    t_success = MCexecutioncontexts[i]->GetObject()->getstack()->names(P_LONG_ID, &t_stack_id)
-                                && MCListAppend(*t_context, *t_stack_id)
+                    MCAutoValueRef t_context_id;
+                    t_success = MCexecutioncontexts[i]->GetObject()->names(P_LONG_ID, &t_context_id)
+                                && MCListAppend(*t_context, *t_context_id)
                                 && MCListAppend(*t_context, MCNAME("<protected>"))
                                 && MCListAppendInteger(*t_context, 0);
                 }

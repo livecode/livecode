@@ -1,0 +1,1 @@
+# Fix listing the executing object's stack rather than the object in the `executionContexts` for password protected stacks
