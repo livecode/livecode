@@ -750,7 +750,7 @@ command TestEnsureJVM
    end if
 end TestEnsureJVM
 
-command TestEnumPropRoundTrip pObjectType, pProperty, pValues
+command TestPropRoundTrip pObjectType, pProperty, pValues
    local tStack
    put "TestRoundTrip" & pProperty into tStack
    create stack tStack
@@ -766,20 +766,23 @@ command TestEnumPropRoundTrip pObjectType, pProperty, pValues
       put the long id of stack tStack into tObject
    end if
 
-   repeat for each item tValue in pValues
-      set the pProperty of tObject to tValue
-      TestAssert format("round trip %s '%s'", pProperty, tValue), \
-            the pProperty of tObject is tValue
-      TestDiagnostic format("%s is '%s'", pProperty, the pProperty of tObject)
-   
-      save stack tStack
-      delete stack tStack
-      TestAssert format("round trip to disk %s '%s'", pProperty, tValue), \
-            the pProperty of tObject is tValue
-      TestDiagnostic format("%s is '%s'", pProperty, the pProperty of tObject)
+   repeat for each element tValue in pValues
+      _TestPropRoundTrip tStack, tObject, pProperty, tValue
    end repeat
 
    delete file the filename of stack tStack
    delete stack tStack
-end TestEnumPropRoundTrip
+end TestPropRoundTrip
 
+private command _TestPropRoundTrip pStack, pObject, pProperty, pValue
+	set the pProperty of pObject to pValue
+	TestAssert format("round trip %s '%s'", pProperty, pValue), \
+			the pProperty of pObject is pValue
+	TestDiagnostic format("%s is '%s'", pProperty, the pProperty of pObject)
+
+	save stack pStack
+	delete stack pStack
+	TestAssert format("round trip to disk %s '%s'", pProperty, pValue), \
+			the pProperty of pObject is pValue
+	TestDiagnostic format("%s is '%s'", pProperty, the pProperty of pObject)
+end _TestPropRoundTrip

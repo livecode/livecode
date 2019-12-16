@@ -1,0 +1,1 @@
+# Fix `tabAlign` property not saving when `tabStops` is not set
