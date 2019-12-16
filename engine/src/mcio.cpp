@@ -621,16 +621,8 @@ IO_stat IO_read_stringref_new(MCStringRef& r_string, IO_handle p_stream, bool p_
 	if (IO_read_uint2or4(&t_length, p_stream) != IO_NORMAL)
 		return IO_ERROR;
 	
-	MCAutoArray<byte_t> t_utf8_string;
-	if (!t_utf8_string.New(t_length))
-		return IO_ERROR;
-	
-	if (MCStackSecurityRead(reinterpret_cast<char *>(t_utf8_string.Ptr()),
-	                        t_length, p_stream) != IO_NORMAL)
-		return IO_ERROR;
-	
-	if (!MCStringCreateWithBytes(t_utf8_string.Ptr(), t_length, kMCStringEncodingUTF8, false, r_string))
-		return IO_ERROR;
+    if (MCStackSecurityReadUTF8StringRef(r_string, t_length, p_stream) != IO_NORMAL)
+        return IO_ERROR;
 	
 	return IO_NORMAL;
 }

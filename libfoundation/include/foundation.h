@@ -2180,6 +2180,10 @@ MC_DLLEXPORT bool MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte
 MC_DLLEXPORT bool MCStringCreateWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringCreateWithCharsAndRelease(unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
 
+// Create an immutable string from the given unicode char sequence and force it
+// to be unicode.
+MC_DLLEXPORT bool MCStringCreateUnicodeWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
+
 // Create an immutable string from the given NUL terminated unicode char sequence.
 MC_DLLEXPORT bool MCStringCreateWithWString(const unichar_t *wstring, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStringRef& r_string);

@@ -109,11 +109,10 @@ static const unichar_t close_comment[] = {'-', '-', '>'};
 static const unichar_t rev_tag[] = {'r','e','v'};
 static const unichar_t livecode_tag[] = {'l','i','v', 'e', 'c', 'o', 'd', 'e'};
 
-MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, MCStringRef s)
+MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, MCDataRef s)
 {
-    unichar_t *t_unicode_string;
-	/* UNCHECKED */ MCStringConvertToUnicode(s, t_unicode_string, length);
-	/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_unicode_string, (length + 1) * 2, utf16_script);
+    utf16_script = MCValueRetain(s);
+    length = MCDataGetLength(s) / 2 - 1;
     
 	curobj = o;
 	curhlist = hl;
@@ -131,6 +130,30 @@ MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, MCStringRef s)
 	in_tag = False;
 	was_in_tag = False;
 	token_nameref = MCValueRetain(kMCEmptyName);
+}
+
+MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, MCStringRef s)
+{
+    unichar_t *t_unicode_string;
+    /* UNCHECKED */ MCStringConvertToUnicode(s, t_unicode_string, length);
+    /* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_unicode_string, (length + 1) * 2, utf16_script);
+    
+    curobj = o;
+    curhlist = hl;
+    curhandler = NULL;
+    curptr = tokenptr = backupptr = (const unichar_t *)MCDataGetBytePtr(utf16_script);
+    endptr = curptr + length;
+    
+    uindex_t t_index = 0;
+    codepoint = MCUnicodeCodepointAdvance(curptr, length, t_index);
+    curlength = t_index;
+    
+    line = pos = 1;
+    escapes = False;
+    tagged = False;
+    in_tag = False;
+    was_in_tag = False;
+    token_nameref = MCValueRetain(kMCEmptyName);
 }
 
 MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)

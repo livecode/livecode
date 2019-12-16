@@ -558,6 +558,50 @@ bool MCStringCreateWithCharsAndRelease(unichar_t *p_chars, uindex_t p_char_count
 }
 
 MC_DLLEXPORT_DEF
+bool MCStringCreateUnicodeWithChars(const unichar_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
+{
+    if (p_char_count == 0)
+    {
+        if (kMCEmptyString != nil)
+        {
+            r_string = MCValueRetain(kMCEmptyString);
+            return true;
+        }
+    }
+    else
+    {
+        MCAssert(nil != p_chars);
+    }
+    
+    bool t_success;
+    t_success = true;
+    
+    __MCString *self;
+    self = nil;
+    if (t_success)
+        t_success = __MCValueCreate(kMCValueTypeCodeString, self);
+    
+    if (t_success)
+        t_success = MCMemoryNewArray(p_char_count + 1, self -> chars);
+    
+    if (t_success)
+    {
+        MCStrCharsMapFromUnicode(p_chars, p_char_count, self -> chars, self -> char_count);
+        self -> flags |= kMCStringFlagIsNotNative;
+        r_string = self;
+    }
+    else
+    {
+        if (self != nil)
+            MCMemoryDeleteArray(self -> chars);
+        
+        MCMemoryDelete(self);
+    }
+    
+    return t_success;
+}
+
+MC_DLLEXPORT_DEF
 bool MCStringCreateWithWString(const unichar_t *p_wstring, MCStringRef& r_string)
 {
 	MCAssert(nil != p_wstring);
