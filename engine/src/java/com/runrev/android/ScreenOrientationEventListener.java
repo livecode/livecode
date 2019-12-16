@@ -20,7 +20,7 @@ import android.view.*;
 import android.content.*;
 import android.util.*;
 
-abstract class ScreenOrientationEventListener extends OrientationEventListener
+public abstract class ScreenOrientationEventListener extends OrientationEventListener
 {
 	int m_orientation = 0;
 	boolean m_orientation_known = false;
