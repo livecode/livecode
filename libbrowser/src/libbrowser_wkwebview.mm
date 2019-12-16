@@ -1097,9 +1097,9 @@ bool MCWKWebViewBrowser::Init(void)
 		{
 			[t_view setNavigationDelegate: t_delegate];
 			[t_view setHidden: NO];
+			[t_view setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
 
 			[t_container_view setAutoresizesSubviews:YES];
-			[t_view setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
 			[t_container_view addSubview:t_view];
 			[t_container_view setHidden: YES];
 
@@ -1171,6 +1171,7 @@ bool MCWKWebViewBrowser::Reconfigure()
 			
 			[t_view setNavigationDelegate: m_delegate];
 			[t_view setHidden: NO];
+			[t_view setAutoresizingMask:UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight];
 
 			[m_container_view addSubview:t_view];
 			
