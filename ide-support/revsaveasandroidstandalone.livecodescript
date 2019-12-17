@@ -1829,6 +1829,18 @@ command MergeManifestArray @xManifestArrayA, pAdditionalsA
             put max(tExisting, tNew) into \
                   xManifestArrayA[tUsesSDKIndex]["@attributes"]["android:minSDKVersion"]
             break
+         case "activity"
+            local tActivityIndex
+            put FindIndex(xManifestArrayA, "activity") into tActivityIndex
+            local tExistingA, tNewA
+            put xManifestArrayA[tActivityIndex]["@attributes"] \
+                  into tExistingA
+            put tData["@attributes"] into tNewA
+            repeat for each line tKey in the keys of tNewA
+               put tNewA[tKey] after tExistingA[tKey]
+            end repeat
+            put tExistingA into xManifestArrayA[tActivityIndex]["@attributes"]
+            break
          default
             insertIntoList tData, xManifestArrayA, tEndOfBlock
             add 1 to tEndOfBlock
