@@ -81,7 +81,7 @@ extern bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path);
 extern void MCS_getcurdir(MCStringRef& r_path);
 /* LEGACY */ extern char *MCS_getcurdir();
 extern Boolean MCS_setcurdir(MCStringRef p_path);
-extern bool MCS_getentries(MCStringRef p_folder, bool p_files, bool p_detailed, MCListRef& r_list);
+extern bool MCS_getentries(MCStringRef p_folder, bool p_files, bool p_detailed, bool p_utf8, MCListRef& r_list);
 
 extern bool MCS_getDNSservers(MCListRef& r_list);
 extern Boolean MCS_getdevices(MCStringRef& r_list);
