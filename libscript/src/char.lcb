@@ -588,12 +588,17 @@ end syntax
 ----------------------------------------------------------------
 
 /**
-Summary:	Get the numeric value of a single char
+Summary:	Get the numeric value of a single codepoint in a string.
 
 Target:	A string containing one character
 
+Example:
+  the code of codeunit 1 of tChar
+
 Description:
-Returns the Unicode codepoint index of a single character.
+Returns the unicode codepoint index of a single codepoint in a string.
+If a string contains more than one codepoint then an error will be thrown.
+Use the `codeunit` property to target a specific `codepoint` within a multi-codepoint string.
 
 Tags: Strings
 */
