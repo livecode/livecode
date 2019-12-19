@@ -116,7 +116,7 @@ private function __ArchABI pArch
    end switch
 end __ArchABI
 
-constant kAndroidExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql"
+constant kAndroidExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql revpdfprinter"
 
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettings
    local tArchABIs, tArchs
@@ -169,7 +169,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    set the itemDelimiter to comma
    
    -- Fetch the various options we need to initially build the app-bundle
-   local tName, tVersionName, tVersionCode, tExternals, tIcon, tSplash, tKey, tUnsigned, tStatusBarIcon
+   local tName, tVersionName, tVersionCode, tExternals, tDrivers, tIcon, tSplash, tKey, tUnsigned, tStatusBarIcon
    put pSettings["name"] into tName
    put pSettings["android,icon"] into tIcon
    put pSettings["android,key"] into tKey
@@ -265,12 +265,15 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
                put "revdb" & return after tExternals
             end if
             put tExternal & return after tExternals
+         else if tExternal is among the words of "revpdfprinter" then
+            put tExternal & return after tDrivers
          else
             put tExternal & return after tExternals
          end if
       end if
    end repeat
    delete the last char of tExternals
+   delete the last char of tDrivers
    
    -- Compute the stackfiles list
    lock messages
@@ -847,6 +850,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       repeat for each line tEntry in tExternals
          put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
       end repeat
+      repeat for each line tEntry in tDrivers
+         put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
+      end repeat
       
       set the itemDelimiter to comma
       repeat for each item tArch in tArchs
@@ -982,6 +988,19 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
             put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tArch & slash & tEntry)) \
                   into url ("binfile:" & tArchLibsBuildFolders[tArch] & slash & "lib" & tEntry & ".so")
             // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
+            if the result is not empty then
+               throw "Could not find " & tEntry && "library"
+            end if
+         end repeat
+         
+         -- Copy across any other driver libraries into the libs folder
+         repeat for each line tEntry in tDrivers
+            -- Only copy across the library if it's not already there
+            if there is a file (tArchLibsBuildFolders[tArch] & slash & "lib" & tEntry & ".so") then
+               next repeat
+            end if
+            put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tArch & slash & tEntry)) \
+                  into url ("binfile:" & tArchLibsBuildFolders[tArch] & slash & "lib" & tEntry & ".so")
             if the result is not empty then
                throw "Could not find " & tEntry && "library"
             end if
@@ -1809,6 +1828,18 @@ command MergeManifestArray @xManifestArrayA, pAdditionalsA
             put tData["@attributes"]["android:minSDKVersion"] into tNew
             put max(tExisting, tNew) into \
                   xManifestArrayA[tUsesSDKIndex]["@attributes"]["android:minSDKVersion"]
+            break
+         case "activity"
+            local tActivityIndex
+            put FindIndex(xManifestArrayA, "activity") into tActivityIndex
+            local tExistingA, tNewA
+            put xManifestArrayA[tActivityIndex]["@attributes"] \
+                  into tExistingA
+            put tData["@attributes"] into tNewA
+            repeat for each line tKey in the keys of tNewA
+               put tNewA[tKey] after tExistingA[tKey]
+            end repeat
+            put tExistingA into xManifestArrayA[tActivityIndex]["@attributes"]
             break
          default
             insertIntoList tData, xManifestArrayA, tEndOfBlock

@@ -191,3 +191,17 @@ on _TestMixedEffectiveLineProperties pProp, pValue1, pValue2
 
 	delete field "Test"
 end _TestMixedEffectiveLineProperties
+
+on TestLinePropertyRoundTrip
+	repeat for each element tTest in sTests
+		if not tTest["effective"] then
+			next repeat
+		end if
+
+		local tValues
+		put tTest["value-1"] into tValues[1]
+		put tTest["value-2"] into tValues[2]
+
+		TestPropRoundTrip "field", tTest["property"], tValues
+	end repeat
+end TestLinePropertyRoundTrip

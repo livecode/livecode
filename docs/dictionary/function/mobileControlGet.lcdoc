@@ -212,47 +212,37 @@ to play fullscreen.
 should preserve its aspect ratio when scaled to fit within the control's
 bounds. 
 
-- "useApplicationAudioSession" (iOS Only): returns true if the movie
-uses a system-supplied audio session or not (maps to the native
-useApplicationAudioSession property).
+- ~~"useApplicationAudioSession" (iOS Only): returns true if the movie
+uses a system-supplied audio session or not.~~ *Note*: removed in LiveCode 9.6
 
 - "shouldAutoplay" (iOS Only): returns true if the playback of
 network-based content begins automatically when there is enough buffered
-data to ensure uninterrupted playback (maps to the native shouldAutoplay
-property).
+data to ensure uninterrupted playback.
 
 - "allowsAirPlay" (iOS Only): returns true if a control is presented to
-allow the user to choose AirPlay-enabled hardware for playback (maps to
-the native allowsAirPlay property). Note: This property is only
-supported on iOS 4.3 and later.
+allow the user to choose AirPlay-enabled hardware for playback. Note: This
+property is only supported on iOS 4.3 and later.
 
 - "duration": returns the duration of a movie, measured in
-milliseconds (maps to the native duration property on iOS). This is an integer
-value.
+milliseconds. This is an integer value.
 
 - "playableDuration": returns the amount of currently
-playable content, measured in milliseconds (maps to the native
-playableDuration property on iOS). This is an integer value.
+playable content, measured in milliseconds. This is an integer value.
 
 - "startTime" (iOS Only): returns the position at which playback starts,
-measured in milliseconds (maps to the native initialPlaybackTime
-property). This is an integer value.
+measured in milliseconds. This is an integer value.
 
 - "endTime" (iOS Only): returns the position at which playback ends,
-measured in milliseconds (maps to the native endPlaybackTime property).
-This is an integer value.
+measured in milliseconds. This is an integer value.
 
 - "playRate" (iOS Only): returns the current playback rate for the
-player (maps to the native currentPlaybackRate property). This
-represents a multiplier for the default playback rate of the current
-content. A value of 0.0 indicates playback is stopped, while a value of
+player. This represents a multiplier for the default playback rate of the
+current content. A value of 0.0 indicates playback is stopped, while a value of
 1.0 indicates normal speed. Positive values indicate forward playback,
 while negative values indicate reverse playback. This is real value.
 
-
-- "loadState" (iOS Only): returns the network load state of the player
-(maps to the native loadStateproperty). This is a comma delimited list
-of zero or more of the following:
+- "loadState" (iOS Only): returns the network load state of the player. This is
+a comma delimited list of zero or more of the following:
   - "playable": enough data is available to start playing, but it may
 run out before playback finishes.
   - "playthrough": enough data has been buffered for playback to
@@ -260,10 +250,8 @@ continue uninterrupted.
   - "stalled": buffer of data has stalled and playback may pause
 automatically if the player runs out of data.
 
-
 - "playbackState" (iOS Only): returns the current playback state of the
-player (maps to the native playbackState property). This is one of the
-following:
+player. This is one of the following:
   - "stopped": playback is stopped and commences from the
 beginning when started.
   - "playing": playback is current underway.
@@ -276,10 +264,9 @@ of the movie.
   - "seeking backward": the player is currently seeking towards the
 beginning of the movie.
 
-
-- "naturalSize" (iOS Only): The raw size of a video frame in pixels
-(maps to the native naturalSize property). This is a comma-separated
-list of two integers, the first is the width, the second is the height.
+- "naturalSize" (iOS Only): The raw size of a video frame in pixels.
+This is a comma-separated list of two integers, the first is the width,
+the second is the height.
 
 
 **Text Input Specific Properties**

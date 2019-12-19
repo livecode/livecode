@@ -904,6 +904,7 @@ struct MCS_getentries_state
 {
 	bool files;
 	bool details;
+    bool utf8;
 	MCListRef list;
 };
 
@@ -939,7 +940,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
         // SN-2015-01-22: [[ Bug 14412 ]] the detailed files should return
         //   URL-encoded filenames
         MCAutoStringRef t_url_encoded;
-        if (!MCU_urlencode(*t_normalized, false, &t_url_encoded))
+        if (!MCU_urlencode(*t_normalized, t_state -> utf8, &t_url_encoded))
 			return false;
         
 #ifdef _WIN32
@@ -996,6 +997,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 bool MCS_getentries(MCStringRef p_folder,
                     bool p_files,
                     bool p_detailed,
+                    bool p_utf8,
                     MCListRef& r_list)
 {
 	MCAutoStringRef t_resolved_folder;
@@ -1014,6 +1016,7 @@ bool MCS_getentries(MCStringRef p_folder,
 	MCS_getentries_state t_state;	
 	t_state.files = p_files;
 	t_state.details = p_detailed;
+    t_state.utf8 = p_utf8;
 	t_state.list = *t_list;
 	
     // SN-2015-11-09: [[ Bug 16223 ]] Make sure that the list starts with ..

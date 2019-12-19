@@ -39,51 +39,83 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mbldc.h"
 #include "mbliphone.h"
+#include "mbliphoneapp.h"
 #include "mbliphonecontrol.h"
 
-#import <MediaPlayer/MPMoviePlayerController.h>
-#import <MediaPlayer/MPMoviePlayerViewController.h>
+#import <AVFoundation/AVFoundation.h>
+#import <AVKit/AVKit.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED < 100000
+	typedef NSString *NSKeyValueChangeKey;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 UIView *MCIPhoneGetView(void);
+UIViewController *MCIPhoneGetViewController(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool g_movie_player_in_use;
-extern MPMoviePlayerViewController *g_movie_player;
+enum MCiOSPlayerStatus
+{
+	kMCiOSPlayerStatusNone,
+	kMCiOSPlayerStatusError,
 
-////////////////////////////////////////////////////////////////////////////////
+	kMCiOSPlayerStatusPaused,
+	kMCiOSPlayerStatusWaiting,
+	kMCiOSPlayerStatusPlaying,
+	kMCiOSPlayerStatusStopped,
+};
 
 class MCiOSPlayerControl;
 
 @interface com_runrev_livecode_MCiOSPlayerDelegate : NSObject
 {
 	MCiOSPlayerControl *m_instance;
-    UIControl *m_overlay;
+	AVPlayer *m_player;
+	AVPlayerItem *m_player_item;
+
+ 	UIControl *m_overlay;
 }
 
-- (id)initWithInstance:(MCiOSPlayerControl*)instance;
-- (void)beginWithOverlay: (bool)p_overlay;
-- (void)end;
+- (id)initWithInstance:(MCiOSPlayerControl*)instance player:(AVPlayer*)player;
+- (void)setPlayer:(AVPlayer*)player;
+- (void)setCurrentItem:(AVPlayerItem*)item;
+
+- (void)beginFullscreenWithOverlay:(BOOL)overlay;
+- (void)removeOverlay;
+- (void)endFullscreen;
 - (void)dealloc;
 
-- (void)movieDurationAvailable: (NSNotification *)notification;
-- (void)movieMediaTypesAvailable: (NSNotification *)notification;
-- (void)movieNaturalSizeAvailable: (NSNotification *)notification;
-- (void)movieSourceTypeAvailable: (NSNotification *)notification;
-- (void)movieLoadStateDidChange: (NSNotification *)notification;
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context;
 
-- (void)playerWillEnterFullscreen: (NSNotification *)notification;
-- (void)playerDidExitFullscreen: (NSNotification *)notification;
-- (void)playerMovieChanged: (NSNotification *)notification;
-- (void)playerPlaybackDidFinish: (NSNotification *)notification;
-- (void)playerPlaybackStateDidChange: (NSNotification *)notification;
-- (void)playerScalingModeDidChange: (NSNotification *)notification;
+- (void)playerItemDidPlayToEndTime:(NSNotification*)notification;
+
+/* TODO - update */
+//- (void)playerWillEnterFullscreen: (NSNotification *)notification;
+//- (void)playerDidExitFullscreen: (NSNotification *)notification;
+//- (void)playerMovieChanged: (NSNotification *)notification;
+//- (void)playerPlaybackDidFinish: (NSNotification *)notification;
+
 - (void)playerWindowTouched: (UIControl*) p_sender;
 
 @end
+
+@compatibility_alias MCiOSPlayerDelegate com_runrev_livecode_MCiOSPlayerDelegate;
+
+@interface com_livecode_engine_MCiOSAVPlayerViewController : AVPlayerViewController
+{
+	MCiOSPlayerControl *m_instance;
+}
+
+- (id)initWithInstance:(MCiOSPlayerControl*)instance;
+- (void)viewDidDisappear:(BOOL)animated;
+@end
+
+@compatibility_alias MCiOSAVPlayerViewController com_livecode_engine_MCiOSAVPlayerViewController;
 
 class MCiOSPlayerControl: public MCiOSControl
 {
@@ -101,6 +133,8 @@ public:
     
     virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
     virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
+	
+    virtual void SetVisible(MCExecContext& ctxt, bool p_visible);
 
     void SetContent(MCExecContext& ctxt, MCStringRef p_content);
     void GetContent(MCExecContext& ctxt, MCStringRef& r_content);
@@ -146,14 +180,28 @@ public:
 	void ExecEndSeeking(MCExecContext& ctxt);
 	void ExecSnapshot(MCExecContext& ctxt, integer_t t_time, integer_t* t_max_width, integer_t* t_max_height);
 	void ExecSnapshotExactly(MCExecContext& ctxt, integer_t t_time, integer_t* t_max_width, integer_t* t_max_height);
-    
-	void HandlePropertyAvailableEvent(const char *p_property);
+	
+	// Event handling
+	void OnPlayerTimeControlStatusChanged();
+	void OnPlayerDidPlayToEndTime();
+	void OnFullscreenPlayerDismissed(bool p_user);
+	
+	void HandlePropertyAvailableEvent(MCStringRef p_property);
 	void HandleNotifyEvent(MCNameRef p_event);
 	
+	void ConfigureControllers();
+	void ConfigureController(AVPlayerViewController *p_controller);
+	
+	void UpdateFullscreen();
+	
     void Play();
-    
-	MPMoviePlayerController *GetController(void);
-
+    void Pause();
+    void Stop();
+    void SeekTo(CMTime p_time);
+	void SeekToStart(void);
+    void Autoplay();
+	
+    void Snapshot(integer_t p_time, const integer_t* p_max_width, const integer_t* p_max_height, bool p_exact);
 	
 protected:
 	virtual ~MCiOSPlayerControl(void);
@@ -161,8 +209,26 @@ protected:
 	virtual void DeleteView(UIView *view);
 	
 private:
-	MPMoviePlayerController *m_controller;
-	com_runrev_livecode_MCiOSPlayerDelegate *m_delegate;
+	AVPlayer *m_player;
+	AVPlayerViewController *m_controller;
+	MCiOSPlayerDelegate *m_delegate;
+	UIView *m_container;
+	AVPlayerViewController *m_fullscreen_controller;
+
+	CMTime m_start_time;
+	CMTime m_end_time;
+
+	MCiOSPlayerStatus m_status;
+	MCiOSPlayerStatus m_pending_status;
+
+	bool m_looping;
+	bool m_should_autoplay;
+	bool m_fullscreen;
+	bool m_preserve_aspect;
+	bool m_show_controller;
+
+	bool m_did_autoplay;
+	bool m_is_fullscreen;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,7 +239,6 @@ MCPropertyInfo MCiOSPlayerControl::kProperties[] =
     DEFINE_RW_CTRL_PROPERTY(P_CONTENT, String, MCiOSPlayerControl, Content)
     DEFINE_RW_CTRL_PROPERTY(P_FULLSCREEN, Bool, MCiOSPlayerControl, Fullscreen)
     DEFINE_RW_CTRL_PROPERTY(P_PRESERVE_ASPECT, Bool, MCiOSPlayerControl, PreserveAspect)
-    // PM-2014-10-24: [[ Bug 13790 ]] Setting the showController to true resulted in going fullscreen in ios player
     DEFINE_RW_CTRL_PROPERTY(P_SHOW_CONTROLLER, Bool, MCiOSPlayerControl, ShowController)
     DEFINE_RW_CTRL_PROPERTY(P_USE_APPLICATION_AUDIO_SESSION, Bool, MCiOSPlayerControl, UseApplicationAudioSession)
     DEFINE_RW_CTRL_PROPERTY(P_START_TIME, Int32, MCiOSPlayerControl, StartTime)
@@ -225,7 +290,7 @@ MCNativeControlActionTable MCiOSPlayerControl::kActionTable =
 
 static void MCIPhoneImportUIImage(UIImage *p_image, int32_t p_max_width, int32_t p_max_height)
 {
-	uint32_t t_width, t_height;
+	CGFloat t_width, t_height;
 	t_width = [p_image size] . width * [p_image scale];
 	t_height = [p_image size] . height * [p_image scale];
 
@@ -261,7 +326,7 @@ static void MCIPhoneImportUIImage(UIImage *p_image, int32_t p_max_width, int32_t
 	MCExecContext ctxt(nil, nil, nil);
 	MCAutoDataRef t_dataref;
 	/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)[t_data bytes], [t_data length], &t_dataref);
-	iptr -> setdataprop(ctxt, 0, P_TEXT, false, *t_dataref);	
+	iptr -> setdataprop(ctxt, 0, P_TEXT, false, *t_dataref);
 }
 
 static void content_to_url(MCStringRef p_file, NSURL*& r_url)
@@ -286,36 +351,32 @@ static void content_to_url(MCStringRef p_file, NSURL*& r_url)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCNativeControlEnumEntry s_loadstate_set[] =
-{
-	{ "playable", MPMovieLoadStatePlayable },
-	{ "playthrough", MPMovieLoadStatePlaythroughOK },
-	{ "stalled", MPMovieLoadStateStalled },
-	{ nil, 0 },
-};
-
-static MCNativeControlEnumEntry s_playbackstate_enum[] =
-{
-	{ "stopped", MPMoviePlaybackStateStopped },
-	{ "playing", MPMoviePlaybackStatePlaying },
-	{ "paused", MPMoviePlaybackStatePaused },
-	{ "interrupted", MPMoviePlaybackStateInterrupted },
-	{ "seeking forward", MPMoviePlaybackStateSeekingForward },
-	{ "seeking backward", MPMoviePlaybackStateSeekingBackward },
-	{ nil, 0 },
-};
-
 MCiOSPlayerControl::MCiOSPlayerControl(void)
 {
-	g_movie_player_in_use = true;
-	
-	m_delegate = nil;
+	m_player = nil;
 	m_controller = nil;
+	m_delegate = nil;
+	m_container = nil;
+	m_fullscreen_controller = nil;
+	
+	m_status = kMCiOSPlayerStatusNone;
+	m_pending_status = kMCiOSPlayerStatusNone;
+	
+	m_looping = false;
+	m_should_autoplay = false;
+	m_fullscreen = false;
+	m_preserve_aspect = false;
+	m_show_controller = false;
+
+	m_did_autoplay = false;
+	m_is_fullscreen = false;
+
+	m_start_time = kCMTimeInvalid;
+	m_end_time = kCMTimeInvalid;
 }
 
 MCiOSPlayerControl::~MCiOSPlayerControl(void)
 {
-	g_movie_player_in_use = false;
 }
 
 MCNativeControlType MCiOSPlayerControl::GetType(void)
@@ -328,25 +389,37 @@ void MCiOSPlayerControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeC
     UIColor *t_color;
     if (ParseColor(p_color, t_color))
         if (m_controller != nil)
-            [[m_controller backgroundView] setBackgroundColor: t_color];
+        	m_controller.view.backgroundColor = t_color;
 }
 
 void MCiOSPlayerControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color)
 {
     if (m_controller != nil)
-        FormatColor([[m_controller backgroundView] backgroundColor], r_color);
+    	FormatColor(m_controller.view.backgroundColor, r_color);
 }
 
 void MCiOSPlayerControl::SetContent(MCExecContext& ctxt, MCStringRef p_content)
 {
+	Stop();
+	
     NSURL *t_url;
-    MPMovieSourceType t_type;
     content_to_url(p_content, t_url);
-    if (m_controller != nil)
+    if (m_player != nil)
     {
-        [m_controller setContentURL: t_url];
-        [m_controller prepareToPlay];
+		AVPlayerItem *t_item;
+		t_item = [AVPlayerItem playerItemWithURL:t_url];
+		
+    	[m_delegate setCurrentItem:t_item];
+    	[m_player replaceCurrentItemWithPlayerItem:t_item];
+
+		m_did_autoplay = false;
     }
+}
+
+void MCiOSPlayerControl::SetVisible(MCExecContext &ctxt, bool p_visible)
+{
+	MCiOSControl::SetVisible(ctxt, p_visible);
+	UpdateFullscreen();
 }
 
 void MCiOSPlayerControl::GetContent(MCExecContext& ctxt, MCStringRef& r_content)
@@ -354,11 +427,11 @@ void MCiOSPlayerControl::GetContent(MCExecContext& ctxt, MCStringRef& r_content)
     NSString *t_string;
     t_string = nil;
     
-    if (m_controller != nil)
+    if (m_player != nil)
     {
         NSURL *t_url;
-        
-        t_url = [m_controller contentURL];
+		
+        t_url = ((AVURLAsset*)m_player.currentItem.asset).URL;
         if ([t_url isFileURL])
             t_string = [t_url path];
         else
@@ -377,66 +450,63 @@ void MCiOSPlayerControl::GetContent(MCExecContext& ctxt, MCStringRef& r_content)
     
     ctxt . Throw();
 }
+
 void MCiOSPlayerControl::SetFullscreen(MCExecContext& ctxt, bool p_value)
 {
-    if (m_controller != nil)
-        [m_controller setFullscreen: p_value];
+	if (m_fullscreen == p_value)
+		return;
+	
+	m_fullscreen = p_value;
+	UpdateFullscreen();
 }
 
 void MCiOSPlayerControl::GetFullscreen(MCExecContext& ctxt, bool& r_value)
 {
-    if (m_controller != nil)
-        r_value = [m_controller isFullscreen];
-    else
-        r_value = false;
+	r_value = m_fullscreen;
 }
 
 void MCiOSPlayerControl::SetPreserveAspect(MCExecContext& ctxt, bool p_value)
 {
-    if (m_controller != nil)
-        [m_controller setScalingMode: p_value ? MPMovieScalingModeAspectFit : MPMovieScalingModeFill];
+	m_preserve_aspect = p_value;
+	ConfigureControllers();
 }
 
 void MCiOSPlayerControl::GetPreserveAspect(MCExecContext& ctxt, bool& r_value)
 {
-    if (m_controller != nil)
-        r_value = [m_controller scalingMode] != MPMovieScalingModeAspectFill;
-    else
-        r_value = false;
+	r_value = m_preserve_aspect;
 }
 
 void MCiOSPlayerControl::SetShowController(MCExecContext& ctxt, bool p_value)
 {
-    if (m_controller != nil)
-        [m_controller setControlStyle: !p_value ? MPMovieControlStyleNone : ([m_controller isFullscreen] ? MPMovieControlStyleFullscreen : MPMovieControlStyleEmbedded)];
+	m_show_controller = p_value;
+	ConfigureControllers();
 }
 
 void MCiOSPlayerControl::GetShowController(MCExecContext& ctxt, bool& r_value)
 {
-    if (m_controller != nil)
-        r_value = [m_controller controlStyle] != MPMovieControlStyleNone;
-    else
-        r_value = false;
+	r_value = m_show_controller;
 }
 
 void MCiOSPlayerControl::SetUseApplicationAudioSession(MCExecContext& ctxt, bool p_value)
 {
-    if (m_controller != nil)
-        [m_controller setUseApplicationAudioSession: p_value];
+	/* UNIMPLEMENTED */
 }
 
 void MCiOSPlayerControl::GetUseApplicationAudioSession(MCExecContext& ctxt, bool& r_value)
 {
-    if (m_controller != nil)
-        r_value = [m_controller useApplicationAudioSession];
-    else
-        r_value = false;
+	/* UNIMPLEMENTED */
+	r_value = false;
 }
 
 void MCiOSPlayerControl::SetStartTime(MCExecContext& ctxt, integer_t p_time)
 {
-    if (m_controller != nil)
-        [m_controller setInitialPlaybackTime: p_time / 1000.0];
+	if (p_time == -1)
+		m_start_time = kCMTimeInvalid;
+	else
+		m_start_time = CMTimeMake(p_time, 1000);
+
+    if (m_player != nil)
+		m_player.currentItem.reversePlaybackEndTime = m_start_time;
 }
 
 void MCiOSPlayerControl::GetStartTime(MCExecContext& ctxt, integer_t& r_time)
@@ -444,124 +514,131 @@ void MCiOSPlayerControl::GetStartTime(MCExecContext& ctxt, integer_t& r_time)
     integer_t t_time;
     t_time = -1;
     
-    if (m_controller != nil)
-        t_time = (integer_t)([m_controller initialPlaybackTime] * 1000);
-    
+   	if (CMTIME_IS_INVALID(m_start_time))
+   		t_time = -1;
+	else
+		t_time = m_start_time.value;
+	
     r_time = t_time;
 }
 
 void MCiOSPlayerControl::SetEndTime(MCExecContext& ctxt, integer_t p_time)
 {
-    if (m_controller != nil)
-        [m_controller setEndPlaybackTime: p_time / 1000.0];
+	if (p_time == -1)
+		m_end_time = kCMTimeInvalid;
+	else
+		m_end_time = CMTimeMake(p_time, 1000);
+
+    if (m_player != nil)
+    	m_player.currentItem.forwardPlaybackEndTime = m_end_time;
 }
 
 void MCiOSPlayerControl::GetEndTime(MCExecContext& ctxt, integer_t& r_time)
 {
     integer_t t_time;
     t_time = -1;
-    
-    if (m_controller != nil)
-        t_time = (integer_t)([m_controller endPlaybackTime] * 1000);
-    
+	
+    if (CMTIME_IS_INVALID(m_end_time))
+    	t_time = -1;
+	else
+		t_time = m_end_time.value;
+	
     r_time = t_time;
 }
-void MCiOSPlayerControl::SetCurrentTime(MCExecContext& ctxt, integer_t p_time)
+void MCiOSPlayerControl::SetCurrentTime(MCExecContext& ctxt, integer_t p_time_in_millis)
 {
-    if (m_controller != nil)
-    {
-        if ([m_controller playbackState] == MPMoviePlaybackStateStopped)
-            [m_controller prepareToPlay];
-        [m_controller setCurrentPlaybackTime: p_time / 1000.0];
-    }
+	SeekTo(CMTimeMake(p_time_in_millis, 1000));
 }
 
-void MCiOSPlayerControl::GetCurrentTime(MCExecContext& ctxt, integer_t& r_time)
+void MCiOSPlayerControl::GetCurrentTime(MCExecContext& ctxt, integer_t& r_time_in_millis)
 {
     integer_t t_time;
     t_time = -1;
     
-    if (m_controller != nil)
-        t_time = (integer_t)([m_controller currentPlaybackTime] * 1000);
-    
-    r_time = t_time;
+    if (m_player != nil)
+		t_time = CMTimeGetSeconds(m_player.currentTime) * 1000;
+	
+    r_time_in_millis = t_time;
 }
 
 void MCiOSPlayerControl::SetShouldAutoplay(MCExecContext& ctxt, bool p_value)
 {
-    if (m_controller != nil)
-        [m_controller setShouldAutoplay: p_value];
+	m_should_autoplay = p_value;
 }
 
 void MCiOSPlayerControl::GetShouldAutoplay(MCExecContext& ctxt, bool& r_value)
 {
-    if (m_controller != nil)
-        r_value = [m_controller shouldAutoplay];
-    else
-        r_value = false;
+	r_value = m_should_autoplay;
 }
 
 void MCiOSPlayerControl::SetLooping(MCExecContext& ctxt, bool p_value)
 {
-    if (m_controller != nil)
-        [m_controller setRepeatMode: p_value ? MPMovieRepeatModeOne : MPMovieRepeatModeNone];
+	m_looping = p_value;
 }
 
 void MCiOSPlayerControl::GetLooping(MCExecContext& ctxt, bool& r_value)
 {
-    if (m_controller != nil)
-        r_value = [m_controller repeatMode] != MPMovieRepeatModeNone;
-    else
-        r_value = false;
+	r_value = m_looping;
 }
 
 void MCiOSPlayerControl::SetAllowsAirPlay(MCExecContext& ctxt, bool p_value)
 {
-    if (m_controller != nil && MCmajorosversion >= 430)
-        [m_controller setAllowsAirPlay: p_value];
+	if (m_player != nil)
+		m_player.allowsExternalPlayback = p_value;
 }
 
 void MCiOSPlayerControl::GetAllowsAirPlay(MCExecContext& ctxt, bool& r_value)
 {
-    if (m_controller != nil && MCmajorosversion >= 430)
-        r_value = [m_controller allowsAirPlay];
-    else
-        r_value = false;
+	if (m_player != nil)
+		r_value = m_player.allowsExternalPlayback;
+	else
+		r_value = false;
 }
 
 void MCiOSPlayerControl::SetPlayRate(MCExecContext& ctxt, double p_rate)
 {
-    if (m_controller != nil)
-        [m_controller setCurrentPlaybackRate: (float)p_rate];
+    if (m_player != nil)
+    	m_player.rate = p_rate;
 }
 
 void MCiOSPlayerControl::GetPlayRate(MCExecContext& ctxt, double& r_rate)
 {
-    if (m_controller != nil)
-        r_rate = [m_controller currentPlaybackRate];
+    if (m_player != nil)
+    	r_rate = m_player.rate;
     else
         r_rate = 0;
 }
 void MCiOSPlayerControl::GetDuration(MCExecContext& ctxt, integer_t& r_duration)
 {
-    if (m_controller != nil)
-        r_duration = [m_controller duration] * 1000;
+    if (m_player != nil)
+    	r_duration = CMTimeGetSeconds(m_player.currentItem.duration);
     else
         r_duration = 0;
 }
 
 void MCiOSPlayerControl::GetPlayableDuration(MCExecContext& ctxt, integer_t& r_duration)
 {
-    if (m_controller != nil)
-        r_duration = [m_controller playableDuration] * 1000;
+    if (m_player != nil)
+    {
+    	// Calculate sum of duration of playable ranges
+    	CGFloat t_duration;
+    	t_duration = 0;
+    	for (NSValue *i in m_player.currentItem.loadedTimeRanges)
+    	{
+			CMTimeRange t_time_range;
+			t_time_range = [i CMTimeRangeValue];
+			t_duration += CMTimeGetSeconds(t_time_range.duration);
+		}
+        r_duration = t_duration * 1000;
+	}
     else
         r_duration = 0;
 }
 
 void MCiOSPlayerControl::GetIsPreparedToPlay(MCExecContext& ctxt, bool& r_value)
 {
-    if (m_controller != nil)
-        r_value = [m_controller isPreparedToPlay];
+    if (m_player != nil)
+    	r_value = m_player.status == AVPlayerStatusReadyToPlay;
     else
         r_value = false;
 }
@@ -572,12 +649,7 @@ void MCiOSPlayerControl::GetIsReadyForDisplay(MCExecContext& ctxt, bool& r_value
     r_value = false;
     
     if (m_controller != nil)
-    {
-#ifdef __IPHONE_6_0
-        if (MCmajorosversion >= 600)
-            r_value = [m_controller readyForDisplay];
-#endif
-    }
+    	r_value = m_controller.readyForDisplay;
 }
 
 void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadState& r_state)
@@ -585,58 +657,53 @@ void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadSt
     uint32_t t_load_state;
     t_load_state = 0;
     
-    if (m_controller != nil)
+    if (m_player != nil)
     {
-        MPMovieLoadState t_state;
-        t_state = [m_controller loadState];
-        
-        // PM-2015-02-13: [[ Bug 14604 ]] Used (1 << kMCNativeControlLoadState*) to align with the definition of MCExecFormatSet()
-        if (t_state & MPMovieLoadStatePlayable)
-            t_load_state |= 1 << kMCNativeControlLoadStatePlayable;
-        if (t_state & MPMovieLoadStatePlaythroughOK)
-            t_load_state |= 1 << kMCNativeControlLoadStatePlaythroughOK;
-        if (t_state & MPMovieLoadStateStalled)
-            t_load_state |= 1 << kMCNativeControlLoadStateStalled;
+		AVPlayerItemStatus t_status;
+		t_status = m_player.currentItem.status;
+		
+		if (t_status == AVPlayerItemStatusReadyToPlay)
+			t_load_state |= 1 << kMCNativeControlLoadStatePlayable;
+		if (m_player.currentItem.playbackLikelyToKeepUp)
+			t_load_state |= 1 << kMCNativeControlLoadStatePlaythroughOK;
+		if (t_status == AVPlayerItemStatusFailed) /* TODO - CHECK THIS */
+			t_load_state |= 1 << kMCNativeControlLoadStateStalled;
     }
     r_state = (MCNativeControlLoadState)t_load_state;
 }
 
 void MCiOSPlayerControl::GetPlaybackState(MCExecContext& ctxt, MCNativeControlPlaybackState& r_state)
 {
-    if (m_controller != nil)
-    {
-        switch ([m_controller playbackState])
-        {
-            case MPMoviePlaybackStateInterrupted:
-                r_state = kMCNativeControlPlaybackStateInterrupted;
-                return;
-            case MPMoviePlaybackStatePaused:
-                r_state = kMCNativeControlPlaybackStatePaused;
-                return;
-            case MPMoviePlaybackStatePlaying:
-                r_state = kMCNativeControlPlaybackStatePlaying;
-                return;
-            case MPMoviePlaybackStateSeekingBackward:
-                r_state = kMCNativeControlPlaybackStateSeekingBackward;
-                return;
-            case MPMoviePlaybackStateSeekingForward:
-                r_state = kMCNativeControlPlaybackStateSeekingForward;
-                return;
-            case MPMoviePlaybackStateStopped:
-                r_state = kMCNativeControlPlaybackStateStopped;
-                return;
-        }
-    }
-    else
-        r_state = kMCNativeControlPlaybackStateNone;
+	switch (m_status)
+	{
+		case kMCiOSPlayerStatusNone:
+			r_state = kMCNativeControlPlaybackStateNone;
+			return;
+		case kMCiOSPlayerStatusPlaying:
+			r_state = kMCNativeControlPlaybackStatePlaying;
+			return;
+		case kMCiOSPlayerStatusWaiting:
+			r_state = kMCNativeControlPlaybackStateInterrupted;
+			return;
+		case kMCiOSPlayerStatusPaused:
+			r_state = kMCNativeControlPlaybackStatePaused;
+			return;
+		case kMCiOSPlayerStatusStopped:
+			r_state = kMCNativeControlPlaybackStateStopped;
+			return;
+			
+		default:
+			r_state = kMCNativeControlPlaybackStateNone;
+			return;
+	}
 }
 
 void MCiOSPlayerControl::GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2])
 {
-    if (m_controller != nil)
+    if (m_player != nil)
     {
         CGSize t_size;
-        t_size = [m_controller naturalSize];
+        t_size = m_player.currentItem.asset.naturalSize;
         r_size[0] = (int32_t)t_size . width;
         r_size[1] = (int32_t)t_size . height;
     }
@@ -647,13 +714,152 @@ void MCiOSPlayerControl::GetNaturalSize(MCExecContext& ctxt, integer_t r_size[2]
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void MCiOSPlayerControl::SeekTo(CMTime p_time)
+{
+	if (m_player == nil)
+		return;
+	
+	if (CMTIME_IS_INVALID(p_time))
+		return;
+		
+	CMTime t_start_time;
+	t_start_time = m_player.currentItem.seekableTimeRanges.firstObject.CMTimeRangeValue.start;
+
+	CMTime t_end_time;
+	t_end_time = CMTimeRangeGetEnd(m_player.currentItem.seekableTimeRanges.lastObject.CMTimeRangeValue);
+
+	CMTimeRange t_seekable_range;
+	t_seekable_range = CMTimeRangeFromTimeToTime(t_start_time, t_end_time);
+	
+	[m_player seekToTime:CMTimeClampToRange(p_time, t_seekable_range)];
+	
+	// if stopped, move to paused status
+	if (m_status == kMCiOSPlayerStatusStopped)
+		m_status = kMCiOSPlayerStatusPaused;
+}
+
+void MCiOSPlayerControl::SeekToStart()
+{
+	if (m_player == nil)
+		return;
+
+	CGFloat t_rate;
+	t_rate = m_player.rate;
+	
+	if (t_rate < 0)
+	{
+		// playing in reverse - seek to end
+		if (CMTIME_IS_VALID(m_end_time))
+			SeekTo(m_end_time);
+		else
+		{
+			CMTime t_end_time;
+			t_end_time = CMTimeRangeGetEnd(m_player.currentItem.seekableTimeRanges.lastObject.CMTimeRangeValue);
+			SeekTo(t_end_time);
+		}
+	}
+	else
+	{
+		if (CMTIME_IS_VALID(m_start_time))
+			SeekTo(m_start_time);
+		else
+		{
+			CMTime t_start_time;
+			t_start_time = m_player.currentItem.seekableTimeRanges.firstObject.CMTimeRangeValue.start;
+			SeekTo(t_start_time);
+		}
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCiOSPlayerControl::Play()
 {
-    // PM-2014-09-18: [[ Bug 13048 ]] Make sure movieTouched message is sent
-    // PM-2015-03-06: [[ Bug 14816 ]] movieTouched msg to be sent only when in fullscreen and showController=false
-    [m_delegate beginWithOverlay:([m_controller isFullscreen] && [m_controller controlStyle] == MPMovieControlStyleNone)];
-    [m_controller play];
+	if (m_player == nil)
+		return;
+
+	if (m_status == kMCiOSPlayerStatusStopped)
+		SeekToStart();
+
+	m_pending_status = kMCiOSPlayerStatusPlaying;
+	[m_player play];
 }
+
+void MCiOSPlayerControl::Pause()
+{
+	if (m_player == nil)
+		return;
+
+	m_pending_status = kMCiOSPlayerStatusPaused;
+	[m_player pause];
+}
+
+void MCiOSPlayerControl::Stop()
+{
+	if (m_player == nil)
+		return;
+
+	m_pending_status = kMCiOSPlayerStatusStopped;
+	[m_player pause];
+}
+
+void MCiOSPlayerControl::Snapshot(integer_t p_time, const integer_t *p_max_width, const integer_t *p_max_height, bool p_exact)
+{
+	bool t_success;
+	t_success = true;
+	
+	AVAssetImageGenerator *t_gen;
+	t_gen = nil;
+	
+	if (t_success)
+	{
+		t_gen = [AVAssetImageGenerator assetImageGeneratorWithAsset:m_player.currentItem.asset];
+		t_success = t_gen != nil;
+	}
+	
+	CGImageRef t_cg_image;
+	t_cg_image = nil;
+	if (t_success)
+	{
+		if (p_exact)
+		{
+			t_gen.requestedTimeToleranceBefore = kCMTimeZero;
+			t_gen.requestedTimeToleranceAfter = kCMTimeZero;
+		}
+		
+		t_cg_image = [t_gen copyCGImageAtTime:CMTimeMake(p_time, 1000) actualTime:nil error:nil];
+		t_success = t_cg_image != nil;
+	}
+	
+	UIImage *t_image;
+	t_image = nil;
+	if (t_success)
+	{
+		t_image = [UIImage imageWithCGImage:t_cg_image];
+		t_success = t_image != nil;
+	}
+
+	if (!t_success)
+		return;
+	
+	p_max_width != nil && p_max_height != nil ? MCIPhoneImportUIImage(t_image, *p_max_width, *p_max_height) : MCIPhoneImportUIImage(t_image, 0, 0);
+	
+	if (t_cg_image != nil)
+		CGImageRelease(t_cg_image);
+}
+
+void MCiOSPlayerControl::Autoplay()
+{
+	if (m_should_autoplay && !m_did_autoplay)
+	{
+		m_did_autoplay = true;
+		Play();
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCiOSPlayerControl::ExecPlay(MCExecContext& ctxt)
 {
@@ -661,67 +867,53 @@ void MCiOSPlayerControl::ExecPlay(MCExecContext& ctxt)
 }
 void MCiOSPlayerControl::ExecPause(MCExecContext& ctxt)
 {
-    [m_controller pause];
+	Pause();
 }
 void MCiOSPlayerControl::ExecPrepareToPlay(MCExecContext& ctxt)
 {
-    [m_controller prepareToPlay];
+	Play();
+	Pause();
 }
 void MCiOSPlayerControl::ExecStop(MCExecContext& ctxt)
 {
-    [m_controller stop];
+	Stop();
 }
 // PM-2016-02-23: [[ Bug 16984 ]] Make sure the seek direction is respected
 void MCiOSPlayerControl::ExecBeginSeekingBackward(MCExecContext& ctxt)
 {
-    [m_controller beginSeekingBackward];
+	/* UNIMPLEMENTED */
 }
 
 void MCiOSPlayerControl::ExecBeginSeekingForward(MCExecContext& ctxt)
 {
-    [m_controller beginSeekingForward];
+	/* UNIMPLEMENTED */
 }
 void MCiOSPlayerControl::ExecEndSeeking(MCExecContext& ctxt)
 {
-    [m_controller endSeeking];
+	/* UNIMPLEMENTED */
 }
+
 void MCiOSPlayerControl::ExecSnapshot(MCExecContext& ctxt, integer_t p_time, integer_t *p_max_width, integer_t *p_max_height)
 {
-    UIImage *t_image;
-    t_image = [m_controller thumbnailImageAtTime: p_time / 1000.0
-                                      timeOption: MPMovieTimeOptionNearestKeyFrame];
-    
-    if (t_image == nil)
-        return;
-    
-    p_max_width != nil ? MCIPhoneImportUIImage(t_image, *p_max_width, *p_max_height) : MCIPhoneImportUIImage(t_image, 0, 0);
+	Snapshot(p_time, p_max_width, p_max_height, false);
 }
 
 void MCiOSPlayerControl::ExecSnapshotExactly(MCExecContext& ctxt, integer_t p_time, integer_t* p_max_width, integer_t* p_max_height)
 {
-    UIImage *t_image;
-    t_image = [m_controller thumbnailImageAtTime: p_time / 1000.0
-                                      timeOption: MPMovieTimeOptionExact];
-    
-    if (t_image == nil)
-        return;
-    
-    p_max_width != nil ? MCIPhoneImportUIImage(t_image, *p_max_width, *p_max_height) : MCIPhoneImportUIImage(t_image, 0, 0);
+	Snapshot(p_time, p_max_width, p_max_height, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCiOSPlayerControl::HandlePropertyAvailableEvent(const char *p_property)
+void MCiOSPlayerControl::HandlePropertyAvailableEvent(MCStringRef p_property)
 {
 	MCObject *t_target;
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-        MCAutoStringRef t_string;
-        /* UNCHECKED */ MCStringCreateWithCString(p_property, &t_string);
         MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target -> message_with_valueref_args(MCM_player_property_available, *t_string);
+		t_target -> message_with_valueref_args(MCM_player_property_available, p_property);
 		ChangeTarget(t_old_target);
 	}
 }
@@ -741,58 +933,156 @@ void MCiOSPlayerControl::HandleNotifyEvent(MCNameRef p_message)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MPMoviePlayerController *MCiOSPlayerControl::GetController(void)
+void MCiOSPlayerControl::ConfigureControllers()
 {
-	return m_controller;
+	if (m_controller)
+		ConfigureController(m_controller);
+	if (m_fullscreen_controller)
+		ConfigureController(m_fullscreen_controller);
+}
+
+void MCiOSPlayerControl::ConfigureController(AVPlayerViewController *p_controller)
+{
+	p_controller.videoGravity = m_preserve_aspect ? AVLayerVideoGravityResizeAspect : AVLayerVideoGravityResize;
+	p_controller.showsPlaybackControls = m_show_controller;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCiOSPlayerControl::UpdateFullscreen()
+{
+	bool t_fullscreen;
+	t_fullscreen = m_fullscreen && !m_container.hidden;
+	
+	if (t_fullscreen == m_is_fullscreen)
+		return;
+	
+	m_is_fullscreen = t_fullscreen;
+	if (m_controller != nil)
+	{
+		if (t_fullscreen)
+		{
+			// remove controller view from container
+			[m_controller.view removeFromSuperview];
+			m_controller.player = nil;
+			
+			m_fullscreen_controller = [[MCiOSAVPlayerViewController alloc] initWithInstance:this];
+			m_fullscreen_controller.player = m_player;
+			ConfigureController(m_fullscreen_controller);
+			
+			// present player modally
+			[MCIPhoneGetViewController()
+				presentViewController:m_fullscreen_controller
+				animated:NO
+				completion:^{
+					[m_delegate beginFullscreenWithOverlay:!m_show_controller];
+				}];
+		}
+		else
+		{
+			if (m_fullscreen_controller != nil)
+			{
+				// dismiss modal player view
+				[MCIPhoneGetViewController()
+					dismissViewControllerAnimated:YES
+					completion:^{
+						OnFullscreenPlayerDismissed(false);
+					}];
+			}
+		}
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 UIView *MCiOSPlayerControl::CreateView(void)
 {
-    // MM-2012-02-26: [[ Bug 10568 ]] Initialising a MPMoviePlayerController with an empty URL appears to cause a crash in the 6.0 (and later) simulator.
-    //  Init with nil instead.
-    if (MCmajorosversion >= 420)
-        m_controller = [[MPMoviePlayerController alloc] initWithContentURL: nil];
-    else
-    {
-        if (g_movie_player == nil)
-            g_movie_player = [[MPMoviePlayerViewController alloc] initWithContentURL: [NSURL URLWithString: @""]];
-        m_controller = [g_movie_player moviePlayer];
-        [m_controller setFullscreen: NO];
-        [m_controller setControlStyle: MPMovieControlStyleEmbedded];
-        g_movie_player_in_use = true;
-    }
+	bool t_success;
+	t_success = true;
+	
+	AVPlayer *t_player;
+	t_player = nil;
+	if (t_success)
+	{
+		t_player = [AVPlayer playerWithURL:[NSURL URLWithString:@""]];
+		t_success = t_player != nil;
+	}
 
-    [m_controller setShouldAutoplay: NO];
-    [m_controller stop];
-    
-    UIView *t_view;
-    t_view = [m_controller view];
-    if (t_view == nil)
-        return nil;
+	AVPlayerViewController *t_controller;
+	t_controller = nil;
+	if (t_success)
+	{
+		t_controller = [[AVPlayerViewController new] autorelease];
+		t_success = t_controller != nil;
+	}
+	
+	UIView *t_view;
+	t_view = nil;
+	if (t_success)
+	{
+		t_player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
+		t_controller.player = t_player;
+		t_view = t_controller.view;
+		t_success = t_view != nil;
+	}
+	
+	UIView *t_container_view;
+	t_container_view = nil;
+	if (t_success)
+	{
+		t_container_view = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, 0, 0)] autorelease];
+		t_success = t_container_view != nil;
+	}
+	
+	MCiOSPlayerDelegate *t_delegate;
+	t_delegate = nil;
+	if (t_success)
+	{
+		t_delegate = [[[MCiOSPlayerDelegate alloc] initWithInstance:this player:t_player] autorelease];
+		t_success = t_delegate != nil;
+	}
+	
+	if (t_success)
+	{
+		t_container_view.hidden = YES;
+		t_container_view.autoresizesSubviews = YES;
+		
+		t_view.hidden = NO;
+		t_view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+		
+		[t_container_view addSubview:t_view];
+		t_view.frame = t_container_view.bounds;
 
-    [t_view setHidden: YES];
-    [t_view setFrame: CGRectMake(0, 0, 0, 0)];
-
-    m_delegate = [[com_runrev_livecode_MCiOSPlayerDelegate alloc] initWithInstance: this];
-    return t_view;
+		[MCIPhoneGetViewController() addChildViewController:t_controller];
+		
+		m_player = [t_player retain];
+		m_controller = [t_controller retain];
+		m_delegate = [t_delegate retain];
+		m_container = [t_container_view retain];
+		
+		return m_container;
+	}
+	else
+		return nil;
 }
 
 void MCiOSPlayerControl::DeleteView(UIView *p_view)
 {
-	[m_controller stop];
-	if (MCmajorosversion >= 420)
-		[m_controller release];
-	m_controller = nil;
-	
-	[m_delegate release];
-	m_delegate = nil;
-	
-	if (MCmajorosversion < 420)
+	if (m_player != nil)
 	{
-		[[g_movie_player moviePlayer] setContentURL: [NSURL URLWithString: @""]];
-		g_movie_player_in_use = false;
+		[m_delegate release];
+		m_delegate = nil;
+		
+		m_controller.player = nil;
+		[m_player release];
+		m_player = nil;
+		
+		[m_controller removeFromParentViewController];
+		[m_controller release];
+		m_controller = nil;
+
+		[m_container release];
+		m_container = nil;
 	}
 }
 
@@ -807,12 +1097,15 @@ public:
 	{
 		m_target = p_target;
 		m_target -> Retain();
-		m_property = p_property;
+		m_property = nil;
+		/* UNCHECKED */ MCStringCreateWithCString(p_property, m_property);
 	}
 	
 	void Destroy(void)
 	{
 		m_target -> Release();
+		if (m_property != nil)
+			MCValueRelease(m_property);
 		delete this;
 	}
 	
@@ -823,7 +1116,7 @@ public:
 	
 private:
 	MCiOSPlayerControl *m_target;
-	const char *m_property;
+	MCStringRef m_property;
 };
 
 class MCiOSPlayerNotifyEvent: public MCCustomEvent
@@ -854,64 +1147,275 @@ private:
 	MCNameRef m_notification;
 };
 
-// MM-2013-09-23: [[ iOS7 Support ]] Tweaked type to appease llvm 5.0.
-static struct { NSString* const* name; SEL selector; } s_player_notifications[] =
+////////////////////////////////////////////////////////////////////////////////
+
+static void MCiOSPlayerPostPropertyAvailableEvent(MCiOSPlayerControl *p_target, const char *p_property)
 {
-	{ &MPMovieDurationAvailableNotification, @selector(movieDurationAvailable:) },
-	{ &MPMovieMediaTypesAvailableNotification, @selector(movieMediaTypesAvailable:) },
-	{ &MPMovieNaturalSizeAvailableNotification, @selector(movieNaturalSizeAvailable:) },
-	{ &MPMovieSourceTypeAvailableNotification, @selector(movieSourceTypeAvailable:) },
-	{ &MPMoviePlayerWillEnterFullscreenNotification, @selector(playerWillEnterFullscreen:) },
-	{ &MPMoviePlayerDidExitFullscreenNotification, @selector(playerDidExitFullscreen:) },
-	{ &MPMoviePlayerLoadStateDidChangeNotification, @selector(movieLoadStateDidChange:) },
-	{ &MPMoviePlayerNowPlayingMovieDidChangeNotification, @selector(playerMovieChanged:) },
-	{ &MPMoviePlayerPlaybackDidFinishNotification, @selector(playerPlaybackDidFinish:) },
-	{ &MPMoviePlayerPlaybackStateDidChangeNotification, @selector(playerPlaybackStateDidChange:) },
-	{ &MPMoviePlayerScalingModeDidChangeNotification, @selector(playerScalingModeDidChange:) },
-	{ nil, nil }
-};
+	MCIPhoneRunBlockOnMainFiber(^{
+		MCEventQueuePostCustom(new MCiOSPlayerPropertyAvailableEvent(p_target, p_property));
+	});
+}
+
+static void MCiOSPlayerPostNotifyEvent(MCiOSPlayerControl *p_target, MCNameRef p_message)
+{
+	MCIPhoneRunBlockOnMainFiber(^{
+		MCEventQueuePostCustom(new MCiOSPlayerNotifyEvent(p_target, p_message));
+	});
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation com_runrev_livecode_MCiOSPlayerDelegate
+void MCiOSPlayerControl::OnPlayerTimeControlStatusChanged()
+{
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
+	if (m_player == nil)
+		return;
+	
+	if (@available(iOS 10.0, *))
+	{
+		MCiOSPlayerStatus t_old_status;
+		t_old_status = m_status;
+
+		switch (m_player.timeControlStatus)
+		{
+			case AVPlayerTimeControlStatusWaitingToPlayAtSpecifiedRate:
+				m_status = kMCiOSPlayerStatusWaiting;
+				break;
+				
+			case AVPlayerTimeControlStatusPaused:
+				if (m_pending_status == kMCiOSPlayerStatusStopped)
+					m_status = kMCiOSPlayerStatusStopped;
+				else
+					m_status = kMCiOSPlayerStatusPaused;
+				break;
+				
+			case AVPlayerTimeControlStatusPlaying:
+				m_status = kMCiOSPlayerStatusPlaying;
+				break;
+		}
+		
+		// notify on status change
+		if (m_status != t_old_status)
+			MCiOSPlayerPostNotifyEvent(this, MCM_player_state_changed);
+	}
+#endif
+}
+
+void MCiOSPlayerControl::OnPlayerDidPlayToEndTime()
+{
+	MCiOSPlayerPostNotifyEvent(this, MCM_player_finished);
+	if (m_looping)
+	{
+		// reset back to start (or end if playing backwards)
+		SeekToStart();
+	}
+	else
+		Stop();
+}
+
+void MCiOSPlayerControl::OnFullscreenPlayerDismissed(bool p_user)
+{
+	[m_delegate endFullscreen];
+
+	m_fullscreen_controller.player = nil;
+	[m_fullscreen_controller release];
+	m_fullscreen_controller = nil;
+
+	// reattach controller view to container
+	m_controller.player = m_player;
+	[m_container addSubview:m_controller.view];
+	m_controller.view.frame = m_container.bounds;
+	
+	if (p_user)
+	{
+		m_is_fullscreen = false;
+		m_fullscreen = false;
+		MCiOSPlayerPostNotifyEvent(this, MCM_player_stopped);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+@implementation com_livecode_engine_MCiOSAVPlayerViewController
+{
+}
 
 - (id)initWithInstance:(MCiOSPlayerControl*)instance
 {
 	self = [super init];
 	if (self == nil)
 		return nil;
-	
+
 	m_instance = instance;
-    m_overlay = nil;
-	
-	for(uint32_t i = 0; s_player_notifications[i] . name != nil; i++)
-		if (*s_player_notifications[i] . name != nil)
-			[[NSNotificationCenter defaultCenter] addObserver: self
-													 selector: s_player_notifications[i] . selector 
-														 name: *s_player_notifications[i] . name 
-													   object: m_instance -> GetController()];
 	
 	return self;
 }
 
-// PM-2015-02-12: [[ Bug 14525 ]] Moved the overlay code entirely into the delegate
-- (void)beginWithOverlay:(bool)p_overlay
+- (void)viewDidDisappear:(BOOL)animated
 {
-    if (p_overlay)
-    {
-        // The movie's window is the one that is active
-        UIWindow *t_window = [[UIApplication sharedApplication] keyWindow];
-
-        // Now we create an invisible control with the same size as the window
-        m_overlay = [[UIControl alloc] initWithFrame: [t_window frame]];
-        
-        // We want to get notified whenever the overlay control is touched
-        [m_overlay addTarget: self action: @selector(playerWindowTouched:) forControlEvents: UIControlEventTouchDown];
-        [t_window addSubview: m_overlay];
-    }
+	[super viewDidDisappear:animated];
+	m_instance->OnFullscreenPlayerDismissed(true);
 }
 
-- (void)end
+@end
+
+////////////////////////////////////////////////////////////////////////////////
+
+static struct { NSString *const *name; SEL selector; } s_player_item_notifications[] =
+{
+	{&AVPlayerItemDidPlayToEndTimeNotification, @selector(playerItemDidPlayToEndTime:)},
+	{&AVPlayerItemFailedToPlayToEndTimeNotification, @selector(playerItemFailedToPlayToEndTime:)},
+};
+#define s_player_item_notification_count (sizeof(s_player_item_notifications) / sizeof(s_player_item_notifications[0]))
+
+static NSString* s_player_item_keys[] =
+{
+	@"status",
+	@"playbackLikelyToKeepUp",
+};
+#define s_player_item_key_count (sizeof(s_player_item_keys) / sizeof(s_player_item_keys[0]))
+
+static NSString* s_player_asset_async_keys[] =
+{
+	@"duration",
+	@"naturalSize",
+};
+#define s_player_asset_async_key_count (sizeof(s_player_asset_async_keys) / sizeof(s_player_asset_async_keys[0]))
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 100000
+static NSString* s_player_keys[] =
+{
+	@"timeControlStatus",
+};
+#define s_player_key_count (sizeof(s_player_keys) / sizeof(s_player_keys[0]))
+#else
+static NSString* s_player_keys[] =
+{
+};
+#define s_player_key_count (0)
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
+@implementation com_runrev_livecode_MCiOSPlayerDelegate
+
+- (id)initWithInstance:(MCiOSPlayerControl*)instance player:(AVPlayer*)player
+{
+	self = [super init];
+	if (self == nil)
+		return nil;
+	
+	m_instance = instance;
+	m_player = nil;
+	m_player_item = nil;
+	m_overlay = nil;
+
+	[self setPlayer:player];
+	
+	return self;
+}
+
+- (void)setPlayer:(AVPlayer *)player
+{
+	if (player == m_player)
+		return;
+	
+	if (m_player != nil)
+	{
+		for (uint32_t i = 0; i < s_player_key_count; i++)
+			[m_player removeObserver:self forKeyPath:s_player_keys[i]];
+		
+		[m_player release];
+	}
+
+	m_player = [player retain];
+	
+	if (m_player != nil)
+	{
+		for (uint32_t i = 0; i < s_player_key_count; i++)
+		{
+			[m_player addObserver:self
+				forKeyPath:s_player_keys[i]
+				options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
+				context:nil];
+		}
+	}
+}
+
+- (void)setCurrentItem:(AVPlayerItem *)item
+{
+	if (item == m_player_item)
+		return;
+	
+	if (m_player_item != nil)
+	{
+		for (uint32_t i = 0; i < s_player_item_key_count; i++)
+			[m_player_item removeObserver:self forKeyPath:s_player_item_keys[i]];
+		
+		for (uint32_t i = 0; i < s_player_item_notification_count; i++)
+			[[NSNotificationCenter defaultCenter] removeObserver:self name:*s_player_item_notifications[i].name object:m_player_item];
+		
+		[m_player_item.asset cancelLoading];
+		[m_player_item release];
+		m_player_item = nil;
+	}
+	
+	m_player_item = item;
+	
+	if (m_player_item != nil)
+	{
+		[m_player_item retain];
+		
+		for (uint32_t i = 0; i < s_player_item_key_count; i++)
+		{
+			[m_player_item addObserver:self
+				forKeyPath:s_player_item_keys[i]
+				options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
+				context:nil];
+		}
+
+		for(uint32_t i = 0; i < s_player_item_notification_count; i++)
+			if (*s_player_item_notifications[i] . name != nil)
+				[[NSNotificationCenter defaultCenter] addObserver: self
+														 selector: s_player_item_notifications[i] . selector
+															 name: *s_player_item_notifications[i] . name
+														   object: m_player_item];
+		
+		[m_player_item.asset
+			loadValuesAsynchronouslyForKeys:[NSArray arrayWithObjects:s_player_asset_async_keys count:s_player_asset_async_key_count]
+			completionHandler:^{
+				for (uindex_t i = 0; i < s_player_asset_async_key_count; i++)
+				{
+					NSError *t_error;
+					t_error = nil;
+					if ([m_player_item.asset statusOfValueForKey:s_player_asset_async_keys[i] error:nil] == AVKeyValueStatusLoaded)
+					{
+						MCiOSPlayerPostPropertyAvailableEvent(m_instance, s_player_asset_async_keys[i].UTF8String);
+					}
+				}
+			}];
+	}
+}
+
+- (void)beginFullscreenWithOverlay:(BOOL)overlay
+{
+	if (overlay)
+	{
+		// The movie's window is the one that is active
+		UIWindow *t_window = [[UIApplication sharedApplication] keyWindow];
+
+		// Now we create an invisible control with the same size as the window
+		m_overlay = [[UIControl alloc] initWithFrame: [t_window frame]];
+		
+		// We want to get notified whenever the overlay control is touched
+		[m_overlay addTarget: self action: @selector(playerWindowTouched:) forControlEvents: UIControlEventTouchDown];
+		[t_window addSubview: m_overlay];
+	}
+
+	MCiOSPlayerPostNotifyEvent(m_instance, MCM_player_enter_fullscreen);
+}
+
+- (void)removeOverlay
 {
     if (m_overlay != nil)
     {
@@ -922,105 +1426,59 @@ static struct { NSString* const* name; SEL selector; } s_player_notifications[] 
     }
 }
 
+- (void)endFullscreen
+{
+	[self removeOverlay];
+	MCiOSPlayerPostNotifyEvent(m_instance, MCM_player_leave_fullscreen);
+}
+
 - (void)dealloc
 {
-    [self end];
-	[[NSNotificationCenter defaultCenter] removeObserver: self];
+	[self removeOverlay];
+	[self setCurrentItem:nil];
+	[self setPlayer:nil];
 	[super dealloc];
 }
 
-- (void)movieDurationAvailable: (NSNotification *)notification
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
 {
-	MCEventQueuePostCustom(new MCiOSPlayerPropertyAvailableEvent(m_instance, "duration"));
-}
-
-- (void)movieMediaTypesAvailable: (NSNotification *)notification
-{
-}
-
-- (void)movieNaturalSizeAvailable: (NSNotification *)notification
-{
-	MCEventQueuePostCustom(new MCiOSPlayerPropertyAvailableEvent(m_instance, "naturalSize"));
-}
-
-- (void)movieSourceTypeAvailable: (NSNotification *)notification
-{
-}
-
-- (void)movieLoadStateDidChange: (NSNotification *)notification
-{
-	MCEventQueuePostCustom(new MCiOSPlayerNotifyEvent(m_instance, MCM_player_progress_changed));
-}
-
-- (void)playerWillEnterFullscreen: (NSNotification *)notification
-{
-	// MW-2011-04-07: [[ Bug 9468 ]] When the player enters fullscreen it doesn't cause touch
-	//   cancellation to occur and so we get lingering touch events
-	static_cast<MCScreenDC *>(MCscreen) -> cancel_touches();
-	
-	MCEventQueuePostCustom(new MCiOSPlayerNotifyEvent(m_instance, MCM_player_enter_fullscreen));
-}
-
-- (void)playerDidExitFullscreen: (NSNotification *)notification
-{
-	MCEventQueuePostCustom(new MCiOSPlayerNotifyEvent(m_instance, MCM_player_leave_fullscreen));
-}
-
-- (void)playerMovieChanged: (NSNotification *)notification
-{
-	MCEventQueuePostCustom(new MCiOSPlayerNotifyEvent(m_instance, MCM_player_movie_changed));
-}
-
-- (void)playerPlaybackDidFinish: (NSNotification *)notification
-{
-    // PM-2014-09-18: [[ Bug 13048 ]] Clear m_overlay if playback finishes for any reason
-    [self end];
-    
-	NSObject *t_value;
-	
-	int32_t t_reason;
-	t_reason = [[[notification userInfo] objectForKey: MPMoviePlayerPlaybackDidFinishReasonUserInfoKey] intValue];
-	
-	MCNameRef t_message;
-	t_message = nil;
-	if (t_reason == MPMovieFinishReasonPlaybackEnded)
-		t_message = MCM_player_finished;
-	else if (t_reason == MPMovieFinishReasonPlaybackError)
+	if ([keyPath isEqualToString:@"status"])
 	{
-		NSString *t_string;
-		t_string = [[m_instance -> GetController() contentURL] absoluteString];
-		if (![t_string isEqualToString: @""])
-			t_message = MCM_player_error;
+		MCiOSPlayerPostNotifyEvent(m_instance, MCM_player_progress_changed);
 	}
-	else if (t_reason == MPMovieFinishReasonUserExited)
-		t_message = MCM_player_stopped;
-	
-	if (t_message != nil)
-		MCEventQueuePostCustom(new MCiOSPlayerNotifyEvent(m_instance, t_message));
+	else if ([keyPath isEqualToString:@"playbackLikelyToKeepUp"])
+	{
+		MCiOSPlayerPostNotifyEvent(m_instance, MCM_player_progress_changed);
+		if (m_player_item.playbackLikelyToKeepUp)
+			m_instance->Autoplay();
+	}
+	else if ([keyPath isEqualToString:@"timeControlStatus"])
+	{
+		m_instance->OnPlayerTimeControlStatusChanged();
+	}
 }
 
-- (void)playerPlaybackStateDidChange: (NSNotification *)notification
+- (void)playerItemDidPlayToEndTime:(NSNotification *)notification
 {
-	MCEventQueuePostCustom(new MCiOSPlayerNotifyEvent(m_instance, MCM_player_state_changed));
+	m_instance->OnPlayerDidPlayToEndTime();
 }
 
-- (void)playerScalingModeDidChange: (NSNotification *)notification
+- (void)playeritemFailedToPlayToEndTime:(NSNotification*)notification
 {
+	MCiOSPlayerPostNotifyEvent(m_instance, MCM_player_error);
 }
 
 - (void)playerWindowTouched: (UIControl*) p_sender
 {
-    MCEventQueuePostCustom(new MCiOSPlayerNotifyEvent(m_instance, MCM_movie_touched));
+	MCiOSPlayerPostNotifyEvent(m_instance, MCM_movie_touched);
 }
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCNativePlayerControlCreate(MCNativeControl*& r_control)
 {
-	if (MCmajorosversion < 420 && g_movie_player_in_use)
-		return false;
-	
 	r_control = new MCiOSPlayerControl;
 	return true;
 }

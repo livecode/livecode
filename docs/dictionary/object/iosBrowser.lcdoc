@@ -5,7 +5,7 @@ Type: object
 Syntax: iosBrowser
 
 Summary:
-A native iOS control, UIWebView, that displays a browser.
+A native iOS control that displays a browser.
 
 Introduced: 4.5.3
 
@@ -23,10 +23,11 @@ mobileControlSet sBrowserID, "visible", "true"
 mobileControlSet sBrowserID, "url", "http://www.livecode.com"
 
 Description:
-An iosBrowser(UIWebView) control is created using a control type of
+An iosBrowser control is created using a control type of
 "browser". 
 
->*Note:* For full details of what the UIWebView control is capable of,
+>*Note:* The iOS browser control is based on WKWebView.
+> For full details of what the WKWebView control is capable of,
 > and background about it see the iOS reference document.
 
 References: mobileControlDelete (command), mobileControlDo (command),

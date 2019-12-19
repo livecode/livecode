@@ -1300,6 +1300,11 @@ static void setparagraphattr_int16(MCParagraphAttrs*& attrs, uint32_t p_flag, si
     setparagraphattr_int<int16_t, INT16_MIN, INT16_MAX>(attrs, p_flag, p_field_offset, (int16_t *)p_value);
 }
 
+static void setparagraphattr_uint16(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, uinteger_t *p_value)
+{
+    setparagraphattr_int<uint16_t, 0, UINT16_MAX>(attrs, p_flag, p_field_offset, (uint16_t *)p_value);
+}
+
 static void setparagraphattr_color(MCParagraphAttrs*& attrs, uint32_t p_flag, size_t p_field_offset, const MCInterfaceNamedColor& p_color)
 {
     MCColor t_color;
@@ -2734,7 +2739,7 @@ void MCParagraph::GetEffectiveSpaceAbove(MCExecContext& ctxt, uinteger_t& r_spac
 
 void MCParagraph::SetSpaceAbove(MCExecContext& ctxt, uinteger_t *p_space)
 {
-    setparagraphattr_int<uinteger_t, 0, 32767>(attrs, PA_HAS_SPACE_ABOVE, offsetof(MCParagraphAttrs, space_above), p_space);
+    setparagraphattr_uint16(attrs, PA_HAS_SPACE_ABOVE, offsetof(MCParagraphAttrs, space_above), p_space);
 }
 
 void MCParagraph::GetSpaceBelow(MCExecContext& ctxt, uinteger_t *&r_space)
@@ -2752,7 +2757,7 @@ void MCParagraph::GetEffectiveSpaceBelow(MCExecContext& ctxt, uinteger_t& r_spac
 
 void MCParagraph::SetSpaceBelow(MCExecContext& ctxt, uinteger_t *p_space)
 {
-    setparagraphattr_int<uinteger_t, 0, 32767>(attrs, PA_HAS_SPACE_BELOW, offsetof(MCParagraphAttrs, space_below), p_space);
+    setparagraphattr_uint16(attrs, PA_HAS_SPACE_BELOW, offsetof(MCParagraphAttrs, space_below), p_space);
 }
 
 void MCParagraph::DoSetTabStops(MCExecContext &ctxt, bool p_is_relative, const vector_t<uinteger_t>& p_tabs)

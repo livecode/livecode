@@ -1484,9 +1484,23 @@ public class Engine extends View implements EngineApi
         int t_screen_height = ((LiveCodeActivity)getContext()).s_main_layout.getRootView().getHeight();
         
         // keyboard height equals (screen height - (user app height + status))
-        int t_keyboard_height = t_screen_height - (t_app_rect.height() + t_status_bar_height);
+        int t_keyboard_height = t_screen_height - (t_app_rect.height() + t_status_bar_height) - getSoftbuttonsbarHeight();
         
         return t_keyboard_height > 0;
+    }
+    
+    private int getSoftbuttonsbarHeight() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            return 0;
+        }
+        
+        DisplayMetrics t_metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(t_metrics);
+        int t_usable_height = t_metrics.heightPixels;
+        getWindowManager().getDefaultDisplay().getRealMetrics(t_metrics);
+        int t_real_height = t_metrics.heightPixels;
+        
+        return t_real_height > t_usable_height ? t_real_height - t_usable_height : 0;
     }
 	
 	void updateKeyboardVisible()

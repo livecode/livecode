@@ -1,0 +1,1 @@
+# Fix crash when an error occurs in a SQLite query

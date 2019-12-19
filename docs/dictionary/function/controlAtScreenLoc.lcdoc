@@ -17,7 +17,7 @@ Example:
 put controlAtScreenLoc((100,100))
 
 Example:
-get the name of (controlAtScreenLoc(the mouseLoc))
+get the name of (controlAtScreenLoc(the screenMouseLoc))
 
 Parameters:
 coordinates(point):
@@ -31,10 +31,11 @@ The <controlAtScreenLoc> function returns the control at the given
 location. The function returns the number of the control, below are
 examples of getting the name or long id of the control
 
-  get the name of (controlAtLoc(<coordinates>))
-  get the long ID of (controlAtLoc(<coordinates>))
+    get the name of (controlAtScreenLoc(<coordinates>))
 
-References: mouseLoc (function), controlAtLoc (function),
+    get the long ID of (controlAtScreenLoc(<coordinates>))
+
+References: screenMouseLoc (function), controlAtLoc (function),
 control (keyword), location (property)
 
 Tags: ui

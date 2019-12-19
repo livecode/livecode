@@ -854,7 +854,7 @@ static void __MCUnicodeSimpleCaseFold(icu::UnicodeString& p_string)
     
     while(i < p_string.length())
     {
-        t_temp.append(u_toupper(p_string.char32At(i)/*, U_FOLD_CASE_DEFAULT*/));
+        t_temp.append(u_tolower(p_string.char32At(i)/*, U_FOLD_CASE_DEFAULT*/));
         i = p_string.moveIndex32(i, 1);
     }
     

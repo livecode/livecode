@@ -23,156 +23,21 @@
 
 #include "libbrowser_internal.h"
 #include "libbrowser_osx_webview.h"
+#include "libbrowser_nsvalue.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCNSNumberToBrowserValue(NSNumber *p_number, MCBrowserValue &r_value);
-bool MCNSDictionaryToBrowserValue(NSDictionary *p_dictionary, MCBrowserValue &r_value);
-bool MCNSArrayToBrowserValue(NSArray * p_array, MCBrowserValue &r_value);
 bool MCWebScriptObjectToBrowserValue(WebScriptObject *p_obj, MCBrowserValue &r_value);
 
-//////////
-
-bool MCNSObjectToBrowserValue(id p_obj, MCBrowserValue &r_value)
+static bool MCNSObjectConvertWebScriptObject(id p_obj, MCBrowserValue &r_value)
 {
-	if ([p_obj isKindOfClass: [NSString class]])
-		return MCBrowserValueSetUTF8String(r_value, [(NSString*)p_obj cStringUsingEncoding: NSUTF8StringEncoding]);
-	else if ([p_obj isKindOfClass: [NSNumber class]])
-		return MCNSNumberToBrowserValue((NSNumber*)p_obj, r_value);
-	else if ([p_obj isKindOfClass: [NSDictionary class]])
-		return MCNSDictionaryToBrowserValue((NSDictionary*)p_obj, r_value);
-	else if ([p_obj isKindOfClass: [NSArray class]])
-		return MCNSArrayToBrowserValue((NSArray*)p_obj, r_value);
-	else if ([p_obj isKindOfClass: [WebScriptObject class]])
+	if ([p_obj isKindOfClass: [WebScriptObject class]])
 		return MCWebScriptObjectToBrowserValue((WebScriptObject*)p_obj, r_value);
 	
 	return false;
 }
 
-bool MCNSDictionaryToBrowserDictionary(NSDictionary *p_dictionary, MCBrowserDictionaryRef &r_dict)
-{
-	__block bool t_success;
-	t_success = true;
-	
-	__block MCBrowserDictionaryRef t_dict;
-	t_dict = nil;
-	
-	if (t_success)
-		t_success = MCBrowserDictionaryCreate(t_dict, [p_dictionary count]);
-	
-	if (t_success)
-		[p_dictionary enumerateKeysAndObjectsUsingBlock: ^(id p_key, id p_obj, BOOL *r_stop) {
-			MCBrowserValue t_value;
-			MCBrowserMemoryClear(&t_value, sizeof(MCBrowserValue));
-			
-			t_success = [p_key isKindOfClass: [NSString class]];
-			
-			if (t_success)
-				t_success = MCNSObjectToBrowserValue(p_obj, t_value);
-			
-			if (t_success)
-				t_success = MCBrowserDictionarySetValue(t_dict, [(NSString*)p_key cStringUsingEncoding: NSUTF8StringEncoding], t_value);
-			
-			if (!t_success)
-				*r_stop = YES;
-			
-			MCBrowserValueClear(t_value);
-		}];
-	
-	if (t_success)
-		r_dict = t_dict;
-	else
-		MCBrowserDictionaryRelease(t_dict);
-	
-	return t_success;
-}
-
-bool MCNSArrayToBrowserList(NSArray *p_array, MCBrowserListRef &r_list)
-{
-	__block bool t_success;
-	t_success = true;
-	
-	__block MCBrowserListRef t_list;
-	t_list = nil;
-	
-	if (t_success)
-		t_success = MCBrowserListCreate(t_list, [p_array count]);
-	
-	if (t_success)
-		[p_array enumerateObjectsUsingBlock: ^(id p_obj, NSUInteger p_index, BOOL *r_stop) {
-			MCBrowserValue t_value;
-			MCBrowserMemoryClear(&t_value, sizeof(MCBrowserValue));
-			
-			t_success = MCNSObjectToBrowserValue(p_obj, t_value);
-			
-			if (t_success)
-				t_success = MCBrowserListSetValue(t_list, p_index, t_value);
-			
-			if (!t_success)
-				*r_stop = YES;
-			
-			MCBrowserValueClear(t_value);
-		}];
-	
-	if (t_success)
-		r_list = t_list;
-	else
-		MCBrowserListRelease(t_list);
-	
-	return t_success;
-}
-
-bool MCNSNumberToBrowserValue(NSNumber *p_number, MCBrowserValue &r_value)
-{
-	if ([p_number isEqual:@YES])
-		return MCBrowserValueSetBoolean(r_value, true);
-	else if ([p_number isEqual:@NO])
-		return MCBrowserValueSetBoolean(r_value, false);
-	else if (MCCStringEqual([p_number objCType], @encode(int)))
-		return MCBrowserValueSetInteger(r_value, [p_number intValue]);
-	else
-		return MCBrowserValueSetDouble(r_value, [p_number doubleValue]);
-}
-
-//////////
-
-bool MCNSDictionaryToBrowserValue(NSDictionary *p_dictionary, MCBrowserValue &r_value)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCBrowserDictionaryRef t_dict;
-	t_dict = nil;
-
-	t_success = MCNSDictionaryToBrowserDictionary(p_dictionary, t_dict);
-	
-	if (t_success)
-		t_success = MCBrowserValueSetDictionary(r_value, t_dict);
-	
-	MCBrowserDictionaryRelease(t_dict);
-	
-	return t_success;
-}
-
-bool MCNSArrayToBrowserValue(NSArray *p_array, MCBrowserValue &r_value)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCBrowserListRef t_list;
-	t_list = nil;
-	
-	t_success = MCNSArrayToBrowserList(p_array, t_list);
-	
-	if (t_success)
-		t_success = MCBrowserValueSetList(r_value, t_list);
-	
-	MCBrowserListRelease(t_list);
-	
-	return t_success;
-}
-
-//////////
+////////////////////////////////////////////////////////////////////////////////
 
 bool MCJSObjectToBrowserValue(JSContextRef p_context, JSObjectRef p_value, MCBrowserValue &r_value);
 JSContextRef MCGetCurrentJSContext();
@@ -609,7 +474,7 @@ bool MCWebViewBrowser::GetHTMLText(char *&r_htmltext)
 
 bool MCWebViewBrowser::SetHTMLText(const char *p_htmltext)
 {
-	return ExecLoad(LIBBROWSER_DUMMY_URL, p_htmltext);
+	return LoadHTMLText(p_htmltext, LIBBROWSER_DUMMY_URL);
 }
 
 bool MCWebViewBrowser::GetUserAgent(char*& r_user_agent)
@@ -750,7 +615,7 @@ JSContextRef MCGetCurrentJSContext()
 	{
 		MCBrowserListRef t_args;
 		t_args = nil;
-		/* UNCHECKED */ MCNSArrayToBrowserList(arguments, t_args);
+		/* UNCHECKED */ MCNSArrayToBrowserList(arguments, t_args, MCNSObjectConvertWebScriptObject);
 		
 		m_instance->OnJavaScriptCall([name cStringUsingEncoding: NSUTF8StringEncoding], t_args);
 		
@@ -892,6 +757,28 @@ bool MCWebViewBrowser::GetStringProperty(MCBrowserProperty p_property, char *&r_
 	return true;
 }
 
+bool MCWebViewBrowser::SetIntegerProperty(MCBrowserProperty p_property, int32_t p_value)
+{
+	switch (p_property)
+	{
+		default:
+			break;
+	}
+	
+	return true;
+}
+
+bool MCWebViewBrowser::GetIntegerProperty(MCBrowserProperty p_property, int32_t &r_value)
+{
+	switch (p_property)
+	{
+		default:
+			break;
+	}
+	
+	return true;
+}
+
 bool MCWebViewBrowser::GetRect(MCBrowserRect &r_rect)
 {
 	WebView *t_view;
@@ -925,8 +812,7 @@ bool MCWebViewBrowser::SetRect(const MCBrowserRect &p_rect)
 	return true;
 }
 
-// Browser-specific actions
-bool MCWebViewBrowser::ExecStop()
+bool MCWebViewBrowser::StopLoading()
 {
 	WebView *t_view;
 	if (!GetView(t_view))
@@ -965,7 +851,7 @@ bool MCWebViewBrowser::GoBack()
 	return true;
 }
 
-bool MCWebViewBrowser::ExecReload()
+bool MCWebViewBrowser::Reload()
 {
 	WebView *t_view;
 	if (!GetView(t_view))
@@ -995,7 +881,7 @@ bool MCWebViewBrowser::EvaluateJavaScript(const char *p_script, char *&r_result)
 	return MCCStringClone([t_result cStringUsingEncoding:NSUTF8StringEncoding], r_result);
 }
 
-bool MCWebViewBrowser::ExecLoad(const char *p_url, const char *p_html)
+bool MCWebViewBrowser::LoadHTMLText(const char *p_html, const char *p_url)
 {
 	WebView *t_view;
 	if (!GetView(t_view))

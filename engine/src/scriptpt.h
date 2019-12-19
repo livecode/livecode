@@ -120,7 +120,8 @@ class MCScriptPoint
 
 public:
 	MCScriptPoint(MCScriptPoint &sp);
-	MCScriptPoint(MCObject *, MCHandlerlist *, MCStringRef script);
+    MCScriptPoint(MCObject *, MCHandlerlist *, MCDataRef utf8_script);
+    MCScriptPoint(MCObject *, MCHandlerlist *, MCStringRef utf8_script);
     MCScriptPoint(MCExecContext &ctxt);
     MCScriptPoint(MCExecContext &ctxt, MCStringRef p_string);
 	MCScriptPoint(MCStringRef p_string);

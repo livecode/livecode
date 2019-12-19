@@ -1,0 +1,1 @@
+# Fix page not displayed after setting htmltext of browser widget
