@@ -29,6 +29,99 @@ metadata author is "LiveCode"
 metadata title is "Widget Utilities"
 
 /**
+Summary: Calculates an affine transform that translates coordinates from one rectangle to another
+
+Parameters:
+pSrcRect: The rectangle that defines the coordinate bounds before transform
+pDestRect: The rectangle that defines the coordinate bounds after transform
+
+Example:
+public handler OnPaint() returns nothing
+	// set up the canvas to draw everything into the bottom-right corner of the widget
+	variable tDrawBounds as Rectangle
+	put rectangle [my width / 2, my height / 2, my width / 2, my height / 2] into tDrawBounds
+	
+	clip to tDrawBounds on this canvas
+	transform this canvas by transformFromRectToRect(my bounds, tDrawBounds)
+end handler
+
+Description:
+Returns a transform that can be used to translate coordinates between the
+viewports defined by <pSrcRect> and <pDestRect>.
+*/
+public handler transformFromRectToRect(in pSrcRect as Rectangle, in pDestRect as Rectangle) returns Transform
+	variable tXScale as Real
+	variable tYScale as Real
+	put the width of pDestRect / the width of pSrcRect into tXScale
+	put the height of pDestRect / the height of pSrcRect into tYScale
+	
+	variable tXTranslate as Real
+	variable tYTranslate as Real
+	put the left of pDestRect - (the left of pSrcRect * tXScale) into tXTranslate
+	put the top of pDestRect - (the top of pSrcRect * tYScale) into tYTranslate
+
+	return transform with matrix [tXScale, 0, 0, tYScale, tXTranslate, tYTranslate]
+end handler
+
+/**
+Summary: Returns a rectangle scaled to fill the target rectangle while preserving the aspect ratio
+
+Parameters:
+pSrcRect: The rectangle to scale
+pTargetRect: The rectangle to fit the source rectangle within
+
+Example:
+use com.livecode.library.iconsvg
+
+public handler OnPaint() returns nothing
+	-- get the 'shopping cart' icon from the icon library
+	variable tPathString as String
+ 	put iconSVGPathFromName("shopping cart") into tPathString
+	
+	-- create the path
+	variable tPath as Path
+	put path tPathString into tPath
+	
+	-- scale the path bounds to fill the canvas without stretching
+	variable tPathBounds as Rectangle
+	put the bounding box of tPath into tPathBounds
+	
+	variable tDestRect as Rectangle
+	put constrainRectToRect(tPathBounds, my bounds) into tDestRect
+	
+	-- transform the canvas so that the path fits within the destination rect
+	transform this canvas by transformFromRectToRect(tPathBounds, tDestRect)
+	
+	-- fill the path
+	fill tPath on this canvas
+end handler
+
+Description:
+Returns the largest rectangle that will fit within <pTargetRect> while maintaining
+the aspect ratio of <pSrcRect>, centered within <pTargetRect>
+*/
+public handler constrainRectToRect(in pSrcRect as Rectangle, in pTargetRect as Rectangle) returns Rectangle
+	variable tXScale as Real
+	variable tYScale as Real
+	put the width of pTargetRect / the width of pSrcRect into tXScale
+	put the height of pTargetRect / the height of pSrcRect into tYScale
+	
+	variable tScale as Real
+	put the minimum of tXScale and tYScale into tScale
+	
+	variable tWidth as Real
+	variable tHeight as Real
+	put the width of pSrcRect * tScale into tWidth
+	put the height of pSrcRect * tScale into tHeight
+	
+	variable tLeft as Real
+	variable tTop as Real
+	put the left of pTargetRect + the width of pTargetRect / 2 - tWidth / 2 into tLeft
+	put the top of pTargetRect + the height of pTargetRect / 2 - tHeight / 2 into tTop
+	return rectangle [tLeft, tTop, tLeft + tWidth, tTop + tHeight]
+end handler
+
+/**
 Summary: Scales and translates a path to fit within a rectangle
 
 Parameters:
@@ -59,45 +152,15 @@ Scales and transforms <xPath> so that it fits within <pTargetRect> whilst mainta
 aspect ratio.
 */
 public handler constrainPathToRect(in pTargetRect as Rectangle, inout xPath as Path)
+	variable tBoundingBox as Rectangle
+	put the bounding box of xPath into tBoundingBox
 
-	// Scale the icon
-	variable tBounds
-	put the bounding box of xPath into tBounds
-
-	// Scale appropriately
-	variable tXScale as Real
-	variable tYScale as Real
-
-	put the width of pTargetRect / the width of tBounds into tXScale
-	put the height of pTargetRect / the height of tBounds into tYScale
-
-	if tXScale > tYScale then
-		put tYScale into tXScale
-	else
-		put tXScale into tYScale
-	end if
-
-    scale xPath by [tXScale, tYScale]
-
-	variable tXTranslate as Real
-	variable tYTranslate as Real
-
-    put the bounding box of xPath into tBounds
-
-	put the left of pTargetRect - the left of tBounds into tXTranslate
-	put the top of pTargetRect - the top of tBounds into tYTranslate
-
-    variable tXDiff as Real
-    variable tYDiff as Real
-
-    put the width of pTargetRect - the width of tBounds into tXDiff
-    put the height of pTargetRect - the height of tBounds into tYDiff
-
-	// align center
-	divide tXDiff by 2
-	divide tYDiff by 2
-
-	translate xPath by [tXTranslate + tXDiff, tYTranslate + tYDiff]
+	// compute constraining transform
+	variable tTransform as Transform
+	put transformFromRectToRect(tBoundingBox, constrainRectToRect(tBoundingBox, pTargetRect)) into tTransform
+	
+	// apply transform to path
+	transform xPath by tTransform
 end handler
 
 /**
