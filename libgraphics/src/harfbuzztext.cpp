@@ -19,9 +19,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_SIZES_H
 
 #include <hb.h>
-#include "hb-sk.h"
+#include <hb-ft.h>
 #include <hb-icu.h>
 
 #include <SkTypeface.h>
@@ -29,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SkTypes.h>
 #include <SkFontMgr.h>
 #include <SkUtils.h>
+#include <SkTypeface_FreeType.h>
 
 #include "foundation-unicode.h"
 #include <unicode/uscript.h>
@@ -42,7 +44,7 @@ extern void MCCStringFree(char *p_string);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void skia_get_replacement_glyph(uint16_t p_size, sk_sp<SkTypeface> p_typeface, uint16_t& glyph, uindex_t& advance)
+static void skia_get_replacement_glyph(uint16_t p_size, sk_sp<SkTypeface> p_typeface, uint16_t& glyph, MCGFloat& advance)
 {
     SkPaint paint;
     paint . setTextEncoding(SkPaint::kUTF16_TextEncoding);
@@ -56,7 +58,7 @@ static void skia_get_replacement_glyph(uint16_t p_size, sk_sp<SkTypeface> p_type
     paint . textToGlyphs(&t_replacement, 2, &glyph);
     paint . getTextWidths(&t_replacement, 2, &skWidth, &skBounds);
     
-    advance = (uint16_t)skWidth;
+    advance = (MCGFloat)skWidth;
 }
 
 struct MCGlyphRun
@@ -78,16 +80,16 @@ void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, 
     MCMemoryNewArray(t_count, r_run.positions);
     
 	// IM-2016-03-31: [[ Bug 17281 ]] positions may have negative values, so we need to use signed offsets.
-	index_t x_offset, y_offset;
+	MCGFloat x_offset, y_offset;
 	
     uindex_t run_index = 0;
-    uindex_t advance_y = 0;
-    uindex_t advance_x = 0;
+    MCGFloat advance_y = 0;
+    MCGFloat advance_x = 0;
     
     for (uindex_t i = p_start; i < p_end; i++)
     {
-        x_offset = x_location -> x + p_positions[i] . x_offset / HB_SCALE_FACTOR + advance_x;
-        y_offset = x_location -> y + p_positions[i] . y_offset / HB_SCALE_FACTOR + advance_y;
+        x_offset = x_location -> x + (MCGFloat)p_positions[i] . x_offset / (MCGFloat)HB_SCALE_FACTOR + advance_x;
+        y_offset = x_location -> y + (MCGFloat)p_positions[i] . y_offset / (MCGFloat)HB_SCALE_FACTOR + advance_y;
         r_run . positions[run_index] = SkPoint::Make(x_offset, y_offset);
         
         uint16_t t_glyph = p_infos[i] . codepoint;
@@ -95,12 +97,12 @@ void MCGlyphRunMake(hb_glyph_info_t *p_infos, hb_glyph_position_t *p_positions, 
         {
             r_run . glyphs[run_index] = t_glyph;
 
-            advance_x += p_positions[i] . x_advance / HB_SCALE_FACTOR;
-            advance_y += p_positions[i] . y_advance / HB_SCALE_FACTOR;
+            advance_x += (MCGFloat)p_positions[i] . x_advance / (MCGFloat)HB_SCALE_FACTOR;
+            advance_y += (MCGFloat)p_positions[i] . y_advance / (MCGFloat)HB_SCALE_FACTOR;
         }
         else
         {
-            uindex_t advance;
+            MCGFloat advance;
             skia_get_replacement_glyph(p_size, t_typeface, r_run . glyphs[run_index], advance);
             advance_x += advance;
         }
@@ -146,11 +148,6 @@ void MCGPlatformFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static hb_font_t *HBSkiaFaceToHBFont(MCHarfbuzzSkiaFace *p_typeface)
-{
-    return hb_sk_font_create(p_typeface, nil);
-}
-
 static hb_script_t HBScriptFromText(const unichar_t *p_text, uindex_t p_count)
 {
     UScriptCode t_script;
@@ -173,7 +170,17 @@ static hb_script_t HBScriptFromText(const unichar_t *p_text, uindex_t p_count)
     return hb_icu_script_to_script(t_script);
 }
 
-MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uint32_t p_size)
+struct MCHarfbuzzSkiaFace
+{
+	hb_font_t *hb_font;
+	SkTypeface *sk_typeface;
+	FT_Face ft_face;
+	FT_Size ft_size;
+	FT_Size ft_old_size;
+	bool locked;
+};
+
+MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface)
 {
 	bool t_success;
 	t_success = true;
@@ -183,57 +190,103 @@ MCHarfbuzzSkiaFace *MCHarfbuzzGetFaceForSkiaTypeface(SkTypeface *p_typeface, uin
 	
 	void *t_key;
 	t_key = nil;
-    
-    uint32_t t_id;
-    t_id = p_typeface -> uniqueID();
-    
-    // AL-2014-10-08: [[ Bug 13542 ]] Retrieve harfbuzz face from cache if possible
+	
+	uint32_t t_id;
+	t_id = p_typeface -> uniqueID();
+	
+	// AL-2014-10-08: [[ Bug 13542 ]] Retrieve harfbuzz face from cache if possible
 	if (t_success)
-    {
+	{
 		t_success = MCMemoryNew(sizeof(t_id), t_key);
-        MCMemoryCopy(t_key, &t_id, sizeof(t_id));
-    }
+		MCMemoryCopy(t_key, &t_id, sizeof(t_id));
+	}
 	
 	if (t_success)
 	{
-        MCHarfbuzzSkiaFace *t_hb_sk_face;
-        MCHarfbuzzSkiaFace **t_hb_sk_face_ptr;
-        // IM-2015-10-02: [[ Bug 14786 ]] Make sure we store & dereference the *pointer* to MCHarfbuzzSkiaFace
-        //    instead of its contents.
-        t_hb_sk_face_ptr = (MCHarfbuzzSkiaFace **)MCGCacheTableGet(s_hb_face_cache, t_key, sizeof(t_id));
-        if (t_hb_sk_face_ptr != nil)
+		MCHarfbuzzSkiaFace *t_hb_sk_face;
+		MCHarfbuzzSkiaFace **t_hb_sk_face_ptr;
+		// IM-2015-10-02: [[ Bug 14786 ]] Make sure we store & dereference the *pointer* to MCHarfbuzzSkiaFace
+		//    instead of its contents.
+		t_hb_sk_face_ptr = (MCHarfbuzzSkiaFace **)MCGCacheTableGet(s_hb_face_cache, t_key, sizeof(t_id));
+		if (t_hb_sk_face_ptr != nil)
 		{
-            t_hb_sk_face = *t_hb_sk_face_ptr;
-            // AL-2014-10-27: [[ Bug 13802 ]] Make sure to set the size when we retrieve the cached face
-            t_hb_sk_face -> skia_face -> size = p_size;
+			t_hb_sk_face = *t_hb_sk_face_ptr;
+			// AL-2014-10-27: [[ Bug 13802 ]] Make sure to set the size when we retrieve the cached face
 			MCMemoryDelete(t_key);
 			return t_hb_sk_face;
 		}
-        
-        hb_skia_face_t *t_face;
-        t_face = new (nothrow) hb_skia_face_t;
-            
-        t_face -> typeface = p_typeface;
-        t_face -> size = p_size;
-        
-        t_hb_sk_face = new (nothrow) MCHarfbuzzSkiaFace;
-        t_hb_sk_face -> face = nil;
-        t_hb_sk_face -> skia_face = nil;
 
-        hb_sk_set_face(t_hb_sk_face, t_face);
-        t_hb_sk_face -> skia_face = t_face;
-        p_typeface -> ref();
-        
-        // IM-2015-10-02: [[ Bug 14786 ]] Make sure we store & dereference the *pointer* to MCHarfbuzzSkiaFace
-        //    instead of its contents.
-        MCGCacheTableSet(s_hb_face_cache, t_key, sizeof(t_id), &t_hb_sk_face, sizeof(MCHarfbuzzSkiaFace*));
-        return t_hb_sk_face;
+		FT_Face t_ft_face;
+		t_ft_face = SkTypeface_GetFTFace(p_typeface);
+
+		FT_Size t_ft_size;
+		/* UNCHECKED */ FT_Err_Ok == FT_New_Size(t_ft_face, &t_ft_size);
+
+		hb_font_t *t_hb_ft_font;
+		t_hb_ft_font = hb_ft_font_create(t_ft_face, nil);
+
+		t_hb_sk_face = new (nothrow) MCHarfbuzzSkiaFace;
+		t_hb_sk_face->hb_font = t_hb_ft_font;
+		t_hb_sk_face->ft_face = t_ft_face;
+		t_hb_sk_face->ft_size = t_ft_size;
+		t_hb_sk_face->sk_typeface = p_typeface;
+		t_hb_sk_face->locked = false;
+
+		p_typeface -> ref();
+		
+		// IM-2015-10-02: [[ Bug 14786 ]] Make sure we store & dereference the *pointer* to MCHarfbuzzSkiaFace
+		//    instead of its contents.
+		MCGCacheTableSet(s_hb_face_cache, t_key, sizeof(t_id), &t_hb_sk_face, sizeof(MCHarfbuzzSkiaFace*));
+		return t_hb_sk_face;
 	}
 	
 	if (!t_success)
 		MCMemoryDelete(t_key);
-    
+	
 	return nil;
+}
+
+bool MCHarfbuzzLockFont(MCHarfbuzzSkiaFace *p_face, uint16_t p_size, hb_font_t *&r_font)
+{
+	if (p_face == nil)
+		return false;
+
+	if (p_face->locked)
+		return false;
+
+	bool t_success;
+	t_success = true;
+
+	p_face->ft_old_size = p_face->ft_face->size;
+	if (t_success)
+		t_success = FT_Err_Ok == FT_Activate_Size(p_face->ft_size);
+	if (t_success)
+		t_success = FT_Err_Ok == FT_Set_Char_Size(p_face->ft_face, p_size * HB_SCALE_FACTOR, 0, 0, 0);
+
+	if (t_success)
+	{
+		FT_Reference_Face(p_face->ft_face);
+
+		hb_font_set_scale(p_face->hb_font, HB_SCALE_FACTOR, HB_SCALE_FACTOR);
+		hb_font_set_ppem (p_face->hb_font, p_face->ft_size->metrics.x_ppem, p_face->ft_size->metrics.y_ppem);
+		p_face->locked = true;
+
+		r_font = p_face->hb_font;
+	}
+
+	return t_success;
+}
+
+void MCHarfbuzzUnlockFont(MCHarfbuzzSkiaFace *p_face)
+{
+	if (p_face == nil)
+		return;
+	if (!p_face->locked)
+		return;
+
+	/* UNCHECKED */ FT_Err_Ok == FT_Activate_Size(p_face->ft_old_size);
+	FT_Done_Face(p_face->ft_face);
+	p_face->locked = false;
 }
 
 // Check if the font supports all glyphs in a given cluster from shape info
@@ -284,11 +337,15 @@ static uindex_t shape_text_and_add_to_glyph_array(const unichar_t* p_text, uinde
         return 0;
     
     MCHarfbuzzSkiaFace *t_hb_sk_face;
-    t_hb_sk_face = MCHarfbuzzGetFaceForSkiaTypeface(t_typeface, p_font . size);
+    t_hb_sk_face = MCHarfbuzzGetFaceForSkiaTypeface(t_typeface);
     
     if (t_hb_sk_face == nil)
         return 0;
     
+    hb_font_t *t_hb_font;
+    t_hb_font = nil;
+    /* UNCHECKED */ MCHarfbuzzLockFont(t_hb_sk_face, p_font.size, t_hb_font);
+
     // Set up the HarfBuzz buffer
     hb_buffer_t *buffer = hb_buffer_create();
     hb_buffer_set_unicode_funcs(buffer, hb_icu_get_unicode_funcs());
@@ -298,7 +355,7 @@ static uindex_t shape_text_and_add_to_glyph_array(const unichar_t* p_text, uinde
     
     hb_buffer_add_utf16(buffer, p_text, p_char_count, 0, p_char_count);
     
-    hb_shape(HBSkiaFaceToHBFont(t_hb_sk_face), buffer, NULL, 0);
+    hb_shape(t_hb_font, buffer, NULL, 0);
     
     uindex_t glyph_count = hb_buffer_get_length(buffer);
     hb_glyph_info_t *glyph_info = hb_buffer_get_glyph_infos(buffer, 0);
@@ -376,6 +433,9 @@ static uindex_t shape_text_and_add_to_glyph_array(const unichar_t* p_text, uinde
     }
     
     hb_buffer_destroy(buffer);
+
+    MCHarfbuzzUnlockFont(t_hb_sk_face);
+
     return t_run_count;
 }
 
