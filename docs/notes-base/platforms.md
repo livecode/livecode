@@ -52,6 +52,7 @@ The Mac engine supports:
 * 10.12.x (Sierra)
 * 10.13.x (High Sierra)
 * 10.14.x (Mojave)
+* 10.15.x (Catalina)
 
 ## iOS
 iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcode is installed and has been set in LiveCode *Preferences* (in the *Mobile Support* pane).
@@ -67,12 +68,22 @@ on a wider range of iOS simulators. For instance, on MacOS 10.12
 (Sierra), you can add *Xcode 8.2* in the *Mobile Support* preferences,
 to let you test your stack on the *iOS Simulator 10.2*.
 
-We currently support deployment for the following versions of iOS:
+We currently support building against the following versions of the iOS SDK:
 
-* 10.2
-* 11.2
-* 12.1
-* 13.1
+* 10.2 (included in Xcode 8.2)
+* 11.2 (included in Xcode 9.2)
+* 12.1 (included in Xcode 10.1)
+* 13.1 (included in Xcode 11.1)
+
+Note that the minimum iOS version of the deployment target can be set from the iOS
+standalone settings, and it is not related to the version of the iOS SDK used to build
+the iOS standalone.
+
+For example, if you use Xcode 10.1 (thus iOS SDK 12.1) to build the standalone, and in
+the iOS standalone settings you have chosen "10 or later" for the deployment target, then
+the standalone will run on all devices running iOS 10 or later. In other words, you do
+*not* need to build the app using the latest Xcode version, if you want your app to run on
+devices running the latest iOS version.
 
 ## Android
 
@@ -82,7 +93,7 @@ also to deploy it on an Android device or simulator from the IDE.
 
 Android deployment is possible from Windows, Linux and Mac OSX.
 
-The Android engine supports devices using ARMv7 or ARMv8 processors.
+The Android engine supports devices using armv7, arm64, x86 and x86_64 processors.
 It will run on the following versions of Android:
 
 * 4.1-4.3 (Jelly Bean)
@@ -91,6 +102,8 @@ It will run on the following versions of Android:
 * 6.0 (Marshmallow)
 * 7.x (Nougat)
 * 8.x (Oreo)
+* 9.0 (Pie)
+* 10.0 (X)
 
 To enable deployment to Android devices, you need to download the
 [Android SDK](https://developer.android.com/sdk/index.html#Other), and
