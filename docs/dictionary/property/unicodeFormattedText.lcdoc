@@ -17,12 +17,7 @@ Introduced: 4.6
 Deprecated:
 In LiveCode 7.0 the language was changed to handle unicode
 transparently. This means that language functionality which previously
-aided unicode text manipulation is no longer required. This property
-should not be used in new code; simply get the formattedText as normal.
-The following are now equivalent:
-
-    get the unicodeFormattedText of field 1
-    get textEncode(the formattedText of field 1, "UTF16")
+aided unicode text manipulation is no longer required.
 
 OS: mac, windows, linux, ios, android
 
@@ -56,6 +51,13 @@ When you set a field's <unicodeFormattedText> property, the string is
 unwrapped before being put in the field. Double end-of-line characters
 are converted to a single end-of-line character, and single end-of-line
 characters are converted to spaces.
+
+> *Important:* As this property is deprecated, it should not be used in 
+> new code; simply get the formattedText as normal. The following are
+> now equivalent:
+
+    get the unicodeFormattedText of field 1
+    get textEncode(the formattedText of field 1, "UTF-16")
 
 References: formattedText (property), dontWrap (property)
 
