@@ -5,7 +5,7 @@ Synonyms: soap, simple object access protocol
 Type: glossary
 
 Description:
-Simple Object Access <Protocol>. An <XML> -based set of rules for
+Simple Object Access <protocol|Protocol>. An <XML>-based set of rules for
 applications to access and use web services.
 
 References: protocol (glossary), XML (glossary)

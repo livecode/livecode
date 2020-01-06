@@ -34,8 +34,8 @@ specify that only a portion of the oval, forming an arc, should be
 drawn. 
 
 The <startAngle> determines the starting <point> of the arc. The
-<angleInDegrees> zero is at the right edge, 3 o'clock. Increasing the
-<angleInDegrees> moves the starting <point> counter-clockwise around the
+*angleInDegrees* zero is at the right edge, 3 o'clock. Increasing the
+*angleInDegrees* moves the starting <point> counter-clockwise around the
 arc. 
 
 The global setting of the <arcAngle> <property> <control|controls> the
@@ -47,7 +47,7 @@ For a graphic oval, the angle is the same as the <startAngle>. Changing
 one changes the other.
 
 References: global (command), property (glossary), paint tool (glossary),
-integer (keyword), point (keyword), graphic (keyword), control (object),
+control (glossary), integer (keyword), point (keyword), graphic (keyword),
 properties (property), arcAngle (property), startAngle (property)
 
 Tags: ui
