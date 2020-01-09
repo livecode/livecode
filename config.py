@@ -31,11 +31,11 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'x86-android-ndk16r15',
     'x86_64-android-ndk16r15',
     'universal-mac-macosx10.9', # Minimum deployment target
-    'universal-ios-iphoneos13.1',
+    'universal-ios-iphoneos13.3',
     'universal-ios-iphoneos12.1',
     'universal-ios-iphoneos11.2',
     'universal-ios-iphoneos10.2',
-    'universal-ios-iphonesimulator13.1',
+    'universal-ios-iphonesimulator13.3',
     'universal-ios-iphonesimulator12.1',
     'universal-ios-iphonesimulator11.2',
     'universal-ios-iphonesimulator10.2',
