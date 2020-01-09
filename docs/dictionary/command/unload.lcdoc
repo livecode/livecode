@@ -42,9 +42,9 @@ Use the <unload> <command> to release memory used by a <cache|cached>
 If the <cachedURL> is still being <download|downloaded> with the <load>
 <command>, the <unload> command cancels the <download>.
 
-The <unload> <command> can be used to cancel any <non-blocking> <FTP> or
-<HTTP> file transfer in progress, but it does not cancel file transfers
-that were initiated by using a <URL(keyword)> <container> in an
+The <unload> <command> can be used to cancel any <non-blocking> <ftp|FTP> 
+or <http|HTTP> file transfer in progress, but it does not cancel file 
+transfers that were initiated by using a <URL(keyword)> <container> in an
 <expression> or by putting something into a <URL(keyword)>.
 
 The <unload> <command> removes the <cachedURL> from the <URLStatus>
