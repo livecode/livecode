@@ -72,7 +72,7 @@ We currently support deployment for the following versions of iOS:
 * 10.2
 * 11.2
 * 12.1
-* 13.3
+* 13.2
 
 ## Android
 
