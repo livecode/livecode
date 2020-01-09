@@ -7,7 +7,7 @@ Syntax: the version
 Syntax: version()
 
 Summary:
-<return|Returns> the <application engine's> version number.
+<return|Returns> the <engine|application engine's> version number.
 
 Introduced: 1.0
 
@@ -40,6 +40,5 @@ LiveCode that was used to create it.
 
 References: function (control structure), environment (function),
 libURLVersion (function), buildNumber (function), application (glossary),
-standalone application (glossary), return (glossary), engine (glossary),
-application engine (glossary)
+standalone application (glossary), return (glossary), engine (glossary)
 
