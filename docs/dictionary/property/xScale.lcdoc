@@ -5,7 +5,7 @@ Type: property
 Syntax: set the xScale of <EPSObject> to <number>
 
 Summary:
-Specifies the ratio of the width of an <EPS|EPS object's> <PostScript>
+Specifies the ratio of the width of an <EPS|EPS object's> <postScript>
 bounding box to the <object|object's> screen width.
 
 Introduced: 1.0
