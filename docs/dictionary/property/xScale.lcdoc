@@ -25,12 +25,13 @@ Use the <xScale> <property> to control an <EPS|EPS object's> screen
 appearance. 
 
 The <number> 1 indicates no scaling--that is, the <EPS|EPS object's>
-width is the same as the width specified by the <PostScript> code it
-contains. Numbers greater than one indicate that the <object|object's>
-width is less than the <PostScript> width; the screen <object(glossary)>
-is scaled down. Numbers less than one indicate that the
-<object|object's> width is greater than the <PostScript> width, and the
-screen <object(glossary)> is scaled up from the <PostScript>.
+width is the same as the width specified by the <postScript|PostScript> 
+code it contains. Numbers greater than one indicate that the 
+<object|object's> width is less than the <postScript|PostScript> width; 
+the screen <object(glossary)> is scaled down. Numbers less than one 
+indicate that the <object|object's> width is greater than the 
+<postScript|PostScript> width, and the screen <object(glossary)> is 
+scaled up from the <postScript|PostScript>.
 
 In geometric terms, xScale = xExtent/width.
 
