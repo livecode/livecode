@@ -42,11 +42,11 @@ been scrolled.
 Setting the <vScroll> of a <field> or <group> causes a <scrollbarDrag>
 <message> to be sent to the <field> or <group>.
 
->*Cross-platform note:* On <Mac OS> and <OS X|OS X systems>, the <menu
-> bar> appears at the top of the screen, rather than inside the stack
-> window. If a <stack|stack's> <editMenus> <property> is set to false
-> and the <stack> contains a <menu bar>, the window is scrolled down and
-> resized so that the <menu bar> <group> is not visible in the window.
+>*Cross-platform note:* On <Mac OS> and <OS X|OS X systems>, the 
+> <menu bar> appears at the top of the screen, rather than inside the 
+> stack window. If a <stack|stack's> <editMenus> <property> is set to 
+> false and the <stack> contains a <menu bar>, the window is scrolled down 
+> and resized so that the <menu bar> <group> is not visible in the window.
 > Because of this, on <Mac OS> and <OS X|OS X systems>, the <vScroll> of
 > a <stack> reports the amount the <stack> has been scrolled down to
 > hide a <menu bar> <group>.
