@@ -581,6 +581,23 @@ bool MCGFontGetPlatformFontList(MCProperListRef &r_fonts);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct MCGGlyphInfo
+{
+	uindex_t codepoint;
+	uindex_t cluster;
+
+	MCGFloat x_offset;
+	MCGFloat y_offset;
+	MCGFloat x_advance;
+	MCGFloat y_advance;
+};
+
+typedef bool (*MCGFontLayoutTextCallback)(void *context, const MCGFont &p_font, const MCGGlyphInfo *p_glyphs, uindex_t p_glyph_count, const unichar_t *p_chars, uindex_t p_char_count);
+
+bool MCGFontLayoutText(const MCGFont &p_font, const unichar_t *p_text, uindex_t p_char_count, bool p_rtl, MCGFontLayoutTextCallback p_callback, void *p_context);
+
+////////////////////////////////////////////////////////////////////////////////
+
 inline bool MCGPointIsEqual(const MCGPoint &p_a, const MCGPoint &p_b)
 {
 	return p_a.x == p_b.x && p_a.y == p_b.y;

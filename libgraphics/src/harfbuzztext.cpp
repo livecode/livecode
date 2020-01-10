@@ -654,6 +654,62 @@ bool MCGContextMeasurePlatformTextImageBounds(MCGContextRef self, const unichar_
 	/* UNCHECKED */ MCHarfbuzzShape(p_text, p_length / 2, false, p_font, false, _measure_image_bounds_callback, &t_context);
 
 	r_bounds = MCGRectangleFromSkRect(t_context.bounds);
+
 	return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct _layout_text_context_t
+{
+	MCGFontLayoutTextCallback callback;
+	void *context;
+	const unichar_t *chars;
+	bool success;
+};
+
+static bool _layout_text_callback(void *context, const hb_glyph_info_t *p_infos, const hb_glyph_position_t *p_positions, uindex_t p_glyph_count, const unichar_t *p_chars, uindex_t p_char_count, const MCGFont &p_font)
+{
+	_layout_text_context_t *self;
+	self = (_layout_text_context_t*)context;
+
+	MCAutoArray<MCGGlyphInfo> t_info;
+	if (!t_info.New(p_glyph_count))
+	{
+		self->success = false;
+		return false;
+	}
+
+	// Glyph cluster points to a char position in the original string
+	// Calculate the offset of this substring so we can maintain the 
+	// relationship from glyph to char index
+	uindex_t t_char_offset;
+	t_char_offset = p_chars - self->chars;
+
+	for (uindex_t i = 0; i < p_glyph_count; i++)
+	{
+		t_info[i].codepoint = p_infos[i].codepoint;
+		t_info[i].cluster = p_infos[i].cluster - t_char_offset;
+		t_info[i].x_offset = (MCGFloat)p_positions[i].x_offset / (MCGFloat)HB_SCALE_FACTOR;
+		t_info[i].y_offset = (MCGFloat)p_positions[i].y_offset / (MCGFloat)HB_SCALE_FACTOR;
+		t_info[i].x_advance = (MCGFloat)p_positions[i].x_advance / (MCGFloat)HB_SCALE_FACTOR;
+		t_info[i].y_advance = (MCGFloat)p_positions[i].y_advance / (MCGFloat)HB_SCALE_FACTOR;
+	}
+
+	return self->callback(self->context, p_font, t_info.Ptr(), t_info.Size(), p_chars, p_char_count);
+}
+
+bool MCGFontLayoutText(const MCGFont &p_font, const unichar_t *p_text, uindex_t p_char_count, bool p_rtl, MCGFontLayoutTextCallback p_callback, void *p_context)
+{
+	_layout_text_context_t t_context;
+	t_context.callback = p_callback;
+	t_context.context = p_context;
+	t_context.success = true;
+
+	bool t_success;
+	t_success = MCHarfbuzzShape(p_text, p_char_count, p_rtl, p_font, false, _layout_text_callback, &t_context);
+		return t_success && t_context.success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
