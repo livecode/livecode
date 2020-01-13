@@ -23,29 +23,31 @@ end deployUsableIosSdk
 
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
 function deployGetIphoneOSes
+   // tList will be an array with elements of the form:
+   // SDK_version,Xcode_version,Simulator_version
    local tList, tMacVersion
    put deploySanitizeSystemVersion() into tMacVersion
    // Xcode 8.2 can be installed from Mac OSX 10.11.0 onwards
    if tMacVersion < 101100 then
       answer error "To deploy to an iOS device or simulator, you need to upgrade your Mac to at least Mac OSX 10.11.0"
    else if tMacVersion < 101200 then
-      put "10.2,8.2" into tList[1]
+      put "10.2,8.2,10.2" into tList[1]
    else if tMacVersion < 101206 then
       put empty into tList[1]
       answer error "To use Xcode 9.2, you need to upgrade your Mac to MacOS Sierra 10.12.6"
    else if tMacVersion < 101300 then
-      put "11.2,9.2" into tList[1]
+      put "11.2,9.2,11.2" into tList[1]
    else if tMacVersion < 101304 then
       put empty into tList[1]
       answer error "To use Xcode 10.1, you need to upgrade your Mac to MacOS High Sierra 10.13.4"
    else if tMacVersion < 101400 then
-      put "12.1,10.1" into tList[1]
+      put "12.1,10.1,12.1" into tList[1]
    else if tMacVersion < 101404 then
       put empty into tList[1]
       answer error "To use Xcode 11.3, you need to upgrade your Mac to MacOS Mojave 10.14.4"
    else
       // Xcode 11.3 requires a Mac running Mac OS 10.14.4 or later
-      put "13.2,11.3" into tList[1]
+      put "13.2,11.3,13.3" into tList[1]
    end if
    
    return tList
@@ -92,10 +94,10 @@ function deployListTargets
    
    repeat for each key tKey in sDeploySimulators
       if tKey is among the items of tAvailableSimEngines then
-         put "iPad Simulator" && tKey & return after tTargets
-      end if
-      if tKey is among the items of tAvailableSimEngines then
-         put "iPhone Simulator" && tKey & return after tTargets
+         local tSimVersion
+         put revIDEDeployIOSGetSimulatorVersionFromSDKVersion(tKey) into tSimVersion
+         put "iPad Simulator" && tSimVersion & return after tTargets
+         put "iPhone Simulator" && tSimVersion & return after tTargets
       end if
    end repeat
    delete the last char of tTargets
@@ -104,6 +106,35 @@ function deployListTargets
    
    return tTargets
 end deployListTargets
+
+private function revIDEDeployIOSGetSimulatorVersionFromSDKVersion pSDkVersion
+   local tTriplet
+   put deployGetIphoneOSes() into tTriplet 
+   // tTriplet is an array with elements of the form:
+   // SDK_version,Xcode_version,Simulator_version
+   repeat for each element tElement in tTriplet
+      if item 1 of tElement is pSDkVersion then
+         return item 3 of tElement
+      end if
+   end repeat
+   
+   throw "No Simulator found for iOS SDK:" && pSDkVersion
+end revIDEDeployIOSGetSimulatorVersionFromSDKVersion
+
+private function revIDEDeployIOSGetSDKVersionFromSimulatorVersion pSimVersion
+   local tTriplet
+   put deployGetIphoneOSes() into tTriplet 
+   // tTriplet is an array with elements of the form:
+   // SDK_version,Xcode_version,Simulator_version
+   repeat for each element tElement in tTriplet
+      if item 3 of tElement is pSimVersion then
+         return item 1 of tElement
+      end if
+   end repeat
+   
+   throw "No SDK found for iOS Simulator:" && pSimVersion
+end revIDEDeployIOSGetSDKVersionFromSimulatorVersion
+
 
 -- Invoked when the Deploy/Simulate button is clicked on the menubar
 command deployDo pTargetStack, pSimulator, pAppBundle
@@ -170,6 +201,7 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       if pAppBundle is empty then
          put tTempFolder & slash & tSettings["name"] & ".app" into tTempAppBundle
          try
+            put revIDEDeployIOSGetSdkVersionFromSimulatorVersion(tVersion) into tVersion
             dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
                   pTargetStack, tTempAppBundle, "Simulator" && tVersion, tSettings
          catch tException
@@ -222,7 +254,9 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       
       -- Next try to switch the sdk
       try
-         revIPhoneSetSimulatorSDK tVersion
+         local tSimVersion
+         put revIDEDeployIOSGetSimulatorVersionFromSDKVersion(tVersion) into tSimVersion
+         revIPhoneSetSimulatorSDK tSimVersion
       catch tException
          put "Unable to start simulator:" && tException into tError
       end try
@@ -275,8 +309,8 @@ command deployDo pTargetStack, pSimulator, pAppBundle
          put true into sDeploySimulatorIsRunning
          -- Make sure we bring the simulator to front
          --do "tell application" && quote & "iPhone SImulator" & quote & return & \
-               --"activate" & return & \
-               --"end tell" as "applescript" 
+         --"activate" & return & \
+         --"end tell" as "applescript" 
       else if sDeploySimulationStatus begins with "error:" then
          put "Unable to start simulation:" && word 2 to -1 of sDeploySimulationStatus into tError
       end if
