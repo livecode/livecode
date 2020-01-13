@@ -5,11 +5,11 @@ Synonyms: unicode
 Type: glossary
 
 Description:
-A standard for representing <double-byte character|double-byte characters>,
-also called UTF-16. Unicode contains enough <character|characters> and
-symbols to write most human languages.
+A standard for representing 2-byte characters, also called UTF-16. 
+Unicode contains enough <character|characters> and symbols to write 
+most human languages.
 
-References: character (glossary), double-byte character (glossary)
+References: character (glossary)
 
 Tags: text processing
 
