@@ -461,7 +461,8 @@ bool MCWidget::getprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_RECTANGLE:
 		case P_TOOL_TIP:
 		case P_UNICODE_TOOL_TIP:
-		case P_LAYER_MODE:
+        case P_LAYER_MODE:
+        case P_LAYER_CLIP_RECT:
             
         // Development mode only
         case P_REV_AVAILABLE_HANDLERS:
@@ -570,6 +571,7 @@ bool MCWidget::setprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_whi
 		case P_LAYER_MODE:
         case P_ENABLED:
         case P_DISABLED:
+        case P_LAYER_CLIP_RECT:
             
         case P_KIND:
         case P_THEME_CONTROL_TYPE:
