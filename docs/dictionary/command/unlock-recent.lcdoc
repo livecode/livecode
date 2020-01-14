@@ -28,7 +28,7 @@ When either the user or a handler navigates to a card, that card is
 placed on the recent cards list, and the user can return to it with the
 <go> command or by choosing View → Go Recent from the menubar.
 
-<unlock recent> <command> sets the <lockRecent> <property> to false.
+The <unlock recent> <command> sets the <lockRecent> <property> to false.
 When all pending <handler|handlers> are finished <execute|executing>,
 the <lockRecent> <property> is automatically set to false.
 
