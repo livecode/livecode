@@ -42,3 +42,18 @@ on TestReplace
    replace tNeedle with tNewNeedle in tHaystack
    TestAssert "replace decomposed with base in decomposed", tHaystack is "hello"
 end TestReplace
+
+on TestReplace_Bug22536
+   try
+      local tPattern
+      put "и" into tPattern
+      put tPattern after tPattern
+      get the number of chars in tPattern
+      get textDecode("foobardsdadadasdasd", "native")
+      if true then
+         replace tPattern with empty in it
+      end if
+   catch tError
+   end try
+   TestAssert "replace never-native unciode in native string", tError is empty
+end TestReplace_Bug22536
