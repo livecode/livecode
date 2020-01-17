@@ -52,11 +52,11 @@ If the style of the <scrollbar(keyword)> is scrollbar or progress, the
 maximum value of the <thumbPosition> is the
 <scrollbar(object)|scrollbar's> <endValue> minus the <thumbSize>.
 
-References: scrollbar thumb (glossary), property (glossary),
-scrollbar (keyword), default (keyword), scrollbarLineInc (message),
-scrollbarBeginning (message), scrollbar (object), control (object),
-endValue (property), properties (property), thumbSize (property),
-startValue (property)
+References: control (glossary), scrollbar thumb (glossary), 
+property (glossary), scrollbar (keyword), default (keyword), 
+scrollbarLineInc (message), scrollbarBeginning (message), 
+scrollbar (object), endValue (property), properties (property), 
+thumbSize (property), startValue (property)
 
 Tags: ui
 

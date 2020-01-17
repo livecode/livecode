@@ -107,10 +107,9 @@ These two statements are equivalent:
 
 References: target (function), property (glossary), keyword (glossary),
 binary file (glossary), stack menu (glossary), button menu (glossary),
-button (keyword), image (keyword), field (keyword),
-menu keyword (keyword), string (keyword), menu (keyword), stack (object),
-button (object), menuName (property), style (property),
-unicodeText (property), paintCompression (property)
+button (keyword), image (keyword), field (keyword), string (keyword), 
+menu (keyword), stack (object), button (object), menuName (property), 
+style (property), unicodeText (property), paintCompression (property)
 
 Tags: text processing
 
