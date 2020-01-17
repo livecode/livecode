@@ -28,7 +28,7 @@ field "Old Password" &lt;&gt; field "Password"
 Parameters:
 value1:
 The operands value1 and value2 can be numbers, literal strings of
-characters (delimited with double quotes), or any sources of value. :
+characters (delimited with double quotes), or any sources of value.
 
 value2:
 
@@ -39,14 +39,15 @@ compare two <string|strings>.
 
 When comparing strings, the  &lt;&gt; operator compares the two values
 character by character, using the ASCII value of each character. If the
-caseSensitive <property> is true, the comparison between two
+<caseSensitive> <property> is true, the comparison between two
 <string|strings> treats uppercase letters as coming before lowercase
-letters, so "A" &lt;&gt; "a". If the caseSensitive <property> is false,
+letters, so "A" &lt;&gt; "a". If the <caseSensitive> <property> is false,
 the comparison is not <case-sensitive>, so "a" is considered equivalent
 to "A".
 
 References: property (glossary), operator (glossary),
 case-sensitive (glossary), value (glossary), return (glossary),
 string (glossary), contains (operator), = (operator), &lt; (operator),
-&gt; (operator)
+&lt;= (operator), &gt; (operator), &gt;= (operator), 
+caseSensitive (property)
 
