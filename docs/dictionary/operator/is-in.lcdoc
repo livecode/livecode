@@ -46,7 +46,7 @@ The <is in> <operator> is the logical inverse of the <is not in>
 
 References: evaluate (glossary), string (glossary), operator (glossary),
 string (keyword), is not in (operator), contains (operator),
-is among (operator)
+is among (operator), caseSensitive (property)
 
 Tags: text processing
 

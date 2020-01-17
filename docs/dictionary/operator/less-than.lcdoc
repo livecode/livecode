@@ -48,10 +48,10 @@ other, the missing <characters> are considered to have lower
 
 If the two values are equal, firstValue  secondValue evaluates to false.
 
-If the caseSensitive <property> is true, the comparison between two
+If the <caseSensitive> <property> is true, the comparison between two
 <string(glossary)|strings> treats uppercase letters as coming before
-lowercase letters, so "A" &lt; "a". If the caseSensitive <property> is
-false, the comparison is not <case-sensitive>, so "a" is considered
+lowercase letters, so "A" &lt; "a". If the <caseSensitive> <property> 
+is false, the comparison is not <case-sensitive>, so "a" is considered
 equivalent to "A".
 
 References: min (function), value (function), property (glossary),
@@ -59,7 +59,7 @@ ASCII (glossary), value (glossary), return (glossary),
 operator (glossary), string (glossary), character set (glossary),
 case-sensitive (glossary), string (keyword), character (keyword),
 characters (keyword), &lt;&gt; (operator), &lt;= (operator),
-&gt; (operator)
+&gt; (operator), caseSensitive (property)
 
 Tags: math
 

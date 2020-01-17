@@ -30,7 +30,9 @@ Use the <is not in> <operator> to find out whether a <string> does not
 contain a substring.
 
 The expression
-firstString is not in secondString
+
+   firstString is not in secondString
+
 is equivalent to
 
     not (secondString contains firstString)
@@ -40,7 +42,8 @@ The <is not in> <operator> is the logical inverse of the <is in>
 <operator>. When one is true, the other is false.
 
 References: evaluate (glossary), string (glossary), operator (glossary),
-string (keyword), contains (operator), is in (operator)
+string (keyword), contains (operator), is in (operator), 
+caseSensitive (property)
 
 Tags: text processing
 

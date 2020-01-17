@@ -43,7 +43,7 @@ References: operator (glossary), operation (glossary),
 evaluate (glossary), string (glossary), string (keyword),
 characters (keyword), = (operator), &lt;&gt; (operator), is in (operator),
 is among (operator), is not among (operator), ends with (operator),
-is not in (operator)
+is not in (operator), caseSensitive (property)
 
 Tags: text processing
 

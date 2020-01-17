@@ -37,7 +37,7 @@ The <is not among> operator is the logical inverse of the is among
 operator. When one is true, the other is false.
 
 References: characters (keyword), is among the keys of (operator),
-contains (operator), is among (operator)
+contains (operator), is among (operator), caseSensitive (property)
 
 Tags: text processing
 
