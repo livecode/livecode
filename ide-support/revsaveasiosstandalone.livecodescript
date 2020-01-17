@@ -904,7 +904,8 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
          "ipad retina icon,ipad,72x72,2x,Icon-App-72x72@2x.png" & return & \
          "iOS 7 ipad icon,ipad,76x76,1x,Icon-App-76x76@1x.png" & return & \
          "iOS 7 ipad retina icon,ipad,76x76,2x,Icon-App-76x76@2x.png" & return & \
-         "iPad Pro 12.9 icon,ipad,83.5x83.5,2x,Icon-App-83.5x83.5@2x.png" \
+         "iPad Pro 12.9 icon,ipad,83.5x83.5,2x,Icon-App-83.5x83.5@2x.png" & return & \
+         "iPad Pro 11 icon,ipad,83.5x83.5,2x,Icon-App-83.5x83.5@2x.png" \
          into sIconsList
    
    local tAssetsFolder, tAppIconFolder
@@ -992,6 +993,7 @@ private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle
    repeat for each line tType in ("iphone splash" & return & "retina splash,@2x" & return & "ipad portrait splash,-Portrait" & \
          return & "ipad landscape splash,-Landscape" & return & "ipad retina portrait splash,-Portrait@2x" & return & "ipad retina landscape splash,-Landscape@2x" & \
          return & "ipad pro 12.9 portrait splash,-iPadProPortrait@2x" & return & "ipad pro 12.9 landscape splash,-iPadProLandscape@2x" & \
+         return & "ipad pro 11 portrait splash,-iPadPro11Portrait@2x" & return & "ipad pro 11 landscape splash,-iPadPro11Landscape@2x" & \
          return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-667h@2x" & \
          return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x" & \
          return & "iphone X portrait splash,-812h@3x" & return & "iphone X landscape splash,-375h@3x" & \

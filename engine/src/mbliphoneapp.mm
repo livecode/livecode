@@ -1584,6 +1584,10 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
                     // iPad Pro 12.9 has retina
                     t_image_names[t_img_cnt] = @"Default-iPadProPortrait@2x.png";
                     t_image_angles[t_img_cnt++] = 0.0f;
+                    
+                    // iPad Pro 11 has retina
+                    t_image_names[t_img_cnt] = @"Default-iPadPro11Portrait@2x.png";
+                    t_image_angles[t_img_cnt++] = 0.0f;
 
                 }
 				t_image_names[t_img_cnt] = @"Default-Portrait.png";
@@ -1601,6 +1605,10 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
                     
                     // iPad Pro 12.9 has retina
                     t_image_names[t_img_cnt] = @"Default-iPadProLandscape@2x.png";
+                    t_image_angles[t_img_cnt++] = 0.0f;
+                    
+                    // iPad Pro 11 has retina
+                    t_image_names[t_img_cnt] = @"Default-iPadPro11Landscape@2x.png";
                     t_image_angles[t_img_cnt++] = 0.0f;
                 }
                 t_image_names[t_img_cnt] = @"Default-Landscape.png";
