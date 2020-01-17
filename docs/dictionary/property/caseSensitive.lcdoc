@@ -75,7 +75,7 @@ message (glossary), handler (glossary),
 string (keyword), = (operator), contains (operator), &gt; (operator),
 &gt;= (operator), is among (operator), is not among (operator), 
 &lt; (operator), &lt;= (operator), &lt;&gt; (operator), is in (operator), 
-is not in (property), wholeMatches (property)
+is not in (operator), wholeMatches (property)
 
 Tags: database
 
