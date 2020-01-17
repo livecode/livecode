@@ -47,7 +47,7 @@ The mathematical formula implemented by the wrap operator is:
 
     x wrap y       
     =       (x-1) mod abs(y) +1     if(x &gt;= 0)
-    =     -((x-1) mod abs(y) +1)    if(x &lt; 0)
+    =     -((-x-1) mod abs(y) +1)    if(x &lt; 0)
 
 
 If a math operation on finite inputs produces a non-finite output, an
