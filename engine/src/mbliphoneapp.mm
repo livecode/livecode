@@ -1564,8 +1564,8 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
     t_img_cnt = 0;
     
 	// Compute the list of image names (and rotations) to try in order.
-	NSString *t_image_names[5];
-	CGFloat t_image_angles[5];
+	NSString *t_image_names[6];
+	CGFloat t_image_angles[6];
 	if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
 	{
 		// MW-2011-10-18: [[ Bug 9823 ]] The S/B only ever has portrait / landscape
