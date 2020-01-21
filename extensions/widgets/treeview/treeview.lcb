@@ -1542,6 +1542,7 @@ end handler
 -- This happens when the separator is moved, font/icon sizes change,
 -- and when the ReadOnly property changes.
 private handler updateSeparator() returns nothing
+	ensureEllipsis()
 	if mReadOnly then
 		put 2 * kItemPadding + mIconWidth into mRightIconMargin
 	else
@@ -2632,8 +2633,6 @@ end handler
 -- the portion of the string that can fit, and sets rTrimmed if the string was trimmed.
 -- There should always be space for an ellipsis after a key when there is a value.
 private handler displayWidth(in pText as String, in pSpace as Real, out rText as String, out rTrimmed as Boolean) returns Real		
-	ensureEllipsis()
-	
 	variable tCount as Number
 	variable tCurrentString as String
 	variable tChar as String
