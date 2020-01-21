@@ -1760,10 +1760,12 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       if tIPadOrientations contains "Portrait" then
          put "Default-Portrait|Default-Portrait|{768, 1024}|Portrait" & return after tSplashScreens
          put "Default-iPadProPortrait|Default-iPadProPortrait|{1024, 1366}|Portrait" & return after tSplashScreens
+         put "Default-iPadPro11Portrait|Default-iPadPro11Portrait|{834, 1194}|Portrait" & return after tSplashScreens
       end if
       if tIPadOrientations contains "Landscape" then
          put "Default-Landscape|Default-Landscape|{768, 1024}|Landscape" & return after tSplashScreens
          put "Default-iPadProLandscape|Default-iPadProLandscape|{1024, 1366}|Landscape" & return after tSplashScreens
+         put "Default-iPadPro11Landscape|Default-iPadPro11Landscape|{834, 1194}|Landscape" & return after tSplashScreens
       end if
    end if
    
