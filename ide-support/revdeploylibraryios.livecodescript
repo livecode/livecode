@@ -118,7 +118,7 @@ private function revIDEDeployIOSGetSimulatorVersionFromSDKVersion pSDkVersion
       end if
    end repeat
    
-   throw "No Simulator found for iOS SDK:" && pSDkVersion
+   return pSDkVersion
 end revIDEDeployIOSGetSimulatorVersionFromSDKVersion
 
 private function revIDEDeployIOSGetSDKVersionFromSimulatorVersion pSimVersion
@@ -132,7 +132,7 @@ private function revIDEDeployIOSGetSDKVersionFromSimulatorVersion pSimVersion
       end if
    end repeat
    
-   throw "No SDK found for iOS Simulator:" && pSimVersion
+   return pSimVersion
 end revIDEDeployIOSGetSDKVersionFromSimulatorVersion
 
 
