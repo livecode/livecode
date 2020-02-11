@@ -29,7 +29,10 @@ Example:
 answer file (field "Prompt") with type "LiveCode Stacks|rev|RSTK"
 
 Example:
-answer files "Select the images you wish to view:" with type "JPEG Images|jpg|JPEG"
+answer files "Select the images you wish to view:" with type "JPEG Images|jpg|JPEG" or type "PNG Images|png|PNGf"
+
+Example:
+answer files "Select the images you wish to view:" with type "Image file|jpg,png,gif|JPEG,JPEG,PNGf,GIFf"
 
 Parameters:
 prompt (string):
@@ -42,8 +45,10 @@ the contents of the last folder you used with a file dialog box.
 
 types:
 Use the types parameter to specify which files should appear and be
-available for selection. Each set of types is a return-delimited list of
-values of the form "tag|extensions|filetypes".
+available for selection. Each set of types is a pipe-delimited list of
+values of the form "tag|extensions|filetypes". Extensions and filetypes
+can either be a single extension/filetype, or can be a comma-delimited
+list of extensions or filetypes.
 
 windowTitle:
 The windowTitle, if specified, appears in the title bar of the dialog
