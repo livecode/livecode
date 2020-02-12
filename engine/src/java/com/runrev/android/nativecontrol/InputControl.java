@@ -315,6 +315,14 @@ class InputControl extends NativeControl
     public void focusControl()
     {
         m_text_view.requestFocus();
+        
+        InputMethodManager imm;
+        imm = (InputMethodManager) m_text_view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        
+        if (imm != null)
+            imm.restartInput(m_text_view);
+        
+        imm.showSoftInput(m_text_view, InputMethodManager.SHOW_IMPLICIT);
     }
     
     public native void doBeginEditing();
