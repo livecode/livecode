@@ -1,0 +1,1 @@
+# Drag and drop on macOS from LiveCode to another application no longer fails after three drags

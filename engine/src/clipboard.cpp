@@ -76,6 +76,7 @@ bool MCClipboard::Lock(bool p_skip_pull) const
 
 bool MCClipboard::Unlock() const
 {
+    MCAssert(m_lock_count > 0);
     // Decrement the lock count. If it moves from one to zero, push any changes
     // out to the underlying OS clipboard.
     //
