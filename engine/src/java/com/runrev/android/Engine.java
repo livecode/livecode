@@ -449,8 +449,6 @@ public class Engine extends View implements EngineApi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-	protected CharSequence m_composing_text;
-	
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs)
     {
@@ -458,8 +456,9 @@ public class Engine extends View implements EngineApi
 		if (!m_text_editor_visible)
 			return null;
 		
-		m_composing_text = null;
-        InputConnection t_connection = new BaseInputConnection(this, false) {
+        InputConnection t_connection = new BaseInputConnection(this, true) {
+        	String m_current_text = "";
+        	
 			void handleKey(int keyCode, int charCode)
 			{
 				if (charCode == 0)
@@ -533,25 +532,26 @@ public class Engine extends View implements EngineApi
 				return true;
             }
 			
-			// IM-2013-02-25: [[ BZ 10684 ]] - updated to show text changes in the field
-			// as software keyboards modify the composing text.
-			void updateComposingText(CharSequence p_new)
+			// Show text changes in the field as the composing text is modified.
+			// We do this by removing edited text with fake backspace key events
+			// and sending key events for each new character.
+			void updateComposingText()
 			{
+				String t_new = getEditable().toString();
+				
 				// send changes to the engine as a sequence of key events.
 				int t_match_length = 0;
 				int t_current_length = 0;
 				int t_new_length = 0;
 				int t_max_length = 0;
 				
-				if (m_composing_text != null)
-					t_current_length = m_composing_text.length();
-				if (p_new != null)
-					t_new_length = p_new.length();
+				t_current_length = m_current_text.length();
+				t_new_length = t_new.length();
 				
 				t_max_length = Math.min(t_current_length, t_new_length);
 				for (int i = 0; i < t_max_length; i++)
 				{
-					if (p_new.charAt(i) != m_composing_text.charAt(i))
+					if (t_new.charAt(i) != m_current_text.charAt(i))
 						break;
 					t_match_length += 1;
 				}
@@ -561,9 +561,9 @@ public class Engine extends View implements EngineApi
 					handleKey(KeyEvent.KEYCODE_DEL, 0);
 				// send new text
 				for (int i = t_match_length; i < t_new_length; i++)
-					handleKey(KeyEvent.KEYCODE_UNKNOWN, p_new.charAt(i));
+					handleKey(KeyEvent.KEYCODE_UNKNOWN, t_new.charAt(i));
 				
-				m_composing_text = p_new;
+				m_current_text = t_new;
 				
 				if (m_wake_on_event)
 					doProcess(false);
@@ -573,29 +573,37 @@ public class Engine extends View implements EngineApi
 			@Override
 			public boolean commitText(CharSequence text, int newCursorPosition)
 			{
-				updateComposingText(text);
-				m_composing_text = null;
-				getEditable().clear();
-				return true;
+				boolean t_return_value = super.commitText(text, newCursorPosition);
+				updateComposingText();
+				return t_return_value;
 			}
 			@Override
 			public boolean finishComposingText()
 			{
-				m_composing_text = null;
-				getEditable().clear();
-				return true;
+				boolean t_return_value = super.finishComposingText();
+				updateComposingText();
+				return t_return_value;
 			}
 			@Override
 			public boolean setComposingText(CharSequence text, int newCursorPosition)
 			{
-				updateComposingText(text);
-				return super.setComposingText(text, newCursorPosition);
+				boolean t_return_value =  super.setComposingText(text, newCursorPosition);
+				updateComposingText();
+				return t_return_value;
 			}
             @Override
             public boolean performEditorAction (int editorAction)
             {
                 handleKey(0, 10);
                 return true;
+            }
+            
+            @Override
+            public boolean deleteSurroundingText(int beforeLength, int afterLength)
+            {
+            	boolean t_return_value = super.deleteSurroundingText(beforeLength, afterLength);
+            	updateComposingText();
+            	return t_return_value;
             }
         };
         
