@@ -528,9 +528,27 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 
 - (void)application:(UIApplication*)p_application didRegisterForRemoteNotificationsWithDeviceToken:(NSData*)p_device_token
 {
-    NSString *t_to_log = [NSString stringWithFormat:@"%s%@%s", "Application: push notification device token (", p_device_token, ")"];
-    NSString *t_registration_text = [NSString stringWithFormat:@"%@", p_device_token];
-    
+    NSMutableString *t_registration_text = nil;
+    NSUInteger t_length = p_device_token.length;
+    const unsigned char *t_bytes = (const unsigned char *)p_device_token.bytes;
+    if (t_length != 0)
+    {
+        t_registration_text = [[NSMutableString alloc] init];
+        // Desired format: 8 segments of 8 letters/digits each, separated by spaces,
+        // bracketed by <>
+        [t_registration_text appendString: @"<"];
+        for(int i = 0; i < t_length; i++)
+        {
+            // %4 because each byte produces two chars
+            if (i > 0 && i % 4 == 0)
+            {
+                [t_registration_text appendString: @" "];
+            }
+            [t_registration_text appendFormat: @"%02x", t_bytes[i]];
+        }
+        [t_registration_text appendString: @">"];
+    }
+
     if (t_registration_text != nil)
     {
         MCAutoStringRef t_device_token;
@@ -543,21 +561,13 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
         // If we are already active, dispatch.
         if (m_did_become_active)
             dispatch_notification_events();
+        
+        [t_registration_text release];
     }
-    
-/*    if (t_registration_text != nil)
-    {
-        MCString t_device_token;
-        t_device_token.set ([t_registration_text cStringUsingEncoding:NSMacOSRomanStringEncoding], [t_registration_text length]);
-        m_device_token = t_device_token.clone();
-        MCLog("%s\n", [t_to_log cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-        MCNotificationPostPushRegistered(m_device_token);
-    }*/
 }
 
 - (void)application:(UIApplication*)p_application didFailToRegisterForRemoteNotificationsWithError:(NSError*)p_error
 {
-    NSString *t_to_log = [NSString stringWithFormat:@"%s%@%s", "Application: push notification device token error (", p_error, ")"];
     NSString *t_error_text = [NSString stringWithFormat:@"%@", p_error];
     
     // MW-2014-09-22: [[ Bug 13446 ]] Queue the event.
@@ -566,14 +576,6 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     // If we are already active, dispatch.
     if (m_did_become_active)
         dispatch_notification_events();
-    
-//    if (t_error_text != nil)
-//    {
-//        MCAutoStringRef t_mc_error_text;
-//		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)t_error_text, &t_mc_error_text);
-//        MCLog("%s\n", [t_to_log cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-//        MCNotificationPostPushRegistrationError(*t_mc_error_text);
-//    }
 }
 
 // Check if we have received a custom URL
