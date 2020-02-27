@@ -241,6 +241,13 @@ void MCScreenDC::handle_motion(MCEventMotionType p_type, double p_timestamp)
 
 void MCScreenDC::process_touch(MCEventTouchPhase p_phase, void *p_touch_handle, int32_t p_timestamp, int32_t p_x, int32_t p_y)
 {
+	/* It is possible for the engine to receive touch messages between initial startup and
+	 * there being a stack shown, so ignore the touch if there is no current window. */
+	if (m_current_window == nil)
+	{
+		return;
+	}
+
 	MCActiveTouch *t_touch, *t_previous_touch;
 	t_previous_touch = nil;
 	for(t_touch = m_active_touches; t_touch != nil; t_previous_touch = t_touch, t_touch = t_touch -> next)
