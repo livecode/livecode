@@ -307,8 +307,8 @@ end handler
 public handler OnGeometryChanged()
     if my width is not mWidth or my height is not mHeight then
         CalculateScaledSizes()
-        put my width into mWidth
-        put my height into mHeight
+        // 2020.02.26 mdw [[ fix_redundant_svgpath_assignment]]
+        // storage of mWidth and mHeight are already done in CalculateScaledSized
     end if
 end handler
 ----------
