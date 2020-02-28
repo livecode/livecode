@@ -68,7 +68,7 @@ Android is "date"
 
 current:
 The date, time or date and time that is to be displayed. If this is
-empty, then the current date time is used. If this value is set.
+empty, then the current date time is used.
 
 start:
 The start range of the date picker. If this value is empty, there is no
