@@ -53,6 +53,9 @@ all <file|files>, <subfolder|subfolders>, and their contents.
 > the <library> is available and the <revDeleteFolder> <command> 
 > can be used in any <handler>.
 
+>*Note: This <command> can not delete the defaultFolder and will
+> fail if the folderToDelete is or contains the defaultFolder.
+
 References: revCopyFolder (command), create folder (command),
 answer folder (command), delete file (command), revMoveFolder (command),
 function (control structure), folders (function), result (function),
