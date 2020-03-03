@@ -66,8 +66,6 @@
 	</dict>
 	<key>UIRequiresPersistentWiFi</key>
 		${PERSISTENT_WIFI}
-	<key>UIApplicationExitsOnSuspend</key>
-		${APPLICATION_EXITS_ON_SUSPEND}
 	<key>UIInitialInterfaceOrientation</key>
 		${IPHONE_INITIAL_ORIENTATION}
 	<key>UISupportedInterfaceOrientations</key>
