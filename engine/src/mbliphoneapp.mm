@@ -1067,7 +1067,7 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
         }
         else
         {
-            [[[m_main_controller rootView] textView] setKeyboardType: m_keyboard_type];
+            [[[m_main_controller rootView] textView] setReturnKeyType: m_return_key_type];
         }
     }
 	
