@@ -41,7 +41,7 @@ all <file|files>, <subfolder|subfolders>, and their contents.
 > should not rename or move <file|files> and <folder|folders> it didn't
 > create without obtaining explicit confirmation from the user.
 
->*Note: This <command> can not delete the <defaultFolder> and will
+>*Note:* This <command> can not delete the <defaultFolder> and will
 > fail if the folderToDelete is or contains the <defaultFolder>.
 
 >*Note:* When included in a <standalone application>, the 
