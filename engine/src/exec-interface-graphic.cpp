@@ -653,6 +653,7 @@ void MCGraphic::SetFilled(MCExecContext& ctxt, bool setting)
     }
 	if (changeflag(setting, F_OPAQUE))
 	{
+		sync_mfocus(false, false);
 		Redraw();
 	}
 }
