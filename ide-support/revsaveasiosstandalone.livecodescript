@@ -1916,7 +1916,10 @@ private function revGetMobileProfileInfo pProfileId
    
    repeat for each element tCert in tCerts
       put the base64Decode of tCert into tCert
-      if tCert contains "Distribution" then
+      if tCert contains "Apple Distribution:" then
+         put true into tIsDist
+         get offset("Apple Distribution:", tCert)
+      else if tCert contains "iPhone Distribution:" then
          put true into tIsDist
          get offset("iPhone Distribution:", tCert)
       else if tCert Contains "iOS Development:" then
