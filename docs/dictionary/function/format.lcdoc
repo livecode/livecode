@@ -26,14 +26,19 @@ format("%1.3e",865.3)
 Example:
 format("%45d",5)
 
+Example:
+format("%1.*f",2, 12.345)
+
 Parameters:
 baseString (string):
 A string that can include one or more special formatting incantations.
 
 valuesList:
 A list of strings (or expressions that evaluate to strings), separated
-by commas. The <valuesList> contains as many values as there are
-incantations in the <baseString>.
+by commas. The <valuesList> contains one value for each incantation and
+asterisk (used in place of charLength or precision) in the <baseString>. 
+(The charLength and precision values are listed immediately before the 
+corresponding value to format).
 
 Returns:
 The <format> function returns a <string>.
@@ -47,9 +52,10 @@ The <format> <function> works by taking a <baseString> that contains
 <valuesList> according to the corresponding incantation, then
 substituting the transformed <string(keyword)> for the incantation in
 the <baseString>. It also transforms C escape sequences in the
-<baseString> into their single- <character> equivalents.
+<baseString> into their single-<character> equivalents.
 
 The valid incantations are as follows:
+
 
 String:
 - %[charLength]s - The corresponding value is unchanged, except that 
@@ -57,7 +63,7 @@ if a charLength is specified, if the <string(keyword)> is shorter than
 the charLength, enough leading spaces are added to make it charLength 
 <characters> long. If the length of the <string(keyword)> is equal to or 
 greater than the charLength, it is unchanged. For example, the 
-incantation %3s transforms "H" to "  H". 
+incantation %3s transforms "H" to "  H".
 
 Character: 
 - %[charLength]c - The corresponding value is treated as an ASCII value 
@@ -81,7 +87,7 @@ Unsigned integer:
 - %[charLength]u - Like %[charLength]d, except that if the value is 
 negative, it is subtracted from the largest long integer allowed by the 
 current operating system. (On most operating systems, this is 2^32, or
-4,294,967,296.) 
+4,294,967,296).
 
 Octal:
 - %[charLength]o - The corresponding value is assumed to be a decimal
@@ -90,7 +96,7 @@ number. If a charLength is specified, if the length of the resulting
 number is less than the charLength, enough leading spaces are added to
 make it charLength <characters> long. If the length of the resulting
 number is equal to or greater than the charLength, it is unchanged. For
-example, the incantation %3o transforms "10.7" to " 13". 
+example, the incantation %3o transforms "10.7" to " 13".
 
 Hexadecimal:
 - %[charLength]x - The corresponding value is assumed to be a decimal 
@@ -116,7 +122,7 @@ if the total length of the resulting number is less than the charLength,
 enough leading spaces are added to make it charLength <characters> long;
 if the length of the resulting number is equal to or greater than the
 charLength, it is unchanged. 
-- %[charLength. precision]g - Like %[charLength].[precision]f, except 
+- %[charLength].[precision]g - Like %[charLength].[precision]f, except 
 that trailing zeroes are not added if the number of digits is less than 
 the precision.
 
@@ -135,7 +141,7 @@ charLength, enough leading spaces are added to make it charLength
 <characters> long; if the length of the resulting number is equal to or
 greater than the charLength, it is unchanged. For example, the
 incantation %3.2e transforms "232.4" to "2. 32e+02".
-- %[charLength.precision]E - Like %[charLength. precision]e, except that 
+- %[charLength].[precision]E - Like %[charLength].[precision]e, except that 
 the "E" separating the number from the power of ten is uppercase. For 
 example, the incantation %3.2e transforms "232.4" to "2.32E+02".
 
@@ -155,7 +161,7 @@ character:
 - \t Control-I (tab) 
 - \v Control-K (vertical tab) 
 - \\\ \\ 
-- \?? ? 
+- \? ? 
 - \' ' 
 - \" " (enclose a quote within a <string(keyword)>) 
 - \nnn character whose ASCII value is the octal number represented by nnn 
