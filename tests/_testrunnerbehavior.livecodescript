@@ -292,7 +292,7 @@ command TestRunnerInvokeTestCommand pScriptFile, pCommand
       -- Check for uncaught errors
       put TestGetUncaughtErrorDialog() into tError
       if tError is not empty then
-         TestAssert "uncaught error dialog", line 1 of tError
+         TestAssert "uncaught error dialog" && line 1 of tError, false
          TestDiagnostic tError
       end if
 
