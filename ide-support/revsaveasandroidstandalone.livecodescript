@@ -1837,7 +1837,11 @@ command MergeManifestArray @xManifestArrayA, pAdditionalsA
                   into tExistingA
             put tData["@attributes"] into tNewA
             repeat for each line tKey in the keys of tNewA
-               put tNewA[tKey] after tExistingA[tKey]
+               // do not merge the "theme", "name" and "exported" attributes
+               if tKey is "android:theme" or tKey is "android:name" or tKey is "android:exported" then
+                  next repeat
+               end if
+               put tNewA[tKey] into tExistingA[tKey]
             end repeat
             put tExistingA into xManifestArrayA[tActivityIndex]["@attributes"]
             break
