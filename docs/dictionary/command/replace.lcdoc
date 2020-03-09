@@ -49,6 +49,30 @@ The <replace> <command> is faster than the <replaceText> <function>, but
 does not support <regular expression|regular expressions>: you can
 replace only an exact <string> of text.
 
+>*Note:* The <replace> <command> is not recursive and behaves in much the 
+> same way a text editor would perform a plain text search, looking at each 
+> character in the text once only. This means that if there are two 
+> overlapping instances of matching text, only the first will be replaced. 
+> For example:
+
+    put "x:y:y:y:y:x:" into tChangeMe
+    replace ":y:" with empty in tChangeMe
+    put tChangeMe -- returns x::y::y:x
+    
+> If the goal were to remove every lone y within two colons that appears 
+> in the text, it would be more effective to take advantage of how the 
+> text to remove is contained within two identical characters, along with 
+> the <itemDelimiter> <property>, such as in the following:
+
+    put "x:y:y:y:y:x" into tChangeMe
+    set the itemDelimiter to ":"
+    repeat with tCount = 2 to (the number of items in tChangeMe) - 1
+        if item tCount of tChangeMe is "y" then 
+            put empty into item tCount of tChangeMe
+        end if
+    end repeat
+    put tChangeMe -- returns x:::::x
+
 >*Important:*  You can use the <replace> <command> on a
 > <field(keyword)>, but doing so removes any formatting (fonts, styles,
 > colors, and sizes) in the field. To preserve existing styling in
@@ -57,7 +81,8 @@ replace only an exact <string> of text.
 References: find (command), filter (command), replace (command),
 replace in field (command), function (control structure),
 replaceText (function), command (glossary), regular expression (glossary),
-container (glossary), string (keyword), field (keyword), field (object)
+container (glossary), property (glossary), string (keyword), field (keyword), 
+field (object), itemDelimiter (property)
 
 Tags: text processing
 
