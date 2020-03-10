@@ -38,15 +38,16 @@ A comma separated list of expressions containing the arguments to send.
 Arrays are expressions and are valid to send as arguments.
 
 Description:
-The <log> command invokes the <logMessage> handler. When the <logMessage> is the
-default value of `log` then the <log> command behaves in the same way as any
-other scripted handler. If the <logMessage> is set to empty then the <log>
-command does not invoke any handler or evaluate parameters, therefore, allowing
-for many logs to be added to scripts for development and an easy low-cost method
-to turn the logging off for a release build. The <logMessage> may be set to any
-handler name, however, if the handler is not in the message path then use of the
-<log> command will throw a `can't find handler` error.
+The <log> command invokes the handler specified by the <logMessage> property. 
+When the <logMessage> is the default value of `log` then the <log> command 
+behaves in the same way as any other scripted handler. If the <logMessage> is 
+set to empty then the <log> command does not invoke any handler or evaluate 
+parameters, therefore, allowing for many logs to be added to scripts for 
+development and an easy low-cost method to turn the logging off for a release 
+build. The <logMessage> may be set to any handler name, however, if the 
+handler is not in the message path then use of the <log> command will throw a 
+`can't find handler` error.
 
-References: log (command), put (command), msgChanged (message)
+References: put (command), msgChanged (message), logMessage (property)
 
 Tags: debugging
