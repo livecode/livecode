@@ -143,6 +143,7 @@ void MCMacPlatformApplicationWindowStartedMoving(MCPlatformWindowRef p_window);
 void MCMacPlatformApplicationWindowStoppedMoving(MCPlatformWindowRef p_window);
 void MCMacPlatformApplicationBecomePseudoModalFor(NSWindow *p_window);
 NSWindow *MCMacPlatformApplicationPseudoModalFor(void);
+bool MCMacPlatformApplicationIsCurrentModalWindow(NSWindow *p_window);
 
 ////////////////////////////////////////////////////////////////////////////////
 

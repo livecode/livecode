@@ -123,6 +123,11 @@ void MCMacPlatformApplicationBecomePseudoModalFor(NSWindow *p_window)
     s_pseudo_modal_for = p_window;
 }
 
+bool MCMacPlatformApplicationIsCurrentModalWindow(NSWindow *p_window)
+{
+    return [p_window isMainWindow];
+}
+
 NSWindow *MCMacPlatformApplicationPseudoModalFor(void)
 {
     // MERG-2016-03-04: ensure pseudo modals remain above any calling modals

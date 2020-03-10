@@ -651,7 +651,7 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseDown: (NSEvent *)event
 {
-	if (MCMacPlatformApplicationPseudoModalFor() != nil)
+    if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
     if ([self useTextInput])
@@ -678,12 +678,18 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
+        return;
+    
     [self handleMouseMove: event];
 }
 
 - (void)mouseDragged: (NSEvent *)event
 {
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
+        return;
+    
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
         return;
     
     if ([self useTextInput])
@@ -698,6 +704,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
+        return;
+    
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
         return;
@@ -708,7 +717,10 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 - (void)rightMouseUp: (NSEvent *)event
 {
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
-    return;
+        return;
+    
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
+        return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
@@ -722,6 +734,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
+        return;
+    
     [self handleMouseMove: event];
 }
 
@@ -730,12 +745,18 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
+        return;
+    
     [self handleMouseMove: event];
 }
 
 - (void)otherMouseDown: (NSEvent *)event
 {
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
+        return;
+    
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
         return;
     
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
@@ -750,6 +771,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
+        return;
+    
     // [[ Bug ]] When a sheet is shown, for some reason we get rightMouseDown events.
     if ([[self window] attachedSheet] != nil)
         return;
@@ -762,12 +786,18 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
+        return;
+    
     [self handleMouseMove: event];
 }
 
 - (void)otherMouseDragged: (NSEvent *)event
 {
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
+        return;
+    
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
         return;
     
     [self handleMouseMove: event];
@@ -784,6 +814,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 - (void)mouseExited: (NSEvent *)event
 {
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
+        return;
+    
+    if (!MCMacPlatformApplicationIsCurrentModalWindow(m_window->GetHandle()))
         return;
     
     [self handleMouseMove: event];
