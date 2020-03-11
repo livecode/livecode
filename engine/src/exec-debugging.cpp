@@ -392,8 +392,8 @@ void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, b
 {
     switch(type)
 	{
-		case TYPE_NONE:
-		case TYPE_TRUE:
+		case ASSERT_TYPE_NONE:
+		case ASSERT_TYPE_TRUE:
 			// If the expression threw an error, then just throw.
 			if (!p_eval_success)
             {
@@ -406,7 +406,7 @@ void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, b
 				return;
             break;
             
-		case TYPE_FALSE:
+		case ASSERT_TYPE_FALSE:
 			// If the expression threw an error, then just throw.
 			if (!p_eval_success)
             {
@@ -419,12 +419,12 @@ void MCDebuggingExecAssert(MCExecContext& ctxt, int type, bool p_eval_success, b
 				return;
             break;
             
-		case TYPE_SUCCESS:
+		case ASSERT_TYPE_SUCCESS:
 			if (p_eval_success)
 				return;
 			break;
             
-		case TYPE_FAILURE:
+		case ASSERT_TYPE_FAILURE:
 			if (!p_eval_success)
 				return;
 			break;
