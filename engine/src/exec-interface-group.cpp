@@ -805,3 +805,13 @@ void MCGroup::SetVisible(MCExecContext &ctxt, uinteger_t part, bool setting)
 {
 	MCControl::SetVisible(ctxt, part, setting);
 }
+
+void MCGroup::SetOpaque(MCExecContext &ctxt, bool setting)
+{
+	if (changeflag(setting, F_OPAQUE))
+	{
+		sync_mfocus(false, false);
+		MCObject::Redraw();
+		m_layer_attr_changed = true;
+	}
+}

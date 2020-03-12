@@ -1205,7 +1205,7 @@ public:
     bool is_rtl() const { return false; }
     
     // AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus
-    void sync_mfocus(void);
+	void sync_mfocus(bool p_visiblility_changed, bool p_resize_parent);
     
     // This accessor is used by the widget event manager to trigger tooltip
     // display for widgets.

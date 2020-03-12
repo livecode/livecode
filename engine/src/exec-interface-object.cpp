@@ -3185,7 +3185,7 @@ void MCObject::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
     
 	if (dirty)
         // AL-2015-06-30: [[ Bug 15556 ]] Use refactored function to sync mouse focus
-        sync_mfocus();
+        sync_mfocus(true, true);
 }
 
 void MCObject::GetVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting)
@@ -3741,20 +3741,16 @@ void MCObject::SetRectProp(MCExecContext& ctxt, bool p_effective, MCRectangle p_
 
 	if (!MCU_equal_rect(t_rect, rect))
 	{
-		bool needmfocus;
-		needmfocus = false;
-
-		if (opened && getstack() == MCmousestackptr)
+		bool t_sync_mouse = false;
+		if (MCU_point_in_rect(rect, MCmousex, MCmousey))
 		{
-			MCControl *mfocused = MCmousestackptr->getcard()->getmfocused();
-			if (MCU_point_in_rect(rect, MCmousex, MCmousey))
-			{
-				if (!MCU_point_in_rect(t_rect, MCmousex, MCmousey) && isancestorof(mfocused))
-					needmfocus = true;
-			}
-			else
-				if (MCU_point_in_rect(t_rect, MCmousex, MCmousey) && isancestorof(mfocused))
-					needmfocus = true;
+			if (!MCU_point_in_rect(t_rect, MCmousex, MCmousey))
+				t_sync_mouse = true;
+		}
+		else
+		{
+			if (MCU_point_in_rect(t_rect, MCmousex, MCmousey))
+				t_sync_mouse = true;
 		}
 
 		if (gettype() >= CT_GROUP)
@@ -3767,8 +3763,8 @@ void MCObject::SetRectProp(MCExecContext& ctxt, bool p_effective, MCRectangle p_
 		else
 			setrect(t_rect);
 
-		if (needmfocus)
-			MCmousestackptr->getcard()->mfocus(MCmousex, MCmousey);
+		if (t_sync_mouse)
+			sync_mfocus(false, false);
 	}
 }
 

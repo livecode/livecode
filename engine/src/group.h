@@ -319,8 +319,9 @@ public:
     void SetClipsToRect(MCExecContext& ctxt, bool p_clips_to_rect);
     void GetClipsToRect(MCExecContext& ctxt, bool &r_clips_to_rect);
 
-    void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
-    
+	virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+	virtual void SetOpaque(MCExecContext& ctxt, bool setting);
+	
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
     virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
