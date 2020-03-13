@@ -759,6 +759,21 @@ bool MCWin32RawClipboard::FlushData()
 	return OleFlushClipboard() == S_OK;
 }
 
+MCWin32RawClipboardItem* MCWin32RawClipboard::CreateNewItem()
+{
+	MCWin32RawClipboardItem *t_item;
+	t_item = MCWin32RawClipboardCommon::CreateNewItem();
+
+	if (t_item == NULL)
+		return NULL;
+
+	// fetch data object and push it to the clipboard
+	IDataObject * t_contents = t_item->GetDataObject();
+	OleSetClipboard(t_contents);
+
+	return t_item;
+}
+
 bool MCWin32RawClipboardNull::IsOwned() const
 {
 	// This clipboard is non-functional
@@ -801,9 +816,6 @@ MCWin32RawClipboardItem::MCWin32RawClipboardItem(MCWin32RawClipboardCommon* p_cl
 	m_object(nullptr),
 	m_reps()
 {
-	// create data object and push it to the clipboard
-	IDataObject * t_contents = GetDataObject();
-	OleSetClipboard(t_contents);
 }
 
 MCWin32RawClipboardItem::~MCWin32RawClipboardItem()
