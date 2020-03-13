@@ -1580,23 +1580,23 @@ Parse_stat MCAssertCmd::parse(MCScriptPoint& sp)
 	// See if there is a type token
 	MCScriptPoint temp_sp(sp);
 	if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_TRUE) == PS_NORMAL)
-		m_type = TYPE_TRUE;
+		m_type = ASSERT_TYPE_TRUE;
 	else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_FALSE) == PS_NORMAL)
-		m_type = TYPE_FALSE;
+		m_type = ASSERT_TYPE_FALSE;
 	else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_SUCCESS) == PS_NORMAL)
-		m_type = TYPE_SUCCESS;
+		m_type = ASSERT_TYPE_SUCCESS;
 	else if (sp . skip_token(SP_SUGAR, TT_UNDEFINED, SG_FAILURE) == PS_NORMAL)
-		m_type = TYPE_FAILURE;
+		m_type = ASSERT_TYPE_FAILURE;
 	else
-		m_type = TYPE_NONE;
+		m_type = ASSERT_TYPE_NONE;
 	
 	// Now try to parse an expression
 	if (sp.parseexp(False, True, &m_expr) == PS_NORMAL)
 		return PS_NORMAL;
 
 	// Now if we are not of NONE type, then backup and try for just an
-	// expression (TYPE_NONE).
-	if (m_type != TYPE_NONE)
+	// expression (ASSERT_TYPE_NONE).
+	if (m_type != ASSERT_TYPE_NONE)
 	{
 		MCperror -> clear();
 		sp = temp_sp;
@@ -1604,7 +1604,7 @@ Parse_stat MCAssertCmd::parse(MCScriptPoint& sp)
 	
 	// Parse the expression again (if not NONE, otherwise we already have
 	// a badexpr error to report).
-	if (m_type == TYPE_NONE ||
+	if (m_type == ASSERT_TYPE_NONE ||
 		sp.parseexp(False, True, &m_expr) != PS_NORMAL)
 	{
 		MCperror -> add(PE_ASSERT_BADEXPR, sp);
@@ -1612,7 +1612,7 @@ Parse_stat MCAssertCmd::parse(MCScriptPoint& sp)
 	}
 	
 	// We must be of type none.
-	m_type = TYPE_NONE;
+	m_type = ASSERT_TYPE_NONE;
 	
 	return PS_NORMAL;
 }

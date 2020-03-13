@@ -37,7 +37,7 @@ class MCAssertCmd: public MCStatement
 public:
 	MCAssertCmd(void)
 	{
-		m_type = TYPE_NONE;
+		m_type = ASSERT_TYPE_NONE;
 		m_expr = nil;
 	}
 	
