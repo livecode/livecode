@@ -41,7 +41,7 @@ use com.livecode.library.widgetutils
 
 -- adding metadata to ensure the extension displays correctly in LiveCode
 metadata author is "LiveCode"
-metadata version is "1.2.0"
+metadata version is "1.3.0"
 metadata title is "Line Graph"
 metadata preferredSize is "300,175"
 metadata svgicon is "M50.6,27.2h-2.2v-3.3l0.8-0.5l-0.2-0.3h2.9v-1h-3.5v-5h3.5v-1h-3.5v-5h3.5v-1h-3.5v-5h3.5v-1h-3.5V1.8h-1v2.4h-10V1.8h-1v2.4h-10V1.8h-1v2.4h-10V1.8h-1v2.4H5V2.5C5,1.1,3.9,0,2.5,0S0,1.1,0,2.5v29.7h50.6c1.4,0,2.5-1.1,2.5-2.5C53.1,28.4,52,27.2,50.6,27.2z M47.4,27.2h-10v-4.1h8l1.2,1.9l0.8-0.5V27.2z M15.4,15.2l1.4,0.9h-1.4V15.2z M14.4,17.1v5h-4.2l3.6-5H14.4z M15.4,17.1h2.9l7.1,4.6v0.4h-10V17.1z M26.4,17.1h0.1l-0.1,0.2V17.1z M25.4,18.1l-1.6-1h1.6V18.1z M26.4,22l4-4.9h6v5h-10V22z M37.4,17.1h4.2l3.2,5h-7.4V17.1z M37.4,16.1v-5h0.4l3.2,5H37.4z M36.4,10.1h-0.1l0.1-0.2V10.1z M36.4,11.1v5h-5.1l4.2-5H36.4z M27.4,16.1h-1v-5h5.1L27.4,16.1z M25.4,16.1h-3.1l-6.9-4.5v-0.5h10V16.1z M14.4,11.3l-3.5,4.9H5v-5h9.4V11.3z M10.1,17.1l-3.6,5H5v-5H10.1z M5.7,23.1l-0.7,1v-1H5.7z M9.5,23.1h4.9v4.1H6.5L9.5,23.1z M15.4,23.1h10v4.1h-10V23.1z M26.4,23.1h10v4.1h-10V23.1z M47.4,20.7l-2.3-3.6h2.3V20.7z M47.4,16.1h-2.9l-3.2-5h6.1V16.1z M47.4,10.1h-6.7l-3.2-5h9.9V10.1z M36.4,5.1v0.1l-4,4.9h-6v-5H36.4z M25.4,5.1v5h-10v-5H25.4z M14.4,5.1v5H5v-5H14.4z"
@@ -166,6 +166,30 @@ metadata showLines.label is "Show graph lines"
 metadata showLines.section is "Basic"
 
 /**
+Summary: Whether Y-labels display decimal values or integers
+
+Syntax:
+set the showDecimals of <widget to { true | false }
+get the showDecimals of <widget>
+
+Value (boolean): True if decimal values of Y-labels should be shown; false otherwise
+
+Description:
+If true, the Y-axis labels will display 2 decimals if values have a decimal
+part otherwise ".00" will be appended.
+
+ShowDecimals avoids rounding errors in Y-labels which lead to confusing
+Y-labels.
+
+This widget calculates Y-axis labels by interpolating values between lowest and
+highest Y-values. This often leads to decimal numbers.
+*/
+property showDecimals get mDecimalShow set SetDecimalShow
+metadata showDecimals.default is "true"
+metadata showDecimals.label is "Show decimals"
+metadata showDecimals.section is "Basic"
+
+/**
 Summary: Set the marker style for each data series
 
 Syntax:
@@ -287,6 +311,7 @@ private variable mLabelXShow as Boolean
 private variable mLabelYShow as Boolean
 private variable mVerticesShow as Boolean
 private variable mLinesShow as Boolean
+private variable mDecimalShow as Boolean
 
 private variable mMarkerStyles as List
 private variable mMarkerScale as Real
@@ -340,12 +365,13 @@ public handler OnCreate() returns nothing
 	put true into mLabelYShow
 	put true into mLinesShow
 	put true into mVerticesShow
+	put true into mDecimalShow
 	
 	put [] into mMarkerStyles
 	put 1 into mMarkerScale
 	
-   put my height into mHeight
-   put my width into mWidth
+   	put my height into mHeight
+   	put my width into mWidth
 
 	put [] into mHilitedCoordinates
 	put "0,0,0,255" into mHilitedCoordinatesColor
@@ -397,6 +423,7 @@ public handler OnSave(out rProperties as Array)
 	put mMarkerStyles into rProperties["markerStyles"]
 	put mLinesShow into rProperties["showLines"]
 	put mMarkerScale into rProperties["markerScale"]
+	put mDecimalShow into rProperties["decimalShow"]
 end handler
 
 -- Process saved data array and re-set properties accordingly
@@ -431,6 +458,9 @@ public handler OnLoad(in pProperties as Array)
 	if "markerScale" is among the keys of pProperties then
 		put pProperties["markerScale"] into mMarkerScale
 	end if
+	if "decimalShow" is among the keys of pProperties then
+      		put pProperties["decimalShow"] into mDecimalShow
+   	end if
 	EnsureMarkerStyles()
 end handler
 
@@ -479,7 +509,7 @@ public handler setData(in pData as String) returns nothing
 					if the result is not nothing then
 						push the result onto element tCount of tNewData
 					else
-						push 0 onto element tCount of tNewData
+						push nothing onto element tCount of tNewData
 					end if
 				end if
 			else
@@ -772,6 +802,15 @@ private handler calculateMinMaxes() returns nothing
 	put tYMax into mYMax
 	put tYMin into mYMin
 	
+	// in case all Y-values are the same
+   	if mYMin = mYMax then
+      		if tYMax is not 0 then
+        		put 0 into mYMin
+      		else
+        		put 1 into mYMax
+      		end if
+   	end if
+	
 	put listMin(mData[1], true) into mXMin
 	put listMax(mData[1], true) into mXMax
 	
@@ -843,6 +882,25 @@ private handler calculateYLabelGeometry() returns nothing
       variable tCount as Integer
       repeat with tCount from 1 up to mVPointCount + 1
          put mYMin + mYIncrement * (tCount - 1) into tNumber
+	 
+	 put tNumber formatted as string into tString
+
+         variable tOff as Number
+         variable tLength as Number
+         variable tRest as Number
+         put the first offset of "." in tString into tOff
+         if tOff > 0 then
+            put the number of chars in tString into tLength
+            if tLength < tOff + 2 then
+                put "0" after tString
+            end if
+            if tLength > tOff + 2 then
+                delete char tOff + 3 to tLength of tString
+             end if
+          else
+             put ".00" after tString
+         end if
+	 
          put LabelRect(tNumber) into tTextBounds
          if the width of tTextBounds > tMaxWidth then
             put the width of tTextBounds into tMaxWidth
@@ -1049,7 +1107,28 @@ private handler drawYLabels() returns nothing
 	// Draw the text
 	repeat with tCount from 1 up to mVPointCount + 1
 		put mYIncrement * (tCount - 1) + mYMin into tNumber
-		put the rounded of tNumber formatted as string into tString
+		if not mDecimalShow then
+         		put the rounded of tNumber formatted as string into tString
+      		else
+         		put tNumber formatted as string into tString
+
+         		// display decimals and restrict to 2 decimals
+         		variable tOff as Number
+         		variable tLength as Number
+         		variable tRest as Number
+         		put the first offset of "." in tString into tOff
+         		if tOff > 0 then
+            			put the number of chars in tString into tLength
+            				if tLength < tOff + 2 then
+                				put "0" after tString
+            				end if
+            				if tLength > tOff + 2 then
+                				delete char tOff + 3 to tLength of tString
+             				end if
+         		 else
+            			 put ".00" after tString
+         		end if
+      		end if
 		variable tY as Real
 		put the bottom of mGridRect - (tCount - 1) * mGridVHeight into tY
 		fill text tString at right of rectangle [0,tY-20,gridLeft() - gridPadding(),tY+20] on this canvas
@@ -1082,6 +1161,7 @@ private handler drawGraph() returns nothing
 	variable tDataPoints as List
 	variable tCount2 as Integer
 	variable tColour as Color
+	variable tPathIsStarted as Boolean
 
 	variable tPath as Path
 	variable tPathVertices as Path
@@ -1091,6 +1171,7 @@ private handler drawGraph() returns nothing
 
 	variable tGraphLine as Integer
 	repeat with tGraphLine from 2 up to the number of elements in mData
+		put false into tPathIsStarted
 		put the empty path into tPath
 		put the empty path into tPathVertices
 		put element tGraphLine of mData into tDataPoints
@@ -1140,11 +1221,14 @@ private handler drawGraph() returns nothing
 				put point [tPointX, tPointY] into tPoint
 				
 				if mLinesShow is true then
-					if tPointIndex is 1 then
-						move to tPoint on tPath
-					else
-						line to tPoint on tPath
-					end if
+					if tDataPoints[tPointIndex] is not nothing then
+                  				if not tPathIsStarted then
+                     					move to tPoint on tPath
+                     					put true into tPathIsStarted
+                  				else
+                     					line to tPoint on tPath
+                  				end if
+              				 end if
 				end if
 
 				// Draw vertices
