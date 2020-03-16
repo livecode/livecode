@@ -567,6 +567,11 @@ public handler SetLineVisibility(in pShowLines as Boolean) returns nothing
 	redraw all
 end handler
 
+public handler SetDecimalShow(in pShowDecimals as Boolean) returns nothing
+   	put pShowDecimals into mDecimalShow
+   	redraw all
+end handler
+
 public handler GetMarkerStyles() returns String
 	if mMarkerStyles is [] then
 		return ""
