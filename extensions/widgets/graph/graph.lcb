@@ -906,7 +906,7 @@ private handler calculateYLabelGeometry() returns nothing
              put ".00" after tString
          end if
 	 
-         put LabelRect(tNumber) into tTextBounds
+         put LabelRect(tString) into tTextBounds
          if the width of tTextBounds > tMaxWidth then
             put the width of tTextBounds into tMaxWidth
          end if
