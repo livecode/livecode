@@ -377,6 +377,13 @@ static MCStringRef EmittedBuiltinAdd(NameRef p_symbol_name, uindex_t p_type_inde
     {
         return MCNameGetString(to_mcnameref(p_symbol_name));
     }
+
+    /* If this is a parameterized foriegn type, then don't shim it */
+    if (p_type_index == UINDEX_MAX &&
+        strchr(cstring_from_nameref(p_symbol_name), ':') != NULL)
+    {
+        return MCNameGetString(to_mcnameref(p_symbol_name));
+    }
     
     for(EmittedBuiltin *t_builtin = s_emitted_builtins; t_builtin != nullptr; t_builtin = t_builtin->next)
     {

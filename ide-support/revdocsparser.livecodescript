@@ -538,6 +538,9 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                      # eat the words 'public foreign'
                      put word 3 to -1 of tLine into tLine
                      put true into tEntryEnded
+                  else if word 2 of tLine is "type" then
+                     put word 3 to -1 of tLine into tLine
+                     put true into tEntryEnded
                   end if
                end if
                break
