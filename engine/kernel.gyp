@@ -24,12 +24,12 @@
 				
 				'../prebuilt/libopenssl.gyp:libopenssl_headers',
 
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_pcre',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_jpeg',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_gif',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_png',
+				'../thirdparty/libpcre/libpcre.gyp:libpcre',
+				'../thirdparty/libjpeg/libjpeg.gyp:libjpeg',
+				'../thirdparty/libgif/libgif.gyp:libgif',
+				'../thirdparty/libpng/libpng.gyp:libpng',
 
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
+				'../thirdparty/libz/libz.gyp:libz',
 
 				'engine-common.gyp:encode_version',
 				'engine-common.gyp:quicktime_stubs',
@@ -79,9 +79,9 @@
 										
 						'dependencies':
 						[
-							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_skia',
-							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_freetype',
-							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_harfbuzz',
+							'../thirdparty/libskia/libskia.gyp:libskia',
+							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
+							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
 						],
 
 						'link_settings':
@@ -109,7 +109,7 @@
 
 						'dependencies':
 						[
-							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_skia',
+							'../thirdparty/libskia/libskia.gyp:libskia',
 						],
 					},
 				],

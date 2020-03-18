@@ -98,7 +98,7 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_mysql',
+				'../thirdparty/libmysql/libmysql.gyp:libmysql',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 			],
 			
@@ -156,7 +156,7 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_mysql',
+				'../thirdparty/libmysql/libmysql.gyp:libmysql',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 			],
 			
@@ -223,7 +223,7 @@
 					{
 						'dependencies':
 						[
-							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_iodbc',
+							'../thirdparty/libiodbc/libiodbc.gyp:libiodbc',
 						],
 					},
 					{
@@ -287,7 +287,7 @@
 					{
 						'dependencies':
 						[
-							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_iodbc',
+							'../thirdparty/libiodbc/libiodbc.gyp:libiodbc',
 						],
 					},
 					{
@@ -360,7 +360,7 @@
 			[
 				'../libexternal/libexternal.gyp:libExternal',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_pq',
+				'../thirdparty/libpq/libpq.gyp:libpq',
 			],
 			
 			'include_dirs':
@@ -405,7 +405,7 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_pq',
+				'../thirdparty/libpq/libpq.gyp:libpq',
 				'../thirdparty/libopenssl/libopenssl.gyp:libopenssl_stubs',
 			],
 			
@@ -467,7 +467,7 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_sqlite',
+				'../thirdparty/libsqlite/libsqlite.gyp:libsqlite',
 			],
 			
 			'include_dirs':
@@ -574,7 +574,7 @@
 			'dependencies':
 			[
 				'../libexternal/libexternal.gyp:libExternal',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_sqlite',
+				'../thirdparty/libsqlite/libsqlite.gyp:libsqlite',
 			],
 			
 			'include_dirs':

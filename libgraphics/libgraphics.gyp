@@ -14,10 +14,10 @@
 			
 			'dependencies':
 			[
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_gif',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_png',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_jpeg',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_skia',
+				'../thirdparty/libgif/libgif.gyp:libgif',
+				'../thirdparty/libpng/libpng.gyp:libpng',
+				'../thirdparty/libjpeg/libjpeg.gyp:libjpeg',
+				'../thirdparty/libskia/libskia.gyp:libskia',
 				'../libfoundation/libfoundation.gyp:libFoundation',
 			],
 
@@ -28,8 +28,8 @@
 					{
 						'dependencies':
 						[
-							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_freetype',
-							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_harfbuzz',
+							'../thirdparty/libfreetype/libfreetype.gyp:libfreetype',
+							'../thirdparty/libharfbuzz/libharfbuzz.gyp:libharfbuzz',
 							'../prebuilt/libicu.gyp:libicu',
 						],
 					},
