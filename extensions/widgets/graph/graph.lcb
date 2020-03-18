@@ -709,10 +709,10 @@ public handler getData() returns String
 						put stripZeros((element tCount2 of tLineData) formatted as string) into tString
 						push tString onto back of element tCount2 of tData
 					else
-						push "" onto back of element tCount2 of tData
+						push "x" onto back of element tCount2 of tData
 					end if
 				else
-					push "" onto back of element tCount2 of tData
+					push "x" onto back of element tCount2 of tData
 				end if
 			end if
 		end repeat
