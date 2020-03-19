@@ -45,6 +45,9 @@ IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 ECHO Configuring Thirdparty for %BUILDTRIPLE%
 ECHO ========== CONFIGURING ==========  >%THIRDPARTY_BUILD_LOG%
 
+REM Configure project files to build thirdparty libraries
+SET BUILD_THIRDPARTY=1
+
 REM Generate project files
 cd %_TOOLS_DIR%..
 python config.py --platform %BUILD_PLATFORM% >>%THIRDPARTY_BUILD_LOG% 2>>&1
