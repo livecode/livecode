@@ -587,8 +587,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       // SN-2015-09-24: [[ Bug 15875 ]] Add the screenSize configChanges value for API > 12
       //  Otherwise the app restarts on orientation change.
       local tConfigChangesProp
-      put "keyboardHidden|orientation" into tConfigChangesProp
-      put "|screenSize" after tConfigChangesProp
+      put "keyboardHidden|orientation|uiMode|screenSize" into tConfigChangesProp
       replace "${CONFIG_CHANGES}" with tConfigChangesProp in tManifest
       
       // SN-2015-09-30: [[ Bug 10267 ]] Hardware Acceleration option added

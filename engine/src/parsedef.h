@@ -1758,6 +1758,8 @@ enum Properties {
     P_REV_LIBRARY_MAPPING,
     
     P_LAYER_CLIP_RECT,
+	
+	P_SYSTEM_APPEARANCE,
     
     __P_LAST,
 };

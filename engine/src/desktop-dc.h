@@ -142,7 +142,9 @@ public:
     
     // MW-2014-04-26: [[ Bug 5545 ]] Override this method to defer to the MCPlatform method.
     virtual void hidecursoruntilmousemoves(void);
-    
+	
+	virtual void getsystemappearance(MCSystemAppearance &r_appearance);
+	
 	//////////
 	
 	bool isbackdrop(MCPlatformWindowRef window);

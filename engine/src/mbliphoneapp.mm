@@ -1973,6 +1973,11 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
     }
 }
 
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection
+{
+	MCNotificationPostSystemAppearanceChanged();
+}
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
