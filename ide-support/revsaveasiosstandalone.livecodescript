@@ -1139,7 +1139,7 @@ private command addToManifest pFile, pName, pAppBundle, @xManifest, @xRedirects
       exit addToManifest
    end if
    
-   if there is a file pFile then
+   if there is a file pFile or there is a folder pFile and pFile ends with ".lcextd" then
       put pAppBundle & slash & pName & tab & pFile & return after xManifest
       put pName & "//" & pFile & return after xRedirects
    else if there is a folder pFile then
@@ -1229,6 +1229,45 @@ private command revCopyMobileFiles pSettings, pBaseFolder, pAppBundle, pAppTarge
       -- If the file is an entitlement then handle appropriately
       if tSource ends with ".xcent" then
          put url ("binfile:" & tSource) after rCustomEntitlements
+         next repeat
+      end if
+      
+      if there is a folder tSource and tSource ends with ".lcextd" then
+         if tProcessedDylibs[tSource] then
+            next repeat
+         end if
+         
+         put true into tProcessedDylibs[tSource]
+         set the itemDel to slash
+         local tName
+         put char 1 to -8 of the last item of tSource into tName
+         
+         if pSDKs["sim"]["suffix"] is not empty then
+            put tSource & "/iOS/External-Simulator-" & pSDKs["sim"]["suffix"] into tTarget
+            if there is a file tTarget then
+               put tTarget into rExternals[tName]["sim"]
+               put "external" into rExternals[tName]["type"]
+               
+               -- Since simulator externals are not statically linked to the engine, we need to make sure the location
+               -- of the external is set correctlty relative to the app bundle, so the deploy command knows what to
+               -- dynamically link to.
+               --
+               put char (the number of chars in pAppBundle + 2) to -1 of tTarget into rExternals[tName]["location"]
+            end if
+         else
+            put "external" into rExternals[tName]["type"]        
+            repeat for each word tInstSet in "armv6 armv7 arm64 arm"
+               if pSDKs[tInstSet]["suffix"] is not empty then
+                  put tSource & "/iOS/External-Device-" & pSDKs[tInstSet]["suffix"] into tTarget
+                  if there is a file tTarget then
+                     put tTarget into rExternals[tName][tInstSet]
+                     put tName & ".lcext" into rExternals[tName]["location"]
+                  end if
+               end if             
+            end repeat
+         end if
+         set the itemDel to tab
+         
          next repeat
       end if
       
