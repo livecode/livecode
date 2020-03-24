@@ -1550,7 +1550,12 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
          revStandaloneAddWarning "No iPad supported intial orientation.  Assuming Portrait."
          put "Portrait" into tIPadOrientations
       end if
-   end if 
+   end if
+
+   local tUIStyle
+   if not pSettings["ios,supports dark mode"] then
+      put "<key>UIUserInterfaceStyle</key><string>Light</string>" into tUIStyle
+   end if
    
    -- MM-2011-09-28: Make sure portrait and landscape iPad splashes are present if required.
    --
@@ -1620,6 +1625,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
    replace "${DISABLE_ATS}" with tDisableATS in pPlist
    replace "${HEALTHKIT}" with tHealthKit in pPlist
+   replace "${UI_STYLE}" with tUIStyle in pPlist
    
    -- PM-2018-01-15: [[Bug 20852]] Get info about Xcode/SDK versions
    if pTarget is "Device" then

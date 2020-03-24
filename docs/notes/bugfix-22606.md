@@ -1,0 +1,1 @@
+# Add support for opting out of iOS dark mode
