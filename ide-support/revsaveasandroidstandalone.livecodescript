@@ -364,22 +364,27 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          end if
          
          -- Only look for lcext files.
-         if the last item of tFile["name"] is not "lcext" then
-            next repeat
-         end if
+         switch the last item of tFile["name"]
+            case "lcext"
+               if there is no file tFile["resolved"] then
+                  throw "could not find referenced external -" && tFile["resolved"]
+               end if
+               if addExternalFromFile(tFile["resolved"], tClassesBuildFolder, tArchLibsBuildFolders) then
+                  -- Add the external to the list to load
+                  put char 1 to -7 of tFile["name"] & return after tExternals
+               end if
+               break
+            case "lcextd"
+               if there is no folder tFile["resolved"] then
+                  throw "could not find referenced external -" && tFile["resolved"]
+               end if
+               if addExternalFromFolder(tFile["resolved"], tClassesBuildFolder, tArchLibsBuildFolders) then
+                  -- Add the external to the list to load
+                  put char 1 to -8 of tFile["name"] & return after tExternals
+               end if
+               break
+         end switch 
          
-         -- Only process if the target exists
-         if there is no file tFile["resolved"] then
-            throw "could not find referenced external -" && tFile["resolved"]
-         end if
-         
-         -- MERG-2013-09-05: [[ Bug 11152 ]] Only list the external if it was successfully
-         --   extracted.
-         -- Now attempt to process the external
-         if addExternalFromFile(tFile["resolved"], tClassesBuildFolder, tArchLibsBuildFolders) then
-            -- Add the external to the list to load
-            put char 1 to -7 of tFile["name"] & return after tExternals
-         end if
       end repeat
       delete the last char of tExternals
       set the itemDelimiter to comma
@@ -1448,6 +1453,63 @@ private function addExternalFromFile pExternal, pClassesFolder, pArchLibsFolders
    
    return tLibFileA is an array
 end addExternalFromFile
+
+private function addExternalFromFolder pExternal, pClassesFolder, pArchLibsFolders
+   -- Get the name of the external.
+   local tExternalName
+   set the itemDelimiter to slash
+   get the last item of pExternal
+   set the itemDelimiter to "."
+   put the first item of it into tExternalName
+   set the itemDelimiter to slash
+   
+   -- Compute the class / lib names.
+   local tClassesFile, tLibFileA
+   put pClassesFolder & slash & "lib" & tExternalName & ".jar" into tClassesFile
+   
+   local tItems
+   put files(pExternal & "/Android") into tItems
+   
+   local tItemsFiltered
+   filter tItems with regex pattern ".*(\.jar|Classes)$" into tItemsFiltered
+   repeat for each line tItem in tItemsFiltered
+      if tItem ends with ".jar" then
+         revSBCopyFile pExternal & "/Android/" & tItem, \
+               pClassesFolder & slash & the last item of tItem 
+      else 
+         # will be Classes file
+         revSBCopyFile pExternal & "/Android/" & tItem, \
+               tClassesFile
+      end if
+   end repeat
+   
+   repeat for each key tArch in pArchLibsFolders
+      local tPattern
+      put "^(?:External-" & tArch & "|lib.+" & tArch & "\.so)$" into tPattern
+      filter tItems with regex pattern tPattern into tItemsFiltered
+      put pArchLibsFolders[tArch] & slash & "lib" & tExternalName & ".so" into tLibFileA[tArch]
+      repeat for each line tItem in tItemsFiltered
+         if tItem ends with ".so" then
+            revSBCopyFile pExternal & "/Android/" & tItem, \
+                  pClassesFolder & slash & the last item of tItem 
+         else 
+            # will be External-<Arch> file
+            revSBCopyFile pExternal & "/Android/" & tItem, \
+                  tLibFileA[tArch]
+         end if
+      end repeat
+   end repeat
+   
+   if there is a file tClassesFile then
+      repeat for each key tArch in pArchLibsFolders
+         if there is no file tLibFileA[tArch] then
+            throw "android external contains classes but no library for " & tArch
+         end if
+      end repeat
+   end if
+   
+   return tLibFileA is an array
+end addExternalFromFolder
 
 ################################################################################
 
