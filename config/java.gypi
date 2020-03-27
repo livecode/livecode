@@ -65,11 +65,12 @@
 			[
 				'<(javac_wrapper_path)',
 				'<(javac_path)',
-				'1.5',
+				'1.7',
 				'-d', '<(PRODUCT_DIR)/>(java_classes_dir_name)',
 				'-implicit:none',
 				'-classpath', '>(java_classpath_param)',
 				'-sourcepath', '<(java_source_path):<(INTERMEDIATE_DIR)/src/java',
+				'-encoding utf8',
 				'<(RULE_INPUT_PATH)',
 			],
 		},
