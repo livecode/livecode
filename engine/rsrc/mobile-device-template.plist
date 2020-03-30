@@ -134,5 +134,6 @@
 	<array>
 		${APP_URL_WHITELIST}
 	</array>
+	${UI_STYLE}
 </dict>
 </plist>

@@ -95,5 +95,6 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This application requires access to Photo Library</string>
 	${HEALTHKIT}
+	${UI_STYLE}
 </dict>
 </plist>
