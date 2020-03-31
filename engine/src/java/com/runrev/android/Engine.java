@@ -2146,7 +2146,7 @@ public class Engine extends View implements EngineApi
 		String t_path = m_temp_image_file.getPath();
 
 		Uri t_uri;
-		t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", true, ParcelFileDescriptor.MODE_WRITE_ONLY);
+		t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", true, ParcelFileDescriptor.MODE_READ_WRITE);
 
 		Intent t_image_capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_uri);
