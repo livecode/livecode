@@ -729,11 +729,11 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       end if
    end if
    
-   -- Only need to sign the bundle if its heading for a device
+   revStandaloneProgress "Signing app bundle..."
+   
+   local tEntitlementsOption, tCertificate
    if pTarget is "Device" then
-      revStandaloneProgress "Signing app bundle..."
-      
-      local tCertificate, tEntitlements, tProfileInfo
+      local tEntitlements, tProfileInfo
       put revGetMobileProfileInfo(pSettings["ios,profile"]) into tProfileInfo
       
       -- Get the list of valid identities that are available
@@ -797,64 +797,61 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       local tEntitlementsFile
       put tempName() into tEntitlementsFile
       put tEntitlements into url ("binfile:" & tEntitlementsFile)
-      
+      put "--entitlements" && quote & tEntitlementsFile & quote into tEntitlementsOption
       -- MW-2011-03-17: Make sure the certificate is encoded appropriately
       put uniDecode(uniEncode(tCertificate, "UTF8")) into tCertificate
-      
-      -- Do the codesigning
-      // SN-2015-09-11: [[ Xcode 7.0 ]] codesign in Xcode 7.0 will not work if CODESIGN_ALLOCATE
-      // environment variable is set, so we only set it up to Xcode 6.4
-      // We use Clang version to get the Xcode version in use
-      local tClangVersion, tClangMajorVersion
-      put shell("clang++ --version") into tClangVersion
-      if matchText(tClangVersion, "Apple LLVM version ([0-9]+)\.[0-9]+.[0-9]+", tClangMajorVersion) \
-            and tClangMajorVersion < 7 then
-         put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
-      end if
-      
-      -- make sure you have permission to clear extended attributes from bundle files
-      get shell("chmod -R u+w" && quote & pAppBundle & quote)
-      if the result is not 0 then
-         throw "setting permissions failed with error:" && it
-      end if
-      
-      -- clear extended attributes from bundle files
-      get shell("xattr -cr" && quote & pAppBundle & quote)
-      if the result is not 0 then
-         throw "clearing extended attributes failed with error:" && it
-      end if
-      
-      --try
-      -- Perform the codesigning of the main bundle
-      local tResult
-      __CodesignFrameworks pAppBundle & "/Frameworks", tCertificate, tEntitlementsFile
-      put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & tCertificate & quote && \
-            "--entitlements" && quote & tEntitlementsFile & quote && \
-            quote & pAppBundle & quote) into tResult
-      -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
+   else
+      put "-" into tCertificate
+   end if
+   -- Do the codesigning
+   // SN-2015-09-11: [[ Xcode 7.0 ]] codesign in Xcode 7.0 will not work if CODESIGN_ALLOCATE
+   // environment variable is set, so we only set it up to Xcode 6.4
+   // We use Clang version to get the Xcode version in use
+   local tClangVersion, tClangMajorVersion
+   put shell("clang++ --version") into tClangVersion
+   if matchText(tClangVersion, "Apple LLVM version ([0-9]+)\.[0-9]+.[0-9]+", tClangMajorVersion) \
+         and tClangMajorVersion < 7 then
+      put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
+   end if
+   
+   -- make sure you have permission to clear extended attributes from bundle files
+   get shell("chmod -R u+w" && quote & pAppBundle & quote)
+   if the result is not 0 then
+      throw "setting permissions failed with error:" && it
+   end if
+   
+   -- clear extended attributes from bundle files
+   get shell("xattr -cr" && quote & pAppBundle & quote)
+   if the result is not 0 then
+      throw "clearing extended attributes failed with error:" && it
+   end if
+   
+   --try
+   -- Perform the codesigning of the main bundle
+   local tResult
+   __CodesignFrameworks pAppBundle & "/Frameworks", tCertificate, tEntitlementsOption
+   put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & tCertificate & quote && \
+         tEntitlementsOption && quote & pAppBundle & quote) into tResult
+   -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
+   if there is a file tEntitlementsFile then
       delete file tEntitlementsFile
-      if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
-         throw "codesigning failed with" && tResult
-      end if
-      --      finally
-      --         -- Delete the temporary file
-      --         delete file tEntitlementsFile
-      --      end try
-      
+   end if
+   
+   if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
+      throw "codesigning failed with" && tResult
    end if
 end revSaveAsMobileStandaloneMain
 
-private command __CodesignFrameworks pPath, pCertificate, pEntitlements
+private command __CodesignFrameworks pPath, pCertificate, pEntitlementsOption
    local tFrameworks
    put folders(pPath) into tFrameworks
    filter tFrameworks with "*.framework"
    repeat for each line tFramework in tFrameworks
-      __CodesignFrameworks pPath & "/" & tFramework & "/Frameworks", pCertificate, pEntitlements
+      __CodesignFrameworks pPath & "/" & tFramework & "/Frameworks", pCertificate, pEntitlementsOption
       
       local tResult
       put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & pCertificate & quote && \
-            "--entitlements" && quote & pEntitlements & quote && \
-            quote & pPath & "/" & tFramework & quote) into tResult
+            pEntitlementsOption && quote & pPath & "/" & tFramework & quote) into tResult
       if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
          throw "codesigning failed with" && tResult
       end if
@@ -1139,7 +1136,7 @@ private command addToManifest pFile, pName, pAppBundle, @xManifest, @xRedirects
       exit addToManifest
    end if
    
-   if there is a file pFile or there is a folder pFile and pFile ends with ".lcextd" then
+   if there is a file pFile or (there is a folder pFile and pFile ends with ".lcextd") then
       put pAppBundle & slash & pName & tab & pFile & return after xManifest
       put pName & "//" & pFile & return after xRedirects
    else if there is a folder pFile then
@@ -1243,16 +1240,13 @@ private command revCopyMobileFiles pSettings, pBaseFolder, pAppBundle, pAppTarge
          put char 1 to -8 of the last item of tSource into tName
          
          if pSDKs["sim"]["suffix"] is not empty then
-            put tSource & "/iOS/External-Simulator-" & pSDKs["sim"]["suffix"] into tTarget
-            if there is a file tTarget then
+            put "/iOS/External-Simulator-" & pSDKs["sim"]["suffix"] after tSource
+            if there is a file tSource then
                put tTarget into rExternals[tName]["sim"]
                put "external" into rExternals[tName]["type"]
-               
-               -- Since simulator externals are not statically linked to the engine, we need to make sure the location
-               -- of the external is set correctlty relative to the app bundle, so the deploy command knows what to
-               -- dynamically link to.
-               --
-               put char (the number of chars in pAppBundle + 2) to -1 of tTarget into rExternals[tName]["location"]
+               put tName & ".lcextd" into rExternals[tName]["location"]
+               put pAppBundle & slash & rExternals[tName]["location"] into tTarget
+               revSBCopyFileToFile tSource, tTarget, "revStandaloneProgressCallback", the long id of me
             end if
          else
             put "external" into rExternals[tName]["type"]        
