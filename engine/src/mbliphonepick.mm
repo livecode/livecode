@@ -570,7 +570,14 @@ return 1;
 
             [m_action_sheet_view addSubview: t_toolbar];
             [m_action_sheet_view addSubview: pickerView];
-            m_action_sheet_view.backgroundColor = [UIColor whiteColor];
+			if ([UIColor respondsToSelector:@selector(secondarySystemBackgroundColor)])
+			{
+				m_action_sheet_view.backgroundColor = [UIColor secondarySystemBackgroundColor];
+			}
+			else
+			{
+				m_action_sheet_view.backgroundColor = [UIColor whiteColor];
+			}
             [t_toolbar release];
 
             [MCIPhoneGetView() addSubview:m_action_sheet_view];
