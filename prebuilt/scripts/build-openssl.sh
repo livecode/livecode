@@ -127,6 +127,7 @@ function buildOpenSSL {
 
 		# Customise the OpenSSL configuration to ensure variables are exported as functions
 		cat > Configurations/99-livecode.conf << EOF
+my %targets = ();
 %targets = (
 "${CUSTOM_SPEC}" => {
 	inherit_from => [ "${SPEC}" ],
@@ -134,7 +135,6 @@ function buildOpenSSL {
 },
 );
 EOF
-
 		echo "Configuring OpenSSL for ${NAME}"
 		
 		setCCForTarget "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
