@@ -283,10 +283,6 @@ end deployGetJDK
 
 function deployGetVersionsMap
    local tMap
-   put "4.1 - Jelly Bean" into tMap[16]
-   put "4.2" into tMap[17]
-   put "4.3" into tMap[18]
-   put "4.4 - KitKat" into tMap[19]
    put "5.0 - Lollipop" into tMap[21]
    put "5.1" into tMap[22]
    put "6.0 - Marshmallow" into tMap[23]
