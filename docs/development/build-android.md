@@ -133,3 +133,41 @@ The Linux build environment used for compiling LiveCode for Android is based on 
 * openjdk-7-jdk
 * flex
 * bison
+
+## Debugging & Profiling with Android Studio
+
+* Build a debug build of the android engine
+* Inside android-XXX-bin, create a symlink librevandroid.so -> Standalone-Community
+(or Standalone-Commercial; whichever you're using)
+* Build your standalone
+* Start Android Studio and select "Profile or Debug APK" on the main menu.
+* Select the APK you built
+* Studio will show you the contents of your APK and there will be a banner
+  along the top about being unable to find debug symbols. Click it and navigate
+  to the folder where you created the librevandroid.so symlink.
+* Set the paths to the source folders in the panel that appears if you want to
+do debugging rather than profiling
+* On the top right of the Android Studio toolbar, there are icons for running,
+debugging and profiling. Select the one you want.
+* If Android Studio complains about the SDK not being set, select the top-level
+project in the left-hand tree view, right-click and go to Module Settings. Hunt
+through those menus for SDK/API selections and make sure they're set properly
+(they may default to "Java 1.8" rather than an Android SDK).
+* If Android Studio complains about the app not having a default activity, quit
+Studio and restart it. Keep doing this until it stops being stupid.
+* If you selected "Profile", you'll see the profiler on the bottom of the
+window. Click the "CPU" portion of the graphs. To do a trace, select
+"Sample C++ methods" from the drop down and hit Record. Perform the action you
+want to profile then click "Stop".
+* If profiling says "Advanced profiling not available", you will likely need to
+play around with MinimumSDK settings and the like when building the app. In
+particular, make sure your device is at least API26 and that the minimum API
+level is set to API26 too.
+* The threads of interest are the one at the top of the list (the main Android
+thread) and one further down called "Thread-2" - this is the engine thread.
+
+> **Note:** When you import an APK into Android Studio, the IDE creates a new
+> project in your home directory under ApkProjects/, and makes a local copy of
+> the target APK there. This means that if you rebuild or update the original
+> APK, you need to manually import the updated version into Android Studio
+> again.

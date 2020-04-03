@@ -349,13 +349,13 @@
 						[
 							{
 								'action_name': 'copy_manifest',
-								'message': 'Copying manifest file',
+								'message': 'Copying and update debuggable in manifest file',
 								
 								'inputs':
 								[
 									'rsrc/android-manifest.xml',
 								],
-								
+
 								'outputs':
 								[
 									'<(PRODUCT_DIR)/Manifest.xml',
@@ -363,7 +363,9 @@
 								
 								'action':
 								[
-									'cp', '<@(_inputs)', '<@(_outputs)',
+									'../util/set_android_debuggable.sh',
+									'<@(_inputs)',
+									'<@(_outputs)',
 								],
 							},
 							{
