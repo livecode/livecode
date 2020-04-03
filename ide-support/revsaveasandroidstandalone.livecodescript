@@ -89,7 +89,7 @@ private function updateMinimumAPI pVersionSet, pLimit
    
    answer "The minimum Android API is currently set to" && \
          pVersionSet && \
-         "but the" & tLimitType & " Android API available from LiveCode" && the version && \
+         "but the" && tLimitType & " Android API available from LiveCode" && the version && \
          "is" && pLimit & "." & LF & \
          "Do you want to update the minimum Android API to" && pLimit & "?" \
          with "No" or "Yes" \
@@ -588,9 +588,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       //  Otherwise the app restarts on orientation change.
       local tConfigChangesProp
       put "keyboardHidden|orientation" into tConfigChangesProp
-      if pSettings["android,minimum version"] > 12 then
-         put "|screenSize" after tConfigChangesProp
-      end if
+      put "|screenSize" after tConfigChangesProp
       replace "${CONFIG_CHANGES}" with tConfigChangesProp in tManifest
       
       // SN-2015-09-30: [[ Bug 10267 ]] Hardware Acceleration option added
@@ -893,7 +891,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       -- Stackfile to use
       put the effective filename of stack pStack into tDeploy["stackfile"]
       
-       -- Splash to use (if non-commercial)
+      -- Splash to use (if non-commercial)
       if line 3 of the revLicenseInfo is among the words of "Educational Personal" then
          -- MW-2011-03-17: Make sure absolute paths work correctly
          if pSettings["android,splash"] is not empty and pathIsRelative(pSettings["android,splash"]) then
