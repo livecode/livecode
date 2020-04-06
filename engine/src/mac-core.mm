@@ -868,7 +868,7 @@ void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
 			return;
 		
 		[NSApp endModalSession: s_modal_sessions[t_final_index - 1] . session];
-		[s_modal_sessions[t_final_index - 1] . window -> GetHandle() orderOut: nil];
+		[s_modal_sessions[t_final_index - 1] . window -> GetHandle() performSelector:@selector(orderOut:) withObject:nil afterDelay:0];
 		s_modal_sessions[t_final_index - 1] . window -> Release();
 		s_modal_session_count -= 1;
 	}
