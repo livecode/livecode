@@ -28,8 +28,8 @@ The source for the image.
 - "library":
 - "album":
 - "camera":
-- "rear camera": iOS only
-- "front camera": iOS only
+- "rear camera":
+- "front camera":
 
 
 maxwidth:

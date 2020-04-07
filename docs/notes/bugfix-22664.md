@@ -1,0 +1,1 @@
+# Support `mobilePickPhoto "front camera"` on Android
