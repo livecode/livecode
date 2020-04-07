@@ -138,6 +138,8 @@ public class Engine extends View implements EngineApi
 	private boolean m_new_intent;
 
 	private int m_photo_width, m_photo_height;
+	
+	private int m_night_mode;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -239,6 +241,10 @@ public class Engine extends View implements EngineApi
 
 		m_photo_width = 0;
 		m_photo_height = 0;
+		
+		m_night_mode =
+			p_context.getResources().getConfiguration().uiMode &
+			Configuration.UI_MODE_NIGHT_MASK;
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -356,6 +362,15 @@ public class Engine extends View implements EngineApi
 
     public void onConfigurationChanged(Configuration p_new_config)
 	{
+		int t_night_mode =
+			getContext().getResources().getConfiguration().uiMode &
+			Configuration.UI_MODE_NIGHT_MASK;
+		
+		if (t_night_mode != m_night_mode)
+		{
+			m_night_mode = t_night_mode;
+			doSystemAppearanceChanged();
+		}
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3896,7 +3911,22 @@ public class Engine extends View implements EngineApi
     {
         return ((LiveCodeActivity)getContext()).getServiceClass();
     }
-    
+	
+	////////////////////////////////////////////////////////////////////////////////
+	
+	public int getSystemAppearance()
+	{
+		switch (m_night_mode)
+		{
+			case Configuration.UI_MODE_NIGHT_YES:
+				return 1;
+			case Configuration.UI_MODE_NIGHT_NO:
+			case Configuration.UI_MODE_NIGHT_UNDEFINED:
+			default:
+				return 0;
+		}
+	}
+	
     ////////////////////////////////////////////////////////////////////////////////
     
     // url launch callback
@@ -3966,6 +3996,7 @@ public class Engine extends View implements EngineApi
 	public static native void doShake(int action, long timestamp);
 
 	public static native void doOrientationChanged(int orientation);
+	public static native void doSystemAppearanceChanged();
 
 	public static native void doKeyboardShown(int height);
 	public static native void doKeyboardHidden();

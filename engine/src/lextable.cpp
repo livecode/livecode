@@ -1690,7 +1690,8 @@ const LT factor_table[] =
         {"syncrate", TT_PROPERTY, P_SYNC_RATE},
         {"syserror", TT_FUNCTION, F_SYS_ERROR},
         {"system", TT_PROPERTY, P_SYSTEM},
-        {"systemcolorselector", TT_PROPERTY, P_SYSTEM_CS},
+		{"systemappearance", TT_PROPERTY, P_SYSTEM_APPEARANCE},
+		{"systemcolorselector", TT_PROPERTY, P_SYSTEM_CS},
         {"systemfileselector", TT_PROPERTY, P_SYSTEM_FS},
 		// IM-2013-12-04: [[ PixelScale ]] The "systemPixelScale" token
 		{"systempixelscale", TT_PROPERTY, P_SYSTEM_PIXEL_SCALE},

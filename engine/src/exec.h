@@ -2182,6 +2182,7 @@ extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceTriStateTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceStackFileVersionTypeInfo;
+extern MCExecEnumTypeInfo *kMCInterfaceSystemAppearanceTypeInfo;
 
 void MCInterfaceInitialize(MCExecContext& ctxt);
 void MCInterfaceFinalize(MCExecContext& ctxt);
@@ -2645,6 +2646,7 @@ void MCInterfaceGetScreenGamma(MCExecContext& ctxt, double& r_value);
 void MCInterfaceSetScreenGamma(MCExecContext& ctxt, double p_value);
 void MCInterfaceGetSelectionMode(MCExecContext& ctxt, intenum_t& r_value);
 void MCInterfaceSetSelectionMode(MCExecContext& ctxt, intenum_t p_value);
+void MCInterfaceGetSystemAppearance(MCExecContext& ctxt, intenum_t& r_value);
 void MCInterfaceGetSelectionHandleColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
 void MCInterfaceSetSelectionHandleColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
 void MCInterfaceGetWindowBoundingRect(MCExecContext& ctxt, MCRectangle& r_value);

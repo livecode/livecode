@@ -857,6 +857,22 @@ void MCScreenDC::refresh_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCScreenDC::getsystemappearance(MCSystemAppearance &r_appearance)
+{
+	UITraitCollection *t_traits = [MCIPhoneGetRootView() traitCollection];
+	if ([t_traits respondsToSelector: @selector(userInterfaceStyle)] &&
+		[t_traits userInterfaceStyle] == 2 /* UIUserInterfaceStyleDark */)
+	{
+		r_appearance = kMCSystemAppearanceDark;
+	}
+	else
+	{
+		r_appearance = kMCSystemAppearanceLight;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);
 extern bool coretext_font_destroy(void *p_font);
 extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight);
