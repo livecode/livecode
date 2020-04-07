@@ -106,10 +106,12 @@ static const char *MCPhotoSourceTypeToCString(MCPhotoSourceType p_source)
         case kMCPhotoSourceTypeAlbum:
             return "album";
         case kMCPhotoSourceTypeCamera:
-        case kMCPhotoSourceTypeFrontCamera:
-        case kMCPhotoSourceTypeRearCamera:
-            return "camera";
-        default:
+			return "camera";
+		case kMCPhotoSourceTypeRearCamera:
+            return "rear camera";
+		case kMCPhotoSourceTypeFrontCamera:
+			return "front camera";
+		default:
             MCUnreachableReturn("unknown");
     }
 

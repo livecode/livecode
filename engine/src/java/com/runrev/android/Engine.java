@@ -2080,8 +2080,8 @@ public class Engine extends View implements EngineApi
         m_photo_width = p_width;
         m_photo_height = p_height;
         
-        if (p_source.equals("camera"))
-            showCamera();
+        if (p_source.contains("camera"))
+            showCamera(p_source);
         else if (p_source.equals("album"))
             showLibrary();
         else if (p_source.equals("library"))
@@ -2099,7 +2099,7 @@ public class Engine extends View implements EngineApi
         onAskPermissionDone(grantResults[0] == PackageManager.PERMISSION_GRANTED);
     }
     
-	public void showCamera()
+	public void showCamera(String p_source)
 	{
 		// 2012-01-18-IM temp file may be created in app cache folder, in which case
 		// the file needs to be made world-writable
@@ -2149,6 +2149,20 @@ public class Engine extends View implements EngineApi
 		t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", true, ParcelFileDescriptor.MODE_READ_WRITE);
 
 		Intent t_image_capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		
+		if (p_source.equals("front camera"))
+		{
+			t_image_capture.putExtra("android.intent.extras.CAMERA_FACING", 1);
+			t_image_capture.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+			t_image_capture.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+			
+		}
+		else if (p_source.equals("rear camera"))
+		{
+			t_image_capture.putExtra("android.intent.extras.CAMERA_FACING", 0);
+			t_image_capture.putExtra("android.intent.extras.LENS_FACING_FRONT", 0);
+			t_image_capture.putExtra("android.intent.extra.USE_FRONT_CAMERA", false);
+		}
 		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_uri);
 		t_image_capture.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 		t_activity.startActivityForResult(t_image_capture, IMAGE_RESULT);
