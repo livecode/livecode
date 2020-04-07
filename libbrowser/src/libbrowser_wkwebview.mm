@@ -48,12 +48,65 @@ private:
 	com_livecode_libbrowser_MCWKWebViewNavigationDelegate *m_delegate;
 };
 
+@interface com_livecode_libbrowser_MCWKWebViewLoadRequest : NSObject
+{
+}
+
+@property (retain) NSURL* url;
+@property (retain) NSString* htmlText;
+@property (assign) BOOL quiet;
+
+- (id)initWithUrl:(NSURL *)url htmlText:(NSString *)htmlText quiet:(BOOL)quiet;
++ (id)requestWithUrl: (NSURL*)url htmlText:(NSString *)htmlText quiet:(BOOL)quiet;
+
+@end
+
+@compatibility_alias MCWKWebViewLoadRequest com_livecode_libbrowser_MCWKWebViewLoadRequest;
+
+@implementation com_livecode_libbrowser_MCWKWebViewLoadRequest
+
+@synthesize url;
+@synthesize htmlText;
+
++ (id)requestWithUrl:(NSURL *)url htmlText:(NSString *)htmlText quiet:(BOOL)quiet
+{
+	MCWKWebViewLoadRequest *t_request = [[MCWKWebViewLoadRequest alloc] autorelease];
+	if (t_request == nil)
+		return nil;
+	
+	return [t_request initWithUrl:url htmlText:htmlText quiet:quiet];
+}
+
+- (id)initWithUrl:(NSURL *)p_url htmlText:(NSString *)p_htmlText quiet:(BOOL)p_quiet
+{
+	self = [super init];
+	if (self == nil)
+		return nil;
+	
+	self.url = p_url;
+	self.htmlText = p_htmlText;
+	self.quiet = p_quiet;
+	
+	return self;
+}
+
+- (void)dealloc
+{
+	self.url = nil;
+	self.htmlText = nil;
+	
+	[super dealloc];
+}
+@end
+
 @interface com_livecode_libbrowser_MCWKWebViewNavigationDelegate : NSObject <WKNavigationDelegate>
 {
 	MCWKWebViewBrowser *m_instance;
-	MCWKWebViewBrowserNavigationRequest *m_main_request;
 	NSMutableArray<NSValue*> *m_frame_requests;
-	bool m_pending_request;
+	MCWKWebViewLoadRequest *m_pending_request;
+	MCWKWebViewLoadRequest *m_current_request;
+	MCWKWebViewLoadRequest *m_queued_request;
+	bool m_can_start_load;
 	bool m_delay_requests;
 }
 
@@ -63,14 +116,16 @@ private:
 - (void)webView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation;
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation;
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation;
+- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(WKNavigation *)navigation withError:(NSError *)error;
 - (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error;
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler;
 
-- (void)setPendingRequest: (bool)newValue;
 - (void)setDelayRequests: (bool)newValue;
 - (bool)getDelayRequests;
 - (void)continueRequest: (MCWKWebViewBrowserNavigationRequest *)request withDecisionHandler:(MCWKNavigationDecisionHandler)decisionHandler;
+- (void)cancelRequest: (MCWKWebViewBrowserNavigationRequest *)request withDecisionHandler:(MCWKNavigationDecisionHandler)decisionHandler;
 
+- (void)loadRequest: (MCWKWebViewLoadRequest*)request inWebView:(WKWebView *)webView;
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -317,11 +372,10 @@ bool MCWKWebViewBrowser::LoadHTMLText(const char *p_htmltext, const char *p_base
 	WKWebView *t_view;
 	if (!GetWebView(t_view))
 		return false;
-	
-	MCBrowserRunBlockOnMainFiber(^{
-		[m_delegate setPendingRequest: true];
-		[t_view loadHTMLString: [NSString stringWithUTF8String: p_htmltext] baseURL: [NSURL URLWithString: [NSString stringWithUTF8String: p_baseurl]]];
-	});
+
+	NSURL *t_url = [NSURL URLWithString: [NSString stringWithUTF8String: p_baseurl]];
+	NSString *t_htmltext = [NSString stringWithUTF8String: p_htmltext];
+	[m_delegate loadRequest:[MCWKWebViewLoadRequest requestWithUrl:t_url htmlText:t_htmltext quiet:YES] inWebView:t_view];
 	
 	/* UNCHECKED */ MCBrowserCStringAssignCopy(m_htmltext, p_htmltext);
 	/* UNCHECKED */ MCBrowserCStringAssignCopy(m_url, p_baseurl);
@@ -869,14 +923,31 @@ bool MCWKWebViewBrowser::SetRect(const MCBrowserRect &p_rect)
 
 bool MCWKWebViewBrowser::GoToURL(const char *p_url)
 {
+	MCLog("MCWKWebViewBrowser::GoToURL(%s)", p_url);
 	WKWebView *t_view;
 	if (!GetWebView(t_view))
 		return false;
 	
-	//[m_delegate setPendingRequest: true];
-	MCBrowserRunBlockOnMainFiber(^{
-		[t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithUTF8String: p_url]]]];
-	});
+//	__block NSURL *t_url;
+	NSURL *t_url;
+	t_url = [NSURL URLWithString: [NSString stringWithUTF8String: p_url]];
+
+	// reject file urls with empty path components
+	if (t_url.fileURL && t_url.path.length == 0)
+		return false;
+
+	// check that we have permission to access file urls before proceeding
+	__block bool t_reachable = true;
+	if (t_url.fileURL)
+	{
+		MCBrowserRunBlockOnMainFiber(^{
+			t_reachable = [t_url checkResourceIsReachableAndReturnError:nil];
+		});
+	}
+	if (!t_reachable)
+		return false;
+	
+	[m_delegate loadRequest:[MCWKWebViewLoadRequest requestWithUrl:t_url htmlText:nil quiet:NO] inWebView:t_view];
 	
 	/* UNCHECKED */ MCBrowserCStringAssignCopy(m_url, p_url);
 	MCBrowserCStringAssign(m_htmltext, nil);
@@ -1258,7 +1329,7 @@ void MCWKWebViewBrowserNavigationRequest::Continue()
 void MCWKWebViewBrowserNavigationRequest::Cancel()
 {
 	MCBrowserRunBlockOnMainFiber(^{
-		m_decision_handler(WKNavigationActionPolicyCancel);
+		[m_delegate cancelRequest:this withDecisionHandler:m_decision_handler];
 	});
 }
 
@@ -1273,18 +1344,26 @@ void MCWKWebViewBrowserNavigationRequest::Cancel()
 		return nil;
 	
 	m_instance = instance;
-	m_pending_request = false;
 	m_delay_requests = false;
-	m_main_request = nil;
+	m_can_start_load = true;
 	m_frame_requests = [[NSMutableArray array] retain];
+	m_pending_request = nil;
+	m_current_request = nil;
+	m_queued_request = nil;
 
 	return self;
 }
 
 - (void)dealloc
 {
-	if (m_main_request != nil)
-		m_main_request->Release();
+	if (m_pending_request != nil)
+		[m_pending_request release];
+	
+	if (m_current_request != nil)
+		[m_current_request release];
+	
+	if (m_queued_request != nil)
+		[m_queued_request release];
 	
 	if (m_frame_requests != nil)
 	{
@@ -1299,17 +1378,74 @@ void MCWKWebViewBrowserNavigationRequest::Cancel()
 	[super dealloc];
 }
 
+- (void)finishNavigationWithError:(const char *)errorMsg
+{
+	for (NSValue *t_value in m_frame_requests)
+	{
+		MCWKWebViewBrowserNavigationRequest *t_frame_request;
+		t_frame_request = (MCWKWebViewBrowserNavigationRequest*)t_value.pointerValue;
+		if (!m_current_request.quiet)
+		{
+			if (errorMsg == nil)
+				m_instance->OnDocumentLoadComplete(true, t_frame_request->GetURL());
+			else
+				m_instance->OnDocumentLoadFailed(true, t_frame_request->GetURL(), errorMsg);
+		}
+		t_frame_request->Release();
+	}
+	[m_frame_requests removeAllObjects];
+	
+	if (!m_current_request.quiet)
+	{
+		const char *t_url_string;
+		t_url_string = m_current_request.url.absoluteString.UTF8String;
+		if (errorMsg == nil)
+		{
+			m_instance->OnDocumentLoadComplete(false, t_url_string);
+			m_instance->OnNavigationComplete(false, t_url_string);
+		}
+		else
+		{
+			m_instance->OnDocumentLoadFailed(false, t_url_string, errorMsg);
+			m_instance->OnNavigationFailed(false, t_url_string, errorMsg);
+		}
+	}
+
+	// the current request has ended so release it here
+	[m_current_request release];
+	m_current_request = nil;
+	
+	// Once the navigation is complete it will be safe to start a new load request
+	m_can_start_load = true;
+
+	[self checkQueuedRequest];
+}
+
+- (void)finishNavigation
+{
+	[self finishNavigationWithError:nil];
+}
+
 - (void)webView:(WKWebView *)webView decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
 {
 	NSString *t_url_string;
 	t_url_string = [[[navigationAction request] URL] absoluteString];
 	
-	MCWKWebViewBrowserNavigationRequest *t_request;
-	t_request = new MCWKWebViewBrowserNavigationRequest(navigationAction, m_pending_request, [decisionHandler copy], self);
-	
-	if (m_pending_request || [NSURLConnection canHandleRequest: [navigationAction request]])
+	// Check if this request came from a libbrowser API call, and find whether
+	// or not messages should be sent while the request is serviced
+	bool t_quiet = false;
+	if (navigationAction.navigationType == WKNavigationTypeOther)
 	{
-		if (!m_pending_request && m_delay_requests)
+		MCAssert(m_pending_request != nil);
+		t_quiet = m_pending_request.quiet;
+	}
+	
+	MCWKWebViewBrowserNavigationRequest *t_request;
+	t_request = new MCWKWebViewBrowserNavigationRequest(navigationAction, t_quiet, [decisionHandler copy], self);
+	
+	if (t_quiet || [NSURLConnection canHandleRequest: [navigationAction request]])
+	{
+		if (!t_quiet && m_delay_requests)
 		{
 			if (m_instance->OnNavigationRequest(t_request))
 			{
@@ -1333,79 +1469,56 @@ void MCWKWebViewBrowserNavigationRequest::Cancel()
 
 - (void)webView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation
 {
-	if (m_main_request == nil)
+	if (m_current_request == nil)
 		return;
 	
-	if (!m_main_request->IsQuiet())
-		m_instance->OnDocumentLoadBegin(false, m_main_request->GetURL());
+	if (!m_current_request.quiet)
+		m_instance->OnDocumentLoadBegin(false, m_current_request.url.absoluteString.UTF8String);
+
+	// Once the navigation is committed, new requests can be made safely
+	m_can_start_load = true;
+	[self checkQueuedRequest];
 }
 
 - (void)webView:(WKWebView *)webView didStartProvisionalNavigation:(WKNavigation *)navigation
 {
-	if (m_main_request == nil)
+	if (m_current_request == nil)
 		return;
 	
-	if (!m_main_request->IsQuiet())
-		m_instance->OnNavigationBegin(false, m_main_request->GetURL());
+	if (!m_current_request.quiet)
+		m_instance->OnNavigationBegin(false, m_current_request.url.absoluteString.UTF8String);
 }
 
 - (void)webView:(WKWebView *)webView didFinishNavigation:(WKNavigation *)navigation
 {
-	m_pending_request = false;
-
-	if (m_main_request == nil)
+	if (m_current_request == nil)
 		return;
 	
 	m_instance->SyncJavaScriptHandlers();
 	
-	for (NSValue *t_value in m_frame_requests)
-	{
-		MCWKWebViewBrowserNavigationRequest *t_frame_request;
-		t_frame_request = (MCWKWebViewBrowserNavigationRequest*)t_value.pointerValue;
-		if (!m_main_request->IsQuiet())
-			m_instance->OnDocumentLoadComplete(true, t_frame_request->GetURL());
-		t_frame_request->Release();
-	}
-	[m_frame_requests removeAllObjects];
-	
-	if (!m_main_request->IsQuiet())
-	{
-		m_instance->OnDocumentLoadComplete(false, m_main_request->GetURL());
-		m_instance->OnNavigationComplete(false, m_main_request->GetURL());
-	}
+	[self finishNavigation];
+}
 
-	m_main_request->Release();
-	m_main_request = nil;
+- (void)webView:(WKWebView *)webView didFailProvisionalNavigation:(null_unspecified WKNavigation *)navigation withError:(NSError *)error
+{
+	if (m_current_request == nil)
+		return;
+	
+	const char *t_error;
+	t_error = [[error localizedDescription] UTF8String];
+	
+	[self finishNavigationWithError:t_error];
 }
 
 - (void)webView:(WKWebView *)webView didFailNavigation:(WKNavigation *)navigation withError:(NSError *)error
 {
-	m_pending_request = false;
-
-	if (m_main_request == nil)
+	if (m_current_request == nil)
 		return;
 	
 	const char *t_error;
 	t_error = [[error localizedDescription] UTF8String];
 
-	for (NSValue *t_value in m_frame_requests)
-	{
-		MCWKWebViewBrowserNavigationRequest *t_frame_request;
-		t_frame_request = (MCWKWebViewBrowserNavigationRequest*)t_value.pointerValue;
-		if (!m_main_request->IsQuiet())
-			m_instance->OnDocumentLoadFailed(true, t_frame_request->GetURL(), t_error);
-		t_frame_request->Release();
-	}
-	[m_frame_requests removeAllObjects];
-	
-	if (!m_main_request->IsQuiet())
-	{
-		m_instance->OnDocumentLoadFailed(false, m_main_request->GetURL(), t_error);
-		m_instance->OnNavigationFailed(false, m_main_request->GetURL(), t_error);
-	}
-
-	m_main_request->Release();
-	m_main_request = nil;
+	[self finishNavigationWithError:t_error];
 }
 
 - (void)continueRequest:(MCWKWebViewBrowserNavigationRequest *)request withDecisionHandler:(MCWKNavigationDecisionHandler)decisionHandler
@@ -1418,21 +1531,91 @@ void MCWKWebViewBrowserNavigationRequest::Cancel()
 	}
 	else
 	{
-		if (m_main_request != nil)
-		{
-			// Redirect: replace current request with new one
-			m_main_request->Release();
-			m_main_request = nil;
-		}
-		m_main_request = request;
-		m_main_request->Retain();
+		// continuing this request will cause any in-progress requests to be
+		// silently cancelled, so end that request here and send an appropriate
+		// error message.
+		if (m_current_request != nil)
+			[self finishNavigationWithError: "navigation request cancelled"];
+
+		// The pending load has been accepted so make it current
+		if (m_current_request != nil)
+			[m_current_request release];
+		m_current_request = m_pending_request;
+		m_pending_request = nil;
+		
 		decisionHandler(WKNavigationActionPolicyAllow);
 	}
 }
 
-- (void)setPendingRequest:(bool)p_new_value
+- (void)cancelRequest: (MCWKWebViewBrowserNavigationRequest *)request withDecisionHandler:(MCWKNavigationDecisionHandler)decisionHandler
 {
-	m_pending_request = p_new_value;
+	decisionHandler(WKNavigationActionPolicyCancel);
+	
+	if (!request->IsQuiet())
+		m_instance->OnNavigationFailed(request->IsFrame(), request->GetURL(), "navigation cancelled");
+	
+	if (!request->IsFrame())
+	{
+		// clear the rejected pending load request
+		if (m_pending_request != nil)
+		{
+			[m_pending_request release];
+			m_pending_request = nil;
+		}
+
+		m_can_start_load = true;
+		
+		[self checkQueuedRequest];
+	}
+}
+
+- (void) checkQueuedRequest
+{
+	// if there is a queued request from API calls then load it
+	if (m_queued_request != nil)
+	{
+		MCWKWebViewLoadRequest *t_request = m_queued_request;
+		m_queued_request = nil;
+		
+		WKWebView *t_webview = nil;
+		/* UNCHECKED */ m_instance->GetWebView(t_webview);
+
+		[self loadRequest:t_request inWebView:t_webview];
+		
+		[t_request release];
+	}
+}
+
+- (void) loadRequest:(MCWKWebViewLoadRequest *)request inWebView:(WKWebView *)webView
+{
+	if (request == nil)
+		return;
+	
+	if (!m_can_start_load)
+	{
+		[request retain];
+		if (m_queued_request != nil)
+			[m_queued_request release];
+		m_queued_request = request;
+		return;
+	}
+	
+	// Prevent other loads until this request has begun.
+	// This avoids a permissions error when making multiple requests to file urls within
+	// an app's sandboxed folder.
+	m_can_start_load = false;
+	m_pending_request = [request retain];
+
+	MCBrowserRunBlockOnMainFiber(^{
+		if (request.htmlText == nil)
+		{
+			[webView loadRequest:[NSURLRequest requestWithURL:request.url]];
+		}
+		else
+		{
+			[webView loadHTMLString:request.htmlText baseURL:request.url];
+		}
+	});
 }
 
 - (void)setDelayRequests:(bool)p_new_value
