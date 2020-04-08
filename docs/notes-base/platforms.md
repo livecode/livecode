@@ -52,6 +52,7 @@ The Mac engine supports:
 * 10.12.x (Sierra)
 * 10.13.x (High Sierra)
 * 10.14.x (Mojave)
+* 10.15.x (Catalina)
 
 ## iOS
 iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcode is installed and has been set in LiveCode *Preferences* (in the *Mobile Support* pane).
@@ -82,15 +83,16 @@ also to deploy it on an Android device or simulator from the IDE.
 
 Android deployment is possible from Windows, Linux and Mac OSX.
 
-The Android engine supports devices using ARMv7 or ARMv8 processors.
+The Android engine supports devices using x86, x86-64, ARM and ARM64 processors.
 It will run on the following versions of Android:
 
-* 4.1-4.3 (Jelly Bean)
-* 4.4 (KitKat)
 * 5.0-5.1 (Lollipop)
 * 6.0 (Marshmallow)
 * 7.x (Nougat)
 * 8.x (Oreo)
+* 9.0 (Pie)
+* 10.0 (Q)
+
 
 To enable deployment to Android devices, you need to download the
 [Android SDK](https://developer.android.com/sdk/index.html#Other), and
