@@ -55,6 +55,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#include <objc/message.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void X_main_loop(void);
