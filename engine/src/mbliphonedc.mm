@@ -859,9 +859,11 @@ void MCScreenDC::refresh_current_window(void)
 
 void MCScreenDC::getsystemappearance(MCSystemAppearance &r_appearance)
 {
+	/* userInterfaceStyle was introduced in iOS 12.0 */
+	typedef int (*_userInterfaceStyle)(UITraitCollection *, SEL selector);
 	UITraitCollection *t_traits = [MCIPhoneGetRootView() traitCollection];
 	if ([t_traits respondsToSelector: @selector(userInterfaceStyle)] &&
-		[t_traits userInterfaceStyle] == 2 /* UIUserInterfaceStyleDark */)
+			((_userInterfaceStyle)objc_msgSend)(t_traits, @selector(userInterfaceStyle)) == 2)
 	{
 		r_appearance = kMCSystemAppearanceDark;
 	}
