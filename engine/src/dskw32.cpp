@@ -1170,16 +1170,31 @@ private:
 
 struct MCStdioFileHandle: public MCSystemFileHandle
 {
-	MCStdioFileHandle(MCWinSysHandle p_handle, bool p_is_pipe = false)
+	MCStdioFileHandle(MCWinSysHandle p_handle, bool p_is_pipe = false, bool p_buffered_write = false)
 	{
 		m_handle = p_handle;
 		m_is_eof = false;
 		m_is_pipe = p_is_pipe;
 		m_putback = -1;
+
+		/* We only buffer writes if this is not a pipe and buffering is
+		 * explicitly requested. */
+		m_should_buffer_writes = !m_is_pipe &&
+									p_buffered_write;
+
+		/* The write buffer starts off unallocated. */
+		m_write_buffer = nullptr;
+		m_write_buffer_frontier = 0;
 	}
 
 	virtual void Close(void)
 	{
+		/* Close the write buffer but without checking for failure. It is
+		 * important that critical uses of file streams should call the
+		 * Flush() method before closing to ensure any buffered data is
+		 * written to disk. */
+		CloseWriteBuffer();
+
 		CloseHandle(m_handle);
 		delete this;
 	}
@@ -1202,7 +1217,14 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 			r_read = 0;
 			return false;
 		}
-		
+
+		/* First flush any write buffer, if this fails, then the operation
+		 * fails. */
+		if (!FlushWriteBuffer())
+		{
+			return false;
+		}
+
 		// If this is named pipe, handle things differently -- we first peek to see how
 		// much is available to read.
 		// MW-2012-09-10: [[ Bug 10230 ]] If this stream is a pipe then handle that case.
@@ -1355,13 +1377,61 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 
 	virtual bool Write(const void *p_buffer, uint32_t p_length)
 	{
-		uint32_t t_written;
 		if (this == IO_stdin)
 			return true; // Shouldn't it return false???
 
 		if (m_handle == NULL)
 			return false;
 
+		/* If this is not a pipe then we may have a write buffer. */
+		if (m_should_buffer_writes)
+		{
+			if (p_length <= kMaximumSingleBufferedWriteSize)
+			{
+				/* If the amount to write won't fit, or will completely fill the buffer
+				 * then flush it. */
+				if (kWriteBufferSize - m_write_buffer_frontier <= p_length)
+				{
+					if (!FlushWriteBuffer())
+					{
+						return false;
+					}
+				}
+
+				/* If the write buffer doesn't exist, try to create it. */
+				if (m_write_buffer == nullptr)
+				{
+					if (!MCMemoryAllocate(kWriteBufferSize,
+											m_write_buffer))
+					{
+						m_write_buffer = nullptr;
+					}
+				}
+
+				/* If the write buffer exists then buffer. */
+				if (m_write_buffer != nullptr)
+				{
+					/* Copy the data to the buffer and increase the frontier. */
+					MCMemoryCopy(m_write_buffer + m_write_buffer_frontier,
+									p_buffer,
+									p_length);
+					m_write_buffer_frontier += p_length;
+
+					/* There is nothing more to do as the data has been buffered. */
+					return true;
+				}
+			}
+			else
+			{
+				if (!FlushWriteBuffer())
+				{
+					return false;
+				}
+			}
+		}
+
+		/* Write direct to the file. */
+		uint32_t t_written;
 		if (!WriteFile(m_handle, (LPVOID)p_buffer, (DWORD)p_length,
 					   (LPDWORD)&t_written, NULL))
 		{
@@ -1376,6 +1446,13 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 
 	virtual bool Seek(int64_t p_offset, int p_dir)
 	{
+		/* First flush any write buffer, if this fails, then the operation
+		 * fails. */
+		if (!FlushWriteBuffer())
+		{
+			return false;
+		}
+
 		LONG high_offset;
 		high_offset = (LONG)(p_offset >> 32);
 		DWORD fp;
@@ -1391,6 +1468,13 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	
 	virtual bool Truncate(void)
 	{
+		/* First flush any write buffer, if this fails, then the operation
+		 * fails. */
+		if (!FlushWriteBuffer())
+		{
+			return false;
+		}
+
 		if (!SetEndOfFile(m_handle))
 			return false;
 
@@ -1399,6 +1483,13 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 
 	virtual bool Sync(void)
 	{
+		/* First flush any write buffer, if this fails, then the operation
+		 * fails. */
+		if (!FlushWriteBuffer())
+		{
+			return false;
+		}
+
 		//get the current file position pointer
 		LONG fph;
 		fph = 0;
@@ -1414,6 +1505,13 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 
 	virtual bool Flush(void)
 	{
+		/* First flush any write buffer, if this fails, then the operation
+		 * fails. */
+		if (!FlushWriteBuffer())
+		{
+			return false;
+		}
+
 		// SN-2014-06-16 
 		// FileFlushBuffer returns non-zero on success
 		// (which is the opposite of NO_ERROR
@@ -1425,6 +1523,13 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	
 	virtual bool PutBack(char p_char)
 	{
+		/* First flush any write buffer, if this fails, then the operation
+		 * fails. */
+		if (!FlushWriteBuffer())
+		{
+			return false;
+		}
+
 		if (m_putback != -1)
 			return false;
 			
@@ -1435,11 +1540,22 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	
 	virtual int64_t Tell(void)
 	{
+		/* Fetch the current on-disk file offset. */
 		DWORD low;
 		LONG high;
 		high = 0;
 		low = SetFilePointer(m_handle, 0, &high, FILE_CURRENT);
-		return low | ((int64_t)high << 32);
+
+		/* As the API call returns the offset in two pieces, combine them into
+		 * a 64-bit value. */
+		int64_t t_offset =
+					low | ((int64_t)high << 32);
+
+		/* Increase the offset by any currently (unwritten) buffered data. */
+		t_offset += GetBufferedWriteSize();
+
+		/* Return the final, computed, offset value. */
+		return t_offset;
 	}
 	
 	virtual void *GetFilePointer(void)
@@ -1449,12 +1565,40 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 
 	virtual uint64_t GetFileSize(void)
 	{
+		/* Fetch the on-disk file size - notice that GetLastError() must be
+		 * checked to tell the difference between a low file size word of
+		 * INVALID_FILE_SIZE and an actual error. */
 		DWORD t_high_word, t_low_word;
 		t_low_word = ::GetFileSize(m_handle, &t_high_word);
-		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
-			return (int64_t)t_low_word | (int64_t)t_high_word << 32;
+		if (t_low_word == INVALID_FILE_SIZE && GetLastError() != NO_ERROR)
+		{
+			return 0;
+		}
 
-		return 0;
+		/* As the API call returns the size in two pieces, combine them into
+		 * a single 64-bit value. */
+		uint64_t t_file_size =
+					(uint64_t)t_low_word | (uint64_t)t_high_word << 32;
+
+		/* If there is buffered data to write, then we must take the current
+		 * file pointer into account. */
+		uint32_t t_buffered_write_size =
+					GetBufferedWriteSize();
+		if (t_buffered_write_size != 0)
+		{
+			/* Fetch the current file pointer - including any additional offset
+			 * pending data to write. */
+			int64_t t_file_pointer =
+						Tell();
+
+			/* The file size is either the current file pointer (including any
+			 * adjustment for unwritten data) or the current file size,
+			 * whichever is greater. */
+			t_file_size = MCMax(t_file_size, t_file_pointer);
+		}
+
+		/* Return the final, computed, file size. */
+		return t_file_size;
 	}
     
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
@@ -1463,11 +1607,86 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	}
 
 private:
+	/* Ensure any buffered data is written to disk. If writing the data succeeds
+	 * then true is returned, otherwise false is returned. */
+	bool FlushWriteBuffer(void)
+	{
+		/* If there is no write buffer, or the write buffer is empty then there
+		 * is nothing to do. */
+		if (!m_should_buffer_writes ||
+			m_write_buffer == nullptr ||
+			m_write_buffer_frontier == 0)
+		{
+			return true;
+		}
+
+		/* Write the buffered data to the file. */
+		uint32_t t_written;
+		if (!WriteFile(m_handle,
+						(LPVOID)m_write_buffer,
+						(DWORD)m_write_buffer_frontier,
+						(LPDWORD)&t_written,
+						NULL))
+		{
+			MCS_seterrno(GetLastError());
+			return false;
+		}
+
+		/* If the amount written wasn't the amount requested it is an error. */
+		if (t_written != m_write_buffer_frontier)
+			return false;
+
+		/* Reset the buffer frontier to the start. */
+		m_write_buffer_frontier = 0;
+
+		/* The buffer was successfully flushed. */
+		return true;
+	}
+
+	/* Attempt to write any buffered data to disk, and then free the write buffer
+	 * (regardless of whether the write attempt succeeded or failed). If the write
+	 * succeeded true is returned, otherwise false is returned. */
+	bool CloseWriteBuffer(void)
+	{
+		/* Make sure the write buffer is emptied, noting whether it succeeded. */
+		bool t_success =
+					FlushWriteBuffer();
+
+		/* If there is a write buffer then free it. */
+		if (m_write_buffer != nullptr)
+		{
+			MCMemoryDeallocate(m_write_buffer);
+		}
+
+		/* Return the result of flushing any buffered data to disk. */
+		return t_success;
+	}
+
+	/* Return the number of bytes currently buffered. */ 
+	uint32_t GetBufferedWriteSize(void) const
+	{
+		return m_write_buffer_frontier;
+	}
+
 	MCWinSysHandle m_handle;
 	int m_putback;
 	// MW-2012-09-10: [[ Bug 10230 ]] If true, it means this IO handle is a pipe.
 	bool m_is_pipe;
 	bool m_is_eof;
+
+	/* When the handle is not a pipe and a write is done, a 64k buffer is used to
+	 * reduce the number of system calls performed. */
+	enum
+	{
+		/* The maximum size of the write buffer. */
+		kWriteBufferSize = 65536,
+
+		/* The maximum single write size which will be buffered. */
+		kMaximumSingleBufferedWriteSize = 16384,
+	};
+	bool m_should_buffer_writes;
+	byte_t *m_write_buffer;
+	uint32_t m_write_buffer_frontier;
 };
 
 // MW-2005-02-22: Make this global for now so it is accesible by opensslsocket.cpp
@@ -2146,7 +2365,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			omode = GENERIC_READ;
 			createmode = OPEN_EXISTING;
 		}
-        if (p_mode== kMCOpenFileModeWrite || p_mode == kMCOpenFileModeCreate)
+        if (p_mode == kMCOpenFileModeBufferedWrite || p_mode== kMCOpenFileModeWrite || p_mode == kMCOpenFileModeCreate)
 		{
 			omode = GENERIC_WRITE;
 			createmode = CREATE_ALWAYS;
@@ -2255,7 +2474,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		}
 		else
         {
-			t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+			t_handle = new (nothrow) MCStdioFileHandle((MCWinSysHandle)t_file_handle, 
+														false, 
+														p_mode == kMCOpenFileModeBufferedWrite);
             t_close_file_handler = t_handle == NULL;
         }
 

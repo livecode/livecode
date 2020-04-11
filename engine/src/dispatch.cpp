@@ -1282,7 +1282,9 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname, uint32
 	}
 	IO_handle stream;
 
-	if ((stream = MCS_open(*t_linkname, kMCOpenFileModeWrite, True, False, 0)) == NULL)
+	/* Ask to open the stackfile stream for buffered write. Whether this will
+	 * make a difference depends on the platform. */
+	if ((stream = MCS_open(*t_linkname, kMCOpenFileModeBufferedWrite, True, False, 0)) == NULL)
 	{
 		MCresult->sets("can't open stack file");
 		cleanup(stream, *t_linkname, *t_backup);
@@ -1320,8 +1322,13 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname, uint32
 	MCgroupedobjectoffset . y = 0;
 	
 	MCresult -> clear();
+
+	/* Make sure we flush the stream when we have written everything. This ensures that
+	 * any write buffering is completely applied before we irrevocably remove the
+	 * original. */
 	if (sptr->save(stream, 0, false, p_version) != IO_NORMAL
-	        || IO_write_uint1(OT_END, stream) != IO_NORMAL)
+	        || IO_write_uint1(OT_END, stream) != IO_NORMAL
+			|| MCS_flush(stream) != IO_NORMAL)
 	{
 		if (MCresult -> isclear())
 			MCresult->sets(errstring);

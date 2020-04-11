@@ -51,6 +51,7 @@ enum MCOpenFileMode
 {
     kMCOpenFileModeRead,
     kMCOpenFileModeWrite,
+	kMCOpenFileModeBufferedWrite,
     kMCOpenFileModeUpdate,
     kMCOpenFileModeAppend,
     kMCOpenFileModeCreate,
