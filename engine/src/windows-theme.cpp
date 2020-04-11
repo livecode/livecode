@@ -30,23 +30,24 @@
 #include "stack.h"
 #include "font.h"
 
+#ifndef _SERVER
+#include "w32dc.h"
+#endif
 
 static bool logfont_for_control(MCPlatformControlType p_type, LOGFONTW& r_lf)
 {
+#ifndef _SERVER
     // Get the font used for the non-client areas of Windows. This font
     // gets used throughout the Windows UI.
-	bool t_found;
-    NONCLIENTMETRICSW ncm;
-    ncm.cbSize = sizeof(ncm);
-    t_found = SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0);
-    if (t_found)
+    const NONCLIENTMETRICSW& t_ncm = ((MCScreenDC *)MCscreen)->getnonclientmetrics();
+    if (t_ncm.cbSize != 0)
     {
         // Which LOGFONT structure contains the info for this control?
-        LOGFONTW* lf = NULL;
+        const LOGFONTW* lf = NULL;
         switch (p_type)
         {
             case kMCPlatformControlTypeTooltip:
-                lf = &ncm.lfStatusFont;
+                lf = &t_ncm.lfStatusFont;
                 break;
                 
             case kMCPlatformControlTypeMenu:
@@ -54,11 +55,11 @@ static bool logfont_for_control(MCPlatformControlType p_type, LOGFONTW& r_lf)
             case kMCPlatformControlTypeOptionMenu:
             case kMCPlatformControlTypePulldownMenu:
             case kMCPlatformControlTypePopupMenu:
-                lf = &ncm.lfMenuFont;
+                lf = &t_ncm.lfMenuFont;
                 break;
                 
             default:
-                lf = &ncm.lfMessageFont;
+                lf = &t_ncm.lfMessageFont;
                 break;
         }
         
@@ -71,14 +72,15 @@ static bool logfont_for_control(MCPlatformControlType p_type, LOGFONTW& r_lf)
     }
     
     return false;
+#else
+	return false;
+#endif
 }
 
 bool MCPlatformGetControlThemePropBool(MCPlatformControlType, MCPlatformControlPart, MCPlatformControlState, MCPlatformThemeProperty, bool&)
 {
     return false;
 }
-
-extern bool MCWin32GetScreenDPI(uint32_t&, uint32_t&);
 
 // Density used by default for the Win32 UI
 #define NORMAL_DENSITY  96
@@ -99,11 +101,14 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
             {
                 // Scale compared to the "normal" windows scale
 				uint32_t t_x_dpi, t_y_dpi;
+
 #ifndef _SERVER
-				if (!MCWin32GetScreenDPI(t_x_dpi, t_y_dpi))
+				t_x_dpi = ((MCScreenDC *)MCscreen)->getscreenxdpi();
+				t_y_dpi = ((MCScreenDC *)MCscreen)->getscreenydpi();
+#else
+				t_x_dpi = t_y_dpi = NORMAL_DENSITY;
 #endif
-					t_x_dpi = t_y_dpi = NORMAL_DENSITY;
-				
+
 				// Get the size from the LOGFONT structure
                 r_int = MCGFloat(-lf.lfHeight) / (MCGFloat(MCMax(t_x_dpi, t_y_dpi)) / NORMAL_DENSITY);
             }
