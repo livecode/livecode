@@ -605,6 +605,41 @@ bool MCJavaStringToNative(JNIEnv *env, jstring p_java_string, char *&r_native)
     return t_success;
 }
 
+bool MCJavaStringToUTF8(JNIEnv *env, jstring p_java_string, char *&r_utf_8)
+{
+    bool t_success = true;
+    
+    const jchar *t_unicode_string = nil;
+    int t_unicode_length = 0;
+    char *t_utf8 = nil;
+    int t_utf8_length;
+    
+    if (p_java_string != nil)
+        t_unicode_string = env -> GetStringChars(p_java_string, NULL);
+    
+    if (t_unicode_string != nil)
+    {
+        t_unicode_length = env -> GetStringLength(p_java_string);
+
+        t_utf8_length = UnicodeToUTF8(t_unicode_string, t_unicode_length * 2, nil, 0);
+
+        t_success = MCMemoryAllocate(t_utf8_length + 1, t_utf8);
+
+        if (t_success)
+        {
+            UnicodeToUTF8(t_unicode_string, t_unicode_length * 2, t_utf8, t_utf8_length);
+            t_utf8[t_utf8_length] = 0;
+        }
+
+        env -> ReleaseStringChars(p_java_string, t_unicode_string);
+    }
+    
+    if (t_success)
+        r_utf_8 = t_utf8;
+    
+    return t_success;
+}
+
 //////////
 
 bool MCJavaStringFromStringRef(JNIEnv *env, MCStringRef p_string, jstring &r_java_string)

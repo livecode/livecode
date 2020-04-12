@@ -1717,6 +1717,28 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 			t_env -> DeleteLocalRef(t_java_string);
 		}
 		break;
+		case kMCJavaTypeUtf8CString:
+		{
+			jstring t_java_string;
+			if (context->is_static)
+				t_java_string = (jstring)t_env -> CallStaticObjectMethodA(t_class, t_method_id, t_params->params);
+			else
+				t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
+			if (t_cleanup_java_refs && t_env -> ExceptionCheck())
+			{
+				t_exception_thrown = true;
+				t_success = false;
+			}
+
+            char *t_utf8_string = nil;
+			if (t_success)
+                t_success = MCJavaStringToUTF8(t_env, t_java_string, t_utf8_string);
+            if (t_success)
+                *(char **)(context -> return_value) = t_utf8_string;
+
+			t_env -> DeleteLocalRef(t_java_string);
+		}
+		break;
 		case kMCJavaTypeMCString:
 			{
 				jstring t_java_string;
