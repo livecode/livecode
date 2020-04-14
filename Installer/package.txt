@@ -602,11 +602,17 @@ component Runtime.MacOSX
 
 component Runtime.Emscripten
 	into "[[ToolsFolder]]/Runtime/Emscripten/js" place
-		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].html
-		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].html.mem
-		file emscripten:standalone[[BaseEditionTagLower]]-[[VersionTag]].js
-		file emscripten:emscripten-startup-template.livecodescript
-		rfolder emscripten:emscripten-standalone-template
+		file emscripten-js:standalone[[BaseEditionTagLower]]-[[VersionTag]].html
+		file emscripten-js:standalone[[BaseEditionTagLower]]-[[VersionTag]].html.mem
+		file emscripten-js:standalone[[BaseEditionTagLower]]-[[VersionTag]].js
+		file emscripten-js:emscripten-startup-template.livecodescript
+		rfolder emscripten-js:emscripten-standalone-template
+	into "[[ToolsFolder]]/Runtime/Emscripten/wasm" place
+		file emscripten-wasm:standalone[[BaseEditionTagLower]]-[[VersionTag]].html
+		file emscripten-wasm:standalone[[BaseEditionTagLower]]-[[VersionTag]].js
+		file emscripten-wasm:standalone[[BaseEditionTagLower]]-[[VersionTag]].wasm
+		file emscripten-wasm:emscripten-startup-template.livecodescript
+		rfolder emscripten-wasm:emscripten-standalone-template
 
 //////////
 
