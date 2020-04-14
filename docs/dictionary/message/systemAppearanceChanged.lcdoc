@@ -25,7 +25,7 @@ on systemAppearanceChanged
         set the backColor of me to "white"
         set the foreColor of me to "black"
     end if
-on systemAppearanceChanged
+end systemAppearanceChanged
 
 Description:
 Handle the <systemAppearanceChanged> <message> if you need to change the color
