@@ -57,6 +57,7 @@
 				'src/libbrowser_win_factories.cpp',
 				'src/libbrowser_osx_factories.cpp',
 				'src/libbrowser_ios_factories.cpp',
+				'src/libbrowser_emscripten_factories.cpp',
 			],
 			
 			'target_conditions':
@@ -154,6 +155,16 @@
 						'sources!':
 						[
 							'src/libbrowser_android.cpp',
+						],
+					},
+				],
+
+				[
+					'toolset_os != "emscripten"',
+					{
+						'sources!':
+						[
+							'src/libbrowser_emscripten_factories',
 						],
 					},
 				],

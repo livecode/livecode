@@ -443,6 +443,12 @@ MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_m
 }
 
 
+/* ================================================================
+ * Mouse state
+ * ================================================================ */
+
+Boolean tripleclick = False;
+
 void
 MCScreenDC::update_mouse_press_state(MCMousePressState p_state, int32_t p_button)
 {
