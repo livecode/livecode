@@ -278,12 +278,14 @@ MCScreenDC::wait(real64_t p_duration,
                  Boolean p_allow_dispatch,
                  Boolean p_accept_any_event)
 {
+#if defined(__asmjs__)
 	/* Don't permit inner main loops.  They cause amusing "-12" assertion
 	 * failures from Emterpreter. */
 	if (0 < int(MCwaitdepth))
 	{
 		return true;
 	}
+#endif
 
 	p_duration = MCMax(p_duration, 0.0);
 
