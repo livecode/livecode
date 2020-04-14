@@ -594,6 +594,13 @@
 					# Disable Skia debugging
 					'SK_RELEASE',
 				
+					# Don't try to link against libetc1 for ETC1 texture compression support
+					'SK_IGNORE_ETC1_SUPPORT',
+					
+					# Some Skia source files need this to build
+					# TODO: see if those files can be removed from the build
+					'SK_SUPPORT_LEGACY_IMAGE_ENCODER_CLASS',
+					
 					# We use deprecated Skia features
 					'SK_SUPPORT_LEGACY_CANVAS_IS_REFCNT',
 					'SK_SUPPORT_LEGACY_GETTOPDEVICE',
@@ -654,7 +661,6 @@
 						{
 							'libraries':
 							[
-								'lib/ios/$(SDK_NAME)/libskia.a',
 								'lib/ios/$(SDK_NAME)/libskia.a',
 								'lib/ios/$(SDK_NAME)/libskia_opt_none.a',
 								'lib/ios/$(SDK_NAME)/libskia_opt_arm.a',
