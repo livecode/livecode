@@ -501,8 +501,8 @@ private function getEngineFiles
    -- Engine JavaScript
    put mapBinPath("standalone-" & getEngineType() & "-" & the version & ".js") into tFiles[1]
    
-   -- Memory initialisation file
-   put mapBinPath("standalone-" & getEngineType() & "-" & the version & ".html.mem") into tFiles[2]
+   -- Engine WASM Binary
+   put mapBinPath("standalone-" & getEngineType() & "-" & the version & ".wasm") into tFiles[2]
    
    return tFiles
 end getEngineFiles
