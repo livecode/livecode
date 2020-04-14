@@ -225,7 +225,7 @@ MCEmscriptenFileHandle::Seek(int64_t p_offset,
 	errno = 0;
 	t_result = lseek(m_fd, p_offset, t_sys_whence);
 
-	if (reinterpret_cast<off_t>(-1) == t_result)
+	if ((-1) == t_result)
 	{
 		return false;
 	}
