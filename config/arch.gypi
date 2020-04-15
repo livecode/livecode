@@ -57,12 +57,6 @@
 						'host_os': 'linux',
 					},
 				],
-				[
-					'OS == "emscripten"',
-					{
-						'target_arch': 'js',
-					},
-				],
 			],
 		},
 		
