@@ -38,6 +38,13 @@ extern "C" {
  */
 int MCEmscriptenAsyncYield(real64_t p_timeout_s = -1);
 
+/* Synchronously run callbacks registered by async JS to be run
+ * once the engine resumes
+ *
+ * Defined in em-async.js
+ */
+void MCEmscriptenAsyncRunHooks();
+
 /* Continue running the engine's main loop on receipt of an event.
  *
  * Returns when the engine next yields.

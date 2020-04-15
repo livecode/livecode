@@ -327,6 +327,10 @@ MCScreenDC::wait(real64_t p_duration,
 			if (!t_done &&
 			    MCEmscriptenAsyncYield(t_sleep_time))
 			{
+#if !defined(__asmjs__)
+				/* Run any callbacks while waiting to resume */
+				MCEmscriptenAsyncRunHooks();
+#endif
 				t_done = p_accept_any_event;
 			}
 
