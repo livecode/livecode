@@ -65,15 +65,18 @@ edge moves.
 > <lockLocation> setting.
 
 The setting of the <lockLocation> <property> does not prevent a
-<handler> from moving or resizing an <object(glossary)>.
+<handler> from moving or resizing an <object(glossary)>. 
+
+The setting of the <lockLocation> <property> does not prevent
+moving the <object(glossary)> with the arrow keys while the
+<Pointer tool> is selected.
 
 References: revChangeWindowSize (command), group (command),
 object (glossary), property (glossary), handler (glossary),
 Pointer tool (glossary), group (glossary), file (keyword),
 player (keyword), image (keyword), scrollbar (keyword), card (keyword),
-control (glossary), height (property),
-lockCursor (property), lockLocation (property), width (property),
-location (property)
+control (glossary), height (property), lockCursor (property), 
+width (property), location (property)
 
 Tags: ui
 
