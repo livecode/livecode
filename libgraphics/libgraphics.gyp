@@ -65,6 +65,11 @@
 				'src/legacygradients.cpp',
 				'src/drawing.cpp',
 			],
+
+			'sources!':
+			[
+				'src/hb-sk.cpp',
+			],
 			
 			'target_conditions':
 			[
@@ -92,7 +97,6 @@
 						'sources!':
 						[
 							'src/harfbuzztext.cpp',
-							'src/hb-sk.cpp',
 						],
 					},
 				],

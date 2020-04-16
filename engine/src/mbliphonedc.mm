@@ -55,6 +55,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#include <objc/message.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void X_main_loop(void);
@@ -853,6 +855,24 @@ Window MCScreenDC::get_current_window(void)
 void MCScreenDC::refresh_current_window(void)
 {
     
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCScreenDC::getsystemappearance(MCSystemAppearance &r_appearance)
+{
+	/* userInterfaceStyle was introduced in iOS 12.0 */
+	typedef int (*_userInterfaceStyle)(UITraitCollection *, SEL selector);
+	UITraitCollection *t_traits = [MCIPhoneGetRootView() traitCollection];
+	if ([t_traits respondsToSelector: @selector(userInterfaceStyle)] &&
+			((_userInterfaceStyle)objc_msgSend)(t_traits, @selector(userInterfaceStyle)) == 2)
+	{
+		r_appearance = kMCSystemAppearanceDark;
+	}
+	else
+	{
+		r_appearance = kMCSystemAppearanceLight;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

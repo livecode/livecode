@@ -1,0 +1,1 @@
+# Add NSBluetoothAlwaysUsageDescription to iOS plist template

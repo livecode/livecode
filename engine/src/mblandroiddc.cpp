@@ -737,6 +737,16 @@ Window MCScreenDC::get_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCScreenDC::getsystemappearance(MCSystemAppearance &r_appearance)
+{
+	int t_system_appearance;
+	MCAndroidEngineRemoteCall("getSystemAppearance", "i", &t_system_appearance);
+	
+	r_appearance = static_cast<MCSystemAppearance>(t_system_appearance);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static MCRectangle android_view_get_bounds(void)
 {
 	return MCRectangleMake(s_android_bitmap_loc_x, s_android_bitmap_loc_y, s_android_bitmap_width, s_android_bitmap_height);
@@ -1707,6 +1717,28 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 			t_env -> DeleteLocalRef(t_java_string);
 		}
 		break;
+		case kMCJavaTypeUtf8CString:
+		{
+			jstring t_java_string;
+			if (context->is_static)
+				t_java_string = (jstring)t_env -> CallStaticObjectMethodA(t_class, t_method_id, t_params->params);
+			else
+				t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
+			if (t_cleanup_java_refs && t_env -> ExceptionCheck())
+			{
+				t_exception_thrown = true;
+				t_success = false;
+			}
+
+            char *t_utf8_string = nil;
+			if (t_success)
+                t_success = MCJavaStringToUTF8(t_env, t_java_string, t_utf8_string);
+            if (t_success)
+                *(char **)(context -> return_value) = t_utf8_string;
+
+			t_env -> DeleteLocalRef(t_java_string);
+		}
+		break;
 		case kMCJavaTypeMCString:
 			{
 				jstring t_java_string;
@@ -2032,6 +2064,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doBackPressed(J
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMenuKey(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doSearchKey(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doOrientationChanged(JNIEnv *env, jobject object, jint orientation) __attribute__((visibility("default")));
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doSystemAppearanceChanged(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTextDone(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTextCanceled(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaDone(JNIEnv *env, jobject object, jstring p_media_content) __attribute__((visibility("default")));
@@ -2371,6 +2404,13 @@ void MCAndroidOrientationChanged(int orientation);
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doOrientationChanged(JNIEnv *env, jobject object, jint orientation)
 {
 	MCAndroidOrientationChanged(orientation);
+}
+
+//////////
+
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doSystemAppearanceChanged(JNIEnv *env, jobject object)
+{
+	MCNotificationPostSystemAppearanceChanged();
 }
 
 //////////

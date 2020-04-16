@@ -1,0 +1,1 @@
+# Add support for max width and max height parameters to mobilePickPhoto on Android

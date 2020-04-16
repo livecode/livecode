@@ -245,6 +245,8 @@ public:
 	Window get_current_window(void);
 	
     void refresh_current_window(void);
+	
+	void getsystemappearance(MCSystemAppearance &r_appearance);
 private:
 	// The top-left of the mobile 'window' in screen co-ordinates.
 	int32_t m_window_left;

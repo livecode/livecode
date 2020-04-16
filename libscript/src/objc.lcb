@@ -610,4 +610,212 @@ public handler CreateObjcInformalDelegateWithContext(in pProtocol as List, in pH
     end unsafe
 end handler    
 
+/* Block handling */
+
+private variable mNSConcreteGlobalBlock as optional Pointer
+private constant kRTLD_LAZY is 1
+private type LibraryHandle is Pointer
+
+private foreign handler OpenLibrary(in pPath as ZStringUTF8, in pFlag as CSInt) \
+	returns optional LibraryHandle \
+	binds to "dlopen"
+
+private foreign handler GetSymbolPointer(in pHandle as LibraryHandle, in pSymbol as ZStringUTF8) \
+	returns optional Pointer \
+	binds to "dlsym"
+
+private foreign handler CloseLibrary(in pHandle as LibraryHandle) \
+	returns CSInt \
+	binds to "dlclose"
+
+/* Fetch the `isa` pointer for the (internal) Obj-C concreate block class */
+private unsafe handler EnsureNSConcreteGlobalBlock() returns nothing
+	if mNSConcreteGlobalBlock is not nothing then
+		return
+	end if
+
+	/* As we cannot bind to the pointer to a symbol as a variable, we use
+	 * dynamic library loading and resolution functions to do so directly. */
+	variable tSystem as LibraryHandle
+	put OpenLibrary("libSystem.dylib", kRTLD_LAZY) into tSystem
+	if tSystem is not nothing then
+		put GetSymbolPointer(tSystem, "_NSConcreteGlobalBlock") \
+			into mNSConcreteGlobalBlock
+		CloseLibrary(tSystem)
+	end if
+end handler
+
+private constant kBlockSize is 32
+private constant kBlockDescriptorSize is 40
+
+public foreign type _ObjcBlockDescriptor binds to "MCAggregateTypeInfo:ffrrr"
+public foreign type _ObjcBlock binds to "MCAggregateTypeInfo:rEErr"
+public type ObjcBlockPointer is Pointer
+
+foreign handler MCHandlerGetFunctionPtr(in pHandler as any, out rPtr as Pointer) \
+	returns CBool \
+	binds to "<builtin>"
+
+private foreign handler CopyBlockDescriptor(inout pBlock as _ObjcBlockDescriptor, in pSize as UIntSize, out rNewBlock as Pointer) \
+	returns CBool \
+	binds to "MCMemoryAllocateCopy"
+
+private foreign handler CopyBlock(inout pBlock as _ObjcBlock, in pSize as UIntSize, out rNewBlock as Pointer) \
+	returns CBool \
+	binds to "MCMemoryAllocateCopy"
+
+private foreign handler MCMemoryDelete(in pBlock as Pointer) \
+	returns nothing \
+	binds to "<builtin>"
+
+private foreign handler BlockPointerToBlock(out rBlock as _ObjcBlock, in pPointer as ObjcBlockPointer, in pSize as UIntSize) \
+	returns nothing \
+	binds to "c:memcpy"
+
+/**
+Create an Objective-C block pointer that wraps an LCB handler.
+
+Example:
+private variable sRequestPermissionsCompletionHandler as optional ObjcBlockPointer
+private variable sTarget as ScriptObject
+
+public handler AudioLibraryInitialize() returns Boolean
+	if not CreateObjcBlockPointerFromHandler(RequestPermissionsCompletionHandler, sRequestPermissionsCompletionHandler) then
+		put nothing into sRequestPermissionsCompletionHandler
+		return false
+	end if
+	put the caller into sTarget
+	return true
+end handler
+
+private foreign handler ObjC_AVCaptureDeviceRequestAccessForMediaType(in pMediaType as ObjcId, in pCompletionHandler as ObjcBlockPointer) \
+	returns nothing \
+	binds to "objc:AVCaptureDevice.+requestAccessForMediaType:completionHandler:"
+
+public handler AudioLibraryRequestPermissions()
+	unsafe
+		ObjC_AVCaptureDeviceRequestAccessForMediaType(StringToNSString("soun"), sRequestPermissionsCompletionHandler)
+	end unsafe
+end handler
+
+public handler RequestPermissionsCompletionHandler(in pBlock as ObjcBlockPointer, in pGranted as CBool)
+	post "AudioLibraryRequestPermissionsCallback" to sTarget with [pGranted]
+end handler
+
+Parameters:
+pHandler: The handler the block pointer should wrap.
+rBlockPtr: The variable into which the block pointer should be returned.
+
+Returns:
+True if the block pointer was successfully created, false otherwise.
+
+Description:
+Use the <CreateObjcBlockPointerFromHandler> handler to create a pointer to an
+Objective-C block that wraps an LCB handler. The block pointer can be used in
+calls to Objective-C foreign functions that expect a block as a parameter.
+
+The wrapped handler will be called whenever the block is invoked, with the first
+parameter of its signature being the block pointer. The remaining parameters
+should match those of the Objective-C block.
+
+The lifetime of a created `ObjcBlockPointer` is not automatically managed. When
+such a value has no more references to it and it is no longer going to be used,
+<DeleteObjcBlockPointer> should be used to free the resources used by it.
+
+References:
+DeleteObjcBlockPointer (handler)
+
+*/
+public handler CreateObjcBlockPointerFromHandler(in pHandler as any, out rBlockPtr as optional ObjcBlockPointer) returns Boolean
+	variable tBlockPtr as ObjcBlockPointer
+	unsafe
+		/* Make sure the `isa` pointer has been initialized */
+		EnsureNSConcreteGlobalBlock()
+
+		/* Fetch the (C) function pointer for the given handler - this is used
+		 * later when  constructing the block's record and is called when the
+		 * block is invoked. */
+		variable tFunctionPtr as Pointer
+		if not MCHandlerGetFunctionPtr(pHandler, tFunctionPtr) then
+			return false
+		end if
+
+		/* Initialize the list of block descriptor aggregate members. The first
+		 * field is the flags where 0 means global block; the second field is
+		 * the size of the block record; the other members are not used (for our
+		 * purposes). */
+		variable tBlockDescriptor as _ObjcBlockDescriptor
+		put [0, kBlockSize, nothing, nothing, nothing] into tBlockDescriptor
+
+		/* Copy the block descriptor after being (implicitly) converted to an
+		 * aggregate into a heap allocated memory block. */
+		variable tBlockDescriptorPointer as Pointer
+		if not CopyBlockDescriptor(tBlockDescriptor, \
+									kBlockDescriptorSize, \
+									tBlockDescriptorPointer) then
+			return false
+		end if
+
+		/* Initialize the list of block members. The first field is the obj-c
+		 * objects 'isa' pointer; the second is the flags word; the third is
+		 * unused for our purposes; the fourth is the (C)function pointer it
+		 * wraps; and the fifth is the block descriptor (which mainly defines
+		 * the actual size of the block - as we don't add any block variables,
+		 * this is a fixed size. */
+		variable tBlock as _ObjcBlock
+		put [mNSConcreteGlobalBlock, \
+				0x30000000, \
+				0, \
+				tFunctionPtr, \
+				tBlockDescriptorPointer] into tBlock
+
+		/* Copy the block after being (implicitly) converted to an aggregate
+		 * into a heap allocated memory block. */
+		if not CopyBlock(tBlock, kBlockSize, tBlockPtr) then
+			MCMemoryDelete(tBlockDescriptorPointer)
+			return false
+		end if
+	end unsafe
+
+	put tBlockPtr into rBlockPtr
+	return true
+end handler
+
+/**
+Delete an Objective-C block pointer.
+
+Example:
+public handler AudioLibraryFinalize()
+	if sRequestPermissionsCompletionHandler is not nothing then
+		DeleteObjcBlockPointer(sRequestPermissionsCompletionHandler)
+		put nothing into sRequestPermissionsCompletionHandler
+	end if
+end handler
+
+Parameters:
+pBlockPointer: An Objective-C block pointer created with
+<CreateObjcBlockPointerFromHandler>
+
+Description:
+Use the <DeleteObjcBlockPointer> handler to delete an Objective-C block pointer
+created with <CreateObjcBlockPointerFromHandler>
+
+References:
+CreateObjcBlockPointerFromHandler (handler)
+
+*/
+public handler DeleteObjcBlockPointer(in pBlockPointer as ObjcBlockPointer)
+	unsafe
+		/* Unpack the pointer to block aggregate as an aggregate. */
+		variable tBlock as _ObjcBlock
+		BlockPointerToBlock(tBlock, pBlockPointer, kBlockSize)
+
+		/* Delete the block's descriptor (fifth field). */
+		MCMemoryDelete(tBlock[5])
+
+		/* Delete the block itself. */
+		MCMemoryDelete(pBlockPointer)
+	end unsafe
+end handler
+
 end module

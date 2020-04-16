@@ -20,8 +20,8 @@ Example:
 set the unboundedVScroll of group "items" to true
 
 Description:
-Use the <unboundedVScroll> property to turn automatic clamping of the v
-<Scroll> offset of a group on or off.
+Use the <unboundedVScroll> property to turn automatic clamping of the
+<vScroll> offset of a group on or off.
 
 When the <unboundedVScroll> property of a <group> is set to true and the
 <vScrollbar> is not visible, it is possible to set the <vScroll>
@@ -34,7 +34,7 @@ outside of the content bounds, the <group> is scrolled to bring the
 <vScroll> value within the appropriate range.
 
 References: group (object), vScroll (property),
-unboundedHScroll (property), vScrollbar (property), Scroll (property)
+unboundedHScroll (property), vScrollbar (property)
 
 Tags: ui
 

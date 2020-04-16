@@ -283,7 +283,12 @@ UIViewController *MCIPhoneGetViewController(void);
 		// make a toolbar
         // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
 		UIToolbar *t_toolbar;
-        t_toolbar = [[UIToolbar alloc] initWithFrame: (t_is_landscape ? CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, t_toolbar_landscape_height) : CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height))];
+        
+        if (t_is_landscape)
+            t_toolbar = [[UIToolbar alloc] initWithFrame: (CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_landscape_height))];
+        else
+            t_toolbar = [[UIToolbar alloc] initWithFrame: (CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height))];
+        
 		t_toolbar.barStyle = UIBarStyleBlack;
 		t_toolbar.translucent = YES;
 		[t_toolbar sizeToFit];
@@ -341,7 +346,7 @@ UIViewController *MCIPhoneGetViewController(void);
             }
             else
             {
-                [datePicker setFrame:CGRectMake(0, t_toolbar_landscape_height, [[UIScreen mainScreen] bounds] . size . height, t_pick_wheel_height)];
+                [datePicker setFrame:CGRectMake(0, t_toolbar_landscape_height, [[UIScreen mainScreen] bounds] . size . width, t_pick_wheel_height)];
                 t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_landscape_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_landscape_height + t_pick_wheel_height);
             }
             
@@ -349,8 +354,15 @@ UIViewController *MCIPhoneGetViewController(void);
             
             [m_action_sheet_view addSubview: t_toolbar];
             [m_action_sheet_view addSubview: datePicker];
-            m_action_sheet_view.backgroundColor = [UIColor whiteColor];
-            [t_toolbar release];
+			if ([UIColor respondsToSelector:@selector(secondarySystemBackgroundColor)])
+			{
+				m_action_sheet_view.backgroundColor = [UIColor secondarySystemBackgroundColor];
+			}
+			else
+			{
+				m_action_sheet_view.backgroundColor = [UIColor whiteColor];
+			}
+			[t_toolbar release];
             
             [MCIPhoneGetView() addSubview:m_action_sheet_view];
             

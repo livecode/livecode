@@ -24,7 +24,7 @@ Description:
 Use the <unlock menus> <command> to show changes in the <menu bar> to
 the user.
 
-The <unlock menus> <command> sets the <lockMenus> <property> to true.
+The <unlock menus> <command> sets the <lockMenus> <property> to false.
 
 When all pending handlers are finished executing, the <lockMenus>
 <property> is set to false, <undo|undoing> the <lock menus>

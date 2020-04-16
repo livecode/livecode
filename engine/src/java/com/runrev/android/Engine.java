@@ -61,6 +61,7 @@ import java.nio.charset.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.text.Collator;
+import java.lang.Math;
 
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
@@ -138,6 +139,9 @@ public class Engine extends View implements EngineApi
 	private boolean m_new_intent;
 
 	private int m_photo_width, m_photo_height;
+	private int m_jpeg_quality;
+	
+	private int m_night_mode;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -239,6 +243,11 @@ public class Engine extends View implements EngineApi
 
 		m_photo_width = 0;
 		m_photo_height = 0;
+		m_jpeg_quality = 100;
+		
+		m_night_mode =
+			p_context.getResources().getConfiguration().uiMode &
+			Configuration.UI_MODE_NIGHT_MASK;
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -356,6 +365,15 @@ public class Engine extends View implements EngineApi
 
     public void onConfigurationChanged(Configuration p_new_config)
 	{
+		int t_night_mode =
+			getContext().getResources().getConfiguration().uiMode &
+			Configuration.UI_MODE_NIGHT_MASK;
+		
+		if (t_night_mode != m_night_mode)
+		{
+			m_night_mode = t_night_mode;
+			doSystemAppearanceChanged();
+		}
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -449,8 +467,6 @@ public class Engine extends View implements EngineApi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-	protected CharSequence m_composing_text;
-	
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs)
     {
@@ -458,8 +474,9 @@ public class Engine extends View implements EngineApi
 		if (!m_text_editor_visible)
 			return null;
 		
-		m_composing_text = null;
-        InputConnection t_connection = new BaseInputConnection(this, false) {
+        InputConnection t_connection = new BaseInputConnection(this, true) {
+        	String m_current_text = "";
+        	
 			void handleKey(int keyCode, int charCode)
 			{
 				if (charCode == 0)
@@ -533,25 +550,26 @@ public class Engine extends View implements EngineApi
 				return true;
             }
 			
-			// IM-2013-02-25: [[ BZ 10684 ]] - updated to show text changes in the field
-			// as software keyboards modify the composing text.
-			void updateComposingText(CharSequence p_new)
+			// Show text changes in the field as the composing text is modified.
+			// We do this by removing edited text with fake backspace key events
+			// and sending key events for each new character.
+			void updateComposingText()
 			{
+				String t_new = getEditable().toString();
+				
 				// send changes to the engine as a sequence of key events.
 				int t_match_length = 0;
 				int t_current_length = 0;
 				int t_new_length = 0;
 				int t_max_length = 0;
 				
-				if (m_composing_text != null)
-					t_current_length = m_composing_text.length();
-				if (p_new != null)
-					t_new_length = p_new.length();
+				t_current_length = m_current_text.length();
+				t_new_length = t_new.length();
 				
 				t_max_length = Math.min(t_current_length, t_new_length);
 				for (int i = 0; i < t_max_length; i++)
 				{
-					if (p_new.charAt(i) != m_composing_text.charAt(i))
+					if (t_new.charAt(i) != m_current_text.charAt(i))
 						break;
 					t_match_length += 1;
 				}
@@ -561,9 +579,9 @@ public class Engine extends View implements EngineApi
 					handleKey(KeyEvent.KEYCODE_DEL, 0);
 				// send new text
 				for (int i = t_match_length; i < t_new_length; i++)
-					handleKey(KeyEvent.KEYCODE_UNKNOWN, p_new.charAt(i));
+					handleKey(KeyEvent.KEYCODE_UNKNOWN, t_new.charAt(i));
 				
-				m_composing_text = p_new;
+				m_current_text = t_new;
 				
 				if (m_wake_on_event)
 					doProcess(false);
@@ -573,29 +591,37 @@ public class Engine extends View implements EngineApi
 			@Override
 			public boolean commitText(CharSequence text, int newCursorPosition)
 			{
-				updateComposingText(text);
-				m_composing_text = null;
-				getEditable().clear();
-				return true;
+				boolean t_return_value = super.commitText(text, newCursorPosition);
+				updateComposingText();
+				return t_return_value;
 			}
 			@Override
 			public boolean finishComposingText()
 			{
-				m_composing_text = null;
-				getEditable().clear();
-				return true;
+				boolean t_return_value = super.finishComposingText();
+				updateComposingText();
+				return t_return_value;
 			}
 			@Override
 			public boolean setComposingText(CharSequence text, int newCursorPosition)
 			{
-				updateComposingText(text);
-				return super.setComposingText(text, newCursorPosition);
+				boolean t_return_value =  super.setComposingText(text, newCursorPosition);
+				updateComposingText();
+				return t_return_value;
 			}
             @Override
             public boolean performEditorAction (int editorAction)
             {
                 handleKey(0, 10);
                 return true;
+            }
+            
+            @Override
+            public boolean deleteSurroundingText(int beforeLength, int afterLength)
+            {
+            	boolean t_return_value = super.deleteSurroundingText(beforeLength, afterLength);
+            	updateComposingText();
+            	return t_return_value;
             }
         };
         
@@ -2067,13 +2093,14 @@ public class Engine extends View implements EngineApi
     }
     
     
-    public void showPhotoPicker(String p_source, int p_width, int p_height)
+    public void showPhotoPicker(String p_source, int p_width, int p_height, int p_jpeg_quality)
     {
         m_photo_width = p_width;
         m_photo_height = p_height;
+		m_jpeg_quality = p_jpeg_quality;
         
-        if (p_source.equals("camera"))
-            showCamera();
+        if (p_source.contains("camera"))
+            showCamera(p_source);
         else if (p_source.equals("album"))
             showLibrary();
         else if (p_source.equals("library"))
@@ -2091,7 +2118,7 @@ public class Engine extends View implements EngineApi
         onAskPermissionDone(grantResults[0] == PackageManager.PERMISSION_GRANTED);
     }
     
-	public void showCamera()
+	public void showCamera(String p_source)
 	{
 		// 2012-01-18-IM temp file may be created in app cache folder, in which case
 		// the file needs to be made world-writable
@@ -2138,9 +2165,23 @@ public class Engine extends View implements EngineApi
 		String t_path = m_temp_image_file.getPath();
 
 		Uri t_uri;
-		t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", true, ParcelFileDescriptor.MODE_WRITE_ONLY);
+		t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", true, ParcelFileDescriptor.MODE_READ_WRITE);
 
 		Intent t_image_capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		
+		if (p_source.equals("front camera"))
+		{
+			t_image_capture.putExtra("android.intent.extras.CAMERA_FACING", 1);
+			t_image_capture.putExtra("android.intent.extras.LENS_FACING_FRONT", 1);
+			t_image_capture.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+			
+		}
+		else if (p_source.equals("rear camera"))
+		{
+			t_image_capture.putExtra("android.intent.extras.CAMERA_FACING", 0);
+			t_image_capture.putExtra("android.intent.extras.LENS_FACING_FRONT", 0);
+			t_image_capture.putExtra("android.intent.extra.USE_FRONT_CAMERA", false);
+		}
 		t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_uri);
 		t_image_capture.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 		t_activity.startActivityForResult(t_image_capture, IMAGE_RESULT);
@@ -2168,27 +2209,91 @@ public class Engine extends View implements EngineApi
 					t_photo_uri = Uri.fromFile(m_temp_image_file);
 				else
 					t_photo_uri = data.getData();
+				
 				InputStream t_in = ((LiveCodeActivity)getContext()).getContentResolver().openInputStream(t_photo_uri);
 				ByteArrayOutputStream t_out = new ByteArrayOutputStream();
-				byte[] t_buffer = new byte[4096];
-				int t_readcount;
-				while (-1 != (t_readcount = t_in.read(t_buffer)))
-				{
-					t_out.write(t_buffer, 0, t_readcount);
-				}
-
+				
 				// HH-2017-01-19: [[ Bug 11313 ]]Support maximum width and height of the image
 				if(m_photo_height > 0 && m_photo_width > 0)
 				{
-					Bitmap bm = BitmapFactory.decodeByteArray(t_out.toByteArray(), 0, t_out.size());
-					Bitmap rBm = Bitmap.createScaledBitmap(bm, m_photo_width, m_photo_height, true);
-					ByteArrayOutputStream stream = new ByteArrayOutputStream();
-					rBm.compress(Bitmap.CompressFormat.PNG, 100, stream);
-					byte[] byteArray = stream.toByteArray();
-					doPhotoPickerDone(byteArray, byteArray.length);
+					Bitmap t_bitmap = BitmapFactory.decodeStream(t_in);
+					
+					// scale to required max width/height
+					float t_width = t_bitmap.getWidth();
+					float t_height = t_bitmap.getHeight();
+					
+					InputStream t_exif_in = ((LiveCodeActivity)getContext()).getContentResolver().openInputStream(t_photo_uri);
+					
+					ExifInterface t_exif = new ExifInterface(t_exif_in);
+					
+					int t_orientation = t_exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+															   ExifInterface.ORIENTATION_NORMAL);
+					
+					/* Max width and height need to be flipped if the image orientation is
+					 * requires a 90 or 270 degree rotation */
+					int t_max_width;
+					int t_max_height;
+					switch (t_orientation)
+					{
+						case ExifInterface.ORIENTATION_TRANSPOSE:
+						case ExifInterface.ORIENTATION_ROTATE_90:
+						case ExifInterface.ORIENTATION_TRANSVERSE:
+						case ExifInterface.ORIENTATION_ROTATE_270:
+							t_max_height = m_photo_width;
+							t_max_width = m_photo_height;
+							break;
+						default:
+							t_max_width = m_photo_width;
+							t_max_height = m_photo_height;
+							break;
+					}
+					
+					float t_scale = Math.min(t_max_width / t_width, t_max_height / t_height);
+					
+					Matrix t_matrix = new Matrix();
+					t_matrix.setScale(t_scale, t_scale, 0, 0);
+					
+					switch (t_orientation)
+					{
+						case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+							t_matrix.postScale(-1, 1);
+							break;
+						case ExifInterface.ORIENTATION_ROTATE_180:
+							t_matrix.postRotate(180);
+							break;
+						case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+							t_matrix.postRotate(180);
+							t_matrix.postScale(-1, 1);
+							break;
+						case ExifInterface.ORIENTATION_TRANSPOSE:
+							t_matrix.postRotate(90);
+							t_matrix.postScale(-1, 1);
+							break;
+						case ExifInterface.ORIENTATION_ROTATE_90:
+							t_matrix.postRotate(90);
+							break;
+						case ExifInterface.ORIENTATION_TRANSVERSE:
+							t_matrix.postRotate(-90);
+							t_matrix.postScale(-1, 1);
+							break;
+						case ExifInterface.ORIENTATION_ROTATE_270:
+							t_matrix.postRotate(-90);
+							break;
+					}
+		
+					Bitmap t_scaled_bitmap = Bitmap.createBitmap(t_bitmap, 0, 0, (int)t_width, (int)t_height, t_matrix, true);
+					t_scaled_bitmap.compress(Bitmap.CompressFormat.JPEG, m_jpeg_quality, t_out);
 				}
 				else
-					doPhotoPickerDone(t_out.toByteArray(), t_out.size());
+				{
+					byte[] t_buffer = new byte[4096];
+					int t_readcount;
+					while (-1 != (t_readcount = t_in.read(t_buffer)))
+					{
+						t_out.write(t_buffer, 0, t_readcount);
+					}
+				}
+				doPhotoPickerDone(t_out.toByteArray(), t_out.size());
 				
 				t_in.close();
 				t_out.close();
@@ -3874,7 +3979,22 @@ public class Engine extends View implements EngineApi
     {
         return ((LiveCodeActivity)getContext()).getServiceClass();
     }
-    
+	
+	////////////////////////////////////////////////////////////////////////////////
+	
+	public int getSystemAppearance()
+	{
+		switch (m_night_mode)
+		{
+			case Configuration.UI_MODE_NIGHT_YES:
+				return 1;
+			case Configuration.UI_MODE_NIGHT_NO:
+			case Configuration.UI_MODE_NIGHT_UNDEFINED:
+			default:
+				return 0;
+		}
+	}
+	
     ////////////////////////////////////////////////////////////////////////////////
     
     // url launch callback
@@ -3944,6 +4064,7 @@ public class Engine extends View implements EngineApi
 	public static native void doShake(int action, long timestamp);
 
 	public static native void doOrientationChanged(int orientation);
+	public static native void doSystemAppearanceChanged();
 
 	public static native void doKeyboardShown(int height);
 	public static native void doKeyboardHidden();

@@ -54,6 +54,10 @@ public:
 
 	void SyncJavaScriptHandlers();
 
+public:
+	// return the webview used by the browser class
+	bool GetWebView(WKWebView *&r_view);
+
 protected:
 	bool GetUrl(char *& r_url);
 	
@@ -99,7 +103,6 @@ protected:
 	bool SetMediaPlaybackRequiresUserAction(bool p_value);
 
 private:
-	bool GetWebView(WKWebView *&r_view);
 	bool GetContainerView(UIView *&r_view);
 	
 	bool Reconfigure(void);

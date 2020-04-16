@@ -28,7 +28,6 @@
 			'src/stream.lcb',
 			'src/string.lcb',
 			'src/system.lcb',
-			'src/objc.lcb',
 			'src/type.lcb',
 			'src/type-convert.lcb',
 			'src/unittest.lcb',
@@ -37,6 +36,7 @@
 		
 		'stdscript_other_lcb_files':
 		[
+			'src/objc.lcb',
 			'src/unittest-impl.lcb',
 		],
 		

@@ -1,0 +1,1 @@
+# Fixed browser widget within a group on Android appearing in an incorrect position after moving the group

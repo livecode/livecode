@@ -5792,7 +5792,7 @@ bool MCStringFindAndReplace(MCStringRef self, MCStringRef p_pattern, MCStringRef
                 return MCStringFindAndReplaceNative(self, p_pattern, p_replacement, p_options);
         }
         else if (MCStringCantBeEqualToNative(p_pattern, p_options))
-            return false;
+            return true;
     }
 
 	if (!__MCStringUnnativize(self))

@@ -61,7 +61,7 @@ is false, and vice versa.
 
 References: show (command), group (command), hide (command),
 object (glossary), property (glossary), grouped control (glossary),
-group (glossary), card (keyword), card (object), control (object),
+group (glossary), control (glossary), card (keyword), card (object),
 showInvisibles (property), invisible (property)
 
 Tags: ui

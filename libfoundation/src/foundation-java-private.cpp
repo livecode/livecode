@@ -517,12 +517,20 @@ static bool __MCJavaProperListFromJObjectArray(jobjectArray p_obj_array, MCPrope
         MCJavaAutoLocalRef<jobject> t_object =
             s_env -> GetObjectArrayElement(p_obj_array, i);
         
-        MCAutoJavaObjectRef t_obj;
-        if (!MCJavaObjectCreate(t_object, &t_obj))
-            return false;
+        if (t_object != nullptr)
+        {
+            MCAutoJavaObjectRef t_obj;
+            if (!MCJavaObjectCreate(t_object, &t_obj))
+                return false;
 
-        if (!MCProperListPushElementOntoBack(*t_list, *t_obj))
-            return false;
+            if (!MCProperListPushElementOntoBack(*t_list, *t_obj))
+                return false;
+        }
+        else
+        {
+            if (!MCProperListPushElementOntoBack(*t_list, kMCNull))
+                return false;
+        }
     }
     
     return MCProperListCopy(*t_list, r_list);

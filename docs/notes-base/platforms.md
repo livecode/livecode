@@ -61,7 +61,7 @@ Currently, the supported versions of Xcode are:
 * Xcode 8.2 on MacOS X 10.11
 * Xcode 9.2 on MacOS 10.12 (Note: You need to upgrade to 10.12.6)
 * Xcode 10.1 on MacOS 10.13 (Note: You need to upgrade to 10.13.4)
-* Xcode 11.1 on MacOS 10.14 (Note: You need to upgrade to 10.14.3) 
+* Xcode 11.3 on MacOS 10.14 (Note: You need to upgrade to 10.14.4) 
 
 It is also possible to set other versions of Xcode, to allow testing
 on a wider range of iOS simulators. For instance, on MacOS 10.12
@@ -73,7 +73,7 @@ We currently support building against the following versions of the iOS SDK:
 * 10.2 (included in Xcode 8.2)
 * 11.2 (included in Xcode 9.2)
 * 12.1 (included in Xcode 10.1)
-* 13.1 (included in Xcode 11.1)
+* 13.2 (included in Xcode 11.3)
 
 Note that the minimum iOS version of the deployment target can be set from the iOS
 standalone settings, and it is not related to the version of the iOS SDK used to build
@@ -86,24 +86,20 @@ the standalone will run on all devices running iOS 10 or later. In other words, 
 devices running the latest iOS version.
 
 ## Android
-
-
 LiveCode allows you to save your stack as an Android application, and
 also to deploy it on an Android device or simulator from the IDE.
 
 Android deployment is possible from Windows, Linux and Mac OSX.
 
-The Android engine supports devices using armv7, arm64, x86 and x86_64 processors.
+The Android engine supports devices using x86, x86-64, ARM and ARM64 processors.
 It will run on the following versions of Android:
 
-* 4.1-4.3 (Jelly Bean)
-* 4.4 (KitKat)
 * 5.0-5.1 (Lollipop)
 * 6.0 (Marshmallow)
 * 7.x (Nougat)
 * 8.x (Oreo)
 * 9.0 (Pie)
-* 10.0 (X)
+* 10.0 (Q)
 
 To enable deployment to Android devices, you need to download the
 [Android SDK](https://developer.android.com/sdk/index.html#Other), and

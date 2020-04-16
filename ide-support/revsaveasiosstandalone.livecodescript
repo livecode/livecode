@@ -729,11 +729,11 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       end if
    end if
    
-   -- Only need to sign the bundle if its heading for a device
+   revStandaloneProgress "Signing app bundle..."
+   
+   local tEntitlementsOption, tCertificate
    if pTarget is "Device" then
-      revStandaloneProgress "Signing app bundle..."
-      
-      local tCertificate, tEntitlements, tProfileInfo
+      local tEntitlements, tProfileInfo
       put revGetMobileProfileInfo(pSettings["ios,profile"]) into tProfileInfo
       
       -- Get the list of valid identities that are available
@@ -797,64 +797,61 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
       local tEntitlementsFile
       put tempName() into tEntitlementsFile
       put tEntitlements into url ("binfile:" & tEntitlementsFile)
-      
+      put "--entitlements" && quote & tEntitlementsFile & quote into tEntitlementsOption
       -- MW-2011-03-17: Make sure the certificate is encoded appropriately
       put uniDecode(uniEncode(tCertificate, "UTF8")) into tCertificate
-      
-      -- Do the codesigning
-      // SN-2015-09-11: [[ Xcode 7.0 ]] codesign in Xcode 7.0 will not work if CODESIGN_ALLOCATE
-      // environment variable is set, so we only set it up to Xcode 6.4
-      // We use Clang version to get the Xcode version in use
-      local tClangVersion, tClangMajorVersion
-      put shell("clang++ --version") into tClangVersion
-      if matchText(tClangVersion, "Apple LLVM version ([0-9]+)\.[0-9]+.[0-9]+", tClangMajorVersion) \
-            and tClangMajorVersion < 7 then
-         put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
-      end if
-      
-      -- make sure you have permission to clear extended attributes from bundle files
-      get shell("chmod -R u+w" && quote & pAppBundle & quote)
-      if the result is not 0 then
-         throw "setting permissions failed with error:" && it
-      end if
-      
-      -- clear extended attributes from bundle files
-      get shell("xattr -cr" && quote & pAppBundle & quote)
-      if the result is not 0 then
-         throw "clearing extended attributes failed with error:" && it
-      end if
-      
-      --try
-      -- Perform the codesigning of the main bundle
-      local tResult
-      __CodesignFrameworks pAppBundle & "/Frameworks", tCertificate, tEntitlementsFile
-      put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & tCertificate & quote && \
-            "--entitlements" && quote & tEntitlementsFile & quote && \
-            quote & pAppBundle & quote) into tResult
-      -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
+   else
+      put "-" into tCertificate
+   end if
+   -- Do the codesigning
+   // SN-2015-09-11: [[ Xcode 7.0 ]] codesign in Xcode 7.0 will not work if CODESIGN_ALLOCATE
+   // environment variable is set, so we only set it up to Xcode 6.4
+   // We use Clang version to get the Xcode version in use
+   local tClangVersion, tClangMajorVersion
+   put shell("clang++ --version") into tClangVersion
+   if matchText(tClangVersion, "Apple LLVM version ([0-9]+)\.[0-9]+.[0-9]+", tClangMajorVersion) \
+         and tClangMajorVersion < 7 then
+      put tSdkRoot & slash & "Platforms/iPhoneOS.platform/Developer/usr/bin/codesign_allocate" into $CODESIGN_ALLOCATE
+   end if
+   
+   -- make sure you have permission to clear extended attributes from bundle files
+   get shell("chmod -R u+w" && quote & pAppBundle & quote)
+   if the result is not 0 then
+      throw "setting permissions failed with error:" && it
+   end if
+   
+   -- clear extended attributes from bundle files
+   get shell("xattr -cr" && quote & pAppBundle & quote)
+   if the result is not 0 then
+      throw "clearing extended attributes failed with error:" && it
+   end if
+   
+   --try
+   -- Perform the codesigning of the main bundle
+   local tResult
+   __CodesignFrameworks pAppBundle & "/Frameworks", tCertificate, tEntitlementsOption
+   put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & tCertificate & quote && \
+         tEntitlementsOption && quote & pAppBundle & quote) into tResult
+   -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
+   if there is a file tEntitlementsFile then
       delete file tEntitlementsFile
-      if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
-         throw "codesigning failed with" && tResult
-      end if
-      --      finally
-      --         -- Delete the temporary file
-      --         delete file tEntitlementsFile
-      --      end try
-      
+   end if
+   
+   if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
+      throw "codesigning failed with" && tResult
    end if
 end revSaveAsMobileStandaloneMain
 
-private command __CodesignFrameworks pPath, pCertificate, pEntitlements
+private command __CodesignFrameworks pPath, pCertificate, pEntitlementsOption
    local tFrameworks
    put folders(pPath) into tFrameworks
    filter tFrameworks with "*.framework"
    repeat for each line tFramework in tFrameworks
-      __CodesignFrameworks pPath & "/" & tFramework & "/Frameworks", pCertificate, pEntitlements
+      __CodesignFrameworks pPath & "/" & tFramework & "/Frameworks", pCertificate, pEntitlementsOption
       
       local tResult
       put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & pCertificate & quote && \
-            "--entitlements" && quote & pEntitlements & quote && \
-            quote & pPath & "/" & tFramework & quote) into tResult
+            pEntitlementsOption && quote & pPath & "/" & tFramework & quote) into tResult
       if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
          throw "codesigning failed with" && tResult
       end if
@@ -904,7 +901,8 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
          "ipad retina icon,ipad,72x72,2x,Icon-App-72x72@2x.png" & return & \
          "iOS 7 ipad icon,ipad,76x76,1x,Icon-App-76x76@1x.png" & return & \
          "iOS 7 ipad retina icon,ipad,76x76,2x,Icon-App-76x76@2x.png" & return & \
-         "iPad Pro 12.9 icon,ipad,83.5x83.5,2x,Icon-App-83.5x83.5@2x.png" \
+         "iPad Pro 12.9 icon,ipad,83.5x83.5,2x,Icon-App-83.5x83.5@2x.png" & return & \
+         "iPad Pro 11 icon,ipad,83.5x83.5,2x,Icon-App-83.5x83.5@2x.png" \
          into sIconsList
    
    local tAssetsFolder, tAppIconFolder
@@ -992,6 +990,7 @@ private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle
    repeat for each line tType in ("iphone splash" & return & "retina splash,@2x" & return & "ipad portrait splash,-Portrait" & \
          return & "ipad landscape splash,-Landscape" & return & "ipad retina portrait splash,-Portrait@2x" & return & "ipad retina landscape splash,-Landscape@2x" & \
          return & "ipad pro 12.9 portrait splash,-iPadProPortrait@2x" & return & "ipad pro 12.9 landscape splash,-iPadProLandscape@2x" & \
+         return & "ipad pro 11 portrait splash,-iPadPro11Portrait@2x" & return & "ipad pro 11 landscape splash,-iPadPro11Landscape@2x" & \
          return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-667h@2x" & \
          return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x" & \
          return & "iphone X portrait splash,-812h@3x" & return & "iphone X landscape splash,-375h@3x" & \
@@ -1137,7 +1136,7 @@ private command addToManifest pFile, pName, pAppBundle, @xManifest, @xRedirects
       exit addToManifest
    end if
    
-   if there is a file pFile then
+   if there is a file pFile or (there is a folder pFile and pFile ends with ".lcextd") then
       put pAppBundle & slash & pName & tab & pFile & return after xManifest
       put pName & "//" & pFile & return after xRedirects
    else if there is a folder pFile then
@@ -1227,6 +1226,42 @@ private command revCopyMobileFiles pSettings, pBaseFolder, pAppBundle, pAppTarge
       -- If the file is an entitlement then handle appropriately
       if tSource ends with ".xcent" then
          put url ("binfile:" & tSource) after rCustomEntitlements
+         next repeat
+      end if
+      
+      if there is a folder tSource and tSource ends with ".lcextd" then
+         if tProcessedDylibs[tSource] then
+            next repeat
+         end if
+         
+         put true into tProcessedDylibs[tSource]
+         set the itemDel to slash
+         local tName
+         put char 1 to -8 of the last item of tSource into tName
+         
+         if pSDKs["sim"]["suffix"] is not empty then
+            put "/iOS/External-Simulator-" & pSDKs["sim"]["suffix"] after tSource
+            if there is a file tSource then
+               put tTarget into rExternals[tName]["sim"]
+               put "external" into rExternals[tName]["type"]
+               put tName & ".lcextd" into rExternals[tName]["location"]
+               put pAppBundle & slash & rExternals[tName]["location"] into tTarget
+               revSBCopyFileToFile tSource, tTarget, "revStandaloneProgressCallback", the long id of me
+            end if
+         else
+            put "external" into rExternals[tName]["type"]        
+            repeat for each word tInstSet in "armv6 armv7 arm64 arm"
+               if pSDKs[tInstSet]["suffix"] is not empty then
+                  put tSource & "/iOS/External-Device-" & pSDKs[tInstSet]["suffix"] into tTarget
+                  if there is a file tTarget then
+                     put tTarget into rExternals[tName][tInstSet]
+                     put tName & ".lcext" into rExternals[tName]["location"]
+                  end if
+               end if             
+            end repeat
+         end if
+         set the itemDel to tab
+         
          next repeat
       end if
       
@@ -1455,7 +1490,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    end if
    ----------
    
-   local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi, tEnableBackgroundExecution
+   local tDisplayName, tMinimumOS, tDeviceFamily, tRequiredCapabilities, tPersistentWifi
    local tDisableATS
    local tFileSharing, tPrerenderedIcon
    put pSettings["ios,display name"] into tDisplayName
@@ -1463,37 +1498,21 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    put pSettings["ios,device family"] into tDeviceFamily
    put pSettings["ios,device capabilities"] into tRequiredCapabilities
    put pSettings["ios,persistent wifi"] into tPersistentWifi
-   -- MW-2011-03-10: Force this to true for now, until we can fix the engine
-   put pSettings["ios,enable background execution"] into tEnableBackgroundExecution
    
    -- AB-2017-05-31: Add more background modes
    local tBackgroundModes
    
-   if tEnableBackgroundExecution is empty then
-      put "false" into tEnableBackgroundExecution
-   end if
    
-   if tEnableBackgroundExecution then
-      put pSettings["ios,background audio"] into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
-      put pSettings["ios,background location update"] into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
-      put pSettings["ios,background voip"] into tBackgroundModes["${BACKGROUND_VOIP}"]
-      put pSettings["ios,background newsstand downloads"] into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
-      put pSettings["ios,external acc comn"] into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
-      put pSettings["ios,use bt le"] into tBackgroundModes["${USE_BT_LE}"]
-      put pSettings["ios,acts as bt le"] into tBackgroundModes["${ACTS_AS_BT_LE}"]
-      put pSettings["ios,background fetch"] into tBackgroundModes["${BACKGROUND_FETCH}"]
-      put pSettings["ios,remote notifications"] into tBackgroundModes["${REMOTE_NOTIFICATIONS}"] 
-   else
-      put false into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
-      put false into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
-      put false into tBackgroundModes["${BACKGROUND_VOIP}"]
-      put false into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
-      put false into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
-      put false into tBackgroundModes["${USE_BT_LE}"]
-      put false into tBackgroundModes["${ACTS_AS_BT_LE}"]
-      put false into tBackgroundModes["${BACKGROUND_FETCH}"]
-      put false into tBackgroundModes["${REMOTE_NOTIFICATIONS}"] 
-   end if
+   put pSettings["ios,background audio"] into tBackgroundModes["${PLAY_AUDIO_WHEN_IN_BACKGROUND}"]
+   put pSettings["ios,background location update"] into tBackgroundModes["${BACKGROUND_LOCATION_UPDATE}"]
+   put pSettings["ios,background voip"] into tBackgroundModes["${BACKGROUND_VOIP}"]
+   put pSettings["ios,background newsstand downloads"] into tBackgroundModes["${BACKGROUND_NEWSSTAND_DOWNLOADS}"]
+   put pSettings["ios,external acc comn"] into tBackgroundModes["${EXTERNAL_ACC_COMM}"]
+   put pSettings["ios,use bt le"] into tBackgroundModes["${USE_BT_LE}"]
+   put pSettings["ios,acts as bt le"] into tBackgroundModes["${ACTS_AS_BT_LE}"]
+   put pSettings["ios,background fetch"] into tBackgroundModes["${BACKGROUND_FETCH}"]
+   put pSettings["ios,remote notifications"] into tBackgroundModes["${REMOTE_NOTIFICATIONS}"] 
+   
    put pSettings["ios,file sharing"] into tFileSharing
    put pSettings["ios,prerendered icon"] into tPrerenderedIcon 
    
@@ -1564,7 +1583,12 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
          revStandaloneAddWarning "No iPad supported intial orientation.  Assuming Portrait."
          put "Portrait" into tIPadOrientations
       end if
-   end if 
+   end if
+
+   local tUIStyle
+   if not pSettings["ios,supports dark mode"] then
+      put "<key>UIUserInterfaceStyle</key><string>Light</string>" into tUIStyle
+   end if
    
    -- MM-2011-09-28: Make sure portrait and landscape iPad splashes are present if required.
    --
@@ -1634,6 +1658,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
    replace "${DISABLE_ATS}" with tDisableATS in pPlist
    replace "${HEALTHKIT}" with tHealthKit in pPlist
+   replace "${UI_STYLE}" with tUIStyle in pPlist
    
    -- PM-2018-01-15: [[Bug 20852]] Get info about Xcode/SDK versions
    if pTarget is "Device" then
@@ -1699,7 +1724,6 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${DEVICE_CAPABILITY}" with it in pPlist
    
    replace "${PERSISTENT_WIFI}" with "<" & tPersistentWifi & "/>" in pPlist
-   replace "${APPLICATION_EXITS_ON_SUSPEND}" with "<" & not tEnableBackgroundExecution & "/>" in pPlist
    replace "${FILE_SHARING}" with "<" & tFileSharing & "/>" in pPlist
    replace "${PRE_RENDERED_ICON}" with "<" & tPrerenderedIcon & "/>" in pPlist
    
@@ -1758,10 +1782,12 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       if tIPadOrientations contains "Portrait" then
          put "Default-Portrait|Default-Portrait|{768, 1024}|Portrait" & return after tSplashScreens
          put "Default-iPadProPortrait|Default-iPadProPortrait|{1024, 1366}|Portrait" & return after tSplashScreens
+         put "Default-iPadPro11Portrait|Default-iPadPro11Portrait|{834, 1194}|Portrait" & return after tSplashScreens
       end if
       if tIPadOrientations contains "Landscape" then
          put "Default-Landscape|Default-Landscape|{768, 1024}|Landscape" & return after tSplashScreens
          put "Default-iPadProLandscape|Default-iPadProLandscape|{1024, 1366}|Landscape" & return after tSplashScreens
+         put "Default-iPadPro11Landscape|Default-iPadPro11Landscape|{834, 1194}|Landscape" & return after tSplashScreens
       end if
    end if
    
@@ -1912,7 +1938,10 @@ private function revGetMobileProfileInfo pProfileId
    
    repeat for each element tCert in tCerts
       put the base64Decode of tCert into tCert
-      if tCert contains "Distribution" then
+      if tCert contains "Apple Distribution:" then
+         put true into tIsDist
+         get offset("Apple Distribution:", tCert)
+      else if tCert contains "iPhone Distribution:" then
          put true into tIsDist
          get offset("iPhone Distribution:", tCert)
       else if tCert Contains "iOS Development:" then

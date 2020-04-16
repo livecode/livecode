@@ -159,7 +159,10 @@ public class VideoControl extends NativeControl
     public void setShowController(boolean show)
     {
         if (show)
+		{
             m_video_view.setMediaController(m_video_controller);
+			m_video_view.setControllerVisible(getVisible());
+		}
         else
             m_video_view.setMediaController(null);
     }

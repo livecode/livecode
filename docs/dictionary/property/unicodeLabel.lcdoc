@@ -15,14 +15,7 @@ Introduced: 5.5
 Deprecated:
 In LiveCode 7.0 the language was changed to handle unicode
 transparently. This means that language functionality which previously
-aided unicode text manipulation is no longer required. This property
-should not be used in new code; simply set the label as normal.
-Assigning values other than those returned from uniEncode to this
-property will not produce the desired results.The following are now
-equivalent: 
-
-    set the unicodeLabel of button 1 to tText
-    set the label of button 1 to textDecode(tText, "UTF16")
+aided unicode text manipulation is no longer required. 
 
 OS: mac, windows, linux, ios, android
 
@@ -61,6 +54,14 @@ constant in the <unicodeLabel>.
 
 If an object's <unicodeLabel>  or label is empty, the object's name
 property is displayed instead.
+
+>*Important:* This property should not be used in new code; simply set 
+the label as normal. Assigning values other than those returned from 
+uniEncode to this property will not produce the desired results. The 
+following are now equivalent: 
+
+    set the unicodeLabel of button 1 to tText
+    set the label of button 1 to textDecode(tText, "UTF16")
 
 References: effective (keyword), label (property), encoding (property),
 menuHistory (property)

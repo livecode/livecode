@@ -432,6 +432,21 @@ static MCExecEnumTypeInfo _kMCInterfaceSelectionModeTypeInfo =
 	_kMCInterfaceSelectionModeElementInfo,
 };
 
+//////////
+
+static MCExecEnumTypeElementInfo _kMCInterfaceSystemAppearanceElementInfo[] =
+{
+	{ "light", 0, false },
+	{ "dark", 1, false },
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceSystemAppearanceTypeInfo =
+{
+	"Interface.ProcessType",
+	sizeof(_kMCInterfaceSystemAppearanceElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceSystemAppearanceElementInfo,
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecEnumTypeInfo *kMCInterfaceLookAndFeelTypeInfo = &_kMCInterfaceLookAndFeelTypeInfo;
@@ -441,6 +456,7 @@ MCExecEnumTypeInfo *kMCInterfacePaintCompressionTypeInfo = &_kMCInterfacePaintCo
 MCExecEnumTypeInfo *kMCInterfaceProcessTypeTypeInfo = &_kMCInterfaceProcessTypeTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceSelectionModeTypeInfo = &_kMCInterfaceSelectionModeTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceStackFileVersionTypeInfo = &_kMCInterfaceStackFileVersionTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceSystemAppearanceTypeInfo = &_kMCInterfaceSystemAppearanceTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1699,6 +1715,13 @@ void MCInterfaceGetSelectionMode(MCExecContext& ctxt, intenum_t& r_value)
 void MCInterfaceSetSelectionMode(MCExecContext& ctxt, intenum_t p_value)
 {
 	MCselectintersect = (Boolean)p_value;
+}
+
+void MCInterfaceGetSystemAppearance(MCExecContext& ctxt, intenum_t& r_value)
+{
+	MCSystemAppearance t_appearance;
+	MCscreen->getsystemappearance(t_appearance);
+	r_value = (intenum_t)t_appearance;
 }
 
 void MCInterfaceGetSelectionHandleColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)

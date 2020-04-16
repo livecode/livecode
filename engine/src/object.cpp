@@ -5259,7 +5259,7 @@ uint32_t MCObject::getminimumstackfileversion(void)
 }
 
 // AL-2015-06-30: [[ Bug 15556 ]] Refactored function to sync mouse focus
-void MCObject::sync_mfocus(void)
+void MCObject::sync_mfocus(bool p_visiblility_changed, bool p_resize_parent)
 {
     bool needmfocus;
     needmfocus = false;
@@ -5278,17 +5278,21 @@ void MCObject::sync_mfocus(void)
         else if (MCU_point_in_rect(rect, MCmousex, MCmousey))
             needmfocus = true;
     }
-    
-    if (state & CS_KFOCUSED)
-        getcard(0)->kunfocus();
-    
-    // MW-2008-08-04: [[ Bug 7094 ]] If we change the visibility of the control
-    //   while its grabbed, we should ungrab it - otherwise it sticks to the
-    //   cursor.
-    if (gettype() >= CT_GROUP && getstate(CS_GRAB))
-        state &= ~CS_GRAB;
-    
-    resizeparent();
+	
+	if (p_visiblility_changed)
+	{
+		if (state & CS_KFOCUSED)
+			getcard(0)->kunfocus();
+		
+		// MW-2008-08-04: [[ Bug 7094 ]] If we change the visibility of the control
+		//   while its grabbed, we should ungrab it - otherwise it sticks to the
+		//   cursor.
+		if (gettype() >= CT_GROUP && getstate(CS_GRAB))
+			state &= ~CS_GRAB;
+	}
+	
+	if (p_resize_parent)
+		resizeparent();
     
     if (needmfocus)
         MCmousestackptr->getcard()->mfocus(MCmousex, MCmousey);
