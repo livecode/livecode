@@ -68,16 +68,24 @@ on a wider range of iOS simulators. For instance, on MacOS 10.12
 (Sierra), you can add *Xcode 8.2* in the *Mobile Support* preferences,
 to let you test your stack on the *iOS Simulator 10.2*.
 
-We currently support deployment for the following versions of iOS:
+We currently support building against the following versions of the iOS SDK:
 
-* 10.2
-* 11.2
-* 12.1
-* 13.2
+* 10.2 (included in Xcode 8.2)
+* 11.2 (included in Xcode 9.2)
+* 12.1 (included in Xcode 10.1)
+* 13.2 (included in Xcode 11.3)
+
+Note that the minimum iOS version of the deployment target can be set from the iOS
+standalone settings, and it is not related to the version of the iOS SDK used to build
+the iOS standalone.
+
+For example, if you use Xcode 10.1 (thus iOS SDK 12.1) to build the standalone, and in
+the iOS standalone settings you have chosen "10 or later" for the deployment target, then
+the standalone will run on all devices running iOS 10 or later. In other words, you do
+*not* need to build the app using the latest Xcode version, if you want your app to run on
+devices running the latest iOS version.
 
 ## Android
-
-
 LiveCode allows you to save your stack as an Android application, and
 also to deploy it on an Android device or simulator from the IDE.
 
@@ -92,7 +100,6 @@ It will run on the following versions of Android:
 * 8.x (Oreo)
 * 9.0 (Pie)
 * 10.0 (Q)
-
 
 To enable deployment to Android devices, you need to download the
 [Android SDK](https://developer.android.com/sdk/index.html#Other), and
