@@ -89,6 +89,13 @@ command deployDo pTargetStack, pBrowser
       local tSettings
       put revSBGetSettings(pTargetStack, true) into tSettings
       
+      -- use either js or wasm output - prefer wasm output if enabled in settings
+      if tSettings["Emscripten","wasm"] then
+         put false into tSettings["Emscripten","js"]
+      else
+         put true into tSettings["Emscripten","js"]
+      end if
+      
       put sHTTPFileSpace & slash & tSettings["name"] into tBuildFolder
       if there is a folder tBuildFolder then
          revDeleteFolder tBuildFolder

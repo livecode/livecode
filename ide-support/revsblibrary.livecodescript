@@ -742,7 +742,7 @@ constant kMacOSXArchitectures = "x86-32,x86-64"
 constant kLinuxArchitectures =  "x86-32,x86-64,armv6-hf"
 constant kAndroidArchitectures =  "armv7,arm64,x86,x86_64"
 constant kiOSArchitectures =  "armv7,arm64"
-constant kEmscriptenArchitectures =  "js"
+constant kEmscriptenArchitectures =  "js,wasm"
 
 function revSBPlatformArchitectures pPlatform
    switch pPlatform
@@ -1050,9 +1050,14 @@ function revEngineCheck pEngine
                return true
             end if
             break
-         case "Emscripten"
+         case "Emscripten js"
             if there is a folder (tPath & "/Emscripten/js") then
                return true
+            end if
+            break
+         case "Emscripten wasm"
+            if there is a folder (tPath & "/Emscripten/wasm") then
+               return true;
             end if
             break
       end switch
