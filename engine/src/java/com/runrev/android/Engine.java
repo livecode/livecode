@@ -61,6 +61,7 @@ import java.nio.charset.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.text.Collator;
+import java.lang.Math;
 
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
@@ -138,6 +139,7 @@ public class Engine extends View implements EngineApi
 	private boolean m_new_intent;
 
 	private int m_photo_width, m_photo_height;
+	private int m_jpeg_quality;
 	
 	private int m_night_mode;
 
@@ -241,6 +243,7 @@ public class Engine extends View implements EngineApi
 
 		m_photo_width = 0;
 		m_photo_height = 0;
+		m_jpeg_quality = 100;
 		
 		m_night_mode =
 			p_context.getResources().getConfiguration().uiMode &
@@ -2090,10 +2093,11 @@ public class Engine extends View implements EngineApi
     }
     
     
-    public void showPhotoPicker(String p_source, int p_width, int p_height)
+    public void showPhotoPicker(String p_source, int p_width, int p_height, int p_jpeg_quality)
     {
         m_photo_width = p_width;
         m_photo_height = p_height;
+		m_jpeg_quality = p_jpeg_quality;
         
         if (p_source.contains("camera"))
             showCamera(p_source);
@@ -2205,27 +2209,91 @@ public class Engine extends View implements EngineApi
 					t_photo_uri = Uri.fromFile(m_temp_image_file);
 				else
 					t_photo_uri = data.getData();
+				
 				InputStream t_in = ((LiveCodeActivity)getContext()).getContentResolver().openInputStream(t_photo_uri);
 				ByteArrayOutputStream t_out = new ByteArrayOutputStream();
-				byte[] t_buffer = new byte[4096];
-				int t_readcount;
-				while (-1 != (t_readcount = t_in.read(t_buffer)))
-				{
-					t_out.write(t_buffer, 0, t_readcount);
-				}
-
+				
 				// HH-2017-01-19: [[ Bug 11313 ]]Support maximum width and height of the image
 				if(m_photo_height > 0 && m_photo_width > 0)
 				{
-					Bitmap bm = BitmapFactory.decodeByteArray(t_out.toByteArray(), 0, t_out.size());
-					Bitmap rBm = Bitmap.createScaledBitmap(bm, m_photo_width, m_photo_height, true);
-					ByteArrayOutputStream stream = new ByteArrayOutputStream();
-					rBm.compress(Bitmap.CompressFormat.PNG, 100, stream);
-					byte[] byteArray = stream.toByteArray();
-					doPhotoPickerDone(byteArray, byteArray.length);
+					Bitmap t_bitmap = BitmapFactory.decodeStream(t_in);
+					
+					// scale to required max width/height
+					float t_width = t_bitmap.getWidth();
+					float t_height = t_bitmap.getHeight();
+					
+					InputStream t_exif_in = ((LiveCodeActivity)getContext()).getContentResolver().openInputStream(t_photo_uri);
+					
+					ExifInterface t_exif = new ExifInterface(t_exif_in);
+					
+					int t_orientation = t_exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+															   ExifInterface.ORIENTATION_NORMAL);
+					
+					/* Max width and height need to be flipped if the image orientation is
+					 * requires a 90 or 270 degree rotation */
+					int t_max_width;
+					int t_max_height;
+					switch (t_orientation)
+					{
+						case ExifInterface.ORIENTATION_TRANSPOSE:
+						case ExifInterface.ORIENTATION_ROTATE_90:
+						case ExifInterface.ORIENTATION_TRANSVERSE:
+						case ExifInterface.ORIENTATION_ROTATE_270:
+							t_max_height = m_photo_width;
+							t_max_width = m_photo_height;
+							break;
+						default:
+							t_max_width = m_photo_width;
+							t_max_height = m_photo_height;
+							break;
+					}
+					
+					float t_scale = Math.min(t_max_width / t_width, t_max_height / t_height);
+					
+					Matrix t_matrix = new Matrix();
+					t_matrix.setScale(t_scale, t_scale, 0, 0);
+					
+					switch (t_orientation)
+					{
+						case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+							t_matrix.postScale(-1, 1);
+							break;
+						case ExifInterface.ORIENTATION_ROTATE_180:
+							t_matrix.postRotate(180);
+							break;
+						case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+							t_matrix.postRotate(180);
+							t_matrix.postScale(-1, 1);
+							break;
+						case ExifInterface.ORIENTATION_TRANSPOSE:
+							t_matrix.postRotate(90);
+							t_matrix.postScale(-1, 1);
+							break;
+						case ExifInterface.ORIENTATION_ROTATE_90:
+							t_matrix.postRotate(90);
+							break;
+						case ExifInterface.ORIENTATION_TRANSVERSE:
+							t_matrix.postRotate(-90);
+							t_matrix.postScale(-1, 1);
+							break;
+						case ExifInterface.ORIENTATION_ROTATE_270:
+							t_matrix.postRotate(-90);
+							break;
+					}
+		
+					Bitmap t_scaled_bitmap = Bitmap.createBitmap(t_bitmap, 0, 0, (int)t_width, (int)t_height, t_matrix, true);
+					t_scaled_bitmap.compress(Bitmap.CompressFormat.JPEG, m_jpeg_quality, t_out);
 				}
 				else
-					doPhotoPickerDone(t_out.toByteArray(), t_out.size());
+				{
+					byte[] t_buffer = new byte[4096];
+					int t_readcount;
+					while (-1 != (t_readcount = t_in.read(t_buffer)))
+					{
+						t_out.write(t_buffer, 0, t_readcount);
+					}
+				}
+				doPhotoPickerDone(t_out.toByteArray(), t_out.size());
 				
 				t_in.close();
 				t_out.close();
