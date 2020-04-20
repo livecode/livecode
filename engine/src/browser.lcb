@@ -66,8 +66,8 @@ public foreign handler MCBrowserLibrarySetWaitFunction(in pWait as MCBrowserWait
 public foreign handler MCBrowserLibrarySetBreakWaitFunction(in pBreakWait as MCBrowserBreakWaitFunction) returns nothing binds to "<builtin>"
 public foreign handler MCBrowserLibraryGetRunloopCallback(out rCallback as Pointer, out rContext as optional Pointer) returns CBool binds to "<builtin>"
 
-public foreign handler MCBrowserFactoryGet(in pFactoryId as ZStringUTF8, out rFactory as MCBrowserFactoryRef) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, in pDisplay as optional Pointer, in pParentView as Pointer, out rBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserFactoryGet(in pFactoryId as ZStringUTF8, out rFactory as optional MCBrowserFactoryRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserFactoryCreateBrowser(in pFactory as MCBrowserFactoryRef, in pDisplay as optional Pointer, in pParentView as Pointer, out rBrowser as optional MCBrowserRef) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserRetain(in pBrowser as MCBrowserRef) returns MCBrowserRef binds to "<builtin>"
 public foreign handler MCBrowserRelease(in pBrowser as MCBrowserRef) returns nothing binds to "<builtin>"
@@ -76,7 +76,7 @@ public foreign handler MCBrowserGetNativeLayer(in pBrowser as MCBrowserRef) retu
 
 public foreign handler MCBrowserGetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, out rValue as CBool) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserSetBoolProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, in pValue as CBool) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserGetStringProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, out rValue as ZStringUTF8) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserGetStringProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, out rValue as optional ZStringUTF8) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserSetStringProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, in pValue as ZStringUTF8) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserGetIntegerProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, out rValue as Int32) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserSetIntegerProperty(in pBrowser as MCBrowserRef, in pProperty as MCBrowserProperty, in pValue as Int32) returns CBool binds to "<builtin>"
@@ -87,13 +87,13 @@ public foreign handler MCBrowserGoToURL(in pBrowser as MCBrowserRef, in pURL as 
 public foreign handler MCBrowserLoadHTMLText(in pBrowser as MCBrowserRef, in pHTMLText as ZStringUTF8, in pBaseURL as ZStringUTF8) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserStopLoading(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserReload(in pBrowser as MCBrowserRef) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserEvaluateJavaScript(in pBrowser as MCBrowserRef, in pScript as ZStringUTF8, out rResult as ZStringUTF8) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserEvaluateJavaScript(in pBrowser as MCBrowserRef, in pScript as ZStringUTF8, out rResult as optional ZStringUTF8) returns CBool binds to "<builtin>"
 
 ----------
 
 public foreign handler MCBrowserNavigationRequestRetain(in pBrowserNavigationRequestRef as MCBrowserNavigationRequestRef) returns MCBrowserNavigationRequestRef binds to "<builtin>"
 public foreign handler MCBrowserNavigationRequestRelease(in pBrowserNavigationRequestRef as MCBrowserNavigationRequestRef) returns nothing binds to "<builtin>"
-public foreign handler MCBrowserNavigationRequestGetURL(in pBrowserNavigationRequestRef as MCBrowserNavigationRequestRef, out rURL as ZStringUTF8) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserNavigationRequestGetURL(in pBrowserNavigationRequestRef as MCBrowserNavigationRequestRef, out rURL as optional ZStringUTF8) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserNavigationRequestGetNavigationType(in pBrowserNavigationRequestRef as MCBrowserNavigationRequestRef, out rType as MCBrowserNavigationType) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserNavigationRequestIsFrame(in pBrowserNavigationRequestRef as MCBrowserNavigationRequestRef, out rIsFrame as CBool) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserNavigationRequestContinue(in pBrowserNavigationRequestRef as MCBrowserNavigationRequestRef) returns CBool binds to "<builtin>"
@@ -106,23 +106,23 @@ public foreign handler MCBrowserListGetType(in pList as MCBrowserListRef, in pIn
 public foreign handler MCBrowserListGetBoolean(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as CBool) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserListGetInteger(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as Int32) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserListGetDouble(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as CDouble) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserListGetUTF8String(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as ZStringUTF8) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserListGetList(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as MCBrowserListRef) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserListGetDictionary(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as MCBrowserDictionaryRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetUTF8String(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as optional ZStringUTF8) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetList(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as optional MCBrowserListRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserListGetDictionary(in pList as MCBrowserListRef, in pIndex as UInt32, out rValue as optional MCBrowserDictionaryRef) returns CBool binds to "<builtin>"
 
-public foreign handler MCBrowserDictionaryGetKeys(in pDictionary as MCBrowserDictionaryRef, out rKeys as Pointer, out rCount as UInt32) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserDictionaryGetKeys(in pDictionary as MCBrowserDictionaryRef, out rKeys as optional Pointer, out rCount as UInt32) returns CBool binds to "<builtin>"
 
 /* WORKAROUND - Can't currently dereference a Pointer-to-CString at the moment so need to provide key accessor functions */
 public foreign handler MCBrowserDictionaryGetKeyCount(in pDictionary as MCBrowserDictionaryRef, out rCount as UInt32) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserDictionaryGetKey(in pDictionary as MCBrowserDictionaryRef, in pIndex as UInt32, out rKey as ZStringUTF8) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserDictionaryGetKey(in pDictionary as MCBrowserDictionaryRef, in pIndex as UInt32, out rKey as optional ZStringUTF8) returns CBool binds to "<builtin>"
 
 public foreign handler MCBrowserDictionaryGetType(in pDictionary as MCBrowserDictionaryRef, in pKey as ZStringUTF8, out rType as MCBrowserValueType) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserDictionaryGetBoolean(in pDictionary as MCBrowserDictionaryRef, in pKey as ZStringUTF8, out rValue as CBool) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserDictionaryGetInteger(in pDictionary as MCBrowserDictionaryRef, in pKey as ZStringUTF8, out rValue as Int32) returns CBool binds to "<builtin>"
 public foreign handler MCBrowserDictionaryGetDouble(in pDictionary as MCBrowserDictionaryRef, in pKey as ZStringUTF8, out rValue as CDouble) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserDictionaryGetUTF8String(in pDictionary as MCBrowserDictionaryRef, in pKey as ZStringUTF8, out rValue as ZStringUTF8) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserDictionaryGetList(in pDictionary as MCBrowserDictionaryRef, in pKey as ZStringUTF8, out rValue as MCBrowserListRef) returns CBool binds to "<builtin>"
-public foreign handler MCBrowserDictionaryGetDictionary(in pDictionary as MCBrowserDictionaryRef, in pKey as ZStringUTF8, out rValue as MCBrowserDictionaryRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserDictionaryGetUTF8String(in pDictionary as MCBrowserDictionaryRef, in pKey as ZStringUTF8, out rValue as optional ZStringUTF8) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserDictionaryGetList(in pDictionary as MCBrowserDictionaryRef, in pKey as ZStringUTF8, out rValue as optional MCBrowserListRef) returns CBool binds to "<builtin>"
+public foreign handler MCBrowserDictionaryGetDictionary(in pDictionary as MCBrowserDictionaryRef, in pKey as ZStringUTF8, out rValue as optional MCBrowserDictionaryRef) returns CBool binds to "<builtin>"
 
 public foreign handler type MCBrowserNavigationRequestCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pRequest as MCBrowserNavigationRequestRef) returns CBool
 public foreign handler type MCBrowserNavigationCallback(in pContext as optional Pointer, in pBrowser as MCBrowserRef, in pType as MCBrowserNavigationEventType, in pState as MCBrowserNavigationState, in pFrame as CBool, in pUrl as ZStringUTF8, in pError as optional ZStringUTF8) returns nothing
