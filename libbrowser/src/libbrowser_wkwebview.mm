@@ -991,8 +991,8 @@ bool MCWKWebViewBrowser::EvaluateJavaScript(const char *p_script, char *&r_resul
 	
 	if (t_result == nil)
 	{
-		r_result = nil;
-		return true;
+		// return the empty string if there is no result value
+		return MCCStringClone("", r_result);
 	}
 	
 	NSString *t_result_string = [NSString stringWithFormat:@"%@", t_result];
