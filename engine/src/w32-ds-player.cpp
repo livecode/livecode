@@ -126,7 +126,7 @@ private:
 	bool SetCallbackMarkers(const MCPlatformPlayerDurationArray &p_markers);
 
 	bool Play();
-	bool Pause();
+	bool Pause(bool p_stop = false);
 	bool SeekRelative(int32_t p_amount);
 	bool SetPositions(MCPlatformPlayerDuration p_start, MCPlatformPlayerDuration p_finish);
 
@@ -320,7 +320,7 @@ bool MCWin32DSPlayer::HandleGraphEvent()
 				Play();
 			else
 			{
-				m_control->StopWhenReady();
+				Pause(true);
 				MCPlatformCallbackSendPlayerFinished(this);
 			}
 			break;
@@ -965,6 +965,8 @@ bool MCWin32DSPlayer::SetUrl(MCStringRef p_url)
 	if (!t_success)
 		CloseFile();
 
+	Pause();
+
 	//InvalidateRect(m_video_window, NULL, FALSE);
 	//UpdateWindow(m_video_window);
 	//m_MediaViewer->Pause();
@@ -1054,7 +1056,7 @@ bool MCWin32DSPlayer::SetCurrentPosition(MCPlatformPlayerDuration p_position)
 		return false;
 
 	// Enter paused state if not currently playing
-	if (m_state == kMCWin32DSPlayerStopped)
+	if (m_state != kMCWin32DSPlayerRunning)
 		return Pause();
 
 	return true;
@@ -1102,6 +1104,10 @@ bool MCWin32DSPlayer::SetPositions(MCPlatformPlayerDuration p_start, MCPlatformP
 
 	if (t_result != S_OK && t_result != S_FALSE) // S_FALSE -> no change
 		return false;
+
+	// If not playing, pausing here will make sure the next frame is displayed
+	if (m_state != kMCWin32DSPlayerRunning)
+		return Pause(m_state == kMCWin32DSPlayerStopped);
 
 	return true;
 }
@@ -1325,19 +1331,34 @@ bool MCWin32DSPlayer::Play()
 }
 
 //pause playback
-bool MCWin32DSPlayer::Pause()
+bool MCWin32DSPlayer::Pause(bool p_stop)
 {
 	if (m_control == nil)
 		return false;
 
 	HRESULT t_result;
 	t_result = m_control->Pause();
-	if (t_result != S_OK && t_result != S_FALSE)
+
+	if (t_result == S_FALSE)
+	{
+		OAFilterState t_state;
+		t_result = m_control->GetState(10, &t_state);
+		while (t_result == VFW_S_STATE_INTERMEDIATE)
+		{
+			MCscreen->wait(0.01, false, true);
+			t_result = m_control->GetState(10, &t_state);
+		}
+	}
+
+	if (t_result == E_FAIL)
 		return false;
 
 	StopTimer();
 
-    m_state = kMCWin32DSPlayerPaused;
+	if (p_stop)
+		m_state = kMCWin32DSPlayerStopped;
+	else
+		m_state = kMCWin32DSPlayerPaused;
 
 	return true;
 }
