@@ -928,26 +928,35 @@ bool MCWKWebViewBrowser::GoToURL(const char *p_url)
 	if (!GetWebView(t_view))
 		return false;
 	
-//	__block NSURL *t_url;
 	NSURL *t_url;
-	t_url = [NSURL URLWithString: [NSString stringWithUTF8String: p_url]];
-
-	// reject file urls with empty path components
-	if (t_url.fileURL && t_url.path.length == 0)
-		return false;
-
-	// check that we have permission to access file urls before proceeding
-	__block bool t_reachable = true;
-	if (t_url.fileURL)
+	if (MCCStringIsEmpty(p_url))
 	{
-		MCBrowserRunBlockOnMainFiber(^{
-			t_reachable = [t_url checkResourceIsReachableAndReturnError:nil];
-		});
+		// Sending an empty url to the webview will bypass the delegate's
+		// decidePolicyForNavigationAction method. We can prevent that by
+		// loading a blank page instead.
+		[m_delegate loadRequest:[MCWKWebViewLoadRequest requestWithUrl:nil htmlText:@"<html><body></body></html>" quiet:YES] inWebView:t_view];
 	}
-	if (!t_reachable)
-		return false;
-	
-	[m_delegate loadRequest:[MCWKWebViewLoadRequest requestWithUrl:t_url htmlText:nil quiet:NO] inWebView:t_view];
+	else
+	{
+		t_url = [NSURL URLWithString: [NSString stringWithUTF8String: p_url]];
+
+		// reject file urls with empty path components
+		if (t_url.fileURL && t_url.path.length == 0)
+			return false;
+
+		// check that we have permission to access file urls before proceeding
+		__block bool t_reachable = true;
+		if (t_url.fileURL)
+		{
+			MCBrowserRunBlockOnMainFiber(^{
+				t_reachable = [t_url checkResourceIsReachableAndReturnError:nil];
+			});
+		}
+		if (!t_reachable)
+			return false;
+		
+		[m_delegate loadRequest:[MCWKWebViewLoadRequest requestWithUrl:t_url htmlText:nil quiet:NO] inWebView:t_view];
+	}
 	
 	/* UNCHECKED */ MCBrowserCStringAssignCopy(m_url, p_url);
 	MCBrowserCStringAssign(m_htmltext, nil);
