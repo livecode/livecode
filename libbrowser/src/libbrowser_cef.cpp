@@ -760,13 +760,12 @@ private:
 	MCCefMessageResult m_message_result;
 	std::map<int64_t, MCCefErrorInfo> m_load_error_frames;
 	
-	// IM-2014-05-06: [[ Bug 12384 ]] Set of URLs for which callback messages will not be sent
-	std::set<CefString> m_ignore_urls;
+	// Describes where loading url requests came from
+	std::map<CefString, PageOrigin> m_load_url_origins;
 	
 	CefString m_last_request_url;
 	
 	PageOrigin m_displayed_page_origin;
-	PageOrigin m_loading_page_origin;
 
 	// Error handling - we need to keep track of url that failed to load in a
 	// frame so we can send the correct url in onLoadEnd()
@@ -826,7 +825,7 @@ public:
 	{
 		m_owner = p_owner;
 		m_browser_id = 0;
-		m_displayed_page_origin = m_loading_page_origin = PageOrigin::kNone;
+		m_displayed_page_origin = PageOrigin::kNone;
 	}
 	
 	// IM-2014-07-21: [[ Bug 12296 ]] Method to allow owner to notify client of its deletion
@@ -843,28 +842,24 @@ public:
 	virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE { return this; }
 	
-	void AddIgnoreUrl(const CefString &p_url)
+	void AddLoadingUrl(const CefString &p_url, PageOrigin p_origin)
 	{
-		m_ignore_urls.insert(p_url);
+		m_load_url_origins[p_url] = p_origin;
 	}
 	
-	void RemoveIgnoreUrl(const CefString &p_url)
+	void RemoveLoadingUrl(const CefString &p_url)
 	{
-		m_ignore_urls.erase(p_url);
+		m_load_url_origins.erase(p_url);
 	}
 	
-	// IM-2014-05-06: [[ Bug 12384 ]] Test if callback should be sent for URL
-	bool IgnoreUrl(const CefString &p_url)
+	bool GetLoadingUrlOrigin(const CefString &p_url, PageOrigin &r_origin)
 	{
-		std::set<CefString>::iterator t_iter;
-		t_iter = m_ignore_urls.find(p_url);
-		
-		return t_iter != m_ignore_urls.end();
-	}
-	
-	void SetLoadingPageOrigin(PageOrigin p_origin)
-	{
-		m_loading_page_origin = p_origin;
+		auto t_iter = m_load_url_origins.find(p_url);
+		if (t_iter == m_load_url_origins.end())
+			return false;
+
+		r_origin = t_iter->second;
+		return true;
 	}
 
 	PageOrigin GetDisplayedPageOrigin()
@@ -1036,10 +1031,17 @@ public:
 		CefString t_url;
 		t_url = p_request->GetURL();
 		
-		if (p_user_gesture)
-			SetLoadingPageOrigin(PageOrigin::kBrowse);
+		PageOrigin t_origin = PageOrigin::kNone;
 
-		if (IgnoreUrl(t_url))
+		if (p_user_gesture)
+		{
+			t_origin = PageOrigin::kBrowse;
+			/* UNCHECKED */ AddLoadingUrl(t_url, t_origin);
+		}
+		else
+			/* UNCHECKED */ GetLoadingUrlOrigin(t_url, t_origin);
+
+		if (t_origin == PageOrigin::kSetSource)
 			return false;
 		
 		char *t_url_str;
@@ -1061,7 +1063,10 @@ public:
 		CefString t_url;
 		t_url = p_request->GetURL();
 		
-		if (IgnoreUrl(t_url))
+		PageOrigin t_origin = PageOrigin::kNone;
+		/* UNCHECKED */ GetLoadingUrlOrigin(t_url, t_origin);
+
+		if (t_origin == PageOrigin::kSetSource)
 			return RV_CONTINUE;
 		
 		m_last_request_url = t_url;
@@ -1172,10 +1177,13 @@ public:
 		bool t_frame;
 		t_frame = !p_frame->IsMain();
 
-		if (!t_frame && !t_is_error)
-			m_displayed_page_origin = m_loading_page_origin;
+		PageOrigin t_origin = PageOrigin::kNone;
+		/* UNCHECKED */ GetLoadingUrlOrigin(t_url, t_origin);
 
-		if ((!t_frame && m_loading_page_origin==PageOrigin::kSetSource) || IgnoreUrl(t_url))
+		if (!t_frame && !t_is_error)
+			m_displayed_page_origin = t_origin;
+
+		if (!t_frame && t_origin == PageOrigin::kSetSource)
 			return;
 		
 		char *t_url_str;
@@ -1212,7 +1220,11 @@ public:
 		bool t_frame;
 		t_frame = !p_frame->IsMain();
 
-		if ((!t_frame && m_loading_page_origin == PageOrigin::kSetSource) || IgnoreUrl(t_url))
+		PageOrigin t_origin = PageOrigin::kNone;
+		/* UNCHECKED */ GetLoadingUrlOrigin(t_url, t_origin);
+		/* UNCHECKED */ RemoveLoadingUrl(t_url);
+
+		if (!t_frame && t_origin == PageOrigin::kSetSource)
 			return CefLoadHandler::OnLoadEnd(p_browser, p_frame, p_http_status_code);
 		
 		char *t_url_str;
@@ -1302,7 +1314,7 @@ bool MCCefBrowserBase::Initialize()
 	CefString t_url("data:text/html;charset=utf-8,");
 	
 	// IM-2014-05-06: [[ Bug 12384 ]] Prevent callback messages for dummy URL
-	m_client->SetLoadingPageOrigin(MCCefBrowserClient::PageOrigin::kSetSource);
+	m_client->AddLoadingUrl(t_url, MCCefBrowserClient::PageOrigin::kSetSource);
 	PlatformConfigureWindow(t_window_info);
 
 	if (MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
@@ -1620,7 +1632,7 @@ bool MCCefBrowserBase::LoadHTMLText(const char *p_htmltext, const char *p_base_u
 	if (!MCCefStringFromUtf8String(p_base_url, t_base_url))
 		return false;
 	
-	m_client->SetLoadingPageOrigin(MCCefBrowserClient::PageOrigin::kSetSource);
+	m_client->AddLoadingUrl(t_base_url, MCCefBrowserClient::PageOrigin::kSetSource);
 	m_browser->GetMainFrame()->LoadString(t_htmltext, t_base_url);
 	
 	return true;
@@ -1832,7 +1844,7 @@ bool MCCefBrowserBase::GoToURL(const char *p_url)
 	if (!MCCefStringFromUtf8String(p_url, t_url))
 		return false;
 	
-	m_client->SetLoadingPageOrigin(MCCefBrowserClient::PageOrigin::kSetUrl);
+	m_client->AddLoadingUrl(t_url, MCCefBrowserClient::PageOrigin::kSetUrl);
 
 	t_frame->LoadURL(t_url);
 	return true;
