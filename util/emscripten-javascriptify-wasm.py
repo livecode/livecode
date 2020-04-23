@@ -15,12 +15,12 @@ settings = {
     'ASYNCIFY': 1,
     'ASYNCIFY_IMPORTS': '[MCEmscriptenAsyncYield]',
     'ALLOW_MEMORY_GROWTH': 1,
-    'ASSERTIONS': 1,
     'DEMANGLE_SUPPORT': 1,
+    'ERROR_ON_UNDEFINED_SYMBOLS': 0,
     'EXTRA_EXPORTED_RUNTIME_METHODS': '[addRunDependency,removeRunDependency,ccall]',
-    'LINKABLE': 1,
     'RESERVED_FUNCTION_POINTERS': 1024,
     'TOTAL_MEMORY': 67108864,
+    'USE_SDL': 0,
     'WARN_ON_UNDEFINED_SYMBOLS': 1,
     }
 
