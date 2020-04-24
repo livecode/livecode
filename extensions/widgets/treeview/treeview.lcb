@@ -689,6 +689,7 @@ private variable mIndentPixels as Integer
 private variable mHoverRow as Integer
 private variable mHoverIcon as String
 private variable mMouseDownRow as Integer
+private variable mScrolledSinceMouseDown as Boolean
 
 private variable mFrameBorder as Boolean
 private variable mShowHover as Boolean
@@ -1156,6 +1157,7 @@ public handler OnMouseDown() returns nothing
 	else
 		put yPosToRowNumber(the y of the mouse position) into mMouseDownRow
 	end if
+	put false into mScrolledSinceMouseDown
 end handler
 
 public handler OnMouseMove() returns nothing
@@ -1271,6 +1273,11 @@ public handler OnClick() returns nothing
 		return
 	end if
 
+	// Just return if top position has changed (view was scrolled)
+	if mScrolledSinceMouseDown then
+		return
+	end if
+	
 	// If the first row was clicked then add a new element
 	if mHoverRow is 1 then
 		addBaseLevelElement()
@@ -2558,6 +2565,7 @@ end handler
 private handler setViewTopPosition(in pViewTopPosition as Real) returns nothing
 	if pViewTopPosition is not mViewTopPosition then
 		put pViewTopPosition into mViewTopPosition
+		put true into mScrolledSinceMouseDown
 		ensureViewTopPosition()
 		updateFirstDataItem()
 		updateScrollbar(mViewWidth, mViewHeight, mDataHeight, mViewTopPosition)
