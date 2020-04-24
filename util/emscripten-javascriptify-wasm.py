@@ -33,7 +33,7 @@ env_build_type = os.getenv('BUILDTYPE', 'Debug')
 env_cflags = os.getenv('CFLAGS', '')
 
 if env_build_type == 'Release':
-    optimisation_flags = ['-Os', '-g0']
+    optimisation_flags = ['-O2', '-g0']
 else:
     optimisation_flags = ['-O2', '-g3']
 
