@@ -45,7 +45,7 @@ References: select (command), handler (glossary),
 insertion point (glossary), message (glossary), field (glossary),
 property (glossary), select (glossary), selection (keyword),
 field (keyword), player (keyword), currentTimeChanged (message),
-selectionChanged (message), selectedObjectChanged (message),
+selectedObjectChanged (message), textChanged (message), 
 arrowKey (message), player (object), selected (property),
 startTime (property), endTime (property)
 
