@@ -74,6 +74,11 @@ def get_build_platform():
                 os.environ.get('BUILD_SUBPLATFORM'))
     if platform[0] is None:
         error('You must set $BUILD_PLATFORM')
+
+    # Assume js architecture for emscripten platform if not specified
+    if platform[0] is 'emscripten':
+        platform[0] = 'emscripten-js'
+
     return platform
 
 def get_buildtype():
