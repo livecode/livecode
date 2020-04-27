@@ -29,10 +29,6 @@
 	<key>CFBundleShortVersionString</key>
 	<string>${BUNDLE_VERSION}</string>
 	${BUNDLE_ICONS}
-	<key>UILaunchImages</key>
-	<array>
-		${SPLASHSCREENS}
-	</array>
 	<key>DTCompiler</key>
 	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>DTPlatformBuild</key>
@@ -64,6 +60,8 @@
 	<dict>
 		${DEVICE_CAPABILITY}
 	</dict>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
 	<key>UIRequiresPersistentWiFi</key>
 		${PERSISTENT_WIFI}
 	<key>UIInitialInterfaceOrientation</key>

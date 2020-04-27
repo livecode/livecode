@@ -338,7 +338,8 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	m_window = [[MCIPhoneWindow alloc] initWithFrame: [[UIScreen mainScreen] bounds]];
 	
 	// Create the initial view controller.
-	m_startup_controller = [[MCIPhoneStartupViewController alloc] init];
+	UIStoryboard *sb = [UIStoryboard storyboardWithName:@"StartupScreen" bundle:nil];
+	m_startup_controller = [[sb instantiateInitialViewController] retain];
 	
 	// Create the main view controller.
 	m_main_controller = [[MCIPhoneMainViewController alloc] init];
@@ -1418,8 +1419,6 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
 	if (self == nil)
 		return nil;
 	
-	// We start off with no image.
-	m_image_view = nil;
 	m_image_orientation = UIInterfaceOrientationPortrait;
 	
 	// We always use full screen layout.
@@ -1430,9 +1429,6 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
 
 - (void)dealloc
 {
-	// Release the image.
-	[m_image_view release];
-	
 	// Finalize the superclass.
 	[super dealloc];
 }
@@ -1464,25 +1460,6 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
 	return ([[MCIPhoneApplication sharedApplication] allowedOrientations] & (1 << p_new_orientation)) != 0;
 }
 
-- (void)loadView
-{
-	MCLog("StartupViewController: loadView (%d)\n", [self interfaceOrientation]);
-	
-	// Create an empty view covering the application frame.
-	UIView *t_view;
-	t_view = [[UIView alloc] initWithFrame: [[UIScreen mainScreen] applicationFrame]];
-	[t_view setContentMode: UIViewContentModeCenter];
-	
-	// We turn off user interaction as we don't need any events from the startup
-	// image.
-	[t_view setUserInteractionEnabled: NO];
-	
-	// Set the view, and release our reference to it - we can manipulate the empty
-	// view using [self view];
-	[self setView: t_view];
-	[t_view release];
-}
-
 - (void)viewDidLoad;
 {
 	MCLog("StartupViewController: viewDidLoad\n");
@@ -1496,11 +1473,6 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
 - (void)viewWillAppear:(BOOL)animated
 {
 	MCLog("StartupViewController: viewWillAppear\n");
-	
-	// If we don't have an image view yet, make sure we get one. This can happen
-	// when the device starts up in portrait - 'WillAnimate' will never be called.
-	if (m_image_view == nil)
-		[self switchImageToOrientation: [self interfaceOrientation]];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -1516,11 +1488,6 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
 - (void)viewDidDisappear:(BOOL)animated
 {
 	MCLog("StartupViewController: viewDidDisappear\n");
-	
-	// When the view disappears, get rid of the image view to save space.
-	[m_image_view removeFromSuperview];
-	[m_image_view release];
-	m_image_view = nil;
 }
 
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration
@@ -1532,255 +1499,12 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)newInterfaceOrientation duration:(NSTimeInterval)duration
 {
 	MCLog("StartupViewController: willAnimateToInterfaceOrientation (%d)\n", newInterfaceOrientation);
-	
-	// We switch the image here, which should mean we get a nice smooth rotation
-	// animation (this method is invoked within an animation block).
-	[self switchImageToOrientation: newInterfaceOrientation];
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
 {
 	MCLog("StartupViewController: didRotateFromInterfaceOrientation (%d)\n", fromInterfaceOrientation);
 	[[MCIPhoneApplication sharedApplication] endAutorotation];
-}
-
-- (void)switchImageToOrientation: (UIInterfaceOrientation)p_new_orientation
-{
-	MCLog("StartupViewController: switchImageToOrientation (%d)\n", p_new_orientation);
-	
-	if (m_image_view != nil && m_image_orientation == p_new_orientation)
-		return;
-	
-	// Remove any existing image view from the main view.
-	if (m_image_view != nil)
-	{
-		[m_image_view removeFromSuperview];
-		[m_image_view release];
-		m_image_view = nil;
-	}
-    
-    // MM-2014-10-02: [[ Bug ]] If we are a retina device, attempt to use retina splash screens.
-    bool t_is_retina;
-    t_is_retina = [[UIScreen mainScreen] respondsToSelector:@selector(scale)] == YES && [[UIScreen mainScreen] scale] > 1.0;
-    uint32_t t_img_cnt;
-    t_img_cnt = 0;
-    
-	// Compute the list of image names (and rotations) to try in order.
-	NSString *t_image_names[6];
-	CGFloat t_image_angles[6];
-	if ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPad)
-	{
-		// MW-2011-10-18: [[ Bug 9823 ]] The S/B only ever has portrait / landscape
-		//   images, so simplify the switch to handle that case.
-		// On iPad we use and rotate the appropriate image.
-		switch(p_new_orientation)
-		{
-			default:
-			case UIInterfaceOrientationPortrait:
-            case UIInterfaceOrientationPortraitUpsideDown:
-                if (t_is_retina)
-                {
-                    t_image_names[t_img_cnt] = @"Default-Portrait@2x.png";
-                    t_image_angles[t_img_cnt++] = 0.0f;
-                    
-                    // iPad Pro 12.9 has retina
-                    t_image_names[t_img_cnt] = @"Default-iPadProPortrait@2x.png";
-                    t_image_angles[t_img_cnt++] = 0.0f;
-                    
-                    // iPad Pro 11 has retina
-                    t_image_names[t_img_cnt] = @"Default-iPadPro11Portrait@2x.png";
-                    t_image_angles[t_img_cnt++] = 0.0f;
-
-                }
-				t_image_names[t_img_cnt] = @"Default-Portrait.png";
-				t_image_angles[t_img_cnt++] = 0.0f;
-				t_image_names[t_img_cnt] = @"Default.png";
-				t_image_angles[t_img_cnt++] = 0.0f;
-				t_image_names[t_img_cnt] = nil;
-				break;
-            case UIInterfaceOrientationLandscapeLeft:
-            case UIInterfaceOrientationLandscapeRight:
-                if (t_is_retina)
-                {
-                    t_image_names[t_img_cnt] = @"Default-Landscape@2x.png";
-                    t_image_angles[t_img_cnt++] = 0.0f;
-                    
-                    // iPad Pro 12.9 has retina
-                    t_image_names[t_img_cnt] = @"Default-iPadProLandscape@2x.png";
-                    t_image_angles[t_img_cnt++] = 0.0f;
-                    
-                    // iPad Pro 11 has retina
-                    t_image_names[t_img_cnt] = @"Default-iPadPro11Landscape@2x.png";
-                    t_image_angles[t_img_cnt++] = 0.0f;
-                }
-                t_image_names[t_img_cnt] = @"Default-Landscape.png";
-                t_image_angles[t_img_cnt++] = 0.0f;
-                t_image_names[t_img_cnt] = @"Default.png";
-                t_image_angles[t_img_cnt++] = -90.0f;
-                t_image_names[t_img_cnt] = nil;
-                break;
-		}
-	}
-	else
-	{
-        // MM-2014-10-02: [[ iOS 8 Support ]] Like the iPad, the iPhone 6 Plus allows for portrait and landscape splash screens.
-        if ([[UIScreen mainScreen] bounds] . size . height == 736 || [[UIScreen mainScreen] bounds] . size . width == 736)
-        {
-            switch(p_new_orientation)
-            {
-                case UIInterfaceOrientationPortrait:
-                case UIInterfaceOrientationPortraitUpsideDown:
-                    t_image_names[0] = @"Default-736h@3x.png";
-                    t_image_angles[0] = 0.0f;
-                    break;
-                case UIInterfaceOrientationLandscapeLeft:
-                case UIInterfaceOrientationLandscapeRight:
-                    t_image_names[0] = @"Default-414h@3x.png";
-                    t_image_angles[0] = 0.0f;
-                    break;
-            }
-            t_image_names[1] = nil;
-        }
-        
-        // the iPhone X/XS allows for portrait and landscape splash screens
-        else if ([[UIScreen mainScreen] bounds] . size . height == 812 || [[UIScreen mainScreen] bounds] . size . width == 812)
-        {
-            switch(p_new_orientation)
-            {
-                case UIInterfaceOrientationPortrait:
-                case UIInterfaceOrientationPortraitUpsideDown:
-                    t_image_names[0] = @"Default-812h@3x.png";
-                    t_image_angles[0] = 0.0f;
-                    break;
-                case UIInterfaceOrientationLandscapeLeft:
-                case UIInterfaceOrientationLandscapeRight:
-                    t_image_names[0] = @"Default-375h@3x.png";
-                    t_image_angles[0] = 0.0f;
-                    break;
-            }
-            t_image_names[1] = nil;
-        }
-        
-        // iPhone XR: 414x896 points are rendered in 2x, resulting in 828x1792 pixels
-        // iPhone XSMAX: 414x896 points are rendered in 3x, resulting in 1242x2688 pixels
-        else if ([[UIScreen mainScreen] bounds] . size . height == 896 || [[UIScreen mainScreen] bounds] . size . width == 896)
-        {
-            switch(p_new_orientation)
-            {
-                case UIInterfaceOrientationPortrait:
-                case UIInterfaceOrientationPortraitUpsideDown:
-                    if ([[UIScreen mainScreen] scale] == 3.0)
-                    {
-                        t_image_names[0] = @"Default-896h@3x.png";
-                        t_image_angles[0] = 0.0f;
-                    }
-                    else if ([[UIScreen mainScreen] scale] == 2.0)
-                    {
-                        t_image_names[0] = @"Default-896h@2x.png";
-                        t_image_angles[0] = 0.0f;
-                    }
-                    break;
-                case UIInterfaceOrientationLandscapeLeft:
-                case UIInterfaceOrientationLandscapeRight:
-                    if ([[UIScreen mainScreen] scale] == 3.0)
-                    {
-                        t_image_names[0] = @"Default-414h@3x.png";
-                        t_image_angles[0] = 0.0f;
-                    }
-                    else if ([[UIScreen mainScreen] scale] == 2.0)
-                    {
-                        t_image_names[0] = @"Default-414h@2x.png";
-                        t_image_angles[0] = 0.0f;
-                    }
-                    break;
-            }
-            t_image_names[1] = nil;
-        }
-
-        else
-        {
-            // On iPhone there is only ever a 'Default' image, which we must
-            // rotate appropriately since the screen could be in any orientation.
-            // MM-2012-10-08: [[ Bug 10448 ]] Make sure the startup view uses the 568px tall splash screen for 4 inch devices.
-            // MW-2014-10-02: [[ iOS 8 Support ]] Check height and width for 568, as mainScreen bounds are rotated
-            //   on iOS 8.
-            // MM-2014-10-02: [[ iOS 8 Support ]] Take into account new iPhone 6 splash screens.
-            if ([[UIScreen mainScreen] bounds] . size . height == 667 || [[UIScreen mainScreen] bounds] . size . width == 667)
-            {
-                t_image_names[0] = @"Default-667h@2x.png";
-                t_image_names[1] = nil;
-            }
-            // PM-2015-03-19: [[ Bug 13969 ]] Make sure the correct splash screen is used for iPhone6
-            else if ([[UIScreen mainScreen] bounds] . size . height == 568 || [[UIScreen mainScreen] bounds] . size . width == 568)
-            {
-                t_image_names[0] = @"Default-568h@2x.png";
-                t_image_names[1] = nil;
-            }
-            else
-            {
-                if (t_is_retina)
-                    t_image_names[t_img_cnt++] = @"Default@2x.png";
-                t_image_names[t_img_cnt++] = @"Default.png";
-                t_image_names[t_img_cnt] = nil;
-            }
-            
-            CGFloat t_angle;
-            t_angle = 0.0f;
-            switch(p_new_orientation)
-            {
-                default:
-                case UIInterfaceOrientationPortrait:
-                    t_angle = 0.0f;
-                    break;
-                case UIInterfaceOrientationPortraitUpsideDown:
-                    t_angle = 180.0f;
-                    break;
-                case UIInterfaceOrientationLandscapeLeft:
-                    t_angle = 90.0f;
-                    break;
-                case UIInterfaceOrientationLandscapeRight:
-                    t_angle = 270.0f;
-                    break;
-            }
-            for(uint32_t i = 0; t_image_names[i] != nil; i++)
-                t_image_angles[i] = t_angle;
-        }
-	}
-	
-	// Loop through the image names until we succeed.
-	UIImage *t_image;
-	CGFloat t_angle;
-	t_image = nil;
-	t_angle = 0.0f;
-	for(int i = 0; t_image_names[i] != nil; i++)
-	{
-		t_image = [UIImage imageWithContentsOfFile: [NSString stringWithFormat: @"%@/%@", [[NSBundle mainBundle] bundlePath], t_image_names[i]]];
-		if (t_image != nil)
-		{
-			MCLog("StartupViewController:   using image '%@' with angle %f\n", t_image_names[i], t_image_angles[i]);
-			t_angle = t_image_angles[i];
-			break;
-		}
-	}
-	
-	// We have an image, and an angle so create and set our image view.
-	m_image_view = [[UIImageView alloc] initWithImage: t_image];
-	
-	// Rotate the image view appropriately.
-	[m_image_view setTransform: CGAffineTransformMakeRotation(t_angle * M_PI / 180.0f)];
-	
-	// Get the bounds of the screen, for placement.
-	CGRect t_screen_bounds;
-	t_screen_bounds = [[MCIPhoneApplication sharedApplication] fetchScreenBounds];
-	
-	// Center the image in the screen.
-    [m_image_view setCenter: CGPointMake(t_screen_bounds . size . width / 2.0f, t_screen_bounds . size . height / 2.0f)];
-	
-	// Insert the image view into our view.
-	[[self view] addSubview: m_image_view];
-	
-	// Store the orientation of the image to stop unnecessary switches.
-	m_image_orientation = p_new_orientation;
 }
 
 @end

@@ -258,23 +258,8 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    
    -- MM-2012-09-25: A 4 inch splash screen is required for iphone apps to take up the whole iphone 5 screen space.
    --
-   if pSettings["ios,iphone 4inch splash"] is empty then
-      put mapFilePath(revMobileRuntimeFolder(pTarget) & "/Default4InchSplash.png") into pSettings["ios,iphone 4inch splash"]
-   end if
-   
-   -- MM-2011-09-28: If we have splash screens and icons  specifed in the old format, copy accross using the old format.
-   -- Otherwise, copy accross using the new format (where individual icons and splash screens are specified rther than implied).
-   --
-   if pSettings["ios,icon"] is not empty then
-      revCopyMobileIcons pSettings, tBaseFolder, pAppBundle
-   else
-      revCopyMobileNewIcons pSettings, tBaseFolder, pAppBundle
-   end if
-   if pSettings["ios,splash"] is not empty then
-      revCopyMobileSplash pSettings, tBaseFolder, pAppBundle
-   else
-      revCopyMobileNewSplash pSettings, tBaseFolder, pAppBundle
-   end if
+   local tCFBundleIcons
+   revDecorateImageAssets pTarget, pSettings, tBaseFolder, pAppBundle, tCFBundleIcons
    
    local tPlist, tCustomEntitlements
    revSBUpdateSettingsForExtensions "ios", pSettings
@@ -286,7 +271,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    revCopyMobileDrivers tDrivers, pAppBundle, pTarget, tSDKs, tCopiedExternals
    
    -- Generate the plist
-   revCreateMobilePlist pSettings, pAppBundle, pTarget, tCopiedFonts, tPlist
+   revCreateMobilePlist pSettings, pAppBundle, pTarget, tCopiedFonts, tPlist, tCFBundleIcons
    
    -- Generate the PkgInfo file
    put "APPL????" into url ("binfile:" & pAppBundle & slash & "PkgInfo")
@@ -877,8 +862,11 @@ end revSaveAsMobileDeployer
 
 ################################################################################
 
-local sCFBundleIcons
-private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle   
+private command revDecorateImageAssets pTarget, pSettings, pBaseFolder, pAppBundle, @rCFBundleIcons
+   local tAssetsFolder
+   put tempname() into tAssetsFolder
+   create folder tAssetsFolder
+   
    revStandaloneProgress "Copying icons..."    
    /*
    The entry for the AppStore icon in the JSON file should have the form:
@@ -905,14 +893,13 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
          "iPad Pro 11 icon,ipad,83.5x83.5,2x,Icon-App-83.5x83.5@2x.png" \
          into sIconsList
    
-   local tAssetsFolder, tAppIconFolder
-   put tempname() into tAssetsFolder
-   create folder  tAssetsFolder
+   local tAppIconFolder
    put tAssetsFolder & slash & "AppIcon.appiconset" into tAppIconFolder
    create folder tAppIconFolder
    
    local tContentsJSON
-   put "{" & CR & quote & "images" & quote & ":[" & CR after tContentsJSON
+   local tEntry
+   put "{" & CR & quote & "images" & quote & ":[" & CR into tContentsJSON
    
    repeat for each line tType in sIconsList
       get pSettings["ios," & item 1 of tType]
@@ -925,7 +912,6 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
             throw "could not copy icon '" & it & "'"
          end if
          -- add an entry in the Contents.json file
-         local tEntry
          put "{" & CR into tEntry
          put quote & "idiom" & quote & ":" & quote & item 2 of tType & quote & comma & CR after tEntry
          put quote & "size" & quote & ":" & quote & item 3 of tType & quote & comma & CR after tEntry
@@ -942,13 +928,84 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
       throw "could not create json file '" & it & "'"
    end if
    
+   revStandaloneProgress "Copying launch image..."    
+   
+   local tImageFolder
+   put tAssetsFolder & "/livecode_launch_image.imageset" into tImageFolder
+   create folder tImageFolder
+   
+   local tDimensions
+   
+   put "{" & CR & quote & "images" & quote & ":[" & CR into tContentsJSON
+   
+   repeat for each item tScale in "1x,2x,3x"
+      local tKey
+      put "ios,launch-image-" & tScale into tKey
+      
+      local tFile
+      put pSettings[tKey] into tFile
+      if not (tFile begins with "/") then
+         put pBaseFolder & slash before tFile
+      end if
+      if there is not a file tFile then
+         next repeat
+      end if
+      
+      local tExtension
+      set the itemdelimiter to "."
+      put the last item of tFile into tExtension
+      
+      local tFileName
+      put format("livecode_launch_image@%s.%s", \
+            tScale, \
+            tExtension) into tFileName
+      
+      put url ("binfile:" & tFile) into url ("binfile:" & tImageFolder & "/" & tFileName)
+      
+      put "{" & CR into tEntry
+      put quote & "idiom" & quote & ":" & quote & "universal" & quote & comma & CR after tEntry
+      put quote & "scale" & quote & ":" & quote & tScale & quote & comma & CR after tEntry
+      put quote & "filename" & quote & ":" & quote & tFileName & quote  & CR after tEntry
+      put "}" & comma & CR after tEntry
+      put tEntry after tContentsJSON
+      
+      if tDimensions is empty then
+         put imageGetDimensions(tFile) into tDimensions
+         switch tScale
+            case "2x"
+               put item 1 of tDimensions div 2, \
+                     item 2 of tDimensions div 2 into tDimensions
+               break
+            case "3x"
+               put item 1 of tDimensions div 3, \
+                     item 2 of tDimensions div 3 into tDimensions
+               break
+            default
+            case "1x"
+               break
+         end switch
+      end if
+   end repeat
+   
+   if tDimensions is empty then
+      put 0,0 into tDimensions
+   end if
+   
+   put "]" & CR & "}" after tContentsJSON
+   put tContentsJSON into url ("file:" & tImageFolder & slash &  "Contents.json")
+   if the result is not empty then
+      throw "could not create json file '" & it & "'"
+   end if
+   
    local tCompiledAssetsFolder
    put tempname() into tCompiledAssetsFolder
    create folder  tCompiledAssetsFolder
    
    local tMinVersion
    put pSettings["ios,minimum version"] into tMinVersion
-   if tMinVersion is empty then put "6.0" into tMinVersion
+   if tMinVersion is empty then
+      put "8.0" into tMinVersion
+   end if
    
    -- create the Assets.car file
    get shell("xcrun actool " &  tAssetsFolder & \ 
@@ -960,9 +1017,6 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
    local tCompiledAssetsFolderContents,tPartialPlist
    put url("file:"& tCompiledAssetsFolder & slash & "partial.plist") into tPartialPlist
    
-   -- store the icon-related part of the partial plist in a script local, to use it later in revCreateMobilePlist
-   put line 5 to -3 of tPartialPlist into sCFBundleIcons
-   
    put files(tCompiledAssetsFolder) into tCompiledAssetsFolderContents
    filter tCompiledAssetsFolderContents without "partial.plist"
    
@@ -971,141 +1025,109 @@ private command revCopyMobileNewIcons pSettings, pBaseFolder, pAppBundle
       put url ("binfile:" & tCompiledAssetsFolder & slash & tFile) into url ("binfile:" & pAppBundle & slash &  tFile)
    end repeat
    
+   revCompileStoryboardFiles pTarget, pSettings, tMinVersion, tDimensions, pAppBundle
+   
    -- cleanup
    delete folder tCompiledAssetsFolder
    delete folder tAppIconFolder
    delete folder tAssetsFolder
    
-end revCopyMobileNewIcons
+   -- store the icon-related part of the partial plist in a script local, to use it later in revCreateMobilePlist
+   put line 5 to -3 of tPartialPlist into rCFBundleIcons
+end revDecorateImageAssets
 
-private command revCopyMobileNewSplash pSettings, pBaseFolder, pAppBundle   
-   -- Only copy in the splash screen verbatim if we are a commercial/review license type
-   if line 3 of the revLicenseInfo is among the words of "Personal Educational Evaluation" then
-      exit revCopyMobileNewSplash
-   end if
-   
-   revStandaloneProgress "Copying launch images..."
-   
-   -- PM-2015-03-19: [[ Bug 13969 ]] Make sure we use the correct names for the splash images in iphone6/6+
-   repeat for each line tType in ("iphone splash" & return & "retina splash,@2x" & return & "ipad portrait splash,-Portrait" & \
-         return & "ipad landscape splash,-Landscape" & return & "ipad retina portrait splash,-Portrait@2x" & return & "ipad retina landscape splash,-Landscape@2x" & \
-         return & "ipad pro 12.9 portrait splash,-iPadProPortrait@2x" & return & "ipad pro 12.9 landscape splash,-iPadProLandscape@2x" & \
-         return & "ipad pro 11 portrait splash,-iPadPro11Portrait@2x" & return & "ipad pro 11 landscape splash,-iPadPro11Landscape@2x" & \
-         return & "iphone 4inch splash,-568h@2x" & return & "iphone 6 splash,-667h@2x" & \
-         return & "iphone 6 plus portrait splash,-736h@3x" & return & "iphone 6 plus landscape splash,-414h@3x" & \
-         return & "iphone X portrait splash,-812h@3x" & return & "iphone X landscape splash,-375h@3x" & \
-         return & "iphone XR portrait splash,-896h@2x" & return & "iphone XR landscape splash,-414h@2x" & \
-         return & "iphone XSMAX portrait splash,-896h@3x" & return & "iphone X landscape splash,-414h@3x")
-      get pSettings["ios," & item 1 of tType] 
-      if not (it begins with "/") then
-         put pBaseFolder & slash before it
-      end if
-      if there is a file it then         
-         put url ("binfile:" & it) into url ("binfile:" & pAppBundle & slash & "Default" & item 2 of tType & ".png")
-         if the result is not empty then
-            throw "could not copy splash '" & it & "'"
-         end if
-      end if
-   end repeat
-end revCopyMobileNewSplash
+private function imageGetDimensions pImageFile
+     local tDims
+     create invisible image
+     set the filename of it to pImageFile
+     put (the effective width of it, the effective height of it) into tDims
+     delete it
+     return tDims
+end imageGetDimensions
 
-private command revCopyMobileIcons pSettings, pBaseFolder, pAppBundle
-   local tIconFile
-   put pSettings["ios,icon"] into tIconFile
-   if tIconFile is empty then
-      exit revCopyMobileIcons
-   end if
-   
-   revStandaloneProgress "Copying icons..."
-   
-   if not (tIconFile begins with "/") then
-      put pBaseFolder & slash before tIconFile
-   end if
-   
-   repeat for each item tType in ",-72,-114"
-      get revModifyMobileImageFile(tIconFile, tType)
-      if there is a file it then         
-         --MM-2011-09-28: Make sure the icons are of the appropriate size.
-         --
-         switch tType
-            case "-72"
-               if getImageDimensions(it) is not "72,72" then
-                  revStandaloneAddWarning "iPad Icon wrong size"
-               end if               
-               break
-            case "-114"
-               if getImageDimensions(it) is not "114,114" then
-                  revStandaloneAddWarning "iPhone Hi-Res Icon wrong size"
-               end if               
-               break
-            default
-               if getImageDimensions(it) is not "57,57" then
-                  revStandaloneAddWarning "iPhone Icon wrong size"
-               end if               
-               break
-         end switch
-         
-         put url ("binfile:" & it) into url ("binfile:" & pAppBundle & slash & "Icon" & tType & ".png")
-         if the result is not empty then
-            throw "could not copy icon '" & it & "'"
-         end if
-      end if
-   end repeat
-end revCopyMobileIcons
+private command revCompileStoryboardFiles pTarget, pSettings, pMinVersion, pImageDimensions, pAppBundle
+   revStandaloneProgress "Compiling storyboard files..."    
+   local tStoryboard
+   put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "template.storyboard")) into tStoryboard
 
-private command revCopyMobileSplash pSettings, pBaseFolder, pAppBundle
-   local tSplashFile
-   put pSettings["ios,splash"] into tSplashFile
-   if tSplashFile is empty then
-      exit revCopyMobileSplash
+   replace "${LAUNCH_IMAGE_WIDTH}" \
+      with item 1 of pImageDimensions in tStoryboard
+   replace "${LAUNCH_IMAGE_HEIGHT}" \
+      with item 2 of pImageDimensions in tStoryboard
+   replace "${LAUNCH_IMAGE_X_ORIGIN}" \
+      with 1024 div 2 - item 1 of pImageDimensions div 2 in tStoryboard
+   replace "${LAUNCH_IMAGE_Y_ORIGIN}" \
+      with 1366 div 2 - item 2 of pImageDimensions div 2 in tStoryboard
+
+   local tColor
+   if pSettings["ios,launch-backcolor"] is empty then
+      put 0,0,0 into tColor
+   else
+      put item 1 of pSettings["ios,launch-backcolor"] / 255, \
+         item 2 of pSettings["ios,launch-backcolor"] / 255, \
+         item 3 of pSettings["ios,launch-backcolor"] / 255 into tColor
    end if
-   
-   -- Only copy in the splash screen verbatim if we are a commercial/review license type
-   if line 3 of the revLicenseInfo is among the words of "Personal Educational Evaluation" then
-      exit revCopyMobileSplash
+   replace "${BACKCOLOR_RED}" with item 1 of tColor in tStoryboard
+   replace "${BACKCOLOR_GREEN}" with item 2 of tColor in tStoryboard
+   replace "${BACKCOLOR_BLUE}" with item 3 of tColor in tStoryboard
+
+   local tLaunchScreenStoryboard, tStartupScreenStoryboard
+   put tStoryboard into tLaunchScreenStoryboard
+   replace "${LAUNCH_SCREEN}" with "YES" in tLaunchScreenStoryboard
+   replace "${CUSTOM_CLASS}" with empty in tLaunchScreenStoryboard
+
+   local tLaunchScreenStoryboardFile
+   put pAppBundle & "/LaunchScreen.storyboard" into tLaunchScreenStoryboardFile
+   put tLaunchScreenStoryboard into url ("file:" & tLaunchScreenStoryboardFile)
+
+   get shell("xcrun" && \
+      "ibtool" && \
+      "--errors" && \
+      "--warnings" && \
+      "--notices" && \
+      "--auto-activate-custom-fonts" && \
+      "--target-device iphone" && \
+      "--target-device ipad" && \
+      "--minimum-deployment-target" && pMinVersion && \
+      "--output-format" && "human-readable-text" && \
+      "--compilation-directory" && pAppBundle &&  \
+      quote & tLaunchScreenStoryboardFile & quote)
+
+   if the result is not 0 then
+      throw format("failed to create launch screen: %s", it)
    end if
-   
-   revStandaloneProgress "Copying launch images..."
-   
-   if not (tSplashFile begins with "/") then
-      put pBaseFolder & slash before tSplashFile
+
+   delete file tLaunchScreenStoryboardFile
+
+   put tStoryboard into tStartupScreenStoryboard
+   replace "${LAUNCH_SCREEN}" with "NO" in tStartupScreenStoryboard
+   replace "${CUSTOM_CLASS}" with \
+      "customClass=" & quote & "com_runrev_livecode_MCIPhoneStartupViewController" & quote \
+      in tStartupScreenStoryboard
+
+   local tStartupScreenStoryboardFile
+   put pAppBundle & "/StartupScreen.storyboard" into tStartupScreenStoryboardFile
+   put tStartupScreenStoryboard into url ("file:" & tStartupScreenStoryboardFile)
+
+   get shell("xcrun" && \
+      "ibtool" && \
+      "--errors" && \
+      "--warnings" && \
+      "--notices" && \
+      "--auto-activate-custom-fonts" && \
+      "--target-device iphone" && \
+      "--target-device ipad" && \
+      "--minimum-deployment-target" && pMinVersion && \
+      "--output-format" && "human-readable-text" && \
+      "--compilation-directory" && pAppBundle &&  \
+      quote & tStartupScreenStoryboardFile & quote)
+
+   if the result is not 0 then
+      throw format("failed to create startup screen: %s", it)
    end if
-   
-   repeat for each item tType in ",@2x,-Landscape,-Portrait"
-      get revModifyMobileImageFile(tSplashFile, tType)
-      if there is a file it then         
-         --MM-2011-09-28: Make sure the splash screens are of the appropriate size.
-         --
-         switch tType
-            case "-@2"
-               if getImageDimensions(it) is not "640,960" then
-                  revStandaloneAddWarning "iPhone Hi-Res Splash wrong size"
-               end if               
-               break
-            case "-Landscape"
-               if getImageDimensions(it) is not "114,114" then
-                  revStandaloneAddWarning "iPhone Hi-Res Icon wrong size"
-               end if               
-               break
-            case "-Portrait"
-               if getImageDimensions(it) is not "768,1024" then
-                  revStandaloneAddWarning "iPad Portrait Splash wrong size"
-               end if               
-               break
-            default
-               if getImageDimensions(it) is not "1024,768" then
-                  revStandaloneAddWarning "iPad Landscape Splash wrong size"
-               end if               
-               break
-         end switch
-         
-         put url ("binfile:" & it) into url ("binfile:" & pAppBundle & slash & "Default" & tType & ".png")
-         if the result is not empty then
-            throw "could not launch image '" & it & "'"
-         end if
-      end if
-   end repeat
-end revCopyMobileSplash
+
+   delete file tStartupScreenStoryboardFile
+end revCompileStoryboardFiles
 
 private function revModifyMobileImageFile pFile, pType
    if pFile ends with ".png" then
@@ -1462,7 +1484,7 @@ private function revGetMinimumOSByArch pMinimumOS
    return tMinimumOSByArch
 end revGetMinimumOSByArch
 
-private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPlist
+private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPlist, pCFBundleIcons
    local tTemplateFile
    
    if pPlist is empty then
@@ -1752,65 +1774,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${STATUS_BAR_SOLID}" with "<" & tStatusBarSolid & "/>" in pPlist
    
    -- the icons-related part of the plist is stored in sCFBundleIcons
-   replace "${BUNDLE_ICONS}" with sCFBundleIcons in pPlist
-   
-   -- MM-2014-09-30: [[ iOS8 Support ]] Added new iOS 7 style entries for the splash screens
-   -- MM-2014-10-06: [[ Bug 13512 ]] Splash screen sizes are in points and should omit the @2x @3x suffix, iOS is smart enough to figure that out.
-   local tSplashScreens   
-   if 1 is among the items of tDeviceFamily then
-      put "Default|Default|{320, 480}|Portrait" & return after tSplashScreens
-      put "Default-568h@2x|Default-568h|{320, 568}|Portrait" & return after tSplashScreens      
-      -- PM-2015-03-19: [[ Bug 13969 ]] Use the correct name for iPhone 6/6+ splash screens
-      put "Default-667h@2x|Default-667h|{375, 667}|Portrait" & return after tSplashScreens
-      if tIPhoneOrientation contains "Portrait" then
-         put "Default-736h@3x|Default-736h|{414, 736}|Portrait" & return after tSplashScreens
-         put "Default-812h@3x|Default-812h|{375, 812}|Portrait" & return after tSplashScreens
-         // iPhone XR
-         put "Default-896h@2x|Default-896h|{414, 896}|Portrait" & return after tSplashScreens
-         // iPhone XSMAX
-         put "Default-896h@3x|Default-896h|{414, 896}|Portrait" & return after tSplashScreens
-      else
-         put "Default-414h@3x|Default-414h|{414, 736}|Landscape" & return after tSplashScreens
-         put "Default-375h@3x|Default-375h|{375, 812}|Landscape" & return after tSplashScreens
-         // iPhone XR
-         put "Default-414h@2x|Default-414h|{414, 896}|Landscape" & return after tSplashScreens
-         // iPhone XSMAX
-         put "Default-414h@3x|Default-414h|{414, 896}|Landscape" & return after tSplashScreens
-      end if      
-   end if   
-   if 2 is among the items of tDeviceFamily then      
-      if tIPadOrientations contains "Portrait" then
-         put "Default-Portrait|Default-Portrait|{768, 1024}|Portrait" & return after tSplashScreens
-         put "Default-iPadProPortrait|Default-iPadProPortrait|{1024, 1366}|Portrait" & return after tSplashScreens
-         put "Default-iPadPro11Portrait|Default-iPadPro11Portrait|{834, 1194}|Portrait" & return after tSplashScreens
-      end if
-      if tIPadOrientations contains "Landscape" then
-         put "Default-Landscape|Default-Landscape|{768, 1024}|Landscape" & return after tSplashScreens
-         put "Default-iPadProLandscape|Default-iPadProLandscape|{1024, 1366}|Landscape" & return after tSplashScreens
-         put "Default-iPadPro11Landscape|Default-iPadPro11Landscape|{834, 1194}|Landscape" & return after tSplashScreens
-      end if
-   end if
-   
-   local tSplashTemplate, tSplashData
-   put URL ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & "SplashscreenSettings.plist")) into tSplashTemplate 
-   
-   set the itemDel to "|"
-   repeat for each line tSplashScreen in tSplashScreens
-      if there is a file (pAppBundle & slash & item 1 of tSplashScreen & ".png") or \
-            there is a file (pAppBundle & slash & item 1 of tSplashScreen & "@2x.png") or \
-            there is a file (pAppBundle & slash & item 1 of tSplashScreen & "@3x.png")
-      then
-         get tSplashTemplate 
-         replace "${NAME}" with item 2 of tSplashScreen in it
-         replace "${SIZE}" with item 3 of tSplashScreen in it
-         replace "${ORIENTATION}" with item 4 of tSplashScreen in it
-         put it & return after tSplashData
-      end if
-   end repeat
-   set the itemDel to comma
-   
-   replace "${SPLASHSCREENS}" with tSplashData in pPlist
-   
+   replace "${BUNDLE_ICONS}" with pCFBundleIcons in pPlist
    ----------
    -- MM-2012-02-12: Added support for push notificaitons and custom URL schemes
    
@@ -2051,6 +2015,9 @@ function mapFilePath pPath
    
    local tPath
    switch the last item of pPath
+      case "template.storyboard"
+         put tRepo & slash & "engine/rsrc/template.storyboard" into tPath
+         break
       case "Settings.plist"
          if tIsDevice then
             put tRepo & slash & "engine/rsrc/mobile-device-template.plist" into tPath
@@ -2082,9 +2049,6 @@ function mapFilePath pPath
       case "URLSchemeSettings.plist"
          put tRepo & slash & "engine/rsrc/mobile-url-scheme-template.plist" into tPath
          break
-      case "SplashscreenSettings.plist"
-         put tRepo & slash & "engine/rsrc/mobile-splashscreen-template.plist" into tPath
-         break
       case "Standalone"
          if tIsDevice then
             put tRepo & merge("/_build/ios/[[tBuild]]/standalone-mobile-lib-[[tSuffix]].lcext") into tPath
@@ -2104,9 +2068,6 @@ function mapFilePath pPath
          else
             put tRepo & merge("/_build/ios/[[tBuild]]/[[the last item of pPath]].dylib") into tPath
          end if
-         break
-      case "Default4InchSplash.png"
-         put tRepo & slash & "engine/rsrc/Default-568h@2x.png" into tPath
          break
       default
          put pPath into tPath

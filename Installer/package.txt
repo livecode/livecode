@@ -657,10 +657,9 @@ component Runtime.iOS
 		file ios:iphonesimulator10.2/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator10.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator10.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator10.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator10.2/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator10.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator10.2/fontmap as "fontmap"
+		file ios:iphonesimulator10.2/template.storyboard as "template.storyboard"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-11_2" place
 		executable ios:iphonesimulator11.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator10.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
 		executable ios:iphonesimulator11.2/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator10.2/revsecurity.dylib
@@ -673,10 +672,9 @@ component Runtime.iOS
 		file ios:iphonesimulator11.2/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator11.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator11.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator11.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator11.2/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator11.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator11.2/fontmap as "fontmap"
+		file ios:iphonesimulator11.2/template.storyboard as "template.storyboard"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-12_1" place
 		executable ios:iphonesimulator12.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator10.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
 		executable ios:iphonesimulator12.1/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator10.2/revsecurity.dylib
@@ -689,10 +687,9 @@ component Runtime.iOS
 		file ios:iphonesimulator12.1/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator12.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator12.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator12.1/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator12.1/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator12.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator12.1/fontmap as "fontmap"
+		file ios:iphonesimulator12.1/template.storyboard as "template.storyboard"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-13_2" place
 		executable ios:iphonesimulator13.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator10.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
 		executable ios:iphonesimulator13.2/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator10.2/revsecurity.dylib
@@ -705,10 +702,9 @@ component Runtime.iOS
 		file ios:iphonesimulator13.2/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator13.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator13.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator13.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator13.2/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator13.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator13.2/fontmap as "fontmap"
+		file ios:iphonesimulator13.2/template.storyboard as "template.storyboard"
 	into "[[ToolsFolder]]/Runtime/iOS/Simulator-13_4" place
 		executable ios:iphonesimulator13.4/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphonesimulator10.2/standalone-mobile[[BaseEditionTagLower]].app/standalone-mobile[[BaseEditionTagLower]]
 		executable ios:iphonesimulator13.4/revsecurity.ios-extension as RevSecurity base ios:iphonesimulator10.2/revsecurity.dylib
@@ -721,10 +717,9 @@ component Runtime.iOS
 		file ios:iphonesimulator13.4/mobile-template.plist as "Settings.plist"
 		file ios:iphonesimulator13.4/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphonesimulator13.4/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphonesimulator13.4/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphonesimulator13.4/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphonesimulator13.4/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphonesimulator13.4/fontmap as "fontmap"
+		file ios:iphonesimulator13.4/template.storyboard as "template.storyboard"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-10_2" place
 		executable ios:iphoneos10.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone
 		executable ios:iphoneos10.2/revsecurity.ios-extension as RevSecurity
@@ -737,14 +732,13 @@ component Runtime.iOS
 		file ios:iphoneos10.2/mobile-device-template.plist as "Settings.plist"
 		file ios:iphoneos10.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphoneos10.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos10.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphoneos10.2/template-entitlements.xcent as "Entitlements.xcent"
 		file ios:iphoneos10.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
 		file ios:iphoneos10.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos10.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos10.2/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphoneos10.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos10.2/fontmap as "fontmap"
+		file ios:iphoneos10.2/template.storyboard as "template.storyboard"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-11_2" place
 		executable ios:iphoneos11.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos10.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
 		executable ios:iphoneos11.2/revsecurity.ios-extension as RevSecurity base ios:iphoneos10.2/revsecurity.ios-extension
@@ -757,14 +751,13 @@ component Runtime.iOS
 		file ios:iphoneos11.2/mobile-device-template.plist as "Settings.plist"
 		file ios:iphoneos11.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphoneos11.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos11.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphoneos11.2/template-entitlements.xcent as "Entitlements.xcent"
 		file ios:iphoneos11.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
 		file ios:iphoneos11.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos11.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos11.2/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphoneos11.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos11.2/fontmap as "fontmap"
+		file ios:iphoneos11.2/template.storyboard as "template.storyboard"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-12_1" place
 		executable ios:iphoneos12.1/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos10.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
 		executable ios:iphoneos12.1/revsecurity.ios-extension as RevSecurity base ios:iphoneos10.2/revsecurity.ios-extension
@@ -777,14 +770,13 @@ component Runtime.iOS
 		file ios:iphoneos12.1/mobile-device-template.plist as "Settings.plist"
 		file ios:iphoneos12.1/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphoneos12.1/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos12.1/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphoneos12.1/template-entitlements.xcent as "Entitlements.xcent"
 		file ios:iphoneos12.1/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
 		file ios:iphoneos12.1/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos12.1/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos12.1/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphoneos12.1/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos12.1/fontmap as "fontmap"
+		file ios:iphoneos12.1/template.storyboard as "template.storyboard"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-13_2" place
 		executable ios:iphoneos13.2/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos10.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
 		executable ios:iphoneos13.2/revsecurity.ios-extension as RevSecurity base ios:iphoneos10.2/revsecurity.ios-extension
@@ -797,14 +789,13 @@ component Runtime.iOS
 		file ios:iphoneos13.2/mobile-device-template.plist as "Settings.plist"
 		file ios:iphoneos13.2/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphoneos13.2/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos13.2/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphoneos13.2/template-entitlements.xcent as "Entitlements.xcent"
 		file ios:iphoneos13.2/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
 		file ios:iphoneos13.2/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos13.2/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos13.2/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphoneos13.2/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos13.2/fontmap as "fontmap"
+		file ios:iphoneos13.2/template.storyboard as "template.storyboard"
 	into "[[ToolsFolder]]/Runtime/iOS/Device-13_4" place
 		executable ios:iphoneos13.4/standalone-mobile[[BaseEditionTagLower]].ios-engine as Standalone base ios:iphoneos10.2/standalone-mobile[[BaseEditionTagLower]].ios-engine
 		executable ios:iphoneos13.4/revsecurity.ios-extension as RevSecurity base ios:iphoneos10.2/revsecurity.ios-extension
@@ -817,14 +808,13 @@ component Runtime.iOS
 		file ios:iphoneos13.4/mobile-device-template.plist as "Settings.plist"
 		file ios:iphoneos13.4/mobile-remote-notification-template.plist as "RemoteNotificationSettings.plist"
 		file ios:iphoneos13.4/mobile-url-scheme-template.plist as "URLSchemeSettings.plist"
-		file ios:iphoneos13.4/mobile-splashscreen-template.plist as "SplashscreenSettings.plist"
 		file ios:iphoneos13.4/template-entitlements.xcent as "Entitlements.xcent"
 		file ios:iphoneos13.4/template-beta-report-entitlement.xcent as "BetaReportEntitlement.xcent"
 		file ios:iphoneos13.4/template-remote-notification-entitlements.xcent as "RemoteNotificationEntitlements.xcent"
 		file ios:iphoneos13.4/template-remote-notification-store-entitlements.xcent as "RemoteNotificationStoreEntitlements.xcent"
 		file ios:iphoneos13.4/mobile-disable-ats-template.plist as "DisableATS.plist"
-		file ios:iphoneos13.4/Default-568h@2x.png as "Default4InchSplash.png" base ios:Default-568h@2x.png
 		file ios:iphoneos13.4/fontmap as "fontmap"
+		file ios:iphoneos13.4/template.storyboard as "template.storyboard"
 
 ////////////////////////////////////////////////////////////////////////////////
 
