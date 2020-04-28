@@ -1064,20 +1064,20 @@ private command revCompileStoryboardFiles pTarget, pSettings, pMinVersion, pImag
    replace "${LAUNCH_IMAGE_X_ORIGIN}" \
       with 1024 div 2 - item 1 of pImageDimensions div 2 in tStoryboard
    replace "${LAUNCH_IMAGE_Y_ORIGIN}" \
-      with 1366 div 2 - item 2 of pImageDimensions div 2 in tStoryboard
-
-   local tColor
+         with 1366 div 2 - item 2 of pImageDimensions div 2 in tStoryboard
+   
+   local tBackColor
    if pSettings["ios,launch-backcolor"] is empty then
-      put 0,0,0 into tColor
+      put format("systemColor=\"systemBackgroundColor\" cocoaTouchSystemColor=\"whiteColor\"") \
+            into tBackColor
    else
-      put item 1 of pSettings["ios,launch-backcolor"] / 255, \
-         item 2 of pSettings["ios,launch-backcolor"] / 255, \
-         item 3 of pSettings["ios,launch-backcolor"] / 255 into tColor
+      put format("red=\"%f\" green=\"%f\" blue=\"%f\" alpha=\"1\" colorSpace=\"custom\" customColorSpace=\"sRGB\"", \
+            item 1 of pSettings["ios,launch-backcolor"] / 255, \
+            item 2 of pSettings["ios,launch-backcolor"] / 255, \
+            item 3 of pSettings["ios,launch-backcolor"] / 255) into tBackColor
    end if
-   replace "${BACKCOLOR_RED}" with item 1 of tColor in tStoryboard
-   replace "${BACKCOLOR_GREEN}" with item 2 of tColor in tStoryboard
-   replace "${BACKCOLOR_BLUE}" with item 3 of tColor in tStoryboard
-
+   replace "${BACKGROUND_COLOR}" with tBackColor in tStoryboard
+   
    local tLaunchScreenStoryboard, tStartupScreenStoryboard
    put tStoryboard into tLaunchScreenStoryboard
    replace "${LAUNCH_SCREEN}" with "YES" in tLaunchScreenStoryboard
