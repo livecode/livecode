@@ -586,24 +586,22 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    put tSDKs["sim"]["suffix"] into tSimVersion
    put the itemdel into tOldItemDel
    set the itemdel to"_"
-   if item 1 of tSimVersion < 8 then
-      put tRedirects into tDeploy["redirects"]
-   else
-      put empty into tDeploy["redirects"]
-      repeat for each line tRedirect in tRedirects
-         get offset("//", tRedirect)
-         if it is not 0 then
-            --symlinkRedirect char (it + 2) to -1 of tRedirect, pAppBundle & slash & char 1 to (it - 1) of tRedirect
-            local tSource, tTarget
-            put char (it + 2) to -1 of tRedirect into tSource
-            put pAppBundle into tTarget
-            
-            put slash & char 1 to (it - 1) of tRedirect after tTarget
-            
-            symlinkRedirect tSource, tTarget
-         end if
-      end repeat
-   end if
+   
+   put empty into tDeploy["redirects"]
+   repeat for each line tRedirect in tRedirects
+      get offset("//", tRedirect)
+      if it is not 0 then
+         --symlinkRedirect char (it + 2) to -1 of tRedirect, pAppBundle & slash & char 1 to (it - 1) of tRedirect
+         local tSource, tTarget
+         put char (it + 2) to -1 of tRedirect into tSource
+         put pAppBundle into tTarget
+         
+         put slash & char 1 to (it - 1) of tRedirect after tTarget
+         
+         symlinkRedirect tSource, tTarget
+      end if
+   end repeat
+   
    set the itemdel to tOldItemDel
    
    -- Output file to create
@@ -1011,7 +1009,7 @@ private command revDecorateImageAssets pTarget, pSettings, pBaseFolder, pAppBund
    local tMinVersion
    put pSettings["ios,minimum version"] into tMinVersion
    if tMinVersion is empty then
-      put "8.0" into tMinVersion
+      put "9.0" into tMinVersion
    end if
    
    -- create the Assets.car file
@@ -1474,8 +1472,8 @@ private function revGetMinimumOSByArch pMinimumOS
    --  same for all archs
    -- We only support version >= 6.0
    --
-   if pMinimumOS is empty or pMinimumOS < "6.0" then
-      put "6.0" into tMinimumOSByArch["i386"]
+   if pMinimumOS is empty or pMinimumOS < "9.0" then
+      put "9.0" into tMinimumOSByArch["i386"]
    else
       put pMinimumOS after tMinimumOSByArch["i386"]
    end if
