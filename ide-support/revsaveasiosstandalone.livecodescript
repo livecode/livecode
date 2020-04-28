@@ -938,53 +938,60 @@ private command revDecorateImageAssets pTarget, pSettings, pBaseFolder, pAppBund
    
    put "{" & CR & quote & "images" & quote & ":[" & CR into tContentsJSON
    
-   repeat for each item tScale in "1x,2x,3x"
-      local tKey
-      put "ios,launch-image-" & tScale into tKey
-      
-      local tFile
-      put pSettings[tKey] into tFile
-      if not (tFile begins with "/") then
-         put pBaseFolder & slash before tFile
-      end if
-      if there is not a file tFile then
-         next repeat
-      end if
-      
-      local tExtension
-      set the itemdelimiter to "."
-      put the last item of tFile into tExtension
-      
-      local tFileName
-      put format("livecode_launch_image@%s.%s", \
-            tScale, \
-            tExtension) into tFileName
-      
-      put url ("binfile:" & tFile) into url ("binfile:" & tImageFolder & "/" & tFileName)
-      
-      put "{" & CR into tEntry
-      put quote & "idiom" & quote & ":" & quote & "universal" & quote & comma & CR after tEntry
-      put quote & "scale" & quote & ":" & quote & tScale & quote & comma & CR after tEntry
-      put quote & "filename" & quote & ":" & quote & tFileName & quote  & CR after tEntry
-      put "}" & comma & CR after tEntry
-      put tEntry after tContentsJSON
-      
-      if tDimensions is empty then
-         put imageGetDimensions(tFile) into tDimensions
-         switch tScale
-            case "2x"
-               put item 1 of tDimensions div 2, \
-                     item 2 of tDimensions div 2 into tDimensions
-               break
-            case "3x"
-               put item 1 of tDimensions div 3, \
-                     item 2 of tDimensions div 3 into tDimensions
-               break
-            default
-            case "1x"
-               break
-         end switch
-      end if
+   repeat for each item tAppearance in "light,dark"
+      repeat for each item tScale in "1x,2x,3x"
+         local tKey
+         put format("ios,launch-image-%s-%s", tAppearance, tScale) into tKey
+         
+         local tFile
+         put pSettings[tKey] into tFile
+         if not (tFile begins with "/") then
+            put pBaseFolder & slash before tFile
+         end if
+         if there is not a file tFile then
+            next repeat
+         end if
+         
+         local tExtension
+         set the itemdelimiter to "."
+         put the last item of tFile into tExtension
+         
+         local tFileName
+         put format("livecode_launch_image@%s.%s", \
+               tScale, \
+               tExtension) into tFileName
+         
+         put url ("binfile:" & tFile) into url ("binfile:" & tImageFolder & "/" & tFileName)
+         
+         put "{" & CR into tEntry
+         put quote & "idiom" & quote & ":" & quote & "universal" & quote & comma & CR after tEntry
+         put quote & "scale" & quote & ":" & quote & tScale & quote & comma & CR after tEntry
+         if tAppearance is "dark" then
+            put quote & "appearances" & quote & ": [{" & \
+                  quote & "appearance" & quote & ":" & quote & "luminosity" & quote, \
+                  quote & "value" & quote & ":" & quote & "dark"& quote & "}]" & comma & CR after tEntry
+         end if
+         put quote & "filename" & quote & ":" & quote & tFileName & quote  & CR after tEntry
+         put "}" & comma & CR after tEntry
+         put tEntry after tContentsJSON
+         
+         if tDimensions is empty then
+            put imageGetDimensions(tFile) into tDimensions
+            switch tScale
+               case "2x"
+                  put item 1 of tDimensions div 2, \
+                        item 2 of tDimensions div 2 into tDimensions
+                  break
+               case "3x"
+                  put item 1 of tDimensions div 3, \
+                        item 2 of tDimensions div 3 into tDimensions
+                  break
+               default
+               case "1x"
+                  break
+            end switch
+         end if
+      end repeat
    end repeat
    
    if tDimensions is empty then
@@ -1057,20 +1064,20 @@ private command revCompileStoryboardFiles pTarget, pSettings, pMinVersion, pImag
    replace "${LAUNCH_IMAGE_X_ORIGIN}" \
       with 1024 div 2 - item 1 of pImageDimensions div 2 in tStoryboard
    replace "${LAUNCH_IMAGE_Y_ORIGIN}" \
-      with 1366 div 2 - item 2 of pImageDimensions div 2 in tStoryboard
-
-   local tColor
+         with 1366 div 2 - item 2 of pImageDimensions div 2 in tStoryboard
+   
+   local tBackColor
    if pSettings["ios,launch-backcolor"] is empty then
-      put 0,0,0 into tColor
+      put format("systemColor=\"systemBackgroundColor\" cocoaTouchSystemColor=\"whiteColor\"") \
+            into tBackColor
    else
-      put item 1 of pSettings["ios,launch-backcolor"] / 255, \
-         item 2 of pSettings["ios,launch-backcolor"] / 255, \
-         item 3 of pSettings["ios,launch-backcolor"] / 255 into tColor
+      put format("red=\"%f\" green=\"%f\" blue=\"%f\" alpha=\"1\" colorSpace=\"custom\" customColorSpace=\"sRGB\"", \
+            item 1 of pSettings["ios,launch-backcolor"] / 255, \
+            item 2 of pSettings["ios,launch-backcolor"] / 255, \
+            item 3 of pSettings["ios,launch-backcolor"] / 255) into tBackColor
    end if
-   replace "${BACKCOLOR_RED}" with item 1 of tColor in tStoryboard
-   replace "${BACKCOLOR_GREEN}" with item 2 of tColor in tStoryboard
-   replace "${BACKCOLOR_BLUE}" with item 3 of tColor in tStoryboard
-
+   replace "${BACKGROUND_COLOR}" with tBackColor in tStoryboard
+   
    local tLaunchScreenStoryboard, tStartupScreenStoryboard
    put tStoryboard into tLaunchScreenStoryboard
    replace "${LAUNCH_SCREEN}" with "YES" in tLaunchScreenStoryboard
@@ -1081,18 +1088,18 @@ private command revCompileStoryboardFiles pTarget, pSettings, pMinVersion, pImag
    put tLaunchScreenStoryboard into url ("file:" & tLaunchScreenStoryboardFile)
 
    get shell("xcrun" && \
-      "ibtool" && \
-      "--errors" && \
-      "--warnings" && \
-      "--notices" && \
-      "--auto-activate-custom-fonts" && \
-      "--target-device iphone" && \
-      "--target-device ipad" && \
-      "--minimum-deployment-target" && pMinVersion && \
-      "--output-format" && "human-readable-text" && \
-      "--compilation-directory" && pAppBundle &&  \
-      quote & tLaunchScreenStoryboardFile & quote)
-
+         "ibtool" && \
+         "--errors" && \
+         "--warnings" && \
+         "--notices" && \
+         "--auto-activate-custom-fonts" && \
+         "--target-device iphone" && \
+         "--target-device ipad" && \
+         "--minimum-deployment-target" && pMinVersion && \
+         "--output-format" && "human-readable-text" && \
+         "--compilation-directory" && quote & pAppBundle & quote &&  \
+         quote & tLaunchScreenStoryboardFile & quote)
+   
    if the result is not 0 then
       throw format("failed to create launch screen: %s", it)
    end if
@@ -1110,18 +1117,18 @@ private command revCompileStoryboardFiles pTarget, pSettings, pMinVersion, pImag
    put tStartupScreenStoryboard into url ("file:" & tStartupScreenStoryboardFile)
 
    get shell("xcrun" && \
-      "ibtool" && \
-      "--errors" && \
-      "--warnings" && \
-      "--notices" && \
-      "--auto-activate-custom-fonts" && \
-      "--target-device iphone" && \
-      "--target-device ipad" && \
-      "--minimum-deployment-target" && pMinVersion && \
-      "--output-format" && "human-readable-text" && \
-      "--compilation-directory" && pAppBundle &&  \
-      quote & tStartupScreenStoryboardFile & quote)
-
+         "ibtool" && \
+         "--errors" && \
+         "--warnings" && \
+         "--notices" && \
+         "--auto-activate-custom-fonts" && \
+         "--target-device iphone" && \
+         "--target-device ipad" && \
+         "--minimum-deployment-target" && pMinVersion && \
+         "--output-format" && "human-readable-text" && \
+         "--compilation-directory" && quote & pAppBundle & quote &&  \
+         quote & tStartupScreenStoryboardFile & quote)
+   
    if the result is not 0 then
       throw format("failed to create startup screen: %s", it)
    end if
