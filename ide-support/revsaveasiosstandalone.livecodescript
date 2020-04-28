@@ -955,6 +955,7 @@ private command revDecorateImageAssets pTarget, pSettings, pBaseFolder, pAppBund
          local tExtension
          set the itemdelimiter to "."
          put the last item of tFile into tExtension
+         set the itemdelimiter to comma
          
          local tFileName
          put format("livecode_launch_image@%s.%s", \
