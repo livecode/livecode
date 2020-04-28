@@ -1046,10 +1046,9 @@ end revDecorateImageAssets
 
 private function imageGetDimensions pImageFile
      local tDims
-     create invisible image
-     set the filename of it to pImageFile
-     put (the effective width of it, the effective height of it) into tDims
-     delete it
+     set the filename of the templateImage to pImageFile
+     put (the formattedWidth of the templateImage, the formattedHeight of the templateImage) into tDims
+     reset the templateImage
      return tDims
 end imageGetDimensions
 
