@@ -938,53 +938,60 @@ private command revDecorateImageAssets pTarget, pSettings, pBaseFolder, pAppBund
    
    put "{" & CR & quote & "images" & quote & ":[" & CR into tContentsJSON
    
-   repeat for each item tScale in "1x,2x,3x"
-      local tKey
-      put "ios,launch-image-" & tScale into tKey
-      
-      local tFile
-      put pSettings[tKey] into tFile
-      if not (tFile begins with "/") then
-         put pBaseFolder & slash before tFile
-      end if
-      if there is not a file tFile then
-         next repeat
-      end if
-      
-      local tExtension
-      set the itemdelimiter to "."
-      put the last item of tFile into tExtension
-      
-      local tFileName
-      put format("livecode_launch_image@%s.%s", \
-            tScale, \
-            tExtension) into tFileName
-      
-      put url ("binfile:" & tFile) into url ("binfile:" & tImageFolder & "/" & tFileName)
-      
-      put "{" & CR into tEntry
-      put quote & "idiom" & quote & ":" & quote & "universal" & quote & comma & CR after tEntry
-      put quote & "scale" & quote & ":" & quote & tScale & quote & comma & CR after tEntry
-      put quote & "filename" & quote & ":" & quote & tFileName & quote  & CR after tEntry
-      put "}" & comma & CR after tEntry
-      put tEntry after tContentsJSON
-      
-      if tDimensions is empty then
-         put imageGetDimensions(tFile) into tDimensions
-         switch tScale
-            case "2x"
-               put item 1 of tDimensions div 2, \
-                     item 2 of tDimensions div 2 into tDimensions
-               break
-            case "3x"
-               put item 1 of tDimensions div 3, \
-                     item 2 of tDimensions div 3 into tDimensions
-               break
-            default
-            case "1x"
-               break
-         end switch
-      end if
+   repeat for each item tAppearance in "light,dark"
+      repeat for each item tScale in "1x,2x,3x"
+         local tKey
+         put format("ios,launch-image-%s-%s", tAppearance, tScale) into tKey
+         
+         local tFile
+         put pSettings[tKey] into tFile
+         if not (tFile begins with "/") then
+            put pBaseFolder & slash before tFile
+         end if
+         if there is not a file tFile then
+            next repeat
+         end if
+         
+         local tExtension
+         set the itemdelimiter to "."
+         put the last item of tFile into tExtension
+         
+         local tFileName
+         put format("livecode_launch_image@%s.%s", \
+               tScale, \
+               tExtension) into tFileName
+         
+         put url ("binfile:" & tFile) into url ("binfile:" & tImageFolder & "/" & tFileName)
+         
+         put "{" & CR into tEntry
+         put quote & "idiom" & quote & ":" & quote & "universal" & quote & comma & CR after tEntry
+         put quote & "scale" & quote & ":" & quote & tScale & quote & comma & CR after tEntry
+         if tAppearance is "dark" then
+            put quote & "appearances" & quote & ": [{" & \
+                  quote & "appearance" & quote & ":" & quote & "luminosity" & quote, \
+                  quote & "value" & quote & ":" & quote & "dark"& quote & "}]" & comma & CR after tEntry
+         end if
+         put quote & "filename" & quote & ":" & quote & tFileName & quote  & CR after tEntry
+         put "}" & comma & CR after tEntry
+         put tEntry after tContentsJSON
+         
+         if tDimensions is empty then
+            put imageGetDimensions(tFile) into tDimensions
+            switch tScale
+               case "2x"
+                  put item 1 of tDimensions div 2, \
+                        item 2 of tDimensions div 2 into tDimensions
+                  break
+               case "3x"
+                  put item 1 of tDimensions div 3, \
+                        item 2 of tDimensions div 3 into tDimensions
+                  break
+               default
+               case "1x"
+                  break
+            end switch
+         end if
+      end repeat
    end repeat
    
    if tDimensions is empty then
