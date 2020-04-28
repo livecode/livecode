@@ -1088,18 +1088,18 @@ private command revCompileStoryboardFiles pTarget, pSettings, pMinVersion, pImag
    put tLaunchScreenStoryboard into url ("file:" & tLaunchScreenStoryboardFile)
 
    get shell("xcrun" && \
-      "ibtool" && \
-      "--errors" && \
-      "--warnings" && \
-      "--notices" && \
-      "--auto-activate-custom-fonts" && \
-      "--target-device iphone" && \
-      "--target-device ipad" && \
-      "--minimum-deployment-target" && pMinVersion && \
-      "--output-format" && "human-readable-text" && \
-      "--compilation-directory" && pAppBundle &&  \
-      quote & tLaunchScreenStoryboardFile & quote)
-
+         "ibtool" && \
+         "--errors" && \
+         "--warnings" && \
+         "--notices" && \
+         "--auto-activate-custom-fonts" && \
+         "--target-device iphone" && \
+         "--target-device ipad" && \
+         "--minimum-deployment-target" && pMinVersion && \
+         "--output-format" && "human-readable-text" && \
+         "--compilation-directory" && quote & pAppBundle & quote &&  \
+         quote & tLaunchScreenStoryboardFile & quote)
+   
    if the result is not 0 then
       throw format("failed to create launch screen: %s", it)
    end if
@@ -1117,18 +1117,18 @@ private command revCompileStoryboardFiles pTarget, pSettings, pMinVersion, pImag
    put tStartupScreenStoryboard into url ("file:" & tStartupScreenStoryboardFile)
 
    get shell("xcrun" && \
-      "ibtool" && \
-      "--errors" && \
-      "--warnings" && \
-      "--notices" && \
-      "--auto-activate-custom-fonts" && \
-      "--target-device iphone" && \
-      "--target-device ipad" && \
-      "--minimum-deployment-target" && pMinVersion && \
-      "--output-format" && "human-readable-text" && \
-      "--compilation-directory" && pAppBundle &&  \
-      quote & tStartupScreenStoryboardFile & quote)
-
+         "ibtool" && \
+         "--errors" && \
+         "--warnings" && \
+         "--notices" && \
+         "--auto-activate-custom-fonts" && \
+         "--target-device iphone" && \
+         "--target-device ipad" && \
+         "--minimum-deployment-target" && pMinVersion && \
+         "--output-format" && "human-readable-text" && \
+         "--compilation-directory" && quote & pAppBundle & quote &&  \
+         quote & tStartupScreenStoryboardFile & quote)
+   
    if the result is not 0 then
       throw format("failed to create startup screen: %s", it)
    end if
