@@ -232,4 +232,109 @@ public handler AndroidHasPermission(in pPermission as String) returns Boolean
 	return tHasPermission
 end handler
 
+public handler type OnPauseHandler() returns nothing
+public handler type OnResumeHandler() returns nothing
+
+__safe foreign handler _JNI_Engine_LifecycleListener(in pListener as Array) returns JObject \
+    binds to "java:com.runrev.android.Engine$LifecycleListener>interface()"
+__safe foreign handler _JNI_Engine_RegisterLifecycleListener(in pSelf as JObject, in pListener as JObject) returns JBoolean \
+    binds to "java:com.runrev.android.Engine>registerLifecycleListener(Lcom/runrev/android/Engine$LifecycleListener;)Z"
+__safe foreign handler _JNI_Engine_UnregisterLifecycleListener(in pSelf as JObject, in pListener as JObject) returns JBoolean \
+    binds to "java:com.runrev.android.Engine>unregisterLifecycleListener(Lcom/runrev/android/Engine$LifecycleListener;)Z"
+
+/**
+Summary:
+Register handlers to be called when on application lifecycle events.
+
+Parameters:
+pPauseHandler: The handler to be called when the application is paused
+pResumeHandler: The handler to be called when the application is resumed
+
+Returns:
+A listener object that wraps the registered handlers.
+
+Example:
+private variable mLifecycleListener as optional JObject
+
+public handler OnOpen() returns nothing
+    put AndroidRegisterLifecycleListener(OnMyWidgetPaused, OnMyWidgetResumed) into mLifecycleListener
+end handler
+
+public handler OnClose() returns nothing
+    AndroidUnregisterLifecycleListener(mLifecycleListener)
+    put nothing into mLifecycleListener
+end handler
+
+private handler OnMyWidgetPaused() returns nothing
+    -- Perform pause actions
+end handler
+
+private handler OnMyWidgetResumed() returns nothing
+    -- Perform resume actions
+end handler
+
+Description:
+Use the <AndroidRegisterLifecycleListener> handler to register handlers to
+application lifecycle events. The handler <pPauseHandler> will be called when
+the application is paused and enters into the background. The handler
+<pResumeHandler> will be called when the application is resumed and returns from
+the background.
+
+A listener object will be returned that wraps the registered handlers and can be
+used with <AndroidUnregisterLifecycleListener> to cancel the registration.
+*/
+public handler AndroidRegisterLifecycleListener(in pPauseHandler as OnPauseHandler, in pResumeHandler as OnResumeHandler) returns JObject
+    variable tEngine as JObject
+    put _JNI_GetAndroidEngine() into tEngine
+
+    variable tLifecycleListenerHandler as Array
+    put { \
+        "OnPause": pPauseHandler, \
+        "OnResume": pResumeHandler \
+    } into tLifecycleListenerHandler
+
+    variable tLifecycleListener as JObject
+    put _JNI_Engine_LifecycleListener(tLifecycleListenerHandler) \
+        into tLifecycleListener
+
+    _JNI_Engine_RegisterLifecycleListener(tEngine, tLifecycleListener)
+    return tLifecycleListener
+end handler
+
+/**
+Summary:
+Unregister an object that is listening on application lifecycle events.
+
+Parameters:
+pListener: The listener object to be unregistered
+
+Returns:
+True if the listener object was previously registered and has been successfully
+unregistered.
+
+Example:
+private variable mLifecycleListener as optional JObject
+
+public handler OnOpen() returns nothing
+    put AndroidRegisterLifecycleListener(OnMyWidgetPaused, OnMyWidgetResumed) into mLifecycleListener
+end handler
+
+public handler OnClose() returns nothing
+    AndroidUnregisterLifecycleListener(mLifecycleListener)
+    put nothing into mLifecycleListener
+end handler
+
+Description:
+Use the <AndroidUnregisterLifecycleListener> handler to unregister an object
+created with <AndroidRegisterLifecycleListener> that is listening to application
+lifecycle events. This will have the effect that any handlers that the listener
+object is wrapping will no longer be called.
+*/
+public handler AndroidUnregisterLifecycleListener(in pListener as JObject) returns Boolean
+    variable tEngine as JObject
+    put _JNI_GetAndroidEngine() into tEngine
+
+    return _JNI_Engine_UnregisterLifecycleListener(tEngine, pListener)
+end handler
+
 end module
