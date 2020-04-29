@@ -79,6 +79,12 @@ import java.security.cert.CertificateException;
 
 public class Engine extends View implements EngineApi
 {
+	public interface LifecycleListener
+	{
+		public abstract void OnResume();
+		public abstract void OnPause();
+	}
+
 	public static final String TAG = "revandroid.Engine";
 
 	// This is true if the engine is not suspended.
@@ -142,6 +148,8 @@ public class Engine extends View implements EngineApi
 	private int m_jpeg_quality;
 	
 	private int m_night_mode;
+
+	private List<LifecycleListener> m_lifecycle_listeners;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -248,6 +256,8 @@ public class Engine extends View implements EngineApi
 		m_night_mode =
 			p_context.getResources().getConfiguration().uiMode &
 			Configuration.UI_MODE_NIGHT_MASK;
+
+		m_lifecycle_listeners = new ArrayList<LifecycleListener>();
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3368,6 +3378,14 @@ public class Engine extends View implements EngineApi
 
 	public void onPause()
 	{
+		/* Pause registered listeners in reverse order of registration as
+		 * then components will be paused before any components they
+		 * depend on. */
+		for (int i = m_lifecycle_listeners.size() - 1; i >= 0; i--)
+		{
+			m_lifecycle_listeners.get(i).OnPause();
+		}
+
 		if (m_text_editor_visible)
 			hideKeyboard();
 		
@@ -3440,7 +3458,15 @@ public class Engine extends View implements EngineApi
 		
 		// IM-2013-08-16: [[ Bugfix 11103 ]] dispatch any remote notifications received while paused
 		dispatchNotifications();
-		
+
+		/* Resume registered listeners in order of registration as then
+		 * components will be resumed before any components which depend
+		 * on them. */
+		for (int i = 0; i < m_lifecycle_listeners.size(); i++)
+		{
+			m_lifecycle_listeners.get(i).OnResume();
+		}
+
 		if (m_wake_on_event)
 			doProcess(false);
 	}
@@ -3994,7 +4020,31 @@ public class Engine extends View implements EngineApi
 				return 0;
 		}
 	}
-	
+
+	////////////////////////////////////////////////////////////////////////////////
+
+	public boolean registerLifecycleListener(LifecycleListener p_listener)
+	{
+		return m_lifecycle_listeners.add(p_listener);
+	}
+
+	public boolean unregisterLifecycleListener(LifecycleListener p_listener)
+	{
+		/* We can't remove the listener directly since LifecycleListener does
+		 * not implement equals. Instead, search backwards through the array
+		 * until we find the passed listener. */
+		for (int i = m_lifecycle_listeners.size() - 1; i >= 0; i--)
+		{
+			if (m_lifecycle_listeners.get(i) == p_listener)
+			{
+				m_lifecycle_listeners.remove(i);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
     ////////////////////////////////////////////////////////////////////////////////
     
     // url launch callback
