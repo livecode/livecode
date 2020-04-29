@@ -958,7 +958,8 @@ private command revDecorateImageAssets pTarget, pSettings, pBaseFolder, pAppBund
          set the itemdelimiter to comma
          
          local tFileName
-         put format("livecode_launch_image@%s.%s", \
+         put format("livecode_launch_image%s@%s.%s", \
+               tAppearance, \
                tScale, \
                tExtension) into tFileName
          
