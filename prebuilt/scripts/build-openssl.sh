@@ -113,7 +113,7 @@ function buildOpenSSL {
 	CUSTOM_SPEC="livecode_${SPEC}"
 
 	OPENSSL_ARCH_SRC="${OPENSSL_SRC}-${PLATFORM_NAME}-${ARCH}"
-	OPENSSL_ARCH_CONFIG="no-rc5 no-hw shared -DOPENSSL_NO_ASYNC=1 --prefix=${INSTALL_DIR}/${NAME} ${CUSTOM_SPEC} ${EXTRA_OPTIONS}"
+	OPENSSL_ARCH_CONFIG="no-rc5 no-hw no-threads shared -DOPENSSL_NO_ASYNC=1 --prefix=${INSTALL_DIR}/${NAME} ${CUSTOM_SPEC} ${EXTRA_OPTIONS}"
 
 	# Copy the source to a target-specific directory
 	if [ ! -d "${OPENSSL_ARCH_SRC}" ] ; then
