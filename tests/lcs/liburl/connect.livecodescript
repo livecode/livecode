@@ -1,10 +1,10 @@
 ﻿script "TestLibUrlCONNECT"
 
 on TestSetup
-   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIfNot "desktop"
    TestSkipIf "stack", "StandaloneTestRunnerMainstack"
    TestSkipIf "environment", "server"
-         
+
    local tLibURl
    put TestGetEngineRepositoryPath() & "/ide-support/revliburl.livecodescript" into tLibUrl
    send "extensionInitialize" to stack tLibUrl
@@ -22,5 +22,5 @@ on TestCONNECTHeader
    put "CONNECT" && kTestHost & ":443 HTTP/1.1" & cr & \
          "Host: " & kTestHost & ":443" into tExpectedHeader
    
-   TestAssert "correct CONNECT header", tHeaders is tExpectedHeader
+   TestAssertBroken "correct CONNECT header", tHeaders is tExpectedHeader, "bug 22155"
 end TestCONNECTHeader

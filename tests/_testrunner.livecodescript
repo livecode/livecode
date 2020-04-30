@@ -120,12 +120,18 @@ private command runTestCommand pInfo, pScriptFile, pCommand
    end repeat
 
    put "invoke" && pScriptFile && pCommand after tCommandLine
-
+   
+   local tHideConsoleWindows
+   put the hideConsoleWindows into tHideConsoleWindows
+   set the hideConsoleWindows to true
+   
    -- Invoke the test in a subprocess.  This ensures that we can detect
    -- if a crash occurs
    local tTestOutput, tTestExitStatus
    put shell(tCommandLine) into tTestOutput
    put the result into tTestExitStatus
+   
+   set the hideConsoleWindows to tHideConsoleWindows
    
    -- The output from the subprocesses will be native encoded utf-8.
    put textDecode(tTestOutput, "utf8") into tTestOutput
