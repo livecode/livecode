@@ -256,6 +256,11 @@ private command __TestEnsureExecErrorMap
 end __TestEnsureExecErrorMap
 
 function TestErrorMatches pError, pCode
+	/* handle custom thrown errors */
+	if item 1 of pError is not an integer then
+		return pError is pCode
+	end if
+
 	__TestEnsureExecErrorMap
 
 	local tErrorNumber
