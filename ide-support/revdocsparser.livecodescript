@@ -520,13 +520,20 @@ on revDocsExtractDocBlocks pText, pSource, @rAPIData, @rLibraryData
                break
             case "public"
                if word 2 of tLine is "handler" then
-                  put "handler" into tEntryData["type"]
-                  # eat the word 'public'
-                  put word 2 to -1 of tLine into tLine
-                  put token 2 of tLine into tEntryData["name"]
+                  if word 3 of tLine is "type" then
+                     put true into tEntryData["private"]
+                     put "type" into tEntryData["type"]
+                     put word 3 to -1 of tLine into tLine
+                     put true into tEntryEnded
+                  else
+                     put "handler" into tEntryData["type"]
+                     # eat the word 'public'
+                     put word 2 to -1 of tLine into tLine
+                     put token 2 of tLine into tEntryData["name"]
                   
-                  # If we have a widget, then public handlers are not in the message path and so don't need docs.
-                  put not tIsWidget into tEntryData["need_docs"]
+                     # If we have a widget, then public handlers are not in the message path and so don't need docs.
+                     put not tIsWidget into tEntryData["need_docs"]
+                  end if
                else 
                   put true into tEntryData["private"]
                   if word 2 of tLine is "foreign" then
