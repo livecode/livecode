@@ -15,7 +15,7 @@ and, optionally with a <behavior> <stack> reference:
 Anything else in the file is the <script> of the <script only stack>.
 
 References: text file (glossary), stack (glossary), script (property), 
-behavior (property)
+behavior (property), scriptOnly (property)
 
 Tags: objects
 
