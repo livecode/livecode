@@ -211,11 +211,11 @@ void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef& r_player)
 #endif
 
 #ifdef TARGET_PLATFORM_WINDOWS
-class MCWin32DSPlayer;
-extern MCWin32DSPlayer *MCWin32DSPlayerCreate(void);
+class MCWin32MFPlayer;
+extern MCWin32MFPlayer *MCWin32MFPlayerCreate(void);
 void MCPlatformCreatePlayer(bool dontuseqt, MCPlatformPlayerRef &r_player)
 {
-	r_player = (MCPlatformPlayerRef)MCWin32DSPlayerCreate();
+	r_player = (MCPlatformPlayerRef)MCWin32MFPlayerCreate();
 }
 #endif
 
