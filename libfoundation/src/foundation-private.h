@@ -460,12 +460,27 @@ struct __MCForeignValue: public __MCValue
 
 ////////
 
+#ifdef __HAS_MULTIPLE_ABIS__
+struct __MCHandlerClosureWithAbi
+{
+	__MCHandlerClosureWithAbi *next;
+	int abi;
+	void *closure;
+	void *function_ptr;
+};
+#endif
+
 struct __MCHandler: public __MCValue
 {
     MCTypeInfoRef typeinfo;
     const MCHandlerCallbacks *callbacks;
+	/* We store the closure with default ABI in the value. */
     void *closure;
     void *function_ptr;
+#ifdef __HAS_MULTIPLE_ABIS__
+	/* All closures with non-default ABIs are stored in a linked list. */
+	__MCHandlerClosureWithAbi *other_closures;
+#endif
     char context[1];
 };
 
