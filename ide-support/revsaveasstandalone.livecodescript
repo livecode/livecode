@@ -731,10 +731,37 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
       __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
    
+   if the platform is "MacOS" then
+      local tAppBundle
+      set the itemDel to slash
+      put item 1 to -4 of tStandalonepath into tAppBundle
+      set the itemDel to comma
+      clearExtendedAttributes tAppBundle
+      performAdHocCodesign tAppBundle
+   end if
+   
    revStandalonePostBuild pStack, pFolder
    
    return empty
 end revSaveAsMacStandalone
+
+private command performAdHocCodesign pAppBundle
+   local tShell
+   put "codesign --deep -f -s -" && quote & pAppBundle & quote into tShell
+   get shell(tShell)
+   if the result is not zero then
+      throw "Adding ad-hoc signature failed with error:" && it
+   end if
+end performAdHocCodesign
+
+private command clearExtendedAttributes pAppBundle
+   local tShell
+   put "xattr -cr" && quote & pAppBundle & quote into tShell
+   get shell(tShell)
+   if the result is not zero then
+      throw "Clearing extended attributes failed with error:" && it
+   end if
+end clearExtendedAttributes
 
 command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalonePaths
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
