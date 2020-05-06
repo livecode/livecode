@@ -756,6 +756,13 @@ end performAdHocCodesign
 
 private command clearExtendedAttributes pAppBundle
    local tShell
+   -- make sure you have permission to clear extended attributes from bundle files
+   put "chmod -R u+w" && quote & pAppBundle & quote into tShell
+   get shell(tShell)
+   if the result is not zero then
+      throw "Setting permissions failed with error:" && it
+   end if
+   
    put "xattr -cr" && quote & pAppBundle & quote into tShell
    get shell(tShell)
    if the result is not zero then
