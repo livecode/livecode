@@ -214,7 +214,7 @@ void MCScreenDC::handle_key_press(uint32_t p_modifiers, uint32_t p_char_code, ui
 	if (p_char_code >= 32 && p_char_code < 128)
 		p_key_code = p_char_code;
 	
-	MCEventQueuePostKeyPress(t_stack, p_modifiers, p_char_code, p_key_code);
+	MCEventQueuePostKeyPress(t_stack, p_modifiers, p_char_code, p_key_code, kMCEventKeyStatePressed);
 }
 
 void MCScreenDC::handle_key_focus(bool p_gain_focus)

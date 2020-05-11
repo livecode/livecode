@@ -504,8 +504,9 @@ mergeInto(LibraryManager.library, {
 						 ['number',  // MCStack *stack
 						  'number',  // uint32_t modifiers
 						  'number',  // uint32_t char_code
-						  'number'], // uint32_t key_code
-						 [stack, modifiers, char_code, key_code]);
+						  'number', // uint32_t key_code
+						  'number'], // MCEventKeyState key_state
+						 [stack, modifiers, char_code, key_code, 2]);
 		},
 
 		_handleKeyboardEvent: function(e) {

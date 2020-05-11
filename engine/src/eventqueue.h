@@ -48,8 +48,16 @@ MC_DLLEXPORT bool MCEventQueuePostMousePress(MCStack *stack, uint32_t time, uint
 bool MCEventQueuePostMouseWheel(MCStack *stack, uint32_t time, uint32_t modifiers, int32_t dh, int32_t dv);
 MC_DLLEXPORT bool MCEventQueuePostMousePosition(MCStack *stack, uint32_t time, uint32_t modifiers, int32_t x, int32_t y);
 
+enum MCEventKeyState
+{
+	kMCEventKeyStateDown,
+	kMCEventKeyStateUp,
+	// Synthetic down+up key state
+	kMCEventKeyStatePressed,
+};
+
 MC_DLLEXPORT bool MCEventQueuePostKeyFocus(MCStack *stack, bool owner);
-MC_DLLEXPORT bool MCEventQueuePostKeyPress(MCStack *stack, uint32_t modifiers, uint32_t char_code, uint32_t key_code);
+MC_DLLEXPORT bool MCEventQueuePostKeyPress(MCStack *stack, uint32_t modifiers, uint32_t char_code, uint32_t key_code, MCEventKeyState key_state);
 
 MC_DLLEXPORT bool MCEventQueuePostImeCompose(MCStack *stack, bool enabled, uint32_t offset, const uint16_t *chars, uint32_t char_count);
 
