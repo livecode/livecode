@@ -45,8 +45,6 @@ mergeInto(LibraryManager.library, {
 				['mouseenter', LiveCodeEvents._handleMouseEvent],
 				['mouseleave', LiveCodeEvents._handleMouseEvent],
 
-				// FIXME "keypress" events are deprecated
-				['keypress', LiveCodeEvents._handleKeyboardEvent],
 				['keyup', LiveCodeEvents._handleKeyboardEvent],
 				['keydown', LiveCodeEvents._handleKeyboardEvent],
 
@@ -498,7 +496,7 @@ mergeInto(LibraryManager.library, {
 		},
 
 		// Wrapper for MCEventQueuePostKeyPress()
-		_postKeyPress: function(stack, modifiers, char_code, key_code) {
+		_postKeyPress: function(stack, modifiers, char_code, key_code, key_state) {
 			Module.ccall('MCEventQueuePostKeyPress',
 						 'number', // bool
 						 ['number',  // MCStack *stack
@@ -506,11 +504,15 @@ mergeInto(LibraryManager.library, {
 						  'number',  // uint32_t char_code
 						  'number', // uint32_t key_code
 						  'number'], // MCEventKeyState key_state
-						 [stack, modifiers, char_code, key_code, 2]);
+						 [stack, modifiers, char_code, key_code, key_state]);
 		},
 
 		_handleKeyboardEvent: function(e) {
 			LiveCodeAsync.delay(function() {
+
+				const kKeyStateDown = 0;
+				const kKeyStateUp = 1;
+				const kKeyStatePressed = 2;
 
 				var stack = LiveCodeEvents._getStackForCanvas(e.target);
 				var mods = LiveCodeEvents._encodeModifiers(e);
@@ -520,26 +522,20 @@ mergeInto(LibraryManager.library, {
 					return;
 
 				switch (e.type) {
-				case 'keypress':
-					var char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
-					var key_code = LiveCodeEvents._encodeKeyboardKeyCode(e);
-					LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code);
-					break;
 				case 'keyup':
+					char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
+					key_code = LiveCodeEvents._encodeKeyboardKeyCode(e);
+					LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code, kKeyStateUp);
+					break;
 				case 'keydown':
 					char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
 					key_code = LiveCodeEvents._encodeKeyboardKeyCode(e);
 
-					// If this is a browser using old-style keyboard events, we won't get
-					// a 'keypress' message for special keys
-					if (!('key' in e) && e.type === 'keydown' && 0xFE00 <= key_code && key_code <= 0xFFFF) {
-						// Dispatch the keypress to the engine
-						LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code);
+					// post synthetic keyup event if this is a repeat (i.e. held down) key event
+					if (e.repeat)
+						LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code, kKeyStateUp);
 
-						// Suppress the default behaviour for this key
-						e.preventDefault();
-					}
-
+					LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code, kKeyStateDown);
 					break;
 				default:
 					console.debug('Unexpected keyboard event type: ' + e.type);
