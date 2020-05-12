@@ -2077,11 +2077,11 @@ void MCPlayer::gettracks(MCStringRef &r_tracks)
             MCPlatformPlayerMediaTypes t_type;
             
             uint32_t t_id;
-            uint32_t t_offset, t_duration;
+            MCPlatformPlayerDuration t_offset, t_duration;
             MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
             MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaType, kMCPlatformPropertyTypePlayerMediaTypes, &t_type);
-            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
-            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypePlayerDuration, &t_offset);
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypePlayerDuration, &t_duration);
             /* UNCHECKED */ MCStringFormat(&t_track, "%u,%s,%u,%u", t_id, MCPlayerGetMediaTypeString((MCPlatformPlayerMediaType)t_type), t_offset, t_duration);
             /* UNCHECKED */ MCListAppend(*t_tracks_list, *t_track);
         }

@@ -1678,13 +1678,13 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		case kMCPlatformPlayerTrackPropertyOffset:
         {
 			CMTimeRange t_timeRange = [t_asset_track timeRange];
-            *(uint32_t *)r_value = CMTimeToLCTime(t_timeRange . start);
+            *(MCPlatformPlayerDuration *)r_value = CMTimeToLCTime(t_timeRange . start);
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyDuration:
         {
             CMTimeRange t_timeRange = [t_asset_track timeRange];
-            *(uint32_t *)r_value = CMTimeToLCTime(t_timeRange . duration);
+            *(MCPlatformPlayerDuration *)r_value = CMTimeToLCTime(t_timeRange . duration);
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyEnabled:
