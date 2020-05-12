@@ -2036,6 +2036,32 @@ bool MCPlayer::changezoom(real8 zoom)
     return isbuffering();
 }
 
+static const char *MCPlayerGetMediaTypeString(MCPlatformPlayerMediaType p_type)
+{
+	switch (p_type)
+	{
+	case kMCPlatformPlayerMediaTypeVideo:
+		return "vide";
+	case kMCPlatformPlayerMediaTypeAudio:
+		return "soun";
+	case kMCPlatformPlayerMediaTypeText:
+		return "text";
+	case kMCPlatformPlayerMediaTypeMuxed:
+		return "muxx";
+	case kMCPlatformPlayerMediaTypeMetadata:
+		return "meta";
+	case kMCPlatformPlayerMediaTypeSubtitle:
+		return "sbtl";
+	case kMCPlatformPlayerMediaTypeTimecode:
+		return "tmcd";
+	case kMCPlatformPlayerMediaTypeClosedCaption:
+		return "clcp";
+	default:
+		// Unknown media type
+		MCUnreachableReturn("");
+	}
+}
+
 void MCPlayer::gettracks(MCStringRef &r_tracks)
 {
     if (getstate(CS_PREPARED) && m_platform_player != nil)
@@ -2048,15 +2074,15 @@ void MCPlayer::gettracks(MCStringRef &r_tracks)
         for(uindex_t i = 0; i < t_track_count; i++)
         {
             MCAutoStringRef t_track;
-            MCAutoStringRef t_name;
+            MCPlatformPlayerMediaTypes t_type;
             
             uint32_t t_id;
             uint32_t t_offset, t_duration;
             MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
-            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaTypeName, kMCPlatformPropertyTypeNativeCString, &(&t_name));
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaType, kMCPlatformPropertyTypePlayerMediaTypes, &t_type);
             MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
             MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
-            /* UNCHECKED */ MCStringFormat(&t_track, "%u,%@,%u,%u", t_id, *t_name, t_offset, t_duration);
+            /* UNCHECKED */ MCStringFormat(&t_track, "%u,%s,%u,%u", t_id, MCPlayerGetMediaTypeString((MCPlatformPlayerMediaType)t_type), t_offset, t_duration);
             /* UNCHECKED */ MCListAppend(*t_tracks_list, *t_track);
         }
         /* UNCHECKED */ MCListCopyAsString(*t_tracks_list, r_tracks);
