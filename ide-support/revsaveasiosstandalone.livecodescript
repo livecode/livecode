@@ -814,7 +814,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    --try
    -- Perform the codesigning of the main bundle
    local tResult
-   __CodesignFrameworks pAppBundle & "/Frameworks", tCertificate, tEntitlementsOption
+   __CodesignFrameworks pAppBundle & "/Frameworks", tCertificate
    put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & tCertificate & quote && \
          tEntitlementsOption && quote & pAppBundle & quote) into tResult
    -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
@@ -827,16 +827,16 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    end if
 end revSaveAsMobileStandaloneMain
 
-private command __CodesignFrameworks pPath, pCertificate, pEntitlementsOption
+private command __CodesignFrameworks pPath, pCertificate
    local tFrameworks
    put folders(pPath) into tFrameworks
    filter tFrameworks with "*.framework"
    repeat for each line tFramework in tFrameworks
-      __CodesignFrameworks pPath & "/" & tFramework & "/Frameworks", pCertificate, pEntitlementsOption
+      __CodesignFrameworks pPath & "/" & tFramework & "/Frameworks", pCertificate
       
       local tResult
       put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & pCertificate & quote && \
-            pEntitlementsOption && quote & pPath & "/" & tFramework & quote) into tResult
+            quote & pPath & "/" & tFramework & quote) into tResult
       if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
          throw "codesigning failed with" && tResult
       end if
