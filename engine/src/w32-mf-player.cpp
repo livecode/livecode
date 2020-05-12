@@ -122,6 +122,12 @@ enum MCWin32MFPlayerState
 	kMCWin32MFPlayerRunning,
 };
 
+struct MCWin32MFMediaTrackInfo
+{
+	DWORD id;
+	GUID majortype;
+};
+
 struct MCWin32MFMediaSourceInfo
 {
 	MCPlatformPlayerMediaTypes types;
@@ -130,7 +136,8 @@ struct MCWin32MFMediaSourceInfo
 	uint32_t frame_rate_denominator;
 	MCPlatformPlayerDuration duration;
 
-	uindex_t audio_track_count;
+	MCWin32MFMediaTrackInfo *tracks;
+	uindex_t track_count;
 };
 
 struct MCWin32MFTopologyConfiguration
@@ -139,6 +146,9 @@ struct MCWin32MFTopologyConfiguration
 	MCPlatformPlayerDuration end_position;
 	bool play_selection;
 	bool mirrored;
+
+	// 64-bit bit-field
+	uint64_t enabled_tracks;
 };
 
 class MCWin32MFMediaEventHandler
@@ -346,7 +356,8 @@ private:
 
 	bool RedisplayCurrentFrame();
 
-	bool SetMediaSource(IMFMediaSource *p_source);
+	bool SetMediaSource(IMFMediaSource *p_source, bool p_reset_config = true);
+	bool ReloadMediaSource();
 	bool OpenFile(MCStringRef p_filename);
 	void CloseFile();
 
@@ -355,7 +366,7 @@ private:
 	HWND m_video_window;
 	HWND m_timer_window;
 
-	MCWin32MFMediaSourceInfo m_source_info;
+	MCWin32MFMediaSourceInfo *m_source_info;
 
 	MCWin32MFTopologyConfiguration m_topology_config;
 
@@ -673,63 +684,101 @@ HRESULT MCWin32MFMediaTypeGetVideoFrameRate(IMFMediaType *p_type, uint32_t &r_ra
 	return t_hresult;
 }
 
-HRESULT MCWin32MFSourceGetInfo(IMFMediaSource *p_source, MCWin32MFMediaSourceInfo &r_info)
+void MCWin32MFMediaSourceInfoDelete(MCWin32MFMediaSourceInfo *p_info)
 {
-	HRESULT t_hresult = S_OK;
+	if (p_info != nil)
+	{
+		if (p_info->tracks != nil)
+			MCMemoryDelete(p_info->tracks);
+		MCMemoryDelete(p_info);
+	}
+}
 
-	MCWin32MFMediaSourceInfo t_info;
-	MCMemoryClear(t_info);
+bool MCWin32MFSourceGetInfo(IMFMediaSource *p_source, MCWin32MFMediaSourceInfo* &r_info, uint64_t &r_enabled_tracks)
+{
+	bool t_success = true;
+
+	bool t_have_frame_size = false;
+
+	MCWin32MFMediaSourceInfo* t_info = nil;
+	if (t_success)
+		t_success = MCMemoryNew(t_info);
+	uint64_t t_enabled_tracks = 0;
 
 	CComPtr<IMFPresentationDescriptor> t_presentation_descriptor;
-	CheckHResult(t_hresult, p_source->CreatePresentationDescriptor(&t_presentation_descriptor));
+	if (t_success)
+		t_success = SUCCEEDED(p_source->CreatePresentationDescriptor(&t_presentation_descriptor));
 
-	CheckHResult(t_hresult, t_presentation_descriptor->GetUINT64(MF_PD_DURATION, &t_info.duration));
+	if (t_success)
+		t_success = SUCCEEDED(t_presentation_descriptor->GetUINT64(MF_PD_DURATION, &t_info->duration));
 
 	DWORD t_stream_descriptor_count;
-	CheckHResult(t_hresult, t_presentation_descriptor->GetStreamDescriptorCount(&t_stream_descriptor_count));
+	if (t_success)
+		t_success = SUCCEEDED(t_presentation_descriptor->GetStreamDescriptorCount(&t_stream_descriptor_count));
 
-	for (uindex_t i = 0; SUCCEEDED(t_hresult) && i < t_stream_descriptor_count; i++)
+	for (uindex_t i = 0; t_success && i < t_stream_descriptor_count; i++)
 	{
+		MCWin32MFMediaTrackInfo t_track;
+
 		CComPtr<IMFStreamDescriptor> t_stream_descriptor;
 		BOOL t_selected;
-		CheckHResult(t_hresult, t_presentation_descriptor->GetStreamDescriptorByIndex(i, &t_selected, &t_stream_descriptor));
+		if (t_success)
+			t_success = SUCCEEDED(t_presentation_descriptor->GetStreamDescriptorByIndex(i, &t_selected, &t_stream_descriptor));
 
+		// if track is selected then mark as enabled in bit-field
 		if (t_selected)
+			t_enabled_tracks |= (1LL << i);
+
+		CComPtr<IMFMediaTypeHandler> t_media_type_handler;
+		if (t_success)
+			t_success = SUCCEEDED(t_stream_descriptor->GetMediaTypeHandler(&t_media_type_handler));
+
+		if (t_success)
+			t_success = SUCCEEDED(t_stream_descriptor->GetStreamIdentifier(&t_track.id));
+		if (t_success)
+			t_success = SUCCEEDED(t_media_type_handler->GetMajorType(&t_track.majortype));
+
+		if (t_success)
 		{
-			CComPtr<IMFMediaTypeHandler> t_media_type_handler;
-			CheckHResult(t_hresult, t_stream_descriptor->GetMediaTypeHandler(&t_media_type_handler));
-
-			GUID t_major_type;
-			CheckHResult(t_hresult, t_media_type_handler->GetMajorType(&t_major_type));
-
-			if (SUCCEEDED(t_hresult))
+			if (MFMediaType_Video == t_track.majortype)
 			{
-				if (MFMediaType_Video == t_major_type)
+				if (!t_have_frame_size)
 				{
-					if ((t_info.types & kMCPlatformPlayerMediaTypeVideo) == 0)
-					{
-						// get frame size of first video stream in source
-						CComPtr<IMFMediaType> t_current_type;
-						CheckHResult(t_hresult, t_media_type_handler->GetCurrentMediaType(&t_current_type));
+					// get frame size and frame rate of first video stream in source
+					CComPtr<IMFMediaType> t_current_type;
+					if (t_success)
+						t_success = SUCCEEDED(t_media_type_handler->GetCurrentMediaType(&t_current_type));
+					if (t_success)
+						t_success = SUCCEEDED(MCWin32MFMediaTypeGetVideoSize(t_current_type, t_info->frame_size));
+					if (t_success)
+						t_success = SUCCEEDED(MCWin32MFMediaTypeGetVideoFrameRate(t_current_type, t_info->frame_rate_numerator, t_info->frame_rate_denominator));
 
-						CheckHResult(t_hresult, MCWin32MFMediaTypeGetVideoSize(t_current_type, t_info.frame_size));
-						CheckHResult(t_hresult, MCWin32MFMediaTypeGetVideoFrameRate(t_current_type, t_info.frame_rate_numerator, t_info.frame_rate_denominator));
-					}
-					t_info.types |= kMCPlatformPlayerMediaTypeVideo;
+					if (t_success)
+						t_have_frame_size = true;
 				}
-				else if (MFMediaType_Audio == t_major_type)
-				{
-					t_info.types |= kMCPlatformPlayerMediaTypeAudio;
-					t_info.audio_track_count++;
-				}
+				t_info->types |= kMCPlatformPlayerMediaTypeVideo;
+			}
+			else if (MFMediaType_Audio == t_track.majortype)
+			{
+				t_info->types |= kMCPlatformPlayerMediaTypeAudio;
 			}
 		}
+
+		if (t_success)
+			t_success = MCMemoryResizeArray(t_info->track_count + 1, t_info->tracks, t_info->track_count);
+		if (t_success)
+			t_info->tracks[t_info->track_count - 1] = t_track;
 	}
 
-	if (SUCCEEDED(t_hresult))
+	if (t_success)
+	{
 		r_info = t_info;
+		r_enabled_tracks = t_enabled_tracks;
+	}
+	else
+		MCWin32MFMediaSourceInfoDelete(t_info);
 
-	return t_hresult;
+	return t_success;
 }
 
 HRESULT MCWin32MFCreateVideoProcessorNode(IMFMediaType *p_input_type, MF_VIDEO_PROCESSOR_MIRROR p_video_mirror, IMFTopologyNode **r_transform_node)
@@ -815,12 +864,24 @@ HRESULT MCWin32MFCreateTopo(IMFMediaSource *p_source, HWND p_video_window, const
 
 	for (uindex_t i = 0; SUCCEEDED(t_hresult) && i < t_stream_descriptor_count; i++)
 	{
-		CComPtr<IMFStreamDescriptor> t_stream_descriptor;
-		BOOL t_selected;
-		CheckHResult(t_hresult, t_presentation_descriptor->GetStreamDescriptorByIndex(i, &t_selected, &t_stream_descriptor));
+		bool t_enabled;
+		t_enabled = p_config.enabled_tracks & (1LL << i);
 
-		if (t_selected)
+		if (t_enabled)
 		{
+			CheckHResult(t_hresult, t_presentation_descriptor->SelectStream(i));
+		}
+		else
+		{
+			CheckHResult(t_hresult, t_presentation_descriptor->DeselectStream(i));
+		}
+
+		if (t_enabled)
+		{
+			CComPtr<IMFStreamDescriptor> t_stream_descriptor;
+			BOOL t_selected;
+			CheckHResult(t_hresult, t_presentation_descriptor->GetStreamDescriptorByIndex(i, &t_selected, &t_stream_descriptor));
+
 			CComPtr<IMFMediaTypeHandler> t_media_type_handler;
 			CheckHResult(t_hresult, t_stream_descriptor->GetMediaTypeHandler(&t_media_type_handler));
 
@@ -1302,7 +1363,7 @@ MCWin32MFPlayer::MCWin32MFPlayer()
 
 	m_source_path = MCValueRetain(kMCEmptyString);
 
-	MCMemoryClear(m_source_info);
+	m_source_info = nil;
 	m_is_valid = false;
 
 	m_callback_markers.count = 0;
@@ -1359,12 +1420,12 @@ bool MCWin32MFPlayer::Initialize()
 
 bool MCWin32MFPlayer::HasVideo()
 {
-	return 0 != (m_source_info.types & kMCPlatformPlayerMediaTypeVideo);
+	return m_source_info != nil && (m_source_info->types & kMCPlatformPlayerMediaTypeVideo) != 0;
 }
 
 bool MCWin32MFPlayer::HasAudio()
 {
-	return 0 != (m_source_info.types & kMCPlatformPlayerMediaTypeAudio);
+	return m_source_info != nil && (m_source_info->types & kMCPlatformPlayerMediaTypeAudio) != 0;
 }
 
 //tell MF where to position video window
@@ -1418,46 +1479,53 @@ bool MCWin32MFPlayer::SetVisible(bool isVisible)
 	return true;
 }
 
-bool MCWin32MFPlayer::SetMediaSource(IMFMediaSource *p_source)
+bool MCWin32MFPlayer::SetMediaSource(IMFMediaSource *p_source, bool p_reset_config)
 {
 	bool t_success;
 	t_success = true;
 
-	CComPtr<IMFTopology> t_topology;
 	CComPtr<MCWin32MFSession> t_session_helper;
 
-	MCWin32MFMediaSourceInfo t_info;
-	MCMemoryClear(t_info);
+	MCWin32MFMediaSourceInfo *t_info = nil;
+	uint64_t t_enabled_tracks = 0;
 
 	if (p_source != nil)
 	{
 		if (t_success)
-			t_success = SUCCEEDED(MCWin32MFSourceGetInfo(p_source, t_info));
+			t_success = MCWin32MFSourceGetInfo(p_source, t_info, t_enabled_tracks);
+
+		if (p_reset_config)
+			m_topology_config.enabled_tracks = t_enabled_tracks;
 
 		MCWin32MFTopologyConfiguration t_config = m_topology_config;
-		MCWin32MFUpdateTopologyConfiguration(t_config, t_info.duration, m_play_selection, m_start_position, m_end_position);
+		if (t_success)
+			MCWin32MFUpdateTopologyConfiguration(t_config, t_info->duration, m_play_selection, m_start_position, m_end_position);
 
-		if (t_success)
-			t_success = SUCCEEDED(MCWin32MFCreateTopo(p_source, m_video_window, t_config, &t_topology));
+		if (t_config.enabled_tracks != 0)
+		{
+			CComPtr<IMFTopology> t_topology;
+			if (t_success)
+				t_success = SUCCEEDED(MCWin32MFCreateTopo(p_source, m_video_window, t_config, &t_topology));
 
-		CComPtr<IMFTopology> t_resolved_topology;
-		if (t_success)
-			t_success = SUCCEEDED(MCWin32MFResolveTopology(t_topology, &t_resolved_topology));
-		if (t_success)
-			t_topology = t_resolved_topology;
+			CComPtr<IMFTopology> t_resolved_topology;
+			if (t_success)
+				t_success = SUCCEEDED(MCWin32MFResolveTopology(t_topology, &t_resolved_topology));
+			if (t_success)
+				t_topology = t_resolved_topology;
 
-		if (t_success)
-			t_success = SUCCEEDED(t_topology->SetUINT32(MF_TOPOLOGY_HARDWARE_MODE, MFTOPOLOGY_HWMODE_USE_HARDWARE));
-		if (t_success)
-			t_success = SUCCEEDED(t_topology->SetUINT32(MF_TOPOLOGY_DXVA_MODE, MFTOPOLOGY_DXVA_FULL));
+			if (t_success)
+				t_success = SUCCEEDED(t_topology->SetUINT32(MF_TOPOLOGY_HARDWARE_MODE, MFTOPOLOGY_HWMODE_USE_HARDWARE));
+			if (t_success)
+				t_success = SUCCEEDED(t_topology->SetUINT32(MF_TOPOLOGY_DXVA_MODE, MFTOPOLOGY_DXVA_FULL));
 
-		// Create session for topology
-		if (t_success)
-			t_success = SUCCEEDED(MCWin32MFSession::CreateInstance(this, &t_session_helper));
-		if (t_success)
-			t_success = t_session_helper->Initialize();
-		if (t_success)
-			t_success = t_session_helper->SetTopology(t_topology);
+			// Create session for topology
+			if (t_success)
+				t_success = SUCCEEDED(MCWin32MFSession::CreateInstance(this, &t_session_helper));
+			if (t_success)
+				t_success = t_session_helper->Initialize();
+			if (t_success)
+				t_success = t_session_helper->SetTopology(t_topology);
+		}
 	}
 
 	if (t_success)
@@ -1475,8 +1543,41 @@ bool MCWin32MFPlayer::SetMediaSource(IMFMediaSource *p_source)
 		m_session_helper = t_session_helper;
 
 		m_source = p_source;
+		MCWin32MFMediaSourceInfoDelete(m_source_info);
 		m_source_info = t_info;
 	}
+	else
+		MCWin32MFMediaSourceInfoDelete(t_info);
+
+	return t_success;
+}
+
+bool MCWin32MFPlayer::ReloadMediaSource()
+{
+	if (m_source == nil)
+		return true;
+
+	bool t_success = true;
+
+	if (t_success && m_state == kMCWin32MFPlayerRunning)
+		t_success = Pause();
+
+	if (t_success)
+		t_success = SetMediaSource(nil, false);
+
+	CComPtr<IMFMediaSource> t_source;
+	if (t_success)
+		t_success = MCWin32MFOpenFile(m_source_path, &t_source);
+
+	if (t_success)
+		t_success = SetMediaSource(t_source, false);
+
+	// restore previous position
+	if (t_success && m_state == kMCWin32MFPlayerPaused && m_session_helper != nil)
+		t_success = SetCurrentPosition(m_paused_position);
+
+	if (t_success)
+		MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
 
 	return t_success;
 }
@@ -1501,8 +1602,9 @@ bool MCWin32MFPlayer::OpenFile(MCStringRef p_filename)
 void MCWin32MFPlayer::CloseFile()
 {
 	SetVideoWindow(nil);
-	SetMediaSource(nil);
+	SetMediaSource(nil, true);
 	m_state = kMCWin32MFPlayerStopped;
+	m_is_valid = false;
 }
 
 bool MCWin32MFPlayer::SetTopologyConfiguration(const MCWin32MFTopologyConfiguration &p_config)
@@ -1512,29 +1614,9 @@ bool MCWin32MFPlayer::SetTopologyConfiguration(const MCWin32MFTopologyConfigurat
 
 	bool t_success = true;
 
-	bool t_restore_position = m_state != kMCWin32MFPlayerStopped;
-
-	MCPlatformPlayerDuration t_current_position = 0;
-	if (t_success && t_restore_position)
-		t_success = GetCurrentPosition(t_current_position);
-
-	if (t_success)
-		t_success = SetMediaSource(nil);
-
-	if (t_success)
-	{
-		m_state = kMCWin32MFPlayerStopped;
-		m_topology_config = p_config;
-		t_success = OpenFile(m_source_path);
-	}
-
-	if (t_success && t_restore_position)
-		t_success = SetCurrentPosition(t_current_position);
-
-	if (t_success)
-		MCPlatformCallbackSendPlayerCurrentTimeChanged(this);
-
-	return t_success;
+	m_topology_config = p_config;
+	
+	return ReloadMediaSource();
 }
 
 bool MCWin32MFPlayer::StartTimer()
@@ -1559,8 +1641,8 @@ bool MCWin32MFPlayer::GetFormattedSize(uint32_t &r_width, uint32_t &r_height)
 	if (!HasVideo())
 		return false;
 
-	r_width = m_source_info.frame_size.width;
-	r_height = m_source_info.frame_size.height;
+	r_width = m_source_info->frame_size.width;
+	r_height = m_source_info->frame_size.height;
 
 	return true;
 }
@@ -1569,9 +1651,6 @@ bool MCWin32MFPlayer::GetFormattedSize(uint32_t &r_width, uint32_t &r_height)
 
 bool MCWin32MFPlayer::SetUrl(MCStringRef p_url)
 {
-	bool t_success;
-	t_success = true;
-
 	if (MCStringIsEqualTo(m_source_path, p_url, kMCStringOptionCompareExact))
 		return true;
 
@@ -1579,8 +1658,8 @@ bool MCWin32MFPlayer::SetUrl(MCStringRef p_url)
 	MCValueRelease(m_source_path);
 	m_source_path = p_url;
 
-	if (t_success)
-		t_success = OpenFile(p_url);
+	bool t_success;
+	t_success = OpenFile(p_url);
 
 	Pause();
 
@@ -1617,10 +1696,10 @@ bool MCWin32MFPlayer::GetTimeScale(MCPlatformPlayerDuration &r_time_scale)
 
 bool MCWin32MFPlayer::GetDuration(MCPlatformPlayerDuration &r_duration)
 {
-	if (m_source == nil)
+	if (m_source_info == nil)
 		return false;
 
-	r_duration = m_source_info.duration;
+	r_duration = m_source_info->duration;
 	return true;
 }
 
@@ -1675,7 +1754,7 @@ bool MCWin32MFPlayer::SetCurrentPosition(MCPlatformPlayerDuration p_position)
 bool MCWin32MFPlayer::ConfigurePositions()
 {
 	MCWin32MFTopologyConfiguration t_config = m_topology_config;
-	MCWin32MFUpdateTopologyConfiguration(t_config, m_source_info.duration, m_play_selection, m_start_position, m_end_position);
+	MCWin32MFUpdateTopologyConfiguration(t_config, m_source_info->duration, m_play_selection, m_start_position, m_end_position);
 
 	if (MCMemoryCompare(&t_config, &m_topology_config, sizeof(MCWin32MFTopologyConfiguration)) == 0)
 	{
@@ -1815,10 +1894,10 @@ bool MCWin32MFPlayer::SetMirrored(bool p_mirrored)
 
 bool MCWin32MFPlayer::GetMediaTypes(MCPlatformPlayerMediaTypes &r_types)
 {
-	if (m_source == nil)
+	if (m_source_info == nil)
 		return false;
 
-	r_types = m_source_info.types;
+	r_types = m_source_info->types;
 	return true;
 }
 
@@ -1935,7 +2014,7 @@ bool MCWin32MFPlayer::SeekRelative(int32_t p_amount)
 		return false;
 
 	LONGLONG t_units_per_frame;
-	t_units_per_frame = 10000000 * (LONGLONG)m_source_info.frame_rate_denominator / m_source_info.frame_rate_numerator;
+	t_units_per_frame = 10000000 * (LONGLONG)m_source_info->frame_rate_denominator / m_source_info->frame_rate_numerator;
 
 	bool t_success;
 	t_success = true;
@@ -2014,24 +2093,85 @@ bool MCWin32MFPlayer::IsPlaying()
 
 void MCWin32MFPlayer::CountTracks(uindex_t &r_track_count)
 {
-	// TODO - implement track switching support
 	r_track_count = 0;
+
+	if (m_source_info != nil)
+		r_track_count = m_source_info->track_count;
 }
 
 bool MCWin32MFPlayer::FindTrackWithId(uint32_t p_id, uindex_t &r_index)
 {
-	// TODO - implement track switching support
+	if (m_source_info == nil)
+		return false;
+
+	for (uindex_t i = 0; i < m_source_info->track_count; i++)
+	{
+		if (m_source_info->tracks[i].id == p_id)
+		{
+			r_index = i;
+			return true;
+		}
+	}
+
 	return false;
+}
+
+MCPlatformPlayerMediaType MCWin32MFMediaMajorTypeToPlatformMediaType(GUID p_majortype)
+{
+	if (MFMediaType_Video == p_majortype)
+		return kMCPlatformPlayerMediaTypeVideo;
+	else if (MFMediaType_Audio == p_majortype)
+		return kMCPlatformPlayerMediaTypeAudio;
+	else if (MFMediaType_Stream == p_majortype)
+		return kMCPlatformPlayerMediaTypeMuxed;
+	else if (MFMediaType_SAMI == p_majortype)
+		return kMCPlatformPlayerMediaTypeSubtitle;
+
+	// unmapped media type
+	MCUnreachableReturn((MCPlatformPlayerMediaType)0);
 }
 
 void MCWin32MFPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
-	// TODO - implement track switching support
+	switch (p_property)
+	{
+	case kMCPlatformPlayerTrackPropertyId:
+		*(uint32_t*)r_value = m_source_info->tracks[p_index].id;
+		break;
+	case kMCPlatformPlayerTrackPropertyEnabled:
+		*(bool*)r_value = (m_topology_config.enabled_tracks & (1LL << p_index)) != 0;
+		break;
+	case kMCPlatformPlayerTrackPropertyOffset:
+		*(MCPlatformPlayerDuration*)r_value = 0;
+		break;
+	case kMCPlatformPlayerTrackPropertyDuration:
+		*(MCPlatformPlayerDuration*)r_value = m_source_info->duration;
+		break;
+	case kMCPlatformPlayerTrackPropertyMediaType:
+		*(MCPlatformPlayerMediaTypes*)r_value = (MCPlatformPlayerMediaTypes)MCWin32MFMediaMajorTypeToPlatformMediaType(m_source_info->tracks[p_index].majortype);
+		break;
+	}
 }
 
 void MCWin32MFPlayer::SetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProperty p_property, MCPlatformPropertyType p_type, void *p_value)
 {
-	// TODO - implement track switching support
+	switch (p_property)
+	{
+	case kMCPlatformPlayerTrackPropertyEnabled:
+		bool t_enabled = *((bool*)p_value);
+		uint64_t t_enabled_tracks = m_topology_config.enabled_tracks;
+		if (t_enabled)
+			t_enabled_tracks |= (1LL << p_index);
+		else
+			t_enabled_tracks &= ~(1LL << p_index);
+
+		if (t_enabled_tracks != m_topology_config.enabled_tracks)
+		{
+			m_topology_config.enabled_tracks = t_enabled_tracks;
+			/* UNCHECKED */ ReloadMediaSource();
+		}
+		break;
+	}
 }
 
 void MCWin32MFPlayer::GetProperty(MCPlatformPlayerProperty p_property, MCPlatformPropertyType p_type, void *r_value)
