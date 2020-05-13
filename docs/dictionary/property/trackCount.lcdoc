@@ -5,13 +5,13 @@ Type: property
 Syntax: get the trackCount of <player>
 
 Summary:
-Specifies the number of separate tracks in a <QuickTime> movie.
+Specifies the number of separate tracks in a movie.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac, linux
+OS: mac, windows, linux
 
 Platforms: desktop, server
 
@@ -27,17 +27,18 @@ This property is read-only and cannot be set.
 
 Description:
 Use the <trackCount> <property> to loop through the tracks in a
-<QuickTime> movie.
+movie.
 
-Each track of a QuickTime movie holds a different set of data, which may
+Each track of a movie holds a different set of data, which may
 consist of sound, video, or other data types. The <trackCount>
 <property> specifies how many tracks there are.
 
 Changes:
-This property was removed from the Windows platform in version 8.1.0,
-due to the change of player implementation from QuickTime to DirectShow.
+This property was added to the Windows platform in version 9.7.0, due
+to the change of player implementation from DirectShow to
+MediaFoundation.
 
-References: QuickTime (glossary), property (glossary), integer (keyword),
+References: property (glossary), integer (keyword),
 enabledTracks (property), tracks (property), mediaTypes (property),
 nodes (property)
 

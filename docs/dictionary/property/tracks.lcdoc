@@ -5,13 +5,13 @@ Type: property
 Syntax: get the tracks of <player>
 
 Summary:
-Lists all the tracks in a <QuickTime> movie.
+Lists all the tracks in a movie.
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac, linux
+OS: mac, windows, linux
 
 Platforms: desktop, server
 
@@ -22,25 +22,34 @@ Value (enum):
 The <tracks> is a list of tracks, one per <line>. Each <line> consists
 of four <items>, separated by commas:
  - the track ID (an integer)
- - the track media type (for example, "audio", "video", or
- "VR Panorama" )
+ - the track media type (a string)
 
  This property is read-only and cannot be set
 
 Description:
-Use the <tracks> <property> to find out the contents of a <QuickTime>
-movie. 
+Use the <tracks> <property> to find out the contents of a movie. 
 
 A movie can contain multiple tracks intended to be played at the same
 time (for example, an audio and a video track), or tracks that are
 separate (for example, an alternative audio track). You specify which
 tracks are active using the enabledTracks <property>.
 
-Changes:
-This property was removed from the Windows platform in version 8.1.0,
-due to the change of player implementation from QuickTime to DirectShow.
+**Track media types**
+The track media type may be one of the following values:
+- "vide": Video data
+- "soun": Audio data
+- "muxx": Combined video & audio data stream
+- "meta": File metadata (MacOS X only)
+- "sbtl": Subtitle data
+- "tmcd": Timecode data (MacOS X only)
+- "clcp": Closed caption data (MacOS X only)
 
-References: QuickTime (glossary), property (glossary), items (keyword),
+Changes:
+This property was added to the Windows platform in version 9.7.0, due
+to the change of player implementation from DirectShow to
+MediaFoundation.
+
+References: property (glossary), items (keyword),
 line (keyword), duration (property), trackCount (property)
 
 Tags: multimedia
