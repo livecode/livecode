@@ -73,8 +73,9 @@ function <return|returns> the full path to the <folder>, including the
 name of the folder.
 
 **On Windows systems**, the <folderIdentifier> can alternatively be a
-Constant Special Item ID List (CSIDL) value that identifies a <special
-folder>. Note that not all CSIDL values work on all versions of Windows.
+Constant Special Item ID List (CSIDL) value that identifies a 
+<special folder>. Note that not all CSIDL values work on all versions of 
+Windows.
 
 The following <folderIdentifier> values are supported:
 
@@ -90,9 +91,11 @@ The following <folderIdentifier> values are supported:
   * "temporary": The folder where temporary files can be placed
   * "engine": The folder containing the LiveCode engine and the
     executable files copied in the standalone application
-  * "resources": In development mode, the current stack's folder.  In a
+  * "resources": In development mode, the current stack's folder. In a
     standalone, the resources folder where files or folders specified
-    in the Standalone Builder are located.
+    in the Standalone Builder are located. Note: A valid resources path 
+    is only returned after a stack has been saved.
+    
 * Examples of common Windows CSIDL numbers:
   * 0x001a: Same as "support"
   * 0x0023: The application-specific data folder shared by all users
@@ -116,8 +119,10 @@ are supported:
 * "engine": The folder containing the LiveCode engine and the executable
   files copied in the <standalone application>
 * "resources": In development mode, the current stack's folder. In 
-a <standalone application|standalone>, the resources folder where files 
-or folders specified in the Standalone Builder are located.
+ a <standalone application|standalone>, the resources folder where files 
+ or folders specified in the Standalone Builder are located. Note: a 
+ valid resources path is only returned after a stack has been saved.
+
 
 **On iOS systems**, only create files in the "documents", "cache" and
 "temporary" folders.  Be careful not to change or add any files within
@@ -196,10 +201,12 @@ are supported:
 * "temporary": The folder where temporary files can be placed
 * "engine": The folder containing the LiveCode engine and the executable
   files copied in the <standalone application>
-* "resources": In development mode, the current stack's folder.  
+* "resources": In development mode, the current stack's folder. In a
+  standalone, the resources folder where files or folders specified
+  in the Standalone Builder are located. Note: A valid resources path 
+  is only returned after a stack has been saved.
 
-In a <standalone application|standalone>, the resources folder where
-files or folders specified in the Standalone Builder are located.
+
 
 **In HTML5 standalones**, you can read and write files from anywhere,
 since the whole file system is virtual and temporary. For compatibility
