@@ -1620,17 +1620,6 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
       put "<key>UIUserInterfaceStyle</key><string>Light</string>" into tUIStyle
    end if
    
-   -- MM-2011-09-28: Make sure portrait and landscape iPad splashes are present if required.
-   --
-   if 2 is among the items of pSettings["ios,device family"] then
-      if tIPadOrientations contains "Portrait" and there is no file (pAppBundle & "/Default-Portrait.png") then
-         revStandaloneAddWarning "No iPad Portrait Splash Screen"
-      end if
-      if tIPadOrientations contains "Landscape" and there is no file (pAppBundle & "/Default-Landscape.png") then
-         revStandaloneAddWarning "No iPad Landscape Splash Screen"
-      end if
-   end if
-   
    if tStatusBarHidden is empty then
       put "false" into tStatusBarHidden
    end if
