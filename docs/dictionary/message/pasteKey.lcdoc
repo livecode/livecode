@@ -18,10 +18,11 @@ Platforms: desktop, server
 
 Example:
 on pasteKey -- replace returns with spaces before pasting
-  if the clipboardData["text"] is not empty then set \
-     the clipboardData["text"] to \
-     replaceText(the clipboardData["text"],return,space)
-  paste
+   if the clipboardData["text"] is not empty then 
+      set the clipboardData["text"] to \
+            replaceText(the clipboardData["text"],return,space)
+   end if
+   paste
 end pasteKey
 
 Description:
