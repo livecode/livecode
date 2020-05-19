@@ -1297,7 +1297,9 @@ private command addAssetsToArchive pFileData, pBaseFolder, pArchive
             revZipAddUncompressedItemWithFile pArchive, "assets/" & tFile["name"], tFile["resolved"]
          end if
       else if there is a folder tFile["resolved"] then
-         addAssetsFromFolderToArchive tFile["resolved"], "assets" & slash & tFile["name"], pArchive, tFonts
+         if not (tFile["resolved"] ends with ".lcextd") then
+            addAssetsFromFolderToArchive tFile["resolved"], "assets" & slash & tFile["name"], pArchive, tFonts
+         end if
       else
          throw "could not find referenced asset to include -" && tFile["resolved"]
       end if
