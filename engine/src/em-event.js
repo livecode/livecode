@@ -148,11 +148,10 @@ mergeInto(LibraryManager.library, {
 			return LiveCodeEvents._getStackForWindow(window);
 		},
 
-		_encodeModifiers: function(uiEvent) {
+		_encodeModifiers: function(pShift, pAlt, pCtrl, pMeta) {
 			return Module.ccall('MCEmscriptenEventEncodeModifiers', 'number',
 								['number', 'number', 'number', 'number'],
-								[uiEvent.shiftKey, uiEvent.altKey,
-								 uiEvent.ctrlKey, uiEvent.metaKey]);
+								[pShift, pAlt, pCtrl, pMeta]);
 		},
 
 		// ----------------------------------------------------------------
@@ -540,8 +539,18 @@ mergeInto(LibraryManager.library, {
 				const kKeyStatePressed = 2;
 
 				var stack = LiveCodeEvents._getStackForCanvas(pCanvas);
-				var mods = LiveCodeEvents._encodeModifiers(e);
+				/* TODO - reenable alt key detection
+				 * As there is no direct way to tell the difference between an alt+<key>
+				 * combination that produces a different character, and holding alt down
+				 * while typing that character directly, for now we ignore the state of
+				 * the alt key so that typing such characters is possible.
+				 */
+				var mods = LiveCodeEvents._encodeModifiers(e.shiftKey, false, e.ctrlKey, e.metaKey);
 
+				// Ignore alt key presses
+				if (e.key == 'Alt')
+					return;
+				
 				// ignore key events during IME composing
 				if (e.isComposing || e.keyCode === 229)
 					return;
@@ -735,7 +744,7 @@ mergeInto(LibraryManager.library, {
 
 				var target = LiveCodeEvents._eventTarget(e);
 				var stack = LiveCodeEvents._getStackForCanvas(target);
-				var mods = LiveCodeEvents._encodeModifiers(e);
+				var mods = LiveCodeEvents._encodeModifiers(e.shiftKey, e.altKey, e.ctrlKey, e.metaKey);
 				var pos = LiveCodeEvents._encodeMouseCoordinates(e);
 
 				// ignore events for non-lc elements
