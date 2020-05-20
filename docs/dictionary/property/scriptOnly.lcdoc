@@ -48,6 +48,7 @@ Stack:
 The name or ID of the stack.
 
 Description:
+A <script only stack> is a stack whose <scriptOnly> property is true.
 A <scriptOnly> stack will save just the script with a single header line
 declaring the stack name. If the stack has a <stack> <behavior>, the 
 name of the behavior stack is also saved to the header line. Any other 
