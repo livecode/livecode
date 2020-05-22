@@ -431,12 +431,28 @@ UIViewController *MCIPhoneGetViewController(void);
 	NSLog(@"Date = %d\n", t_date);
 }
 
+- (NSInteger)getRoundedDate:(NSDate *)originalDate withStep:(NSInteger)step
+{
+    // The originalDate is not rounded down to the nearest "step" minutes.
+    NSInteger t_original_date_in_seconds = [originalDate timeIntervalSince1970];
+    
+    // Get the "extra" minutes and convert them to seconds
+    NSInteger t_extra_seconds = t_original_date_in_seconds % (step * 60);
+    
+    // Get the rounded date in seconds
+    NSInteger t_seconds_rounded_down_to_step = t_original_date_in_seconds - t_extra_seconds;
+        
+    return t_seconds_rounded_down_to_step;
+}
+
 // called when the action sheet is dispmissed (iPhone, iPod)
 - (void)dismissDatePickWheel:(NSObject *)controlButton
 {
 	// dismiss the action sheet programmatically
 	m_selection_made = true;
-	m_selected_date = [[datePicker date] timeIntervalSince1970];
+    
+    NSInteger t_step = [datePicker minuteInterval];
+    m_selected_date = [self getRoundedDate: datePicker.date withStep:t_step];
     
     if (iSiPad)
     {
@@ -539,7 +555,10 @@ UIViewController *MCIPhoneGetViewController(void);
 {
 	m_running = false;
 	m_selection_made = true;
-	m_selected_date = [[datePicker date] timeIntervalSince1970];
+    
+    NSInteger t_step = [datePicker minuteInterval];
+    m_selected_date = [self getRoundedDate: datePicker.date withStep:t_step];
+    
 	// MW-2011-08-16: [[ Wait ]] Tell the wait to exit (our wait has anyevent == True).
 	MCscreen -> pingwait();
 }
