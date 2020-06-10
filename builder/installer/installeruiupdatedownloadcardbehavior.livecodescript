@@ -57,7 +57,8 @@ private command downloadNewVersion pUrl, pCheckSum, pDestination
       put urlEncode(the last item of pURL) into the last item of pURL
       set the itemDel to comma
       libURLSetStatusCallback "downloadLatestRevisionUpdates", the long id of me
-      load URL pURL with message "downloadLatestRevisionComplete"
+      libURLDownloadToFile pUrl, sFileName, "downloadLatestRevisionComplete"
+      //load URL pURL with message "downloadLatestRevisionComplete"
    else
       
       -- The file already exists execute it
@@ -77,7 +78,7 @@ end downloadNewVersion
 --
 on downloadLatestRevisionComplete pURL, pStatus
    if pStatus is among the words "downloaded cached" then
-      put URL the uRemoteURL of me into URL ("binfile:" & sFileName)
+      //put URL the uRemoteURL of me into URL ("binfile:" & sFileName)
       launchDownloadedInstaller
       if the result is not empty then
          set the uError of card "Finish" to the result
