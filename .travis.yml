@@ -101,7 +101,6 @@ script: |
       export JAVA_HOME=$(/usr/libexec/java_home)
       ;;
   esac
-
   if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
     export USE_WINFLEXBISON=1
     export SKIP_LCIDLC=1
