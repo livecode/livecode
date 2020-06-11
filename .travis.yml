@@ -102,8 +102,7 @@ script: |
       ;;
   esac
   if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
-    cmd.exe /C configure.bat &&
-    cmd.exe /C make.cmd
+    python tools/editbin.py win-x86_64-bin/standalone-community.exe
   elif [[ "${COVERITY_SCAN_BRANCH}" != "1" ]]; then
     mkdir -p "${LICENSE_DIR}" &&
     touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
