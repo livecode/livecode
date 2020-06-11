@@ -102,6 +102,7 @@ script: |
       ;;
   esac
   if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
+    quit 1
     export USE_WINFLEXBISON=1
     export SKIP_LCIDLC=1
     export BUILDTYPE=Fast
