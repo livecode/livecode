@@ -1,4 +1,3 @@
-@echo off
 REM Configures the Windows build
 
 SETLOCAL EnableExtensions
