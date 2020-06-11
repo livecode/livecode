@@ -2232,9 +2232,18 @@ public class Engine extends View implements EngineApi
 					float t_width = t_bitmap.getWidth();
 					float t_height = t_bitmap.getHeight();
 					
-					InputStream t_exif_in = ((LiveCodeActivity)getContext()).getContentResolver().openInputStream(t_photo_uri);
-					
-					ExifInterface t_exif = new ExifInterface(t_exif_in);
+					/* In API Level >= 24, you have to use an input stream to make sure that access
+					 * to a photo in the library is granted. Before that you can just open the photo's
+					 * file direct. */
+					ExifInterface t_exif;
+					if (Build.VERSION.SDK_INT >= 24)
+					{
+						t_exif = new ExifInterface(t_in);
+					}
+					else
+					{
+						t_exif = new ExifInterface(t_photo_uri.getPath());
+					}
 					
 					int t_orientation = t_exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
 															   ExifInterface.ORIENTATION_NORMAL);
