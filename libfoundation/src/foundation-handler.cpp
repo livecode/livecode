@@ -87,18 +87,18 @@ bool MCHandlerExternalInvoke(MCHandlerRef self, MCValueRef *p_arguments, uindex_
     if (!MCAndroidIsOnEngineThread())
     {
         typedef void (*co_yield_callback_t)(void *);
-        extern void co_yield_to_android_and_call(co_yield_callback_t callback, void *context);
+        extern void co_yield_to_engine_and_call(co_yield_callback_t callback, void *context);
         MCHandlerInvokeTrampolineContext t_context = {self, p_arguments, p_argument_count, r_value, true};
-        co_yield_to_android_and_call(MCHandlerInvokeTrampoline, &t_context);
+        co_yield_to_engine_and_call(MCHandlerInvokeTrampoline, &t_context);
         return t_context.return_value;
     }
 #elif defined(TARGET_SUBPLATFORM_IPHONE) && !defined(CROSS_COMPILE_HOST)
-    extern bool MCIPhoneIsOnMainFiber(void);
-    if (!MCIPhoneIsOnMainFiber())
+    extern bool MCIPhoneIsOnScriptFiber(void);
+    if (!MCIPhoneIsOnScriptFiber())
     {
-        extern void MCIPhoneRunOnMainFiber(void (*)(void *), void *);
+        extern void MCIPhoneRunOnScriptFiber(void (*)(void *), void *);
         MCHandlerInvokeTrampolineContext t_context = {self, p_arguments, p_argument_count, r_value, true};
-        MCIPhoneRunOnMainFiber(MCHandlerInvokeTrampoline, &t_context);
+        MCIPhoneRunOnScriptFiber(MCHandlerInvokeTrampoline, &t_context);
         return t_context.return_value;
     }
 #endif

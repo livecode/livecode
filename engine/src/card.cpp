@@ -322,6 +322,8 @@ void MCCard::kfocus()
         // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
         //   (otherwise the engine state can change due to script).
         MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+		// Mark card as focused
+		setstate(true, CS_KFOCUSED);
 		kfocused->getref()->kfocus();
 	}
 	if (kfocused == NULL)
@@ -361,6 +363,8 @@ Boolean MCCard::kfocusnext(Boolean top)
                     // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
                     //   (otherwise the engine state can change due to script).
 					MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
+					// Mark card as unfocused
+					setstate(false, CS_KFOCUSED);
 					oldkfocused->getref()->kunfocus();
 					if (oldkfocused == NULL)
 						return False;
@@ -371,6 +375,8 @@ Boolean MCCard::kfocusnext(Boolean top)
             // MW-2014-07-29: [[ Bug 13001 ]] Sync the view focus before the engine state
             //   (otherwise the engine state can change due to script).
 			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+			// Mark card as focused
+			setstate(true, CS_KFOCUSED);
 			kfocused->getref()->kfocus();
 			done = True;
 			break;
@@ -420,6 +426,8 @@ Boolean MCCard::kfocusprev(Boolean bottom)
                     // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
                     //   (otherwise the engine state can change due to script).
 					MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
+					// Mark card as unfocused
+					setstate(false, CS_KFOCUSED);
 					oldkfocused->getref()->kunfocus();
 					if (oldkfocused == NULL)
 						return False;
@@ -430,6 +438,8 @@ Boolean MCCard::kfocusprev(Boolean bottom)
             // MW-2014-07-29: [[ Bug 13001 ]] Sync the view focus before the engine state
             //   (otherwise the engine state can change due to script).
 			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+			// Mark card as focused
+			setstate(true, CS_KFOCUSED);
 			kfocused->getref()->kfocus();
 			done = True;
 			break;
@@ -453,6 +463,8 @@ void MCCard::kunfocus()
         // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
         //   (otherwise the engine state can change due to script).
         MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
+		// Mark card as unfocused
+		setstate(false, CS_KFOCUSED);
 		oldkfocused->getref()->kunfocus();
 	}
 	else
@@ -1382,6 +1394,8 @@ void MCCard::kfocusset(MCControl *target)
             // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
             //   (otherwise the engine state can change due to script).
             MCscreen -> controllostfocus(getstack(), tkfocused -> getid());
+			// Mark card as unfocused
+			setstate(false, CS_KFOCUSED);
 			tkfocused->getref()->kunfocus();
 		}
 		if (kfocused != NULL)
@@ -1395,6 +1409,8 @@ void MCCard::kfocusset(MCControl *target)
                 // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
                 //   (otherwise the engine state can change due to script).
                 MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+				// Mark card as focused
+				setstate(true, CS_KFOCUSED);
 				kfocused->getref()->kfocus();
 
 				// OK-2009-04-29: [[Bug 8013]] - Its possible that kfocus() can set kfocused to NULL if the 
