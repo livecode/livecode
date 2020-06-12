@@ -93,7 +93,7 @@ static MCExecEnumTypeInfo _kMCInterfaceCharsetTypeInfo =
 static MCExecEnumTypeElementInfo _kMCInterfaceCompositorTypeElementInfo[] =
 {
     { "", kMCTileCacheCompositorNone, false },
-	{ "none", kMCTileCacheCompositorNone, true },
+	{ "none", kMCTileCacheCompositorNone, false },
 	{ "Software", kMCTileCacheCompositorSoftware, false },
 	{ "CoreGraphics", kMCTileCacheCompositorCoreGraphics, false },
 	{ "opengl", kMCTileCacheCompositorOpenGL, false },
