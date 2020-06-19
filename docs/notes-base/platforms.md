@@ -75,7 +75,7 @@ We currently support building against the following versions of the iOS SDK:
 * 11.2 (included in Xcode 9.2)
 * 12.1 (included in Xcode 10.1)
 * 13.2 (included in Xcode 11.3)
-* 13.4 (included in Xcode 11.4)
+* 13.5 (included in Xcode 11.5)
 
 ## Android
 

@@ -1,8 +1,8 @@
 #!/bin/python
 
 # Update these lists if you need different SDK versions!
-iphoneos_versions = ["13.4", "13.2", "12.1", "11.2", "10.2"]
-iphonesimulator_versions = ["13.4", "13.2", "12.1", "11.2", "10.2"]
+iphoneos_versions = ["13.5", "13.2", "12.1", "11.2", "10.2"]
+iphonesimulator_versions = ["13.5", "13.2", "12.1", "11.2", "10.2"]
 macosx_versions = ["10.9"]
 
 
