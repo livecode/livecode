@@ -221,6 +221,11 @@ bool MCIPhoneIsOnMainFiber(void)
     return MCFiberIsCurrentThread(s_main_fiber);
 }
 
+bool MCIPhoneIsOnScriptFiber(void)
+{
+    return MCFiberIsCurrentThread(s_script_fiber);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Boolean MCScreenDC::open(void)
@@ -1215,6 +1220,11 @@ void MCIPhoneCallSelectorOnMainFiberWithObject(id p_object, SEL p_selector, id p
 void MCIPhoneRunOnMainFiber(void (*p_callback)(void *), void *p_context)
 {
 	MCFiberCall(s_main_fiber, p_callback, p_context);
+}
+
+void MCIPhoneRunOnScriptFiber(void (*p_callback)(void *), void *p_context)
+{
+    MCFiberCall(s_script_fiber, p_callback, p_context);
 }
 
 static void invoke_block(void *p_context)

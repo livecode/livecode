@@ -35,6 +35,9 @@ function buildOpenSSL {
 	local ARCH=$2
 	local SUBPLATFORM=$3
 	
+	# Boolean flag: if non-zero then configure CC/LD/CFLAGS/LDFLAGS etc.
+	local CONFIGURE_CC_FOR_TARGET=1
+
 	# Each target type in OpenSSL is given a name
 	case "${PLATFORM}" in
 		mac)
@@ -58,24 +61,29 @@ function buildOpenSSL {
 			fi
 			;;
 		android)
+			configureAndroidToolchain "${ARCH}"
+			export ANDROID_NDK_HOME="${ANDROID_TOOLCHAIN_BASE}"
+			export PATH="${ANDROID_NDK_HOME}/bin:${PATH}"
+			CONFIGURE_CC_FOR_TARGET=0
+
 			if [ "${ARCH}" == "x86_64" ] ; then
-				SPEC="android64"
+				SPEC="android-x86_64"
 			elif [[ "${ARCH}" =~ (x|i[3-6])86 ]] ; then
 				# Work around a linker crash using the i686 gold linker in Android NDK r14
-				EXTRA_CFLAGS="-fuse-ld=bfd"
+				export CFLAGS="-fuse-ld=bfd"
 				SPEC="android-x86"
 			elif [ "${ARCH}" == "arm64" ] ; then
 				# Clang's integrated assembler is a bit broken so we need to force the use of GAS instead
-				EXTRA_CFLAGS="-fno-integrated-as"
-				SPEC="android64-aarch64"
+				export CFLAGS="-fno-integrated-as"
+				SPEC="android-arm64"
 			elif [[ "${ARCH}" =~ armv(6|7) ]] ; then
 				# Clang's integrated assembler is a bit broken so we need to force the use of GAS instead
-				EXTRA_CFLAGS="-fno-integrated-as -U__clang__"
+				export CFLAGS="-fno-integrated-as"
 
 				# When compiling with -mthumb, we need to link to libatomic
 				EXTRA_OPTIONS="-latomic"
 
-				SPEC="android-armeabi"
+				SPEC="android-arm"
 			elif [[ "${ARCH}" =~ .*64 ]] ; then
 				SPEC="android64"
 			else
@@ -100,19 +108,18 @@ function buildOpenSSL {
 		local PLATFORM_NAME=${PLATFORM}
 	fi
 	
-	CUSTOM_SPEC="${SPEC}-livecode"
+	# The android-* targets derive the arch from the last portion of the target name
+	# so this needs to be a prefix instead of suffix.
+	CUSTOM_SPEC="livecode_${SPEC}"
 
 	OPENSSL_ARCH_SRC="${OPENSSL_SRC}-${PLATFORM_NAME}-${ARCH}"
-	OPENSSL_ARCH_CONFIG="no-rc5 no-hw shared -DOPENSSL_NO_ASYNC=1 --prefix=${INSTALL_DIR}/${NAME} ${CUSTOM_SPEC} ${EXTRA_OPTIONS}"
+	OPENSSL_ARCH_CONFIG="no-rc5 no-hw no-threads shared -DOPENSSL_NO_ASYNC=1 --prefix=${INSTALL_DIR}/${NAME} ${CUSTOM_SPEC} ${EXTRA_OPTIONS}"
 
 	# Copy the source to a target-specific directory
 	if [ ! -d "${OPENSSL_ARCH_SRC}" ] ; then
 		echo "Duplicating OpenSSL source directory for ${NAME}"
 		cp -r "${OPENSSL_SRC}" "${OPENSSL_ARCH_SRC}"
 	fi
-
-	# Patch the main OpenSSL configuration script to remove a '-mandroid' flag that is incompatible with clang.
-	sed -i.bak -e "s/-mandroid//g" "${OPENSSL_ARCH_SRC}/Configurations/10-main.conf"
 
 	# Get the command used to build a previous copy, if any
 	if [ -e "${OPENSSL_ARCH_SRC}/config.cmd" ] ; then
@@ -127,17 +134,19 @@ function buildOpenSSL {
 
 		# Customise the OpenSSL configuration to ensure variables are exported as functions
 		cat > Configurations/99-livecode.conf << EOF
-%targets = (
+my %targets = (
 "${CUSTOM_SPEC}" => {
 	inherit_from => [ "${SPEC}" ],
-	bn_ops => sub { join(" ",(@_,"EXPORT_VAR_AS_FN")) },
+	bn_ops => add("EXPORT_VAR_AS_FN"),
 },
 );
 EOF
 
+		if [ $CONFIGURE_CC_FOR_TARGET != 0 ] ; then
+			setCCForTarget "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
+		fi
+
 		echo "Configuring OpenSSL for ${NAME}"
-		
-		setCCForTarget "${PLATFORM}" "${ARCH}" "${SUBPLATFORM}"
 		./Configure ${OPENSSL_ARCH_CONFIG}
 		
 		# iOS requires some tweaks to the source when building for devices

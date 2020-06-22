@@ -3074,6 +3074,10 @@ void MCGroup::relayercontrol(MCControl *p_source, MCControl *p_target)
 void MCGroup::relayercontrol_remove(MCControl *p_control)
 {
 	p_control -> remove(controls);
+
+	// make sure this group no longer points to the removed control
+	clearfocus(p_control);
+
 	if (!computeminrect(False))
 		layer_redrawrect(p_control -> geteffectiverect());
 		
