@@ -157,6 +157,7 @@ struct MCEvent
 					uint32_t modifiers;
 					uint32_t key_code;
 					uint32_t char_code;
+					MCEventKeyState state;
 				} press;
 			};
 		} key;
@@ -490,32 +491,37 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
 	case kMCEventTypeKeyPress:
 		{
 			MCStackHandle t_stack = t_event->key.stack;
-            
-            MCObject *t_target = t_menu != nil ? t_menu : t_stack;
+
+			MCObject *t_target = t_menu != nil ? t_menu : t_stack;
 
 			MCmodifierstate = t_event -> key . press . modifiers;
 
-			// If 'char_code' is 0, then this key press has not generated a
-			// character.
+			MCAutoStringRef t_char;
+
 			if (t_event -> key . press . char_code == 0)
 			{
-				t_target -> kdown(kMCEmptyString, t_event -> key . press . key_code);
-				t_target -> kup(kMCEmptyString, t_event -> key . press . key_code);
-				break;
+				// If 'char_code' is 0, then this key press has not generated a
+				// character.
+				t_char = kMCEmptyString;
+			}
+			else
+			{
+				// Otherwise 'char_code' is the unicode codepoint, so first map to
+				// UTF-16 codeunits
+				unichar_t t_unichars[2];
+				uindex_t t_length = 1;
+				if (MCUnicodeCodepointToSurrogates(t_event->key.press.char_code, t_unichars[0], t_unichars[1]))
+					t_length = 2;
+
+				// Now the string is created with the appropriate unicode-capable function
+				MCStringCreateWithChars(t_unichars, t_length, &t_char);
 			}
 
-			// Otherwise 'char_code' is the unicode codepoint, so first map to
-			// UTF-16 codeunits
-			unichar_t t_unichars[2];
-            uindex_t t_length = 1;
-            if (MCUnicodeCodepointToSurrogates(t_event->key.press.char_code, t_unichars[0], t_unichars[1]))
-                t_length = 2;
+			if (t_event->key.press.state == kMCEventKeyStateDown || t_event->key.press.state == kMCEventKeyStatePressed)
+				t_target -> kdown(*t_char, t_event -> key . press . key_code);
 
-			// Now the string is created with the appropriate unicode-capable function
-			MCAutoStringRef t_buffer;
-            MCStringCreateWithChars(t_unichars, t_length, &t_buffer);
-			t_target -> kdown(*t_buffer, t_event -> key . press . key_code);
-			t_target -> kup(*t_buffer, t_event -> key . press . key_code);
+			if (t_event->key.press.state == kMCEventKeyStateUp || t_event->key.press.state == kMCEventKeyStatePressed)
+				t_target -> kup(*t_char, t_event -> key . press . key_code);
 		}
 		break;
 
@@ -1087,7 +1093,7 @@ bool MCEventQueuePostKeyFocus(MCStack *p_stack, bool p_owner)
 }
 
 MC_DLLEXPORT_DEF
-bool MCEventQueuePostKeyPress(MCStack *p_stack, uint32_t p_modifiers, uint32_t p_char_code, uint32_t p_key_code)
+bool MCEventQueuePostKeyPress(MCStack *p_stack, uint32_t p_modifiers, uint32_t p_char_code, uint32_t p_key_code, MCEventKeyState p_key_state)
 {
 	MCEvent *t_event;
 	if (!MCEventQueuePost(kMCEventTypeKeyPress, t_event))
@@ -1097,6 +1103,7 @@ bool MCEventQueuePostKeyPress(MCStack *p_stack, uint32_t p_modifiers, uint32_t p
 	t_event -> key . press . modifiers = p_modifiers;
 	t_event -> key . press . char_code = p_char_code;
 	t_event -> key . press . key_code = p_key_code;
+	t_event -> key . press . state = p_key_state;
 
 	return true;
 }
