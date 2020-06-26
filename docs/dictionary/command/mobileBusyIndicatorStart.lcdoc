@@ -36,7 +36,7 @@ Specifies the message that is to appear on the busy indicator dialog.
 
 opacity:
 Specifies the opacity of the busy indicator, which can lie in the range
-0 - 100. The default value is 42. This option is only available for iOS.
+1 - 100. The default value is 42. This option is only available for iOS.
 
 Description:
 Use the <mobileBusyIndicatorStart> command to show a native busy
