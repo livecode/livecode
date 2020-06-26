@@ -52,5 +52,10 @@ location on the screen. If a location is not specified, then the
 animation is positioned in the middle of the screen. You can turn the
 activity indicator off by calling <iphoneActivityIndicatorStop>.
 
-References: iphoneActivityIndicatorStop (command)
+While this busy indicator is displayed, user input continues to be
+accepted. This is different to the behavior from the indicator 
+displayed by <mobileBusyIndicatorStart>.
+
+References: iphoneActivityIndicatorStop (command),
+mobileBusyIndicatorStart (command)
 
