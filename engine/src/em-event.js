@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 mergeInto(LibraryManager.library, {
 
-	$LiveCodeEvents__deps: ['$LiveCodeAsync', '$LiveCodeDC'],
+	$LiveCodeEvents__deps: ['$LiveCodeAsync', '$LiveCodeDC', '$LiveCodeUtil'],
 	$LiveCodeEvents: {
 
 		// true if ensureInit() has ever been run
@@ -27,54 +27,73 @@ mergeInto(LibraryManager.library, {
 		// contains mouse event data
 		_mouseEvent: null,
 
+		// text element used to capture input events
+		_inputelement: null,
+
 		// This function is used to call a function for each event
 		// type to handler mapping defined for LiveCode on Emscripten.
 		//
-		// The <func> must take two arguments: the event type, and the
-		// handler function used to handle that event type.
+		// The <func> must take three arguments: the event type, the
+		// handler function used to handle that event type, and a
+		// boolean indicating whether the event handler should be
+		// attached to the hidden input control.
 		_eventForEach: function(func) {
 
 			// Master mapping from event types to handler functions.
 			var mapping = [
-				['focus', LiveCodeEvents._handleFocusEvent],
-				['blur', LiveCodeEvents._handleFocusEvent],
+				['focus', LiveCodeEvents._handleFocusEvent, false],
+				['blur', LiveCodeEvents._handleFocusEvent, false],
 
-				['mousemove', LiveCodeEvents._handleMouseEvent],
-				['mousedown', LiveCodeEvents._handleMouseEvent],
-				['mouseup', LiveCodeEvents._handleMouseEvent],
-				['mouseenter', LiveCodeEvents._handleMouseEvent],
-				['mouseleave', LiveCodeEvents._handleMouseEvent],
+				['mousemove', LiveCodeEvents._handleMouseEvent, false],
+				['mousedown', LiveCodeEvents._handleMouseEvent, false],
+				['mouseup', LiveCodeEvents._handleMouseEvent, false],
+				['mouseenter', LiveCodeEvents._handleMouseEvent, false],
+				['mouseleave', LiveCodeEvents._handleMouseEvent, false],
 
-				['keyup', LiveCodeEvents._handleKeyboardEvent],
-				['keydown', LiveCodeEvents._handleKeyboardEvent],
+				['keyup', LiveCodeEvents._handleKeyboardEvent, true],
+				['keydown', LiveCodeEvents._handleKeyboardEvent, true],
 
-				['input', LiveCodeEvents._handleInput],
-				['beforeinput', LiveCodeEvents._handleInput],
+				['input', LiveCodeEvents._handleInput, true],
+				['beforeinput', LiveCodeEvents._handleInput, true],
 
-				['compositionstart', LiveCodeEvents._handleComposition],
-				['compositionupdate', LiveCodeEvents._handleComposition],
-				['compositionend', LiveCodeEvents._handleComposition],
+				['compositionstart', LiveCodeEvents._handleComposition, true],
+				['compositionupdate', LiveCodeEvents._handleComposition, true],
+				['compositionend', LiveCodeEvents._handleComposition, true],
 				
-				['contextmenu', LiveCodeEvents._handleContextMenu],
+				['contextmenu', LiveCodeEvents._handleContextMenu, false],
 			];
 
 			var mapLength = mapping.length;
 			for (var i = 0; i < mapLength; i++) {
-				func(mapping[i][0], mapping[i][1]);
+				func(mapping[i][0], mapping[i][1], mapping[i][2]);
 			}
 		},
 
 		addEventListeners: function(pElement)
 		{
-			LiveCodeEvents._eventForEach(function(type, handler) {
-				pElement.addEventListener(type, handler, true);
+			// Create the hidden input element
+			var tInput = document.createElement('input');
+			tInput.type = 'text';
+			tInput.style.position = 'absolute';
+			tInput.style.zIndex = 0;
+			tInput.style.opacity = 0;
+
+			LiveCodeEvents._inputelement = tInput;
+			document.body.appendChild(tInput);
+
+			LiveCodeEvents._eventForEach(function(type, handler, addToInputField) {
+				if (addToInputField)
+				{
+					tInput.addEventListener(type, function(e){
+						handler(e, pElement);
+					});
+				}
+				else
+					pElement.addEventListener(type, handler, true);
 			});
 
 			// Make sure the canvas is treated as focusable...
 			pElement.tabIndex = 0;
-
-			// Make it a target for text input events
-			pElement.setAttribute('contentEditable', 'true');
 
 			// Force the canvas to use a normal mouse cursor by
 			// default
@@ -87,6 +106,9 @@ mergeInto(LibraryManager.library, {
 			LiveCodeEvents._eventForEach(function (type, handler) {
 				pElement.removeEventListener(type, handler, true);
 			});
+
+			document.body.removeChild(LiveCodeEvents._inputelement);
+			LiveCodeEvents._inputelements = null;
 		},
 		
 		initialize: function() {
@@ -126,11 +148,10 @@ mergeInto(LibraryManager.library, {
 			return LiveCodeEvents._getStackForWindow(window);
 		},
 
-		_encodeModifiers: function(uiEvent) {
+		_encodeModifiers: function(pShift, pAlt, pCtrl, pMeta) {
 			return Module.ccall('MCEmscriptenEventEncodeModifiers', 'number',
 								['number', 'number', 'number', 'number'],
-								[uiEvent.shiftKey, uiEvent.altKey,
-								 uiEvent.ctrlKey, uiEvent.metaKey]);
+								[pShift, pAlt, pCtrl, pMeta]);
 		},
 
 		// ----------------------------------------------------------------
@@ -157,6 +178,9 @@ mergeInto(LibraryManager.library, {
 				case 'focus':
 				case 'focusin':
 					LiveCodeEvents._postKeyFocus(stack, true);
+
+					// direct key events to input element
+					LiveCodeEvents._inputelement.focus();
 					break;
 				case 'blur':
 				case 'focusout':
@@ -507,15 +531,29 @@ mergeInto(LibraryManager.library, {
 						 [stack, modifiers, char_code, key_code, key_state]);
 		},
 
-		_handleKeyboardEvent: function(e) {
+		_handleKeyboardEvent: function(e, pCanvas) {
 			LiveCodeAsync.delay(function() {
 
 				const kKeyStateDown = 0;
 				const kKeyStateUp = 1;
 				const kKeyStatePressed = 2;
 
-				var stack = LiveCodeEvents._getStackForCanvas(e.target);
-				var mods = LiveCodeEvents._encodeModifiers(e);
+				var stack = LiveCodeEvents._getStackForCanvas(pCanvas);
+				/* TODO - reenable alt key detection
+				 * As there is no direct way to tell the difference between an alt+<key>
+				 * combination that produces a different character, and holding alt down
+				 * while typing that character directly, for now we ignore the state of
+				 * the alt key so that typing such characters is possible.
+				 */
+				var mods = LiveCodeEvents._encodeModifiers(e.shiftKey, false, e.ctrlKey, e.metaKey);
+
+				// Ignore alt key presses
+				if (e.key == 'Alt')
+					return;
+				
+				// ignore key events during IME composing
+				if (e.isComposing || e.keyCode === 229)
+					return;
 
 				// ignore events for non-lc elements
 				if (!stack)
@@ -541,6 +579,9 @@ mergeInto(LibraryManager.library, {
 					console.debug('Unexpected keyboard event type: ' + e.type);
 					return;
 				}
+
+				// Clear text input field after capturing key event
+				LiveCodeEvents._inputelement.value = "";
 			});
 			LiveCodeAsync.resume();
 
@@ -562,20 +603,19 @@ mergeInto(LibraryManager.library, {
 						 [stack, enabled, offset, chars, length]);
 		},
 
-		_handleInput: function(inputEvent) {
+		_handleInput: function(inputEvent, pCanvas) {
 			console.debug('Input event: ' + inputEvent.type + ' ' + inputEvent.data);
 		},
 
 		_stringToUTF16: function(string) {
-			var buffer = _malloc(2 * string.length + 2);
-			Module.stringToUTF16(string, buffer, 2*string.length + 2);
+			var buffer = LiveCodeUtil.stringToUTF16(string);
 			return [buffer, string.length];
 		},
 
-		_handleComposition: function(compositionEvent) {
+		_handleComposition: function(compositionEvent, pCanvas) {
 			LiveCodeAsync.delay(function() {
 				// Stack that we're targeting
-				var stack = LiveCodeEvents._getStackForCanvas(compositionEvent.target);
+				var stack = LiveCodeEvents._getStackForCanvas(pCanvas);
 
 				// ignore events for non-lc elements
 				if (!stack)
@@ -589,7 +629,6 @@ mergeInto(LibraryManager.library, {
 						encodedString = LiveCodeEvents._stringToUTF16(compositionEvent.data);
 						chars = encodedString[0];
 						length = encodedString[1];
-						console.debug('Composition event: ' + compositionEvent.type + ' ' + Module.UTF16ToString(chars));
 						LiveCodeEvents._postImeCompose(stack, true, 0, chars, length);
 						_free(chars);
 						break;
@@ -597,9 +636,11 @@ mergeInto(LibraryManager.library, {
 						encodedString = LiveCodeEvents._stringToUTF16(compositionEvent.data);
 						chars = encodedString[0];
 						length = encodedString[1];
-						console.debug('Composition event: ' + compositionEvent.type + ' ' + Module.UTF16ToString(chars));
 						LiveCodeEvents._postImeCompose(stack, false, 0, chars, length);
 						_free(chars);
+
+						// Clear text input field once composition ends
+						LiveCodeEvents._inputelement.value = "";
 						break;
 					default:
 						console.debug('Unexpected composition event type: ' + compositionEvent.type)
@@ -703,7 +744,7 @@ mergeInto(LibraryManager.library, {
 
 				var target = LiveCodeEvents._eventTarget(e);
 				var stack = LiveCodeEvents._getStackForCanvas(target);
-				var mods = LiveCodeEvents._encodeModifiers(e);
+				var mods = LiveCodeEvents._encodeModifiers(e.shiftKey, e.altKey, e.ctrlKey, e.metaKey);
 				var pos = LiveCodeEvents._encodeMouseCoordinates(e);
 
 				// ignore events for non-lc elements
