@@ -11,6 +11,8 @@ Plays a movie or sound.
 
 Introduced: 1.0
 
+Deprecated: 8.1
+
 OS: mac, windows, linux, ios
 
 Platforms: desktop, server, mobile
@@ -102,6 +104,12 @@ by using the put <command> :
 > and <videoClip> for details. To play a wider variety of formats, 
 > use a <player> object.
 
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode. The 
+Windows build of LiveCode no longer supports any <QuickTime> features. 
+Additionally <QuickTime> does not include 64 bit support and therefore 
+can not be supported on OS X 64-bit builds of LiveCode.
+
 References: audioClip (object), beep (command), callbacks (property), 
 command (glossary), current card (glossary), currentTime (property), 
 dontRefresh (property), environment variable (glossary), 
@@ -110,10 +118,10 @@ import (command), iphoneSetAudioCategory (command), looping (property),
 MCISendString (function), message (glossary), 
 playDestination (property), player (object), playLoudness (property), 
 playRate (property), playStarted (message), playStopped (message), 
-prepare (command), QTVersion (function), result (function), 
-return (glossary), revStopAnimation (command), showSelection (property), 
-sound (function), start (command), stop (command), Unix (glossary), 
-videoClip (object)
+prepare (command), QTVersion (function),  QuickTime (glossary), 
+result (function), return (glossary), revStopAnimation (command), 
+showSelection (property), sound (function), start (command), 
+stop (command), Unix (glossary), videoClip (object)
 
 Tags: multimedia
 
