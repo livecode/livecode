@@ -74,6 +74,7 @@ The following additional packages should be installed before building:
 * pkg-config
 * libgtk2.0-dev
 * zip
+* libpango1.0-dev
 
 
 Use 
@@ -81,6 +82,6 @@ Use
     sudo apt-get install build-essential automake libtool gawk git curl flex &&
     sudo apt-get install bison libx11-dev libxext-dev libxrender-dev libxft-dev &&
     sudo apt-get install libxinerama-dev libxv-dev libxcursor-dev libfreetype6-dev && 
-    sudo apt-get install libpopt-dev libesd0-dev liblcms2-dev pkg-config libgtk2.0-dev zip
+    sudo apt-get install libpopt-dev libesd0-dev liblcms2-dev pkg-config libgtk2.0-dev zip libpango1.0-dev
 
 or equivalent in order to assure all the necessary dependencies are installed on your machine.
