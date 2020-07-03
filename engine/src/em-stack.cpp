@@ -149,6 +149,13 @@ MCStack::view_platform_setgeom(const MCRectangle &p_rect)
 	return t_old;
 }
 
+MCRectangle MCStack::view_platform_getwindowrect() const
+{
+	uint32_t t_window = reinterpret_cast<uint32_t>(window);
+
+	return MCEmscriptenGetWindowRect(t_window);
+}
+
 /* ================================================================
  * Stub functions
  * ================================================================ */
