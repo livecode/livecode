@@ -11,8 +11,6 @@ Plays a movie or sound.
 
 Introduced: 1.0
 
-Deprecated: 8.1
-
 OS: mac, windows, linux, ios
 
 Platforms: desktop, server, mobile
@@ -105,10 +103,9 @@ by using the put <command> :
 > use a <player> object.
 
 Changes:
-The use of <QuickTime> was deprecated in version 8.1 of LiveCode. The 
-Windows build of LiveCode no longer supports any <QuickTime> features. 
-Additionally <QuickTime> does not include 64 bit support and therefore 
-can not be supported on OS X 64-bit builds of LiveCode.
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode. As
+the `play videoClip ..` form of the <play> command was relying on 
+<QuickTime>, it is no longer supported.
 
 References: audioClip (object), beep (command), callbacks (property), 
 command (glossary), current card (glossary), currentTime (property), 
