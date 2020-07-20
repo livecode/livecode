@@ -1,0 +1,1 @@
+# Fix crash when relayering focused control into group
