@@ -1441,6 +1441,8 @@ void MCRedrawDoUpdateScreen(void)
 {
 	if (MClockscreen != 0)
 		return;
+	
+	MCscreen->updateIME();
 
 	if (!s_screen_is_dirty)
 		return;

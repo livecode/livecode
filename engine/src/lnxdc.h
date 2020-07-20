@@ -352,8 +352,7 @@ public:
     virtual void clearIME(Window w);
     virtual void configureIME(int32_t x, int32_t y);
 	virtual void activateIME(Boolean activate);
-	//virtual void closeIME();
-    
+	
     virtual bool loadfont(MCStringRef p_path, bool p_globally, void*& r_loaded_font_handle);
     virtual bool unloadfont(MCStringRef p_path, bool p_globally, void *r_loaded_font_handle);
 

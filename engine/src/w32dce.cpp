@@ -714,9 +714,6 @@ char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 }
 */
 
-void MCScreenDC::openIME()
-{}
-
 void MCScreenDC::activateIME(Boolean activate)
 {}
 
@@ -727,5 +724,3 @@ void MCScreenDC::clearIME(Window w)
 	ImmReleaseContext((HWND)w->handle.window,hIMC);
 }
 
-void MCScreenDC::closeIME()
-{}

@@ -283,10 +283,8 @@ public:
 //	virtual char *charsettofontname(uint1 chharset, const char *oldfontname);
 	virtual uint1 fontnametocharset(MCStringRef p_fontname);
 	virtual void clearIME(Window w);
-	virtual void openIME();
 	virtual void activateIME(Boolean activate);
-	virtual void closeIME();
-
+	
 	virtual void enablebackdrop(bool p_hard);
 	virtual void disablebackdrop(bool p_hard);
 

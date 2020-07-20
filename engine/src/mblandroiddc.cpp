@@ -639,10 +639,6 @@ void MCScreenDC::pingwait(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::openIME()
-{
-}
-
 extern int32_t MCInterfaceAndroidKeyboardEnumFromMCExecEnum(MCInterfaceKeyboardType p_type);
 extern int32_t MCInterfaceAndroidReturnKeyTypeEnumFromMCExecEnum(MCInterfaceReturnKeyType p_type);
 void MCScreenDC::activateIME(Boolean activate)
@@ -670,10 +666,6 @@ void MCScreenDC::activateIME(Boolean activate)
     }
     
     MCAndroidEngineRemoteCall("setTextInputVisible", "vbii", nil, activate, t_keyboard_type, t_return_key_type);
-}
-
-void MCScreenDC::closeIME()
-{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

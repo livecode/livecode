@@ -926,20 +926,12 @@ void MCScreenDC::clearIME(Window w)
 	MCPlatformResetTextInputInWindow(MCactivefield -> getstack() -> getwindow());
 }
 
-void MCScreenDC::openIME()
-{
-}
-
 void MCScreenDC::activateIME(Boolean activate)
 {
 	if (!MCactivefield)
 		return;
 	
 	MCPlatformConfigureTextInputInWindow(MCactivefield -> getstack() -> getwindow(), activate);
-}
-
-void MCScreenDC::closeIME()
-{
 }
 
 ////////////////////////////////////////////////////////////////////////////////

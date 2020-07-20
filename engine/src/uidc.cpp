@@ -335,6 +335,9 @@ MCUIDC::MCUIDC()
 	m_runloop_actions = nil;
     
     m_modal_loops = NULL;
+	
+	m_ime_activate = false;
+	m_pending_ime_activate = false;
 }
 
 MCUIDC::~MCUIDC()
@@ -1114,16 +1117,27 @@ uint1 MCUIDC::fontnametocharset(MCStringRef p_fontname)
 	return 0;
 }
 
-void MCUIDC::openIME()
-{}
 void MCUIDC::activateIME(Boolean activate)
 {}
 void MCUIDC::clearIME(Window w)
 {}
-void MCUIDC::closeIME()
-{}
 void MCUIDC::configureIME(int32_t x, int32_t y)
 {}
+
+void MCUIDC::updateIME()
+{
+	if (m_pending_ime_activate)
+	{
+		m_pending_ime_activate = false;
+		activateIME(m_ime_activate);
+	}
+}
+
+void MCUIDC::pendingIME(bool p_activate)
+{
+	m_pending_ime_activate = true;
+	m_ime_activate = p_activate;
+}
 
 void MCUIDC::updatemenubar(Boolean force)
 {

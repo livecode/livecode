@@ -372,6 +372,8 @@ protected:
 	// IM-2014-03-06: [[ revBrowserCEF ]] List of actions to run during the runloop
 	MCRunloopAction *m_runloop_actions;
 	
+	bool m_ime_activate;
+	bool m_pending_ime_activate;
 public:
 	MCColor white_pixel;
 	MCColor black_pixel;
@@ -594,9 +596,9 @@ public:
 	
 	virtual void clearIME(Window w);
     virtual void configureIME(int32_t x, int32_t y);
-	virtual void openIME();
 	virtual void activateIME(Boolean activate);
-	virtual void closeIME();
+	void pendingIME(bool activate);
+	void updateIME();
 
 	virtual void seticon(uint4 p_icon);
 	virtual void seticonmenu(MCStringRef p_menu);

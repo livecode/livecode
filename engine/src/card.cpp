@@ -66,6 +66,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "stackfileformat.h"
 
+#include "mode.h"
+
 MCRectangle MCCard::selrect;
 int2 MCCard::startx;
 int2 MCCard::starty;
@@ -804,7 +806,7 @@ Boolean MCCard::mdown(uint2 which)
 #ifdef _MOBILE
 				// Make sure the IME has gone away on mobile if due to an explicit card
 				// click.
-				MCscreen -> closeIME();
+				MCModeActivateIme(getstack(), false);
 #endif
 				message_with_valueref_args(MCM_mouse_down, MCSTR("1"));
 				if (!(MCbuttonstate & (0x1L << (which - 1))))
