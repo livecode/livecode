@@ -682,7 +682,12 @@ bool MCSessionGenerateID(MCStringRef &r_id)
 	t_remote_addr = NULL;
 
 	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
-		t_remote_addr = MCStringGetCString(*t_remote_addr_string);
+    {
+        MCAutoStringRefAsCString t_cstr_remote_addr_string;
+        t_cstr_remote_addr_string.Lock(*t_remote_addr_string);
+        t_remote_addr = *t_cstr_remote_addr_string;
+    }
+		
 		
 	time_t t_time;
 	time(&t_time);

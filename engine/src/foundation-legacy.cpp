@@ -658,9 +658,11 @@ bool MCStringToInteger(MCStringRef p_string, integer_t& r_integer)
 	t_end = nil;
 	
 	integer_t t_value;
-	t_value = strtol(MCStringGetCString(p_string), &t_end, 10);
+    MCAutoStringRefAsCString t_string;
+    t_string.Lock(p_string);
+    t_value = strtol(*t_string, &t_end, 10);
 	
-	if (t_end != MCStringGetCString(p_string) + strlen(MCStringGetCString(p_string)))
+	if (t_end != *t_string + strlen(*t_string))
 		return false;
 	
 	r_integer = t_value;
@@ -1171,7 +1173,9 @@ static uint32_t measure_array_entry(MCNameRef p_key, MCValueRef p_value)
 	//   * bytes - C string of key
 
 	uint32_t t_size;
-	t_size = 1 + 4 + MCCStringLength(MCStringGetCString(MCNameGetString(p_key))) + 1;
+    MCAutoStringRefAsCString t_key_string;
+    t_key_string.Lock(MCNameGetString(p_key));
+	t_size = 1 + 4 + MCCStringLength(*t_key_string) + 1;
 	switch(MCValueGetTypeCode(p_value))
 	{
 	case kMCValueTypeCodeNull:

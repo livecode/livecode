@@ -141,7 +141,10 @@ static bool GetFileForContext(MCExecContext &ctxt, MCStringRef &r_file)
 bool MCServerDebugConnect(MCStringRef p_site, MCStringRef p_url)
 {
 #ifdef _IREVIAM
-	s_debugging = IreviamDebuggerConnect(MCStringGetCString(p_site), MCStringGetCString(p_url));
+    MCAutoStringRefAsCString t_cstr_site, t_cstr_url;
+    t_cstr_site.Lock(p_site);
+    t_cstr_url.Lock(p_url);
+	s_debugging = IreviamDebuggerConnect(*t_cstr_site, *t_cstr_url);
 	if (s_debugging)
 	{
 		MCservererrormode = kMCSErrorModeDebugger;

@@ -226,7 +226,9 @@ static bool path_to_dataref(MCStringRef p_path, DataReferenceRecord& r_rec)
 {
 	bool t_success = true;
 	CFStringRef t_cf_path = NULL;
-	t_cf_path = CFStringCreateWithCString(NULL, MCStringGetCString(p_path), kCFStringEncodingWindowsLatin1);
+    MCAutoStringRefAsCString t_path_string;
+    t_path_string.Lock(p_path);
+	t_cf_path = CFStringCreateWithCString(NULL, *t_path_string, kCFStringEncodingWindowsLatin1);
 	t_success = (t_cf_path != NULL);
 	if (t_success)
 	{

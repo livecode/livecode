@@ -847,9 +847,19 @@ static void cgi_fix_path_variables()
     //  the appropriate shebang pointing to the LiveCode server, PATH_TRANSLATED is not set by Apache.
     //  The current file (stored in SCRIPT_FILENAME) is the one containing the script.
 	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), env))
-		t_path = strdup(MCStringGetCString(env));
+    {
+        MCAutoStringRefAsCString t_env_string;
+        t_env_string.Lock(env);
+        t_path = strdup(*t_env_string);
+    }
+		
     else if (MCS_getenv(MCSTR("SCRIPT_FILENAME"), env))
-        t_path = strdup(MCStringGetCString(env));
+    {
+        MCAutoStringRefAsCString t_env_string;
+        t_env_string.Lock(env);
+        t_path = strdup(*t_env_string);
+    }
+    
 
     // SN-2015-02-11: [[ Bug 14457 ]] We want to split PATH_TRANSLATED
     //  between what is the real filename (into PATH_TRANSLATED)
@@ -990,7 +1000,11 @@ static bool cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 	if (MCS_getenv(MCSTR("CONTENT_LENGTH"), &t_content_length))
 	{
 		uint32_t t_length;
-		t_length = atoi(MCStringGetCString(*t_content_length));
+        
+        MCAutoStringRefAsCString t_content_length_cstr;
+        t_content_length_cstr.Lock(*t_content_length);
+		
+        t_length = atoi(*t_content_length_cstr);
 		
 		uint32_t t_read = 0;
 		
@@ -1119,7 +1133,12 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	t_success = MCStringFirstIndexOfChar(*t_content_type, ';', 0, kMCStringOptionCompareExact, t_index);
 
 	if (t_success)
-		t_success = MCMultiPartParseHeaderParams(MCStringGetCString(*t_content_type) + t_index + 1, t_names, t_values, t_param_count);
+    {
+        MCAutoStringRefAsCString t_content_type_cstr;
+        t_content_type_cstr.Lock(*t_content_type);
+        t_success = MCMultiPartParseHeaderParams(*t_content_type_cstr + t_index + 1, t_names, t_values, t_param_count);
+    }
+		
 
 	r_boundary = NULL;
 	
@@ -1768,7 +1787,9 @@ static bool cgi_send_cookies(void)
 			t_success = MCD_convert(ctxt, *t_num, CF_SECONDS, CF_UNDEFINED, CF_INTERNET_DATE, CF_UNDEFINED, &t_string);
 			if (t_success)
 			{
-				t_success = MCCStringAppendFormat(t_cookie_header, "; Expires=%s", MCStringGetCString(*t_string));
+                MCAutoStringRefAsCString t_cstr_string;
+                t_cstr_string.Lock(*t_string);
+				t_success = MCCStringAppendFormat(t_cookie_header, "; Expires=%s", *t_cstr_string);
 			}
 		}
 		

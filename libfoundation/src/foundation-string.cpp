@@ -255,23 +255,6 @@ bool MCStringCreateWithCStringAndRelease(char* p_cstring, MCStringRef& r_string)
     return false;
 }
 
-MC_DLLEXPORT_DEF
-const char *MCStringGetCString(MCStringRef p_string)
-{
-    if (p_string == nil)
-        return nil;
-
-    __MCAssertIsString(p_string);
-    
-    MCStringNativize(p_string);
-    
-	const char *t_cstring;
-	t_cstring = (const char *)MCStringGetNativeCharPtr(p_string);
-	
-	MCAssert(t_cstring != nil);
-    
-	return t_cstring;
-}
 
 MC_DLLEXPORT_DEF
 bool MCStringIsEqualToCString(MCStringRef p_string, const char *p_cstring, MCStringOptions p_options)
