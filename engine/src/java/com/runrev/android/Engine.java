@@ -2234,10 +2234,12 @@ public class Engine extends View implements EngineApi
 					
 					/* In API Level >= 24, you have to use an input stream to make sure that access
 					 * to a photo in the library is granted. Before that you can just open the photo's
-					 * file direct. */
+					 * file directly. */
 					ExifInterface t_exif;
 					if (Build.VERSION.SDK_INT >= 24)
 					{
+						t_in.close();
+						t_in = ((LiveCodeActivity)getContext()).getContentResolver().openInputStream(t_photo_uri);
 						t_exif = new ExifInterface(t_in);
 					}
 					else
