@@ -2383,14 +2383,12 @@ void MCInterfaceExecShowTaskBar(MCExecContext& ctxt);
 
 void MCInterfaceExecPopupWidget(MCExecContext &ctxt, MCNameRef p_kind, MCPoint *p_at, MCArrayRef p_properties);
 void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint *p_at);
-void MCInterfaceExecDrawerStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned);
-void MCInterfaceExecDrawerStackByName(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned);
-void MCInterfaceExecDrawerStackLegacy(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned);
-void MCInterfaceExecDrawerStackByNameLegacy(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned);
-void MCInterfaceExecSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack);
-void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack);
-void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode);
-void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_target, int p_mode);
+void MCInterfaceExecDrawerStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned, bool p_wait_while_open);
+void MCInterfaceExecDrawerStackByName(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack, int p_at, int p_aligned, bool p_wait_while_open);
+void MCInterfaceExecSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack, bool p_wait_while_open);
+void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_target, MCNameRef parent, bool p_parent_is_thisstack, bool p_wait_while_open);
+void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode, bool p_wait_while_open);
+void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_target, int p_mode, bool p_wait_while_open);
 void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *p_at, int p_mode);
 void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCNameRef p_target, MCPoint *p_at, int p_mode);
 
