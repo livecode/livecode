@@ -114,9 +114,14 @@ mergeInto(LibraryManager.library, {
 			// Create the hidden input element
 			var tInput = document.createElement('input');
 			tInput.type = 'text';
-			tInput.style.position = 'absolute';
+			tInput.style.position = 'fixed';
+			tInput.style.display = 'block';
 			tInput.style.zIndex = 0;
 			tInput.style.opacity = 0;
+			tInput.style.setProperty('left', '0px', 'important');
+			tInput.style.setProperty('top', '0px', 'important');
+			tInput.style.setProperty('width', '1px', 'important');
+			tInput.style.setProperty('height', '1px', 'important');
 
 			LiveCodeEvents._inputelement = tInput;
 			document.body.appendChild(tInput);
