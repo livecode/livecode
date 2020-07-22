@@ -4335,7 +4335,7 @@ void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, int p_mode, bool p_this_stack, MCInterfaceExecGoVisibility p_visibility_type)
+void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, int p_mode, bool p_this_stack, MCInterfaceExecGoVisibility p_visibility_type, bool p_wait_while_open)
 {
 	
 	if (p_card == nil)
@@ -4549,14 +4549,14 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 		ctxt . Throw();
 }
 
-void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, MCInterfaceExecGoVisibility p_visibility_type, bool p_this_stack)
+void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, MCInterfaceExecGoVisibility p_visibility_type, bool p_this_stack, bool p_wait_while_open)
 {
-	MCInterfaceExecGo(ctxt, p_card, nil, p_mode, p_this_stack, p_visibility_type);
+	MCInterfaceExecGo(ctxt, p_card, nil, p_mode, p_this_stack, p_visibility_type, p_wait_while_open);
 }
 
 void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, MCInterfaceExecGoVisibility p_visibility_type, bool p_this_stack)
 {
-	MCInterfaceExecGo(ctxt, p_card, p_window, WM_MODELESS, p_this_stack, p_visibility_type);
+	MCInterfaceExecGo(ctxt, p_card, p_window, WM_MODELESS, p_this_stack, p_visibility_type, false);
 }
 
 void MCInterfaceExecGoRecentCard(MCExecContext& ctxt)
@@ -4582,7 +4582,7 @@ void MCInterfaceExecGoHome(MCExecContext& ctxt, MCCard *p_card)
 		MCdefaultstackptr->close();
 		MCdefaultstackptr->checkdestroy();
 	}
-	MCInterfaceExecGo(ctxt, p_card, nil, 0, false, kMCInterfaceExecGoVisibilityImplicit);
+	MCInterfaceExecGo(ctxt, p_card, nil, 0, false, kMCInterfaceExecGoVisibilityImplicit, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

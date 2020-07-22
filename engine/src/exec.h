@@ -2453,7 +2453,7 @@ enum MCInterfaceExecGoVisibility
 	kMCInterfaceExecGoVisibilityExplicitVisible,
 	kMCInterfaceExecGoVisibilityExplicitInvisible
 };
-void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, MCInterfaceExecGoVisibility p_visibility_type, bool p_this_stack);
+void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, MCInterfaceExecGoVisibility p_visibility_type, bool p_this_stack, bool p_wait_while_open);
 void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, MCInterfaceExecGoVisibility p_visibility_type, bool p_this_stack);
 void MCInterfaceExecGoRecentCard(MCExecContext& ctxt);
 void MCInterfaceExecGoCardRelative(MCExecContext& ctxt, bool p_forward, real8 p_amount);

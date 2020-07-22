@@ -204,6 +204,19 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 						(PE_GO_NOMODE, sp);
 						return PS_ERROR;
 					}
+					
+					if (mode == WM_MODAL || mode == WM_SHEET)
+					{
+						if ((sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL) &&
+							(sp.skip_token(SP_MOVE, TT_UNDEFINED, MM_WAITING) == PS_NORMAL))
+						{
+							m_wait_while_open = false;
+						}
+						else
+						{
+							m_wait_while_open = true;
+						}
+					}
 				}
 				else
 				{
@@ -748,7 +761,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 	else if (window != nil)
 		MCInterfaceExecGoCardInWindow(ctxt, cptr, *t_window, visibility_type, thisstack == True);
 	else
-        MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visibility_type, thisstack == True);
+        MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visibility_type, thisstack == True, m_wait_while_open);
 }
 
 MCHide::~MCHide()

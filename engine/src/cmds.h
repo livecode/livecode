@@ -1769,6 +1769,7 @@ class MCGo : public MCStatement
 	
 	MCChunk *widget;
 	Chunk_term direction;
+	bool m_wait_while_open;
 public:
     MCGo() :
         background(nil),
@@ -1780,7 +1781,8 @@ public:
         visibility_type(kMCInterfaceExecGoVisibilityImplicit),
         thisstack(False),
 		widget(nil),
-        direction(CT_BACKWARD)
+        direction(CT_BACKWARD),
+		m_wait_while_open(false)
     {
         ;
     };
