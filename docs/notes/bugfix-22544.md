@@ -1,0 +1,1 @@
+# Enabled right-click context menu in browser widget on Windows & Linux
