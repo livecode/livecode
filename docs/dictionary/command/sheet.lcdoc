@@ -2,7 +2,7 @@ Name: sheet
 
 Type: command
 
-Syntax: sheet <stack> [in <parentStack>]
+Syntax: sheet <stack> [in <parentStack>] [without waiting]
 
 Summary:
 Displays a <stack> as a <sheet|sheet dialog box>.
@@ -18,6 +18,9 @@ sheet stack "myFilePickerStack"
 
 Example:
 sheet me in stack "project1"
+
+Example:
+sheet stack "ColorPicker" without waiting
 
 Parameters:
 stack:
@@ -51,13 +54,13 @@ want to prevent the close <message|messages> from being sent; the open
 <message|messages> are sent regardless of the setting of the
 <lockMessages> <property>.
 
-The <sheet> <command> pauses the running <handler> until the
-<sheet(command)> is dismissed (usually by clicking a button in the
-<sheet(command)>). To <return> information to the <handler> about which
-<button(keyword)> was clicked, in the <button(object)|button's>
-<script>, set a <global|global variable> or <custom property>. After the
-<dialog box> is dismissed, the <handler> can query this <variable> or
-<property> and act accordingly.
+Unless the without waiting clause is used the <sheet> <command> pauses
+the running <handler> until the <sheet(command)> is dismissed (usually
+by clicking a button in the <sheet(command)>). To <return> information
+to the <handler> about which <button(keyword)> was clicked, in the
+<button(object)|button's> <script>, set a <global|global variable> or
+<custom property>. After the <dialog box> is dismissed, the <handler> can
+query this <variable> or <property> and act accordingly.
 
 Attempting to open a sheet from within another sheet displays the second
 <stack> as a <modal dialog box> instead.

@@ -4,7 +4,7 @@ Synonyms: open
 
 Type: command
 
-Syntax: go [{visible | invisible}] [to] <card> [of <stack>] [{as <mode> |in [a] new window|in <window>}]
+Syntax: go [{visible | invisible}] [to] <card> [of <stack>] [{as <mode> [without waiting]|in [a] new window|in <window>}]
 
 Syntax: go [{visible | invisible}] [to] {first | prev[ious]| next | last | any} [marked] [<card>]
 
@@ -48,6 +48,9 @@ set the defaultFolder to tStackFolder
 go stack "somethingElse.livecode"
 -- "somethingElse" being the name of a stack file in the same folder
 
+Example:
+go stack "EditRecord" as modal without waiting
+
 Parameters:
 card:
 Any card reference. Cards can be described by their name, number, or ID
@@ -60,13 +63,13 @@ command opens the main stack of the specified stack file.
 
 mode (enum):
 
--   editable window
--   palette
--   modal dialog box
--   modeless dialog box 
--   sheet dialog box - appears in <defaultStack(property)>
--   drawer - appears in <defaultStack(property)>, centered at left 
-    side if there's room 
+- toplevel: editable window
+- palette
+- modal: dialog box
+- modeless: dialog box 
+- sheet: dialog box - appears in <defaultStack(property)>
+- drawer: appears in <defaultStack(property)>, centered at left 
+  side if there's room 
 
 
 window:
