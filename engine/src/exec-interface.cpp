@@ -1611,7 +1611,7 @@ void MCInterfaceExecPopToLast(MCExecContext& ctxt)
 	Boolean oldtrace = MCtrace;
 	MCtrace = False;
 	if (sptr->setcard(cptr, True, False) == ES_NORMAL
-		        && sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE) == ES_NORMAL)
+		        && sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE, false) == ES_NORMAL)
 	{
 		MCtrace = oldtrace;
 		return;
@@ -1824,7 +1824,7 @@ static void MCInterfaceRevertStack(MCExecContext& ctxt, MCStack *p_stack)
         p_stack -> scheduledelete();
         p_stack = MCdispatcher->findstackname(*t_name);
         if (p_stack != NULL)
-            p_stack->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
+            p_stack->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE, oldmode == WM_MODAL || oldmode == WM_SHEET);
     }
     else
         ctxt . Throw();
@@ -2814,7 +2814,7 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 		added = True;
 	}
     
-	if (p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned) != ES_NORMAL)
+	if (p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned, p_wait_while_open) != ES_NORMAL)
     {
         ctxt.Throw();
     }
@@ -4493,7 +4493,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 #endif	
 	
 	if (t_stack->setcard(p_card, True, True) == ES_ERROR
-	        || t_stack->openrect(rel, wm, parentptr, WP_DEFAULT, OP_NONE) == ES_ERROR)
+	        || t_stack->openrect(rel, wm, parentptr, WP_DEFAULT, OP_NONE,p_wait_while_open) == ES_ERROR)
 	{
 		MCtrace = oldtrace;
 		stat = ES_ERROR;

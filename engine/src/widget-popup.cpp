@@ -148,7 +148,7 @@ public:
 		MCdispatcher -> addmenu(this);
 		m_widget->setrect(MCRectangleMake(0, 0, t_width, t_height));
 		
-		return ES_NORMAL == openrect(MCRectangleMake(p_at.x, p_at.y, t_width, t_height), WM_POPUP, NULL, WP_ASRECT, OP_NONE);
+		return ES_NORMAL == openrect(MCRectangleMake(p_at.x, p_at.y, t_width, t_height), WM_POPUP, NULL, WP_ASRECT, OP_NONE, false);
 	}
 	
 	const MCWidget *getpopupwidget() const

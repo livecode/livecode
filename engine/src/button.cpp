@@ -2804,7 +2804,7 @@ void MCButton::openmenu(Boolean grab)
 			menu->menuset(menuhistory, rect.height >> 1);
 		}
 
-		menu->openrect(rel, (Window_mode)menumode, NULL, WP_DEFAULT, OP_NONE);
+		menu->openrect(rel, (Window_mode)menumode, NULL, WP_DEFAULT, OP_NONE, false);
 		menu->mode_openasmenu(t_did_grab ? sptr : NULL);
 		
 		// MW-2014-03-11: [[ Bug 11893 ]] Make sure we don't do anything to a stack panel.

@@ -219,7 +219,7 @@ void MCCardlist::gorel(int2 offset)
 	if (sptr != MCdefaultstackptr && MCdefaultstackptr->hcstack())
 		MCdefaultstackptr->close();
 	sptr->setcard(cards->card, False, False);
-	sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE);
+	sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE, false);
 	MCdefaultstackptr = sptr;
 }
 
@@ -249,7 +249,7 @@ void MCCardlist::godirect(Boolean start)
 	if (sptr != MCdefaultstackptr && MCdefaultstackptr->hcstack())
 		MCdefaultstackptr->close();
 	sptr->setcard(cards->card, False, False);
-	sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE);
+	sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE, false);
 	MCdefaultstackptr = sptr;
 }
 

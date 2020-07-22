@@ -487,7 +487,7 @@ void MCImage::startmag(int2 x, int2 y)
 	MCRectangle trect = MCU_intersect_rect(rect, getcard()->getrect());
 	magrect = MCU_bound_rect(magrect, trect.x - rect.x, trect.y - rect.y,
 	                         trect.width, trect.height);
-	sptr->openrect(getstack()->getrect(), WM_PALETTE, NULL, WP_DEFAULT, OP_NONE);
+	sptr->openrect(getstack()->getrect(), WM_PALETTE, NULL, WP_DEFAULT, OP_NONE, false);
 	MCscreen->addtimer(this, MCM_internal2, MCmovespeed);
 }
 

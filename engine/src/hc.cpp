@@ -2505,7 +2505,7 @@ IO_stat hc_import(MCStringRef name, IO_handle stream, MCStack *&sptr)
 		{
 			sptr->open();
 			tptr->openrect(MCdefaultstackptr->getrect(), WM_MODELESS,
-			               NULL, WP_DEFAULT, OP_NONE);
+			               NULL, WP_DEFAULT, OP_NONE, false);
 		}
 	}
 	return stat;

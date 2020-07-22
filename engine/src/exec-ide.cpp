@@ -57,7 +57,7 @@ void MCIdeExecShowMessageBox(MCExecContext& ctxt)
 
 	// MW-2007-08-14: [[ Bug 3310 ]] - "show message box" toplevels rather than palettes
 	if (mb != NULL)
-		mb->openrect(ctxt . GetObject()->getstack()->getrect(), WM_PALETTE, NULL, WP_DEFAULT, OP_NONE);
+		mb->openrect(ctxt . GetObject()->getstack()->getrect(), WM_PALETTE, NULL, WP_DEFAULT, OP_NONE, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
