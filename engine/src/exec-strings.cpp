@@ -739,14 +739,18 @@ void MCStringsEvalMatchText(MCExecContext& ctxt, MCStringRef p_string, MCStringR
 {
     regexp* t_compiled = nil;
 
-    if (!MCStringsCompilePattern(p_pattern, t_compiled, true /* casesensitive */))
+    MCAutoStringRef t_normalized_pattern, t_normalized_string;
+    MCStringNormalizedCopyNFC(p_pattern, &t_normalized_pattern);
+    MCStringNormalizedCopyNFC(p_string, &t_normalized_string);
+
+    if (!MCStringsCompilePattern(*t_normalized_pattern, t_compiled, true /* casesensitive */))
     {
         ctxt.LegacyThrow(EE_MATCH_BADPATTERN);
         return;
     }
     
     bool t_success = true;
-    r_match = 0 != MCR_exec(t_compiled, p_string, MCRangeMake(0, MCStringGetLength(p_string)));
+    r_match = 0 != MCR_exec(t_compiled, *t_normalized_string, MCRangeMake(0, MCStringGetLength(*t_normalized_string)));
     uindex_t t_match_index = 1;
     
     for (uindex_t i = 0; t_success && i < p_result_count; i++)
@@ -756,7 +760,7 @@ void MCStringsEvalMatchText(MCExecContext& ctxt, MCStringRef p_string, MCStringR
             uindex_t t_start, t_length;
             t_start = t_compiled->matchinfo[t_match_index].rm_so;
             t_length = t_compiled->matchinfo[t_match_index].rm_eo - t_start;
-            t_success = MCStringCopySubstring(p_string, MCRangeMake(t_start, t_length), r_results[i]);
+            t_success = MCStringCopySubstring(*t_normalized_string, MCRangeMake(t_start, t_length), r_results[i]);
         }
         else
             r_results[i] = MCValueRetain(kMCEmptyString);
