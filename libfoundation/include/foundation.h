@@ -1025,11 +1025,11 @@ extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 
 #else
 
-#define MCAssert(expr) (void) (expr)
+#define MCAssert(expr)  (void)(0 ? (expr) : 0)
 
-#define MCLog(...) (void) (__VA_ARGS__)
+#define MCLog(...) (void)(0 ? (__VA_ARGS__) : 0)
 
-#define MCLogWithTrace(...) (void) (__VA_ARGS__)
+#define MCLogWithTrace(...) (void)(0 ? (__VA_ARGS__) : 0)
 
 #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >  4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5)))
 
