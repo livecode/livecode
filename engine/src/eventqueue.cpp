@@ -1261,12 +1261,17 @@ static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p
          * is ending or cancelling a touch. */
         if (t_touch != nil)
         {
-            t_target = t_touch -> target;
-            
+			if ((t_touch -> target).IsValid())
+			{
+				t_target = t_touch -> target;
+			}
+			
             // MW-2011-09-05: [[ Bug 9683 ]] Make sure we remove (and delete the touch) here if
             //   it is 'end' or 'cancelled' so that a cleartouches inside an invoked handler
             //   doesn't cause a crash.			
-            if (p_phase == kMCEventTouchPhaseEnded || p_phase == kMCEventTouchPhaseCancelled)
+            if (p_phase == kMCEventTouchPhaseEnded ||
+				p_phase == kMCEventTouchPhaseCancelled ||
+				!(t_touch -> target).IsValid())
             {
                 if (t_previous_touch == nil)
                     s_touches = t_touch -> next;
