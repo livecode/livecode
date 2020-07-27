@@ -618,7 +618,7 @@ def validate_android_tools(opts):
         opts['ANDROID_NDK_PLATFORM_VERSION'] = '16'
 
     if opts['ANDROID_API_VERSION'] is None:
-        opts['ANDROID_API_VERSION'] = '28'
+        opts['ANDROID_API_VERSION'] = '29'
      
     api_ver = opts['ANDROID_API_VERSION']
 

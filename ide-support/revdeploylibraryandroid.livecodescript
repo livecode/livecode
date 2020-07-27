@@ -212,7 +212,7 @@ function deployIsValidJDK pPath
    return true
 end deployIsValidJDK
 
-constant kDeployAndroidTargetSDK = "28"
+constant kDeployAndroidTargetSDK = "29"
 function deployTargetSdkVersion
    return kDeployAndroidTargetSDK
 end deployTargetSdkVersion
