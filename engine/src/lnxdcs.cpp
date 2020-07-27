@@ -55,6 +55,7 @@ namespace x11
 {
 #include <X11/extensions/Xv.h>
 #include <X11/extensions/Xvlib.h>
+#include <X11/cursorfont.h>
 }
 
 #include <gdk/gdkkeysyms.h>
@@ -1072,7 +1073,8 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
     if (window == 0 && r.x == -32768)
     {
         // Switch to a box drawing cursor and take control of the pointer
-        GdkCursor *t_cursor = gdk_cursor_new(GDK_PLUS);
+//        x11::Cursor t_cursor = x11::XCreateFontCursor(x11::gdk_x11_display_get_xdisplay(dpy), XC_plus);
+        GdkCursor *t_cursor = gdk_cursor_new_from_name(dpy, "crosshair");
         if (gdk_pointer_grab(t_root, False,
                              GdkEventMask(GDK_POINTER_MOTION_MASK|GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK),
                              NULL, t_cursor, GDK_CURRENT_TIME) != GDK_GRAB_SUCCESS)
@@ -1192,13 +1194,13 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
 				default:
                     // 2019-10-26 MDW [[ bugfix_17257 ]]
                     // compute the screen rect here
-                    gdk_window_get_geometry(t_root, &t_x, &t_y, &t_width, &t_height, NULL);
-                    t_start_x = (int16_t)t_x;
-                    t_start_y = (int16_t)t_y;
-                    r = MCU_compute_rect(t_start_x, t_start_y, t_width, t_height);
-                    if (r.width < 4 && r.height < 4)
-                        r.width = r.height = 0;
-                    t_done = true;
+ //                   gdk_window_get_geometry(t_root, &t_x, &t_y, &t_width, &t_height, NULL);
+ //                   t_start_x = (int16_t)t_x;
+ //                   t_start_y = (int16_t)t_y;
+ //                   r = MCU_compute_rect(t_start_x, t_start_y, t_width, t_height);
+ //                   if (r.width < 4 && r.height < 4)
+ //                       r.width = r.height = 0;
+ //                   t_done = true;
 					break;
             }
             
