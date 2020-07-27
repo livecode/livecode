@@ -1,0 +1,1 @@
+# Fix hang executing `do in <browser widget>` on iOS
