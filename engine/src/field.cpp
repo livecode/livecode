@@ -2586,7 +2586,7 @@ IO_stat MCField::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part, uint
     }
     
     // SN-2015-04-30: [[ Bug 15175 ]] Save the tabalign property of the field
-    if (ntabs != 0)
+    if (nalignments != 0)
     {
         t_flags |= FIELD_EXTRA_TABALIGN;
         // Save number of tab alignments, and then each of them.

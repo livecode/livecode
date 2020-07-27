@@ -851,7 +851,7 @@ __safe foreign handler _JNI_TextWatcher_TextChangedListener(in pCallbacks as Arr
 __safe foreign handler _JNI_TextView_addTextChangedListener(in pObj as JObject, in pParam_watcher as JObject) returns nothing \
 	binds to "java:android.widget.TextView>addTextChangedListener(Landroid/text/TextWatcher;)V?ui"
 
-handler type EditorActionCallback(in pView as JObject, in pActionId as JObject, in pKeyEvent as JObject) returns JObject
+handler type EditorActionCallback(in pView as JObject, in pActionId as JObject, in pKeyEvent as optional JObject) returns JObject
 __safe foreign handler _JNI_View_OnEditorActionListener(in pHandler as EditorActionCallback) returns JObject \
    binds to "java:android.widget.TextView$OnEditorActionListener>interface()"
 __safe foreign handler _JNI_TextView_setOnEditorActionListener(in pObj as JObject, in pParam_listener as JObject) returns nothing \
@@ -1074,7 +1074,7 @@ __safe foreign handler _JNI_Boolean_False() returns JObject \
    binds to "java:java.lang.Boolean>get.FALSE()Ljava/lang/Boolean;!static"
 __safe foreign handler _JNI_Boolean_True() returns JObject \
    binds to "java:java.lang.Boolean>get.TRUE()Ljava/lang/Boolean;!static"
-handler OnEditorAction(in pView as JObject, in pActionId as JObject, in pKeyEvent as JObject) returns JObject
+handler OnEditorAction(in pView as JObject, in pActionId as JObject, in pKeyEvent as optional JObject) returns JObject
    post "returnKey"
 
    // Return value determines whether the return key event is eaten
@@ -1771,9 +1771,8 @@ end handler
 
 public handler GetScrollingEnabled() returns Boolean
    if mNativeObj is not nothing then
-      put TextView_getMovementMethod(mNativeObj) into mScrollingEnabled
+      put (TextView_getMovementMethod(mNativeObj) is not nothing) into mScrollingEnabled
    end if
-
    return mScrollingEnabled
 end handler
 

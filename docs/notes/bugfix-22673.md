@@ -1,0 +1,1 @@
+# Show first frame in Android mobile player after loading file

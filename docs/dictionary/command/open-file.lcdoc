@@ -29,7 +29,9 @@ filePath:
 Specifies the name and location of the file you want to open or create.
 If you specify a name but not a location, LiveCode assumes the file is
 in the defaultFolder. If the file you specify doesn't exist, LiveCode
-creates it.
+creates it unless the containing folder you specify also doesn't exist,
+in which case the command fails and the <result> <function> 
+<return(glossary)|returns> "Can't open that file.".
 
 encoding (enum):
 The encoding to be used.
@@ -48,13 +50,9 @@ The encoding to be used.
 - "Native": ISO-8859-1 on Linux, MacRoman on OS X, CP1252 on Windows
 
 The result:
-Use the for read form to open the file for reading. If the
-<file(keyword)> is opened for reading, you can use the <read from file>
-<command> to examine its contents, but you cannot modify it. If you use
-the for read form and the file does not exist, LiveCode does not create
-it, and the <result> <function> <return(glossary)|returns>
-"Can't open that file.". Use this form for files on CD-ROM and other
-read-only media.
+If you use the for read form and the file does not exist or if you
+use another form and the location of the file does not exist, 
+returns "Can't open that file.".
 
 Description:
 Use the <open file> <command> to create a <file(keyword)> or prepare an
@@ -73,6 +71,14 @@ data from the <file(keyword)>, end-of-line markers are translated to the
 translated to spaces (<ASCII> 32). If you specify binary mode, null
 characters and end-of-line markers are not translated. If you do not
 specify a mode, the <file(keyword)> is opened in text mode.
+
+Use the for read form to open the file for reading. If the
+<file(keyword)> is opened for reading, you can use the <read from file>
+<command> to examine its contents, but you cannot modify it. If you use
+the for read form and the file does not exist, LiveCode does not create
+it, and the <result> <function> <return(glossary)|returns>
+"Can't open that file.". Use this form for files on CD-ROM and other
+read-only media.
 
 Use the for write form to open the file for writing. If the file is
 opened for writing, the write to file <command> replaces the
@@ -121,7 +127,7 @@ settings.
 > end in a colon (:).
 
 >*Tip:* As an alternative to the <open file>, <read from file>, and
-> <write to file commands(command)>, you can also use the <URL keyword>
+> <write to file commands(command)>, you can also use the <URL> <keyword>
 > with <get>, <put>, and other <command|commands> to access the contents
 > of a <file(keyword)>.
 

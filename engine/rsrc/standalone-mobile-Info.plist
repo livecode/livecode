@@ -72,5 +72,7 @@
 	<string>This application requires access to Location Services when in use</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>This application requires access to Location Services always</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>This application requires access to Bluetooth always</string>
 </dict>
 </plist>

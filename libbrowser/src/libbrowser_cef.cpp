@@ -21,6 +21,7 @@
 #include "libbrowser_cef.h"
 
 #include <include/cef_app.h>
+#include <include/cef_parser.h>
 #include <include/wrapper/cef_scoped_temp_dir.h>
 #include <list>
 #include <set>
@@ -741,6 +742,15 @@ struct MCCefErrorInfo
 
 class MCCefBrowserClient : public CefClient, CefLifeSpanHandler, CefRequestHandler, /* CefDownloadHandler ,*/ CefLoadHandler, CefContextMenuHandler, CefDragHandler
 {
+public:
+	enum PageOrigin
+	{
+		kNone,
+		kSetUrl,
+		kSetSource,
+		kBrowse,
+	};
+
 private:
 	int m_browser_id;
 	int m_popup_browser_id = 0;
@@ -750,11 +760,13 @@ private:
 	MCCefMessageResult m_message_result;
 	std::map<int64_t, MCCefErrorInfo> m_load_error_frames;
 	
-	// IM-2014-05-06: [[ Bug 12384 ]] Set of URLs for which callback messages will not be sent
-	std::set<CefString> m_ignore_urls;
+	// Describes where loading url requests came from
+	std::map<CefString, PageOrigin> m_load_url_origins;
 	
 	CefString m_last_request_url;
 	
+	PageOrigin m_displayed_page_origin;
+
 	// Error handling - we need to keep track of url that failed to load in a
 	// frame so we can send the correct url in onLoadEnd()
 	void AddLoadErrorFrame(int64_t p_id, const CefString &p_url, const CefString &p_error_msg, CefLoadHandler::ErrorCode p_error_code)
@@ -813,6 +825,7 @@ public:
 	{
 		m_owner = p_owner;
 		m_browser_id = 0;
+		m_displayed_page_origin = PageOrigin::kNone;
 	}
 	
 	// IM-2014-07-21: [[ Bug 12296 ]] Method to allow owner to notify client of its deletion
@@ -829,25 +842,31 @@ public:
 	virtual CefRefPtr<CefContextMenuHandler> GetContextMenuHandler() OVERRIDE { return this; }
 	virtual CefRefPtr<CefDragHandler> GetDragHandler() OVERRIDE { return this; }
 	
-	void AddIgnoreUrl(const CefString &p_url)
+	void AddLoadingUrl(const CefString &p_url, PageOrigin p_origin)
 	{
-		m_ignore_urls.insert(p_url);
+		m_load_url_origins[p_url] = p_origin;
 	}
 	
-	void RemoveIgnoreUrl(const CefString &p_url)
+	void RemoveLoadingUrl(const CefString &p_url)
 	{
-		m_ignore_urls.erase(p_url);
+		m_load_url_origins.erase(p_url);
 	}
 	
-	// IM-2014-05-06: [[ Bug 12384 ]] Test if callback should be sent for URL
-	bool IgnoreUrl(const CefString &p_url)
+	bool GetLoadingUrlOrigin(const CefString &p_url, PageOrigin &r_origin)
 	{
-		std::set<CefString>::iterator t_iter;
-		t_iter = m_ignore_urls.find(p_url);
-		
-		return t_iter != m_ignore_urls.end();
+		auto t_iter = m_load_url_origins.find(p_url);
+		if (t_iter == m_load_url_origins.end())
+			return false;
+
+		r_origin = t_iter->second;
+		return true;
 	}
-	
+
+	PageOrigin GetDisplayedPageOrigin()
+	{
+		return m_displayed_page_origin;
+	}
+
 	MCCefMessageResult &GetMessageResult()
 	{
 		return m_message_result;
@@ -1012,7 +1031,17 @@ public:
 		CefString t_url;
 		t_url = p_request->GetURL();
 		
-		if (IgnoreUrl(t_url))
+		PageOrigin t_origin = PageOrigin::kNone;
+
+		if (p_user_gesture)
+		{
+			t_origin = PageOrigin::kBrowse;
+			/* UNCHECKED */ AddLoadingUrl(t_url, t_origin);
+		}
+		else
+			/* UNCHECKED */ GetLoadingUrlOrigin(t_url, t_origin);
+
+		if (t_origin == PageOrigin::kSetSource)
 			return false;
 		
 		char *t_url_str;
@@ -1034,7 +1063,10 @@ public:
 		CefString t_url;
 		t_url = p_request->GetURL();
 		
-		if (IgnoreUrl(t_url))
+		PageOrigin t_origin = PageOrigin::kNone;
+		/* UNCHECKED */ GetLoadingUrlOrigin(t_url, t_origin);
+
+		if (t_origin == PageOrigin::kSetSource)
 			return RV_CONTINUE;
 		
 		m_last_request_url = t_url;
@@ -1142,15 +1174,21 @@ public:
 		if (!t_is_error)
 			t_url = p_frame->GetURL();
 		
-		if (IgnoreUrl(t_url))
+		bool t_frame;
+		t_frame = !p_frame->IsMain();
+
+		PageOrigin t_origin = PageOrigin::kNone;
+		/* UNCHECKED */ GetLoadingUrlOrigin(t_url, t_origin);
+
+		if (!t_frame && !t_is_error)
+			m_displayed_page_origin = t_origin;
+
+		if (!t_frame && t_origin == PageOrigin::kSetSource)
 			return;
 		
 		char *t_url_str;
 		t_url_str = nil;
 		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
-		
-		bool t_frame;
-		t_frame = !p_frame->IsMain();
 		
 		if (!t_is_error)
 		{
@@ -1179,15 +1217,19 @@ public:
 		if (!t_is_error)
 			t_url = p_frame->GetURL();
 		
-		if (IgnoreUrl(t_url))
+		bool t_frame;
+		t_frame = !p_frame->IsMain();
+
+		PageOrigin t_origin = PageOrigin::kNone;
+		/* UNCHECKED */ GetLoadingUrlOrigin(t_url, t_origin);
+		/* UNCHECKED */ RemoveLoadingUrl(t_url);
+
+		if (!t_frame && t_origin == PageOrigin::kSetSource)
 			return CefLoadHandler::OnLoadEnd(p_browser, p_frame, p_http_status_code);
 		
 		char *t_url_str;
 		t_url_str = nil;
 		/* UNCHECKED */ MCCefStringToUtf8String(t_url, t_url_str);
-		
-		bool t_frame;
-		t_frame = !p_frame->IsMain();
 		
 		if (t_is_error)
 		{
@@ -1266,10 +1308,13 @@ bool MCCefBrowserBase::Initialize()
 	
 	// IM-2014-05-06: [[ Bug 12384 ]] Browser must be created with non-empty URL or setting
 	// htmltext will not work
-	CefString t_url(CEF_DUMMY_URL);
+	
+	// Using a blank data url here forces the CEF render process to load,
+	// allowing subsequent calls to MCCefBrowserBase::LoadHTMLText to succeed
+	CefString t_url("data:text/html;charset=utf-8,");
 	
 	// IM-2014-05-06: [[ Bug 12384 ]] Prevent callback messages for dummy URL
-	m_client->AddIgnoreUrl(t_url);
+	m_client->AddLoadingUrl(t_url, MCCefBrowserClient::PageOrigin::kSetSource);
 	PlatformConfigureWindow(t_window_info);
 
 	if (MC_CEF_USE_MULTITHREADED_MESSAGELOOP)
@@ -1572,20 +1617,30 @@ char *MCCefBrowserBase::GetSource(void)
 	return t_src_str;
 }
 
-void MCCefBrowserBase::SetSource(const char *p_source)
+bool MCCefBrowserBase::LoadHTMLText(const char *p_htmltext, const char *p_base_url)
 {
 	// IM-2014-06-25: [[ Bug 12701 ]] CEF will crash if given an empty source string,
 	// so replace here with the source of an empty page :)
-	if (p_source == nil || MCCStringLength(p_source) == 0)
-		p_source = "<html><head></head><body></body></html>";
+	if (p_htmltext == nil || MCCStringLength(p_htmltext) == 0)
+		p_htmltext = "<html><head></head><body></body></html>";
 	
-	CefString t_source;
-	/* UNCHECKED */ MCCefStringFromUtf8String(p_source, t_source);
+	CefString t_htmltext;
+	if (!MCCefStringFromUtf8String(p_htmltext, t_htmltext))
+		return false;
 	
-	// LoadString requires a valid url
-	CefString t_url(CEF_DUMMY_URL);
+	CefString t_base_url;
+	if (!MCCefStringFromUtf8String(p_base_url, t_base_url))
+		return false;
 	
-	m_browser->GetMainFrame()->LoadString(t_source, t_url);
+	m_client->AddLoadingUrl(t_base_url, MCCefBrowserClient::PageOrigin::kSetSource);
+	m_browser->GetMainFrame()->LoadString(t_htmltext, t_base_url);
+	
+	return true;
+}
+
+void MCCefBrowserBase::SetSource(const char *p_source)
+{
+	/* UNCHECKED */ LoadHTMLText(p_source, CEF_DUMMY_URL);
 }
 
 #define MCCEF_VERTICAL_OVERFLOW_PROPERTY "document.body.style.overflowY"
@@ -1684,6 +1739,15 @@ void MCCefBrowserBase::SetUserAgent(const char *p_user_agent)
 
 char *MCCefBrowserBase::GetURL(void)
 {
+	if (m_client->GetDisplayedPageOrigin() == MCCefBrowserClient::PageOrigin::kSetSource)
+	{
+		// return empty string if page was loaded from source
+		char *t_url_string;
+		t_url_string = nil;
+		/* UNCHECKED */ MCCStringClone("", t_url_string);
+		return t_url_string;
+	}
+
 	CefString t_url;
 	t_url = m_browser->GetMainFrame()->GetURL();
 	
@@ -1780,7 +1844,21 @@ bool MCCefBrowserBase::GoToURL(const char *p_url)
 	if (!MCCefStringFromUtf8String(p_url, t_url))
 		return false;
 	
+	m_client->AddLoadingUrl(t_url, MCCefBrowserClient::PageOrigin::kSetUrl);
+
 	t_frame->LoadURL(t_url);
+	return true;
+}
+
+bool MCCefBrowserBase::StopLoading(void)
+{
+	m_browser->StopLoad();
+	return true;
+}
+
+bool MCCefBrowserBase::Reload(void)
+{
+	m_browser->Reload();
 	return true;
 }
 
@@ -1999,6 +2077,28 @@ bool MCCefBrowserBase::GetStringProperty(MCBrowserProperty p_property, char *&r_
 			r_value = GetURL();
 			return true;
 			
+		default:
+			break;
+	}
+	
+	return true;
+}
+
+bool MCCefBrowserBase::SetIntegerProperty(MCBrowserProperty p_property, int32_t p_value)
+{
+	switch (p_property)
+	{
+		default:
+			break;
+	}
+	
+	return true;
+}
+
+bool MCCefBrowserBase::GetIntegerProperty(MCBrowserProperty p_property, int32_t &r_value)
+{
+	switch (p_property)
+	{
 		default:
 			break;
 	}

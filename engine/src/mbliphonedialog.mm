@@ -268,8 +268,7 @@ int32_t MCScreenDC::popupanswerdialog(MCStringRef p_buttons[], uint32_t p_button
 		
 		t_textField.alpha = 0.75;
 		t_textField.borderStyle = UITextBorderStyleBezel;
-		t_textField.backgroundColor = [UIColor whiteColor];
-        
+
 		m_textResult = t_textField;
 		
 		// set up the input mode, either password or not
@@ -496,9 +495,7 @@ static void dopopupaskdialog_prewait(void *p_context)
         [t_alert_controller addTextFieldWithConfigurationHandler: ^(UITextField *p_text_field)
          {
              [p_text_field setAlpha: 0.75];
-             //[p_text_field setBorderStyle: UITextBorderStyleBezel];
-             [p_text_field setBackgroundColor: [UIColor whiteColor]];
-             
+			
              if (ctxt -> type == AT_PASSWORD)
                  [p_text_field setSecureTextEntry: YES];
              else

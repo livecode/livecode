@@ -37,11 +37,6 @@ on displayDate
    -- the maximum date and time that can be selected
    put 5 into tInterval
 
-   // convert the dates into seconds since the UNIX Epoch
-   convert tSelected to seconds
-   convert tRangeStart to seconds
-   convert tRangeEnd to seconds
-
    // launch the date and time picker
    mobilePickDate "dateTime" \
          , tSelected, tRangeStart, tRangeEnd, tInterval
@@ -53,7 +48,6 @@ on displayDate
    if tDateResult is 0 then
        put "No Selection Made" into field "DateField"
    else
-       convert tDateResult from seconds to internet date
        put tDateResult into field "DateField"
    end if
 end displayDate
@@ -67,29 +61,29 @@ Android is "date"
 
 - "datetime" (default on iOS) (iOS only): display a native picker to
   choose the date and time
--   "date" (default on Android): display a native picker to choose the
-    date 
--   "time": display a native picker to choose the time
+- "date" (default on Android): display a native picker to choose the
+  date 
+- "time": display a native picker to choose the time
 
 
 current:
 The date, time or date and time that is to be displayed. If this is
-empty, then the current date time is used. If this value is set, then it
-must be specified in seconds.
+empty, then the current date time is used.
 
 start:
 The start range of the date picker. If this value is empty, there is no
 lower boundary. The value is ignored if <start> is greater than <end>.
-If this value is set then it must be specified in seconds. Start and end
-parameters will be ignored on Android when picking 'time'.
+Start and end parameters will be ignored on Android when picking 'time'.
 
 end:
 The end range of the date picker. If this value is empty, there is no
 upper boundary. The value is ignored if <start> is greater than <end>.
-If this value is set then it must be specified in seconds. Start and end
-parameters will be ignored on Android when picking 'time'. step (iOS
-Only): Specifies the minute interval size. This parameter is ignored if
-<style> is set to "date". The default is 1. buttons (iOS Only) (enum):
+Start and end parameters will be ignored on Android when picking 'time'. 
+
+step (iOS Only): Specifies the minute interval size. This parameter is 
+ignored if <style> is set to "date". The default is 1. 
+
+buttons (iOS Only) (enum):
 Specifies if "Cancel" and/or "Done" buttons should be forced to be
 displayed with the date picker dialog. The default behavior is device
 dependent, exhibiting the most native operation.
@@ -100,9 +94,8 @@ dependent, exhibiting the most native operation.
 
 
 The result:
-The selected date, time or date and time are returned in the result. The
-value is in seconds since the UNIX Epoch. If the picker is cancelled
-then cancel is returned in the result.
+The selected date, time or date and time are returned in the result. If 
+the picker is cancelled then cancel is returned in the result.
 
 Description:
 Allows the user to select the date, time or both the date and time (iOS

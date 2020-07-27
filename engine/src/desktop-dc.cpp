@@ -944,6 +944,13 @@ void MCScreenDC::closeIME()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCScreenDC::getsystemappearance(MCSystemAppearance &r_appearance)
+{
+	MCPlatformGetSystemProperty(kMCPlatformSystemPropertySystemAppearance, kMCPlatformPropertyTypeInt32, &r_appearance);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern bool MCListSystemPrinters(MCStringRef &);
 extern MCPrinter *MCCreateSystemPrinter(void);
 

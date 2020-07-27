@@ -1,0 +1,1 @@
+# Ensure Android mobile player controller is not visible when the control is not visible

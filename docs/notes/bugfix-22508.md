@@ -1,0 +1,1 @@
+# Fix clipboard contents being cleared when setting dragdata on Windows

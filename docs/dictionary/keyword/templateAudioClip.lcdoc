@@ -27,8 +27,8 @@ The <templateAudioClip> can be thought of as a special, abstract
 <templateAudioClip> is zero.
 
 You can use the <set> <command> to set the <properties> of the
-<templateAudioClip> before creating an <audio clip>. The new <audio
-clip> has the <properties> of the <templateAudioClip>, by <default>.
+<templateAudioClip> before creating an <audio clip>. The new 
+<audio clip> has the <properties> of the <templateAudioClip>, by <default>.
 Changing the <properties> of the <templateAudioClip> does not affect
 existing <audio clip|audio clips>.
 

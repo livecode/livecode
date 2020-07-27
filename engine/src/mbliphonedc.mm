@@ -55,6 +55,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "resolution.h"
 
+#include <objc/message.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void X_main_loop(void);
@@ -217,6 +219,11 @@ void MCIPhoneCallOnMainFiber(void (*handler)(void *), void *context)
 bool MCIPhoneIsOnMainFiber(void)
 {
     return MCFiberIsCurrentThread(s_main_fiber);
+}
+
+bool MCIPhoneIsOnScriptFiber(void)
+{
+    return MCFiberIsCurrentThread(s_script_fiber);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -857,6 +864,24 @@ void MCScreenDC::refresh_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCScreenDC::getsystemappearance(MCSystemAppearance &r_appearance)
+{
+	/* userInterfaceStyle was introduced in iOS 12.0 */
+	typedef int (*_userInterfaceStyle)(UITraitCollection *, SEL selector);
+	UITraitCollection *t_traits = [MCIPhoneGetRootView() traitCollection];
+	if ([t_traits respondsToSelector: @selector(userInterfaceStyle)] &&
+			((_userInterfaceStyle)objc_msgSend)(t_traits, @selector(userInterfaceStyle)) == 2)
+	{
+		r_appearance = kMCSystemAppearanceDark;
+	}
+	else
+	{
+		r_appearance = kMCSystemAppearanceLight;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);
 extern bool coretext_font_destroy(void *p_font);
 extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight);
@@ -1195,6 +1220,11 @@ void MCIPhoneCallSelectorOnMainFiberWithObject(id p_object, SEL p_selector, id p
 void MCIPhoneRunOnMainFiber(void (*p_callback)(void *), void *p_context)
 {
 	MCFiberCall(s_main_fiber, p_callback, p_context);
+}
+
+void MCIPhoneRunOnScriptFiber(void (*p_callback)(void *), void *p_context)
+{
+    MCFiberCall(s_script_fiber, p_callback, p_context);
 }
 
 static void invoke_block(void *p_context)

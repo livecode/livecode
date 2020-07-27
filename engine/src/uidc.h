@@ -323,6 +323,12 @@ enum MCPlatformFeature
 	PLATFORM_FEATURE_TRANSIENT_SELECTION
 };
 
+enum MCSystemAppearance
+{
+	kMCSystemAppearanceLight = 0,
+	kMCSystemAppearanceDark = 1,
+};
+
 class MCUIDC
 {
 public:
@@ -654,6 +660,8 @@ public:
     // MW-2014-04-26: [[ Bug 5545 ]] Hides the cursor until the mouse moves on platforms which
     //   require this action.
     virtual void hidecursoruntilmousemoves(void);
+	
+	virtual void getsystemappearance(MCSystemAppearance &r_appearance);
     
     //
 

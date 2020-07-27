@@ -991,6 +991,12 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 			vscroll(-scrolly, False);
 			int2 dx = rect.x - nrect.x;
 			int2 dy = rect.y - nrect.y;
+			
+			/* Make sure we update the group rect before the child controls. This
+			 * is to ensure any native layers can fetch the correct rect to compute
+			 * their relative location. */
+			rect = nrect;
+			
 			MCControl *cptr = controls;
 			do
 			{
@@ -1005,7 +1011,6 @@ void MCGroup::applyrect(const MCRectangle &nrect)
 			while (cptr != controls);
 			minrect.x -= dx;
 			minrect.y -= dy;
-			rect = nrect;
 			setsbrects();
 			hscroll(oldx, False);
 			vscroll(oldy, False);
@@ -3069,6 +3074,10 @@ void MCGroup::relayercontrol(MCControl *p_source, MCControl *p_target)
 void MCGroup::relayercontrol_remove(MCControl *p_control)
 {
 	p_control -> remove(controls);
+
+	// make sure this group no longer points to the removed control
+	clearfocus(p_control);
+
 	if (!computeminrect(False))
 		layer_redrawrect(p_control -> geteffectiverect());
 		

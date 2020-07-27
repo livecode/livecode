@@ -1,0 +1,1 @@
+# Fix error when accepting connections to a socket on some older Android devices

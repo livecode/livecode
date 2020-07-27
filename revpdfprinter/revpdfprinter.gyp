@@ -35,6 +35,7 @@
 				'src/revpdfprinter_w32.cpp',
 				'src/revpdfprinter_coretext.mm',
 				'src/revpdfprinter_ios.mm',
+				'src/revpdfprinter_android.cpp',
 			],
 			
 			# Even on OSX, we don't use the non-coretext method any more
@@ -64,6 +65,18 @@
 							'-lfreetype',
 							'-lgobject-2.0',
 							'-lpangoft2-1.0',
+						],
+					},
+				],
+				[
+					'OS == "android"',
+					{
+						'product_name': 'RevPdfPrinter',
+						'product_extension': '',
+
+						'dependencies':
+						[
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_freetype',
 						],
 					},
 				],

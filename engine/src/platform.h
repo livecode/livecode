@@ -487,10 +487,18 @@ enum MCPlatformSystemProperty
 	kMCPlatformSystemPropertyCursorImageSupport,
     
     kMCPlatformSystemPropertyVolume,
+
+	kMCPlatformSystemPropertySystemAppearance,
 };
 
 void MCPlatformGetSystemProperty(MCPlatformSystemProperty property, MCPlatformPropertyType type, void *value);
 void MCPlatformSetSystemProperty(MCPlatformSystemProperty property, MCPlatformPropertyType type, void *value);
+
+enum MCPlatformSystemAppearance
+{
+	kMCPlatformSystemAppearanceLight = 0,
+	kMCPlatformSystemAppearanceDark = 1,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 

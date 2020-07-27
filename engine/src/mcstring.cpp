@@ -632,6 +632,8 @@ MCNameRef MCN_font_message;
 MCNameRef MCN_font_tooltip;
 MCNameRef MCN_font_system;
 
+MCNameRef MCM_system_appearance_changed;
+
 const struct { const char *cstring; MCNameRef *name_var; } kInitialNames[] =
 {
 	{ "msg", &MCN_msg },
@@ -958,6 +960,7 @@ const struct { const char *cstring; MCNameRef *name_var; } kInitialNames[] =
 	{ "unloadURL", &MCM_unload_url },
 	{ "updateScreen", &MCM_update_screen },
 	{ "updateVariable", &MCM_update_var },
+	{ "systemAppearanceChanged", &MCM_system_appearance_changed },
 
 #ifdef FEATURE_PLATFORM_URL
 	{ "urlProgress", &MCM_url_progress },

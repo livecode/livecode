@@ -78,7 +78,6 @@ GdkDisplay *MCdpy;
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" int initialise_required_weak_link_X11();
-extern "C" int initialise_required_weak_link_glib();
 extern "C" int initialise_required_weak_link_gobject();
 extern "C" int initialise_required_weak_link_gdk();
 extern "C" int initialise_required_weak_link_gdk_pixbuf();

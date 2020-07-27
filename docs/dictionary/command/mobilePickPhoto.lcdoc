@@ -28,8 +28,8 @@ The source for the image.
 - "library":
 - "album":
 - "camera":
-- "rear camera": iOS only
-- "front camera": iOS only
+- "rear camera":
+- "front camera":
 
 
 maxwidth:
@@ -62,10 +62,9 @@ the command returns with result cancel. Otherwise a new image object is
 created on the current card of the default stack containing the chosen
 image. 
 
-The <maxwidth> and <maxheight> parameters are only available on iOS
-devices and constrain the maximum size of an image. The chosen image is
-scaled down proportionally to fit within the size specified. If either
-size specified is 0, then the parameter is ignored.
+The <maxwidth> and <maxheight> parameters constrain the maximum size of an
+image. The chosen image is scaled down proportionally to fit within the size
+specified. If either size specified is 0, then the parameter is ignored.
 
 >*Note:* The image object is cloned from the <templateImage>, so you can
 > use this to configure settings before calling the picker.

@@ -42,9 +42,9 @@ baseline of one line and the baseline of the next. The minimum
 >*Note:* If you change the field's textSize, LiveCode automatically sets
 > the <textHeight> to trunc(4/3 * the textSize of <field>). For example,
 > if the textSize is set to 12, the <textHeight> is set to 16 by
-> <default>. If the textSize is set to 14, the <textHeight> is set to
-> 18. So, if you want to change the <textHeight> and <textSize>, set the
-> <textSize> first, then set the <textHeight>.
+> <default>. If the textSize is set to 14, the <textHeight> is set
+> to 18. So, if you want to change the <textHeight> and <textSize>, set 
+> the <textSize> first, then set the <textHeight>.
 
 If a field's <fixedLineHeight> <property> is false, the <textHeight> of
 the <field> has no effect: in this case, the text height of each line is

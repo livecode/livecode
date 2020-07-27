@@ -17,10 +17,16 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestKeyboardTypeRoundTrip
-	TestEnumPropRoundTrip "field", "keyboardType", ",default,numeric,url,number,phone,contact,email"
+	local tValues
+	put ",default,numeric,url,number,phone,contact,email" into tValues
+	split tValues by comma
+	TestPropRoundTrip "field", "keyboardType", tValues
 end TestKeyboardTypeRoundTrip
 
 on TestReturnKeyTypeRoundTrip
-	TestEnumPropRoundTrip "field", "returnKeyType", ",default,go,google,join,next,route,search,send,yahoo,done,emergency call"
+	local tValues
+	put ",default,go,google,join,next,route,search,send,yahoo,done,emergency call" into tValues
+	split tValues by comma
+	TestPropRoundTrip "field", "returnKeyType", tValues
 end TestReturnKeyTypeRoundTrip
 

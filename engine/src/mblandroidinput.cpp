@@ -285,13 +285,14 @@ MCObjectPropertyTable MCAndroidInputControl::kPropertyTable =
 
 MCNativeControlActionInfo MCAndroidInputControl::kActions[] =
 {
+    DEFINE_CTRL_EXEC_METHOD(Focus, Void, MCAndroidInputControl, Focus)
 };
 
 MCNativeControlActionTable MCAndroidInputControl::kActionTable =
 {
     &MCAndroidControl::kActionTable,
-    0,
-    nil,
+    sizeof(kActions) / sizeof(kActions[0]),
+    &kActions[0],
 };
 
 ////////////////////////////////////////////////////////////////////////////////

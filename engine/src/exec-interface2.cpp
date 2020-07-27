@@ -432,6 +432,21 @@ static MCExecEnumTypeInfo _kMCInterfaceSelectionModeTypeInfo =
 	_kMCInterfaceSelectionModeElementInfo,
 };
 
+//////////
+
+static MCExecEnumTypeElementInfo _kMCInterfaceSystemAppearanceElementInfo[] =
+{
+	{ "light", 0, false },
+	{ "dark", 1, false },
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceSystemAppearanceTypeInfo =
+{
+	"Interface.ProcessType",
+	sizeof(_kMCInterfaceSystemAppearanceElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceSystemAppearanceElementInfo,
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecEnumTypeInfo *kMCInterfaceLookAndFeelTypeInfo = &_kMCInterfaceLookAndFeelTypeInfo;
@@ -441,6 +456,7 @@ MCExecEnumTypeInfo *kMCInterfacePaintCompressionTypeInfo = &_kMCInterfacePaintCo
 MCExecEnumTypeInfo *kMCInterfaceProcessTypeTypeInfo = &_kMCInterfaceProcessTypeTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceSelectionModeTypeInfo = &_kMCInterfaceSelectionModeTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceStackFileVersionTypeInfo = &_kMCInterfaceStackFileVersionTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceSystemAppearanceTypeInfo = &_kMCInterfaceSystemAppearanceTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1699,6 +1715,13 @@ void MCInterfaceGetSelectionMode(MCExecContext& ctxt, intenum_t& r_value)
 void MCInterfaceSetSelectionMode(MCExecContext& ctxt, intenum_t p_value)
 {
 	MCselectintersect = (Boolean)p_value;
+}
+
+void MCInterfaceGetSystemAppearance(MCExecContext& ctxt, intenum_t& r_value)
+{
+	MCSystemAppearance t_appearance;
+	MCscreen->getsystemappearance(t_appearance);
+	r_value = (intenum_t)t_appearance;
 }
 
 void MCInterfaceGetSelectionHandleColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
@@ -3469,13 +3492,20 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 		t_new_target_handle = t_new_target != nil ? t_new_target : nil;
 
 		// Make sure we remove focus from the control.
+		MCObjectHandle t_kfocused_handle = nil;
 		bool t_was_mfocused, t_was_kfocused;
 		t_was_mfocused = t_card -> getstate(CS_MFOCUSED) == True;
 		t_was_kfocused = t_card -> getstate(CS_KFOCUSED) == True;
 		if (t_was_mfocused)
 			t_card -> munfocus();
 		if (t_was_kfocused)
+		{
+			// keep note of which object had key focus before the relayering
+			MCControl *t_kfocused = t_card->getkfocused();
+			if (t_kfocused != nil)
+				t_kfocused_handle = t_kfocused->GetHandle();
 			t_card -> kunfocus();
+		}
         
 		// Check the source and new owner objects exist, and if we have a target object
 		// that that exists and is still a child of new owner.
@@ -3498,8 +3528,8 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 			t_success = false;
 		}
         
-		if (t_was_kfocused)
-			t_card -> kfocus();
+		if (t_was_kfocused && t_kfocused_handle.IsValid())
+			t_card->kfocusset(static_cast<MCControl*>(t_kfocused_handle.Get()));
 		if (t_was_mfocused)
 			t_card -> mfocus(MCmousex, MCmousey);
 	}

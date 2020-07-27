@@ -247,7 +247,7 @@ class InputControl extends NativeControl
         {
             m_transformation_method = m_text_view.getTransformationMethod();
             m_text_view.setTransformationMethod(PasswordTransformationMethod.getInstance());
-            m_text_view.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+            m_text_view.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         }
         else if (!p_password && m_transformation_method != null)
         {
@@ -315,6 +315,14 @@ class InputControl extends NativeControl
     public void focusControl()
     {
         m_text_view.requestFocus();
+        
+        InputMethodManager imm;
+        imm = (InputMethodManager) m_text_view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        
+        if (imm != null)
+            imm.restartInput(m_text_view);
+        
+        imm.showSoftInput(m_text_view, InputMethodManager.SHOW_IMPLICIT);
     }
     
     public native void doBeginEditing();

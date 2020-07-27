@@ -38,7 +38,7 @@ public:
     virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     virtual void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
-    void SetVisible(MCExecContext& ctxt, bool p_visible);
+    virtual void SetVisible(MCExecContext& ctxt, bool p_visible);
     void SetOpaque(MCExecContext& ctxt, bool p_opaque);
     void SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha);
     void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);

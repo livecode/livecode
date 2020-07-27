@@ -395,9 +395,7 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
             mVideoHeight = mp.getVideoHeight();
 
             int seekToPosition = mSeekWhenPrepared;  // mSeekWhenPrepared may be changed after seekTo() call
-            if (seekToPosition != 0) {
-                seekTo(seekToPosition);
-            }
+            seekTo(seekToPosition);
             // IM-2014-02-25: [[ Bug 11753 ]] don't set looping here as this seems to put
             // the player into an error state
             /* CODE REMOVED */

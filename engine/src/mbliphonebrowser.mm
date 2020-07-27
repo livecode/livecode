@@ -40,30 +40,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphonecontrol.h"
 #include "mblcontrol.h"
 
+#include <libbrowser.h>
+
 ////////////////////////////////////////////////////////////////////////////////
+
+extern "C" bool MCEngineBrowserLibrarySetupRunloop();
+extern "C" void MCEngineBrowserLibraryTeardownRunloop();
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 ////////////////////////////////////////////////////////////////////////////////
-
-class MCiOSBrowserControl;
-
-@interface com_runrev_livecode_MCiOSBrowserDelegate : NSObject <UIWebViewDelegate>
-{
-	MCiOSBrowserControl *m_instance;
-	bool m_pending_request;
-}
-
-- (id)initWithInstance:(MCiOSBrowserControl*)instance;
-
-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error;
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType;
-- (void)webViewDidFinishLoad:(UIWebView *)webView;
-- (void)webViewDidStartLoad:(UIWebView *)webView;
-
-- (void)setPendingRequest: (bool)newValue;
-
-@end
 
 class MCiOSBrowserControl: public MCiOSControl
 {
@@ -112,12 +98,10 @@ public:
     
 	void HandleStartEvent(void);
 	void HandleFinishEvent(void);
-	bool HandleLoadRequest(NSURLRequest *request, UIWebViewNavigationType type, bool notify);
-	void HandleLoadFailed(NSError *error);
+	bool HandleLoadRequest(MCBrowserNavigationRequest *p_request, bool notify);
+	void HandleLoadFailed(MCStringRef p_error);
 	
 	bool GetDelayRequests(void);
-	
-	UIScrollView *GetScrollView(void);
 	
 protected:
 	virtual ~MCiOSBrowserControl(void);
@@ -125,8 +109,8 @@ protected:
 	virtual void DeleteView(UIView *view);
 	
 private:
-	com_runrev_livecode_MCiOSBrowserDelegate *m_delegate;
 	bool m_delay_requests;
+	MCBrowser *m_browser;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +145,7 @@ MCNativeControlActionInfo MCiOSBrowserControl::kActions[] =
     DEFINE_CTRL_EXEC_METHOD(Reload, Void, MCiOSBrowserControl, Reload)
     DEFINE_CTRL_EXEC_METHOD(Stop, Void, MCiOSBrowserControl, Stop)
     DEFINE_CTRL_EXEC_BINARY_METHOD(Load, String_String, MCiOSBrowserControl, String, String, Load)
-    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, String, MCiOSBrowserControl, String, Execute)
+    DEFINE_CTRL_WAITABLE_EXEC_UNARY_METHOD(Execute, String, MCiOSBrowserControl, String, Execute)
 };
 
 MCNativeControlActionTable MCiOSBrowserControl::kActionTable =
@@ -174,13 +158,18 @@ MCNativeControlActionTable MCiOSBrowserControl::kActionTable =
 ////////////////////////////////////////////////////////////////////////////////
 
 MCiOSBrowserControl::MCiOSBrowserControl(void)
+	: m_browser(nil)
 {
-	m_delegate = nil;
+	/* UNCHECKED */ MCEngineBrowserLibrarySetupRunloop();
 	m_delay_requests = false;
 }
 
 MCiOSBrowserControl::~MCiOSBrowserControl(void)
 {
+	if (m_browser != nil)
+		m_browser->Release();
+	
+	MCEngineBrowserLibraryTeardownRunloop();
 }
 
 MCNativeControlType MCiOSBrowserControl::GetType(void)
@@ -188,27 +177,16 @@ MCNativeControlType MCiOSBrowserControl::GetType(void)
 	return kMCNativeControlTypeBrowser;
 }
 
-bool datadetectortypes_from_string(const char *p_list, UIDataDetectorTypes &r_types);
-bool datadetectortypes_to_string(UIDataDetectorTypes p_types, char *&r_list);
-
 void MCiOSBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    if (t_view != nil)
-    {
-        [m_delegate setPendingRequest: true];
-        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_url)]]];
-    }
+	MCAutoStringRefAsUTF8String t_utf8_string;
+	if (t_utf8_string.Lock(p_url))
+		/* UNCHECKED */ m_browser->GoToURL(*t_utf8_string);
 }
 
 void MCiOSBrowserControl::SetAutoFit(MCExecContext& ctxt, bool p_value)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    if (t_view != nil)
-        [t_view setScalesPageToFit: p_value ? YES : NO];
+	m_browser->SetBoolProperty(kMCBrowseriOSAutoFit, p_value);
 }
 
 void MCiOSBrowserControl::SetDelayRequests(MCExecContext& ctxt, bool p_value)
@@ -218,97 +196,69 @@ void MCiOSBrowserControl::SetDelayRequests(MCExecContext& ctxt, bool p_value)
 
 void MCiOSBrowserControl::SetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType p_type)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-	if (t_view)
-    {
-        UIDataDetectorTypes t_types;
-        t_types = UIDataDetectorTypeNone;
-        
-        if (p_type & kMCNativeControlInputDataDetectorTypeAll)
-            t_types |= UIDataDetectorTypeAll;
-        if (p_type & kMCNativeControlInputDataDetectorTypeEmailAddress)
-            t_types |= UIDataDetectorTypeAddress;
-        if (p_type & kMCNativeControlInputDataDetectorTypePhoneNumber)
-            t_types |= UIDataDetectorTypePhoneNumber;
-        if (p_type & kMCNativeControlInputDataDetectorTypeWebUrl)
-            t_types |= UIDataDetectorTypeLink;
-        if (p_type & kMCNativeControlInputDataDetectorTypeCalendarEvent)
-            t_types |= UIDataDetectorTypeCalendarEvent;
-        
-        [t_view setDataDetectorTypes: t_types];
-    }
+	int32_t t_types;
+	t_types = kMCBrowserDataDetectorTypeNone;
+	
+	if (p_type & kMCNativeControlInputDataDetectorTypeAll)
+		t_types |= kMCBrowserDataDetectorTypeAll;
+	
+	if (p_type & kMCNativeControlInputDataDetectorTypeEmailAddress)
+		t_types |= kMCBrowserDataDetectorTypeEmailAddress;
+	if (p_type & kMCNativeControlInputDataDetectorTypeMapAddress)
+		t_types |= kMCBrowserDataDetectorTypeMapAddress;
+	if (p_type & kMCNativeControlInputDataDetectorTypePhoneNumber)
+		t_types |= kMCBrowserDataDetectorTypePhoneNumber;
+	if (p_type & kMCNativeControlInputDataDetectorTypeWebUrl)
+		t_types |= kMCBrowserDataDetectorTypeLink;
+	if (p_type & kMCNativeControlInputDataDetectorTypeCalendarEvent)
+		t_types |= kMCBrowserDataDetectorTypeCalendarEvent;
+	
+	m_browser->SetIntegerProperty(kMCBrowserDataDetectorTypes, t_types);
 }
 
 void MCiOSBrowserControl::SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool p_value)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    if (t_view != nil)
-        [t_view setAllowsInlineMediaPlayback: p_value ? YES : NO];
+	m_browser->SetBoolProperty(kMCBrowseriOSAllowsInlineMediaPlayback, p_value);
 }
 
 void MCiOSBrowserControl::SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool p_value)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    if (t_view != nil)
-        [t_view setMediaPlaybackRequiresUserAction: p_value ? YES : NO];
+	m_browser->SetBoolProperty(kMCBrowseriOSMediaPlaybackRequiresUserAction, p_value);
 }
 void MCiOSBrowserControl::SetCanBounce(MCExecContext& ctxt, bool p_value)
 {
-    // MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
-    //   the UIWebView.
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    if (t_view != nil)
-        [GetScrollView() setBounces: p_value ? YES : NO];
+	m_browser->SetBoolProperty(kMCBrowserScrollCanBounce, p_value);
 }
 
 void MCiOSBrowserControl::SetScrollingEnabled(MCExecContext& ctxt, bool p_value)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    if (t_view != nil)
-        [GetScrollView() setScrollEnabled: p_value ? YES : NO];
+	m_browser->SetBoolProperty(kMCBrowserScrollEnabled, p_value);
 }
 
 void MCiOSBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
 {
-	UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-	if (t_view != nil && [[t_view request] URL] != nil)
-    {
-        /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[[[t_view request] URL] absoluteString], r_url);
-        return;
-    }
-	
-    r_url = MCValueRetain(kMCEmptyString);
+	MCAutoUTF8CharArray t_utf8_string;
+	char *t_url;
+	if (m_browser->GetStringProperty(kMCBrowserURL, t_url))
+	{
+		t_utf8_string.Give((char_t*)t_url, MCCStringLength(t_url));
+		/* UNCHECKED */ t_utf8_string.CreateStringAndRelease(r_url);
+	}
 }
                
 void MCiOSBrowserControl::GetCanAdvance(MCExecContext& ctxt, bool& r_value)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    r_value = (t_view != nil ? [t_view canGoForward] == YES : NO);
+	m_browser->GetBoolProperty(kMCBrowserCanGoForward, r_value);
 }
 
 void MCiOSBrowserControl::GetCanRetreat(MCExecContext& ctxt, bool& r_value)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    r_value = (t_view != nil ? [t_view canGoBack] == YES : NO);
+	m_browser->GetBoolProperty(kMCBrowserCanGoBack, r_value);
 }
 
 void MCiOSBrowserControl::GetAutoFit(MCExecContext& ctxt, bool& r_value)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    r_value = (t_view != nil ? [t_view  scalesPageToFit] == YES : NO);
+	m_browser->GetBoolProperty(kMCBrowseriOSAutoFit, r_value);
 }
 
 void MCiOSBrowserControl::GetDelayRequests(MCExecContext& ctxt, bool& r_value)
@@ -318,229 +268,112 @@ void MCiOSBrowserControl::GetDelayRequests(MCExecContext& ctxt, bool& r_value)
 
 void MCiOSBrowserControl::GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    uint32_t t_native_types;
-    uint32_t t_types;
-    
-    t_types = 0;
-    
-	if (t_view)
-    {
-        t_native_types = [t_view dataDetectorTypes];
-        
-        if (t_native_types & UIDataDetectorTypeAll)
-        {
-            t_types |= kMCNativeControlInputDataDetectorTypeCalendarEvent;
-            t_types |= kMCNativeControlInputDataDetectorTypeEmailAddress;
-            t_types |= kMCNativeControlInputDataDetectorTypePhoneNumber;
-            t_types |= kMCNativeControlInputDataDetectorTypeWebUrl;
-        }
-        
-        if (t_native_types & UIDataDetectorTypeCalendarEvent)
-            t_types |= kMCNativeControlInputDataDetectorTypeCalendarEvent;
-        if (t_native_types & UIDataDetectorTypeAddress)
-            t_types |= kMCNativeControlInputDataDetectorTypeEmailAddress;
-        if (t_native_types & UIDataDetectorTypePhoneNumber)
-            t_types |= kMCNativeControlInputDataDetectorTypePhoneNumber;
-        if (t_native_types & UIDataDetectorTypeLink)
-            t_types |= kMCNativeControlInputDataDetectorTypeWebUrl;
-    }
-    
+	uint32_t t_types;
+	t_types = 0;
+	
+	int32_t t_browser_types;
+	t_browser_types = kMCBrowserDataDetectorTypeNone;
+	/* UNCHECKED */ m_browser->GetIntegerProperty(kMCBrowserDataDetectorTypes, t_browser_types);
+	
+	if (t_browser_types == kMCBrowserDataDetectorTypeAll)
+		t_types = kMCNativeControlInputDataDetectorTypeAll;
+	else
+	{
+		if (t_browser_types & kMCBrowserDataDetectorTypeCalendarEvent)
+			t_types |= kMCNativeControlInputDataDetectorTypeCalendarEvent;
+		if (t_browser_types & kMCBrowserDataDetectorTypeEmailAddress)
+			t_types |= kMCNativeControlInputDataDetectorTypeEmailAddress;
+		if (t_browser_types & kMCBrowserDataDetectorTypeMapAddress)
+			t_types |= kMCNativeControlInputDataDetectorTypeMapAddress;
+		if (t_browser_types & kMCBrowserDataDetectorTypePhoneNumber)
+			t_types |= kMCNativeControlInputDataDetectorTypePhoneNumber;
+		if (t_browser_types & kMCBrowserDataDetectorTypeLink)
+			t_types |= kMCNativeControlInputDataDetectorTypeWebUrl;
+	}
+	
+	if (t_types == 0)
+		t_types = kMCNativeControlInputDataDetectorTypeNone;
+	
     r_type = (MCNativeControlInputDataDetectorType)t_types;
 }
 
 void MCiOSBrowserControl::GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool& r_value)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    r_value = (t_view != nil ? [t_view allowsInlineMediaPlayback] == YES : NO);
+	m_browser->GetBoolProperty(kMCBrowseriOSAllowsInlineMediaPlayback, r_value);
 }
 
 void MCiOSBrowserControl::GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool& r_value)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    r_value = (t_view != nil ? [t_view mediaPlaybackRequiresUserAction] == YES : NO);
+	m_browser->GetBoolProperty(kMCBrowseriOSMediaPlaybackRequiresUserAction, r_value);
 }
 
 void MCiOSBrowserControl::GetCanBounce(MCExecContext& ctxt, bool& r_value)
 {
-    // MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
-    //   the UIWebView.
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    r_value = (t_view != nil ? [GetScrollView() bounces] == YES : NO);
+	MCBrowserGetBoolProperty(m_browser, kMCBrowserScrollCanBounce, r_value);
 }
 
 void MCiOSBrowserControl::GetScrollingEnabled(MCExecContext& ctxt, bool& r_value)
 {
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    r_value = (t_view != nil ? [GetScrollView() isScrollEnabled] == YES : NO);
+	m_browser->GetBoolProperty(kMCBrowserScrollEnabled, r_value);
 }
 
 // Browser-specific actions
 
 void MCiOSBrowserControl::ExecStop(MCExecContext& ctxt)
-{  
-    UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    if (t_view != nil)
-        [t_view stopLoading];
+{
+	m_browser->StopLoading();
 }
 
 void MCiOSBrowserControl::ExecAdvance(MCExecContext& ctxt)
 {
-	UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    if (t_view == nil)
-        return;
-    
-    [t_view goForward];
+	m_browser->GoForward();
 }
 
 void MCiOSBrowserControl::ExecRetreat(MCExecContext& ctxt)
 {
-	UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    if (t_view == nil)
-        return;
-    
-    [t_view goBack];
+	m_browser->GoBack();
 }
 
 void MCiOSBrowserControl::ExecReload(MCExecContext& ctxt)
 {
-	UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    if (t_view == nil)
-        return;
-    
-    [t_view reload];
+	m_browser->Reload();
 }
 
 void MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
 {
-	UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    NSString *t_result;
-    t_result = [t_view stringByEvaluatingJavaScriptFromString: MCStringConvertToAutoreleasedNSString(p_script)];
-    
-    if (t_result == nil)
-    {
+	MCAutoStringRefAsUTF8String t_script;
+	if (!t_script.Lock(p_script))
+		return;
+	
+	char *t_result;
+	t_result = nil;
+	
+	if (!m_browser->EvaluateJavaScript(*t_script, t_result))
+	{
         ctxt.SetTheResultToCString("error");
-        return;
-    }
-    MCAutoStringRef t_result_string;
-    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)t_result, &t_result_string);
-    ctxt.SetTheResultToValue(*t_result_string);
+		return;
+	}
+	
+	MCAutoUTF8CharArray t_utf8_string;
+	t_utf8_string.Give((char_t*)t_result, MCCStringLength(t_result));
+	
+	MCAutoStringRef t_string_ref;
+	/* UNCHECKED */ t_utf8_string.CreateStringAndRelease(&t_string_ref);
+	
+    ctxt.SetTheResultToValue(*t_string_ref);
 }
 
 void MCiOSBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_html)
 {
-	UIWebView *t_view;
-	t_view = (UIWebView *)GetView();
-    
-    if (t_view == nil)
-        return;
-    
-    // MW-2012-10-01: [[ Bug 10422 ]] Make sure we mark a pending request so the
-    //   HTML loading doesn't divert through a loadRequested message.
-    [m_delegate setPendingRequest: true];
-    [t_view loadHTMLString: MCStringConvertToAutoreleasedNSString(p_html) baseURL: [NSURL URLWithString: MCStringConvertToAutoreleasedNSString(p_url)]];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool datadetectortypes_from_string(const char *p_list, UIDataDetectorTypes &r_types)
-{
-	bool t_success = true;
-	UIDataDetectorTypes t_data_types = UIDataDetectorTypeNone;
+	MCAutoStringRefAsUTF8String t_html;
+	if (!t_html.Lock(p_html))
+		return;
 	
-	const char *t_string_start = nil;
-	const char *t_string_next = nil;
-	uint32_t t_string_len = 0;
+	MCAutoStringRefAsUTF8String t_url;
+	if (!t_url.Lock(p_url))
+		return;
 	
-	t_string_start = p_list;
-	
-	while (t_success && t_string_start != nil)
-	{
-		t_string_next = nil;
-		
-		if (MCCStringFirstIndexOf(t_string_start, ',', t_string_len))
-			t_string_next = t_string_start + t_string_len + 1;
-		else
-			t_string_len = MCCStringLength(t_string_start);
-		
-		while (t_string_len > 0 && t_string_start[0] == ' ')
-		{
-			t_string_len--;
-			t_string_start++;
-		}
-		while (t_string_len > 0 && t_string_start[t_string_len - 1] == ' ')
-			t_string_len--;
-		
-		if (t_string_len > 0)
-		{
-			if (MCCStringEqualSubstringCaseless(t_string_start, "phone number", t_string_len))
-				t_data_types |= UIDataDetectorTypePhoneNumber;
-			else if (MCCStringEqualSubstringCaseless(t_string_start, "link", t_string_len))
-				t_data_types |= UIDataDetectorTypeLink;
-			else if (MCCStringEqualSubstringCaseless(t_string_start, "address", t_string_len))
-				t_data_types |= UIDataDetectorTypeAddress;
-			else if (MCCStringEqualSubstringCaseless(t_string_start, "calendar event", t_string_len))
-				t_data_types |= UIDataDetectorTypeCalendarEvent;
-			else
-				t_success = false;
-		}
-		
-		t_string_start = t_string_next;
-	}
-	
-	if (t_success)
-		r_types = t_data_types;
-	
-	return t_success;
-}
-
-bool datadetectortypes_to_string(UIDataDetectorTypes p_types, char *&r_list)
-{
-	bool t_success = true;
-	char *t_list = nil;
-	
-	if (p_types == UIDataDetectorTypeNone)
-		t_success = MCCStringClone("", t_list);
-	else if (p_types == UIDataDetectorTypeAll)
-		t_success = MCCStringClone("all", t_list);
-	else
-	{
-		if (t_success && (p_types & UIDataDetectorTypePhoneNumber))
-			t_success = MCCStringAppendFormat(t_list, "%s%s", t_list == nil ? "" : ",", "phone number");
-		if (t_success && (p_types & UIDataDetectorTypeLink))
-			t_success = MCCStringAppendFormat(t_list, "%s%s", t_list == nil ? "" : ",", "link");
-		if (t_success && (p_types & UIDataDetectorTypeAddress))
-			t_success = MCCStringAppendFormat(t_list, "%s%s", t_list == nil ? "" : ",", "address");
-		if (t_success && (p_types & UIDataDetectorTypeCalendarEvent))
-			t_success = MCCStringAppendFormat(t_list, "%s%s", t_list == nil ? "" : ",", "calendar event");
-	}
-	
-	if (t_success)
-		r_list = t_list;
-	else
-		MCCStringFree(t_list);
-	
-	return t_success;
+	m_browser->LoadHTMLText(*t_html, *t_url);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -548,23 +381,6 @@ bool datadetectortypes_to_string(UIDataDetectorTypes p_types, char *&r_list)
 bool MCiOSBrowserControl::GetDelayRequests(void)
 {
 	return m_delay_requests;
-}
-
-// 
-// MW-2012-09-20: [[ Bug 10304 ]] Returns the UIScrollView which is embedded in
-//   the UIWebView.
-UIScrollView *MCiOSBrowserControl::GetScrollView(void)
-{
-	// For iOS5+ theres a proper accessor for it.
-	if (MCmajorosversion >= 500)
-		return [GetView() scrollView];
-	
-	// Otherwise, loop through subviews until we find (a subclass of a) scrollview.
-	for(id t_subview in GetView().subviews)
-		if ([[t_subview class] isSubclassOfClass: [UIScrollView class]])
-			return (UIScrollView *)t_subview;
-	
-	return nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -601,24 +417,39 @@ void MCiOSBrowserControl::HandleFinishEvent(void)
 	}
 }
 
+bool MCBrowserNavigationTypeToString(MCBrowserNavigationType p_type, MCStringRef &r_string)
+{
+	switch (p_type)
+	{
+		case kMCBrowserNavigationTypeFollowLink:
+			return MCStringCreateWithCString("click", r_string);
+		case kMCBrowserNavigationTypeSubmitForm:
+			return MCStringCreateWithCString("submit", r_string);
+		case kMCBrowserNavigationTypeBackForward:
+			return MCStringCreateWithCString("navigate", r_string);
+		case kMCBrowserNavigationTypeReload:
+			return MCStringCreateWithCString("reload", r_string);
+		case kMCBrowserNavigationTypeResubmitForm:
+			return MCStringCreateWithCString("resubmit", r_string);
+		case kMCBrowserNavigationTypeOther:
+			return MCStringCreateWithCString("other", r_string);
+	}
+}
+
 // MW-2011-11-03: [[ LoadRequested ]] Returns 'true' if a request was loaded. If
 //   'notify' is true, it dispatches a loadRequested message.
-bool MCiOSBrowserControl::HandleLoadRequest(NSURLRequest *p_request, UIWebViewNavigationType p_type, bool p_notify)
+bool MCiOSBrowserControl::HandleLoadRequest(MCBrowserNavigationRequest *p_request, bool p_notify)
 {
 	MCObject *t_target;
 	t_target = GetOwner();
 	if (t_target == nil)
 		return false;
 
-	static const char *s_types[] =
-	{
-		"click",
-		"submit",
-		"navigate",
-		"reload",
-		"resumbit",
-		"other"
-	};
+	MCAutoStringRef t_type;
+	/* UNCHECKED */ MCBrowserNavigationTypeToString(p_request->GetNavigationType(), &t_type);
+
+	MCAutoStringRef t_url;
+	/* UNCHECKED */ MCStringCreateWithBytes((char_t*)p_request->GetURL(), MCCStringLength(p_request->GetURL()), kMCStringEncodingUTF8, false, &t_url);
 	
 	MCNativeControl *t_old_target;
 	t_old_target = ChangeTarget(this);
@@ -630,9 +461,6 @@ bool MCiOSBrowserControl::HandleLoadRequest(NSURLRequest *p_request, UIWebViewNa
 	
 	// Whether we send loadRequest or loadRequested depends on 'notify'.
 	Exec_stat t_stat;
-    MCAutoStringRef t_url, t_type;
-    /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[[p_request URL] absoluteString], &t_url);
-    /* UNCHECKED */ MCStringCreateWithCString(s_types[p_type], &t_type);
 	t_stat = t_target -> message_with_valueref_args(p_notify ? MCM_browser_load_requested : MCM_browser_load_request, *t_url, *t_type);
 	
 	// Only in the initial (non-notify) mode do we need to potentially re-request
@@ -641,9 +469,7 @@ bool MCiOSBrowserControl::HandleLoadRequest(NSURLRequest *p_request, UIWebViewNa
 	{
 		if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
 		{
-			[m_delegate setPendingRequest: true];
-			// MW-2012-08-06: [[ Fibers ]] Invoke the system call on the main fiber.
-			/* REMOTE */ MCIPhoneCallSelectorOnMainFiberWithObject(GetView(), @selector(loadRequest:), p_request);
+			p_request->Continue();
 			t_did_load = true;
 		}
 	}
@@ -653,46 +479,20 @@ bool MCiOSBrowserControl::HandleLoadRequest(NSURLRequest *p_request, UIWebViewNa
 	return t_did_load;
 }
 
-void MCiOSBrowserControl::HandleLoadFailed(NSError *p_error)
+void MCiOSBrowserControl::HandleLoadFailed(MCStringRef p_error)
 {
 	MCObject *t_target;
 	t_target = GetOwner();
 	if (t_target != nil)
 	{
-        MCAutoStringRef t_url, t_description;
+        MCAutoStringRef t_url;
         MCExecContext ctxt(nil, nil, nil);
         GetUrl(ctxt, &t_url);
-        /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[p_error localizedDescription], &t_description);
         MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
-		t_target -> message_with_valueref_args(MCM_browser_load_failed, *t_url, *t_description);
+		t_target -> message_with_valueref_args(MCM_browser_load_failed, *t_url, p_error);
 		ChangeTarget(t_old_target);
 	}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-UIView *MCiOSBrowserControl::CreateView(void)
-{
-	UIWebView *t_view;
-	t_view = [[UIWebView alloc] initWithFrame: CGRectMake(0, 0, 0, 0)];
-	if (t_view == nil)
-		return nil;
-	
-	[t_view setHidden: YES];
-	
-	m_delegate = [[com_runrev_livecode_MCiOSBrowserDelegate alloc] initWithInstance: this];
-	[t_view setDelegate: m_delegate];
-	
-	return t_view;
-}
-
-void MCiOSBrowserControl::DeleteView(UIView *p_view)
-{
-	[(UIWebView *)p_view setDelegate: nil];
-	[p_view release];
-	
-	[m_delegate release];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -729,20 +529,21 @@ private:
 class MCNativeBrowserLoadRequestEvent: public MCCustomEvent
 {
 public:
-	MCNativeBrowserLoadRequestEvent(MCiOSBrowserControl *p_target, NSURLRequest *p_request, UIWebViewNavigationType p_type, bool p_notify)
+	MCNativeBrowserLoadRequestEvent(MCiOSBrowserControl *p_target, MCBrowserNavigationRequest *p_request, bool p_notify)
 	{
 		m_target = p_target;
 		m_target -> Retain();
 		m_request = p_request;
-		[m_request retain];
-		m_type = p_type;
+		if (m_request != nil)
+			m_request->Retain();
 		m_notify = p_notify;
 	}
 	
 	void Destroy(void)
 	{
 		m_target -> Release();
-		[m_request release];
+		if (m_request != nil)
+			m_request->Release();
 		delete this;
 	}
 	
@@ -750,32 +551,33 @@ public:
 	{
 		// MW-2011-11-03: [[ LoadRequested ]] If a load occurred, then post a load requested
 		//   event.
-		if (m_target -> HandleLoadRequest(m_request, m_type, m_notify))
-			MCEventQueuePostCustom(new MCNativeBrowserLoadRequestEvent(m_target, m_request, m_type, true));
+		if (m_target -> HandleLoadRequest(m_request, m_notify))
+			MCEventQueuePostCustom(new MCNativeBrowserLoadRequestEvent(m_target, m_request, true));
 	}
 	
 private:
 	MCiOSBrowserControl *m_target;
-	NSURLRequest *m_request;
-	UIWebViewNavigationType m_type;
+	MCBrowserNavigationRequest *m_request;
 	bool m_notify;
 };
 
 class MCNativeBrowserLoadFailedEvent: public MCCustomEvent
 {
 public:
-	MCNativeBrowserLoadFailedEvent(MCiOSBrowserControl *p_target, NSError *p_error)
+	MCNativeBrowserLoadFailedEvent(MCiOSBrowserControl *p_target, MCStringRef p_error)
 	{
 		m_target = p_target;
 		m_target -> Retain();
 		m_error = p_error;
-		[m_error retain];
+		if (m_error != nil)
+			MCValueRetain(m_error);
 	}
 	
 	void Destroy(void)
 	{
 		m_target -> Release();
-		[m_error release];
+		if (m_error != nil)
+			MCValueRelease(m_error);
 		delete this;
 	}
 	
@@ -786,75 +588,147 @@ public:
 	
 private:
 	MCiOSBrowserControl *m_target;
-	NSURLRequest *m_request;
-	NSError *m_error;
+	MCStringRef m_error;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation com_runrev_livecode_MCiOSBrowserDelegate
-
-- (id)initWithInstance:(MCiOSBrowserControl*)instance
+class MCiOSBrowserEventHandler : public MCBrowserEventHandler
 {
-	self = [super init];
-	if (self == nil)
+public:
+	MCiOSBrowserEventHandler(MCiOSBrowserControl *p_browser_control) : m_browser_control(p_browser_control)
+	{
+	}
+	
+	virtual void OnNavigationBegin(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
+	{
+	}
+	
+	virtual void OnNavigationComplete(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
+	{
+	}
+	
+	virtual void OnNavigationFailed(MCBrowser *p_browser, bool p_in_frame, const char *p_url, const char *p_error)
+	{
+	}
+
+	virtual void OnDocumentLoadBegin(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
+	{
+		if (!p_in_frame)
+			loadStartFinish(false);
+	}
+	
+	virtual void OnDocumentLoadComplete(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
+	{
+		if (!p_in_frame)
+			loadStartFinish(true);
+	}
+	
+	virtual void OnDocumentLoadFailed(MCBrowser *p_browser, bool p_in_frame, const char *p_url, const char *p_error)
+	{
+		if (!p_in_frame)
+			loadFail(p_error);
+	}
+
+	virtual void OnNavigationRequestUnhandled(MCBrowser *p_browser, bool p_in_frame, const char *p_url)
+	{
+	}
+	
+private:
+	void loadStartFinish(bool p_finish)
+	{
+		MCCustomEvent *t_event;
+		t_event = new MCNativeBrowserStartFinishEvent(m_browser_control, p_finish);
+		MCEventQueuePostCustom(t_event);
+	}
+	
+	void loadFail(const char *p_error)
+	{
+		MCAutoStringRef t_error;
+		/* UNCHECKED */ MCStringCreateWithBytes((char_t*)p_error, MCCStringLength(p_error), kMCStringEncodingUTF8, false, &t_error);
+		MCCustomEvent *t_event;
+		t_event = new MCNativeBrowserLoadFailedEvent(m_browser_control, *t_error);
+		MCEventQueuePostCustom(t_event);
+	}
+	
+	MCiOSBrowserControl *m_browser_control;
+};
+
+class MCiOSBrowserNavigationRequestHandler : public MCBrowserNavigationRequestHandler
+{
+public:
+	MCiOSBrowserNavigationRequestHandler(MCiOSBrowserControl *p_browser_control)
+		: m_browser_control(p_browser_control)
+	{
+	}
+	
+	virtual bool OnNavigationRequest(MCBrowser *p_browser, MCBrowserNavigationRequest *p_request)
+	{
+		if (!m_browser_control -> GetDelayRequests())
+		{
+			// MW-2011-11-03: [[ LoadRequested ]] In non-delayrequests mode, we always
+			//   post a loadRequested event (notice that we pass 'true' to notify).
+			MCEventQueuePostCustom(new MCNativeBrowserLoadRequestEvent(m_browser_control, p_request, true));
+			return false;
+		}
+
+		MCCustomEvent *t_event;
+		t_event = new MCNativeBrowserLoadRequestEvent(m_browser_control, p_request, false);
+		MCEventQueuePostCustom(t_event);
+		return true;
+	}
+
+private:
+	MCiOSBrowserControl *m_browser_control;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+UIView *MCiOSBrowserControl::CreateView(void)
+{
+	MCBrowser *t_browser;
+	t_browser = nil;
+	
+	MCBrowserFactory *t_factory;
+	t_factory = nil;
+	
+	if (!MCBrowserFactoryGet("default", t_factory))
 		return nil;
 	
-	m_instance = instance;
-	m_pending_request = false;
+	if (!t_factory->CreateBrowser(nil, nil, t_browser))
+		return nil;
 	
-	return self;
-}
-
-- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
-{
-	MCCustomEvent *t_event;
-	t_event = new MCNativeBrowserLoadFailedEvent(m_instance, error);
-	MCEventQueuePostCustom(t_event);
-}
-
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType
-{
-	if (m_pending_request)
-	{
-		m_pending_request = false;
-		return YES;
-	}
+	/* UNCHECKED */ t_browser->SetBoolProperty(kMCBrowseriOSDelayRequests, true);
 	
-	if (!m_instance -> GetDelayRequests())
+	MCBrowserEventHandler *t_event_handler;
+	t_event_handler = new MCiOSBrowserEventHandler(this);
+	
+	MCBrowserNavigationRequestHandler *t_request_handler;
+	t_request_handler = new MCiOSBrowserNavigationRequestHandler(this);
+	
+	t_browser->SetEventHandler(t_event_handler);
+	t_browser->SetNavigationRequestHandler(t_request_handler);
+	
+	t_event_handler->Release();
+	t_request_handler->Release();
+	
+	m_browser = t_browser;
+	
+	return (UIView*)t_browser->GetNativeLayer();
+}
+
+void MCiOSBrowserControl::DeleteView(UIView *p_view)
+{
+	if (m_browser)
 	{
-		// MW-2011-11-03: [[ LoadRequested ]] In non-delayrequests mode, we always
-		//   post a loadRequested event (notice that we pass 'true' to notify).
-		MCEventQueuePostCustom(new MCNativeBrowserLoadRequestEvent(m_instance, request, navigationType, true));
-		return YES;
+		m_browser->SetEventHandler(nil);
+		m_browser->SetNavigationRequestHandler(nil);
+		
+		m_browser->Release();
+		
+		m_browser = nil;
 	}
-
-	MCCustomEvent *t_event;
-	t_event = new MCNativeBrowserLoadRequestEvent(m_instance, request, navigationType, false);
-	MCEventQueuePostCustom(t_event);
-	return NO;
 }
-
-- (void)webViewDidFinishLoad:(UIWebView *)webView
-{
-	MCCustomEvent *t_event;
-	t_event = new MCNativeBrowserStartFinishEvent(m_instance, true);
-	MCEventQueuePostCustom(t_event);
-}
-
-- (void)webViewDidStartLoad:(UIWebView *)webView
-{
-	MCCustomEvent *t_event;
-	t_event = new MCNativeBrowserStartFinishEvent(m_instance, false);
-	MCEventQueuePostCustom(t_event);
-}
-
-- (void)setPendingRequest:(bool)p_new_value
-{
-    m_pending_request = p_new_value;
-}
-
-@end
 
 ////////////////////////////////////////////////////////////////////////////////
 

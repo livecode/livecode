@@ -1710,7 +1710,7 @@ void MCDispatch::wmdragleave(Window w)
 	}
     
     // We are no longer the drop target and no longer care about the drag data.
-    MCdragboard->Unlock();
+    MCdragboard->PushUpdates();
     MCdragboard->ReleaseData();
 	m_drag_target = false;
 }

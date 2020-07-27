@@ -342,10 +342,19 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
         
         [t_event release];
     }
+	
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self
+									 selector:@selector(interfaceThemeChangedNotification:)
+								     name:@"AppleInterfaceThemeChangedNotification" object:nil];
     
 	// We started up successfully, so queue the root runloop invocation
 	// message.
 	[self performSelector: @selector(runMainLoop) withObject: nil afterDelay: 0];
+}
+
+- (void)interfaceThemeChangedNotification:(NSNotification *)notification
+{
+	MCPlatformCallbackSendSystemAppearanceChanged();
 }
 
 - (void)runMainLoop
@@ -608,7 +617,21 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
         case kMCPlatformSystemPropertyVolume:
             MCMacPlatformGetGlobalVolume(*(double *)r_value);
             break;
-            
+		
+		case kMCPlatformSystemPropertySystemAppearance:
+		{
+			NSUserDefaults *t_defaults = [NSUserDefaults standardUserDefaults];
+			NSString *t_appearance = [t_defaults stringForKey:@"AppleInterfaceStyle"];
+			if (t_appearance == nil || ![t_appearance isEqualToString:@"Dark"])
+			{
+				*(int16_t *)r_value = kMCPlatformSystemAppearanceLight;
+			}
+			else
+			{
+				*(int16_t *)r_value = kMCPlatformSystemAppearanceDark;
+			}
+		}
+			break;
 		default:
 			assert(false);
 			break;
@@ -868,7 +891,7 @@ void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
 			return;
 		
 		[NSApp endModalSession: s_modal_sessions[t_final_index - 1] . session];
-		[s_modal_sessions[t_final_index - 1] . window -> GetHandle() orderOut: nil];
+		[s_modal_sessions[t_final_index - 1] . window -> GetHandle() performSelector:@selector(orderOut:) withObject:nil afterDelay:0];
 		s_modal_sessions[t_final_index - 1] . window -> Release();
 		s_modal_session_count -= 1;
 	}

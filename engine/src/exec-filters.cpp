@@ -701,7 +701,8 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCData
                     
                     while (!t_space_skipped)
                     {
-                        if (offset > offset + t_temp_size - t_space_length)
+                        // stop looking for spaces when an encoded space char won't fit within the remaining data
+                        if (t_space_length > t_temp_size)
                         {
                             // No char remaining
                             t_space_skipped = true;

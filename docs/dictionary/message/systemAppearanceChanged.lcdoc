@@ -1,0 +1,35 @@
+Name: systemAppearanceChanged
+
+Type: message
+
+Syntax: systemAppearanceChanged
+
+Summary:
+Sent to the <current card> of the <defaultStack> when the <system appearance|systemAppearance>
+changes.
+
+Associations: card
+
+Introduced: 1.0
+
+OS: mac, ios, android
+
+Platforms: desktop,mobile
+
+Example:
+on systemAppearanceChanged
+    if the systemAppearance is "dark" then
+        set the backColor of me to "black"
+        set the foreColor of me to "white"
+    else
+        set the backColor of me to "white"
+        set the foreColor of me to "black"
+    end if
+end systemAppearanceChanged
+
+Description:
+Handle the <systemAppearanceChanged> <message> if you need to change the color
+of objects when the application enters either light or dark mode.
+
+References: systemAppearance (property), message (glossary), defaultStack (property)
+

@@ -1,0 +1,1 @@
+# Fix native container layers on iOS blocking events to underlying native layers

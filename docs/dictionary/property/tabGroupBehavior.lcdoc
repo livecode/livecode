@@ -26,7 +26,7 @@ is set to false.
 
 Description:
 Use the <tabGroupBehavior> <property> to enable using the arrow keys to
-tab through a <group(glossary)|group's> <control(object)|controls>.
+tab through a <group(glossary)|group's> <control(glossary)|controls>.
 
 If a group's <tabGroupBehavior> <property> is set to true, pressing the
 Tab key moves to the first <unlock|unlocked> <field(keyword)> in the
@@ -54,8 +54,8 @@ arrow keys to move around in any of the <field(object)|fields> in the
 <control(keyword)> instead.
 
 References: group (command), property (glossary), unlock (glossary),
-group (glossary), field (keyword), control (keyword), tabKey (message),
-field (object), control (object), tabStops (property),
+group (glossary), control (glossary), field (keyword), control (keyword), 
+tabKey (message), field (object), tabStops (property),
 textArrows (property), traversalOn (property), radioBehavior (property),
 layer (property)
 

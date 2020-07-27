@@ -1,0 +1,30 @@
+Name: systemAppearance
+
+Type: property
+
+Syntax: get the systemAppearance
+
+Summary:
+Determins if the system appearance is dark or light mode. 
+
+Introduced: 9.6
+
+OS: mac, android, ios
+
+Platforms: desktop, mobile
+
+Example:
+if the systemAppearance is "dark" then
+    set the backColor of me to "black"
+    set the foreColor of me to "white"
+else
+    set the backColor of me to "white"
+    set the foreColor of me to "black"
+end if
+
+Description:
+The <systemAppearance> property returns either "dark" or "light" depending on
+whether the application is running in a dark mode context or not. On windows
+and linux the property will return "light".
+
+References: systemAppearanceChanged (message)

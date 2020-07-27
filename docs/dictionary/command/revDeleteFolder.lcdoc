@@ -41,6 +41,9 @@ all <file|files>, <subfolder|subfolders>, and their contents.
 > should not rename or move <file|files> and <folder|folders> it didn't
 > create without obtaining explicit confirmation from the user.
 
+>*Note:* This <command> can not delete the <defaultFolder> and will
+> fail if the folderToDelete is or contains the <defaultFolder>.
+
 >*Note:* When included in a <standalone application>, the 
 > <Common library> is implemented as a hidden <group> and made 
 > available when the <group> receives its first <openBackground> 
@@ -64,5 +67,6 @@ AppleScript (glossary), group (glossary), Unix (glossary),
 Mac OS (glossary), folder (glossary), message (glossary), 
 handler (glossary), Common library (library), library (library), 
 startup (message), openBackground (message), preOpenStack (message), 
-openStack (message), preOpenCard (message), stack (object)
+openStack (message), preOpenCard (message), stack (object),
+defaultFolder (property)
 

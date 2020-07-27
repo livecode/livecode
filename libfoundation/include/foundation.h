@@ -110,6 +110,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // __HAS_CORE_FOUNDATION__ will be defined if the platform has the CF libraries.
 #undef __HAS_CORE_FOUNDATION__
 
+// __HAS_MULTIPLE_ABIS__ will be defined if the platform has more than one
+// function ABI
+#undef __HAS_MULTIPLE_ABIS__
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  CONFIGURE DEFINITIONS FOR WINDOWS
@@ -130,6 +134,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __i386__ 1
 #define __LP32__ 1
 #define __SMALL__ 1
+#define __HAS_MULTIPLE_ABIS__ 1
 #elif defined(_M_X64)
 #define __64_BIT__ 1
 #define __LITTLE_ENDIAN__ 1
@@ -1020,11 +1025,11 @@ extern void __MCUnreachable(void) ATTRIBUTE_NORETURN;
 
 #else
 
-#define MCAssert(expr) (void) (expr)
+#define MCAssert(expr)  (void)(0 ? (expr) : 0)
 
-#define MCLog(...) (void) (__VA_ARGS__)
+#define MCLog(...) (void)(0 ? (__VA_ARGS__) : 0)
 
-#define MCLogWithTrace(...) (void) (__VA_ARGS__)
+#define MCLogWithTrace(...) (void)(0 ? (__VA_ARGS__) : 0)
 
 #if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >  4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5)))
 
@@ -2180,6 +2185,10 @@ MC_DLLEXPORT bool MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte
 MC_DLLEXPORT bool MCStringCreateWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringCreateWithCharsAndRelease(unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
 
+// Create an immutable string from the given unicode char sequence and force it
+// to be unicode.
+MC_DLLEXPORT bool MCStringCreateUnicodeWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
+
 // Create an immutable string from the given NUL terminated unicode char sequence.
 MC_DLLEXPORT bool MCStringCreateWithWString(const unichar_t *wstring, MCStringRef& r_string);
 MC_DLLEXPORT bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStringRef& r_string);
@@ -3129,8 +3138,26 @@ MC_DLLEXPORT bool MCHandlerExternalInvoke(MCHandlerRef handler, MCValueRef *argu
  *       ExternalInvoke if the current thread is unknown. */
 MC_DLLEXPORT /*copy*/ MCErrorRef MCHandlerTryToInvokeWithList(MCHandlerRef handler, MCProperListRef& x_arguments, MCValueRef& r_value);
 MC_DLLEXPORT /*copy*/ MCErrorRef MCHandlerTryToExternalInvokeWithList(MCHandlerRef handler, MCProperListRef& x_arguments, MCValueRef& r_value);
-    
+   
+/* Create a C function ptr which calls the given handler ref. The function ptr is
+ * stored in the handler ref and is freed when it is. On 32-bit Win32, the calling
+ * convention used is __cdecl. */
 MC_DLLEXPORT bool MCHandlerGetFunctionPtr(MCHandlerRef handler, void*& r_func_ptr);
+
+/* Create a C function ptr with a specific ABI. The function ptr is stored in the
+ * handler ref and is freed when it is. The ABI argument only has an effect on 32-bit
+ * Win32, on all other platforms it is ignored. */
+enum MCHandlerAbiKind
+{
+	kMCHandlerAbiDefault,
+	kMCHandlerAbiStdCall,
+	kMCHandlerAbiThisCall,
+	kMCHandlerAbiFastCall,
+	kMCHandlerAbiCDecl,
+	kMCHandlerAbiPascal,
+	kMCHandlerAbiRegister
+};
+MC_DLLEXPORT bool MCHandlerGetFunctionPtrWithAbi(MCHandlerRef handler, MCHandlerAbiKind p_convention, void*& r_func_ptr);
 
 ////////////////////////////////////////////////////////////////////////////////
 //

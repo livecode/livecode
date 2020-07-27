@@ -164,6 +164,16 @@ void MCPlatformHandleScreenParametersChanged(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCPlatformHandleSystemAppearanceChanged(void)
+{
+	if (MCscreen == nil)
+		return;
+	
+	MCscreen -> delaymessage(MCdefaultstackptr -> getcurcard(), MCM_system_appearance_changed);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if defined (FEATURE_PLATFORM_WINDOW)
 void MCPlatformHandleWindowCloseRequest(MCPlatformWindowRef p_window)
 {

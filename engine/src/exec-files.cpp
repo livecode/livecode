@@ -58,6 +58,7 @@ MCFilesEvalFileItemsOfDirectory(MCExecContext& ctxt,
                                 MCStringRef p_directory,
                                 bool p_files,
                                 bool p_detailed,
+                                bool p_utf8,
                                 MCStringRef& r_string)
 {
 	if (MCsecuremode & MC_SECUREMODE_DISK)
@@ -66,7 +67,7 @@ MCFilesEvalFileItemsOfDirectory(MCExecContext& ctxt,
 		return;
 	}
 	MCAutoListRef t_list;
-	if (MCS_getentries(p_directory, p_files, p_detailed, &t_list))
+	if (MCS_getentries(p_directory, p_files, p_detailed, p_utf8, &t_list))
 	{
 		MCListCopyAsString(*t_list, r_string);
 	}
@@ -2716,7 +2717,7 @@ void MCFilesGetFiles(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(nil, true, false, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, true, false, false, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();
@@ -2728,7 +2729,7 @@ void MCFilesGetDetailedFiles(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(nil, true, true, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, true, true, false, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();
@@ -2740,7 +2741,7 @@ void MCFilesGetFolders(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(nil, false, false, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, false, false, false, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();
@@ -2752,7 +2753,7 @@ void MCFilesGetDetailedFolders(MCExecContext& ctxt, MCStringRef& r_value)
 	if (ctxt . EnsureDiskAccessIsAllowed())
 	{
 		MCAutoListRef t_list;
-		if (MCS_getentries(nil, false, true, &t_list) && MCListCopyAsString(*t_list, r_value))
+		if (MCS_getentries(nil, false, true, false, &t_list) && MCListCopyAsString(*t_list, r_value))
 			return;
 
 		ctxt . Throw();

@@ -36,8 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
-#import <MediaPlayer/MPMoviePlayerController.h>
-
 #include "mbliphonecontrol.h"
 #include "mbliphone.h"
 

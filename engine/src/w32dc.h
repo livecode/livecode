@@ -166,6 +166,10 @@ class MCScreenDC : public MCUIDC
     int m_main_window_depth = 0;
     HWND m_main_window_current = nullptr;
 
+	uint32_t m_metrics_x_dpi;
+	uint32_t m_metrics_y_dpi;
+	NONCLIENTMETRICSW m_metrics_non_client;
+
 protected:
 	static uint4 pen_inks[];
 	static uint4 image_inks[];
@@ -355,6 +359,10 @@ public:
 	void processdesktopchanged(bool p_notify = true, bool p_update_fonts = true);
 	void processtaskbarnotify(HWND hwnd, WPARAM wparam, LPARAM lparam);
 
+	uint32_t getscreenxdpi(void) const { return m_metrics_x_dpi; }
+	uint32_t getscreenydpi(void) const { return m_metrics_y_dpi; }
+	const NONCLIENTMETRICSW& getnonclientmetrics(void) const { return m_metrics_non_client; }
+
 	// These rountines convert a UTF-8 string into with a 'WIDE' or 'ANSI'
 	// string suitable for passing to a windows API W or A function. The
 	// caller is reponsible for freeing the returned string.
@@ -362,6 +370,10 @@ public:
 	static LPCSTR convertutf8toansi(const char *p_utf8_string);
 
 private:
+	/* Refetch any system metric information that may be changed by either a
+	 * WM_SETTINGCHANGE or WM_DISPALYCHANGE message. */
+	void updatemetrics(void);
+
 	bool initialisebackdrop(void);
 	void finalisebackdrop(void);
 };

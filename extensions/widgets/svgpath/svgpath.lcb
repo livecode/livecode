@@ -47,6 +47,8 @@ private variable mAngle as Real
 private variable mFillRule as String
 private variable mScaledWidth as Real
 private variable mScaledHeight as Real
+private variable mWidth as Real
+private variable mHeight as Real
 
 
 /**
@@ -303,7 +305,11 @@ end handler
 ----------
 -- this handler is called when the widget is resized
 public handler OnGeometryChanged()
-	CalculateScaledSizes()
+    if my width is not mWidth or my height is not mHeight then
+        CalculateScaledSizes()
+        put my width into mWidth
+        put my height into mHeight
+    end if
 end handler
 ----------
 

@@ -79,11 +79,11 @@ enum Ask_type {
 };
 
 enum Assert_type {
-    TYPE_NONE,
-    TYPE_TRUE,
-    TYPE_FALSE,
-    TYPE_SUCCESS,
-    TYPE_FAILURE,
+    ASSERT_TYPE_NONE,
+    ASSERT_TYPE_TRUE,
+    ASSERT_TYPE_FALSE,
+    ASSERT_TYPE_SUCCESS,
+    ASSERT_TYPE_FAILURE,
 };
 
 inline Chunk_term ct_class(Chunk_term src)
@@ -1758,6 +1758,8 @@ enum Properties {
     P_REV_LIBRARY_MAPPING,
     
     P_LAYER_CLIP_RECT,
+	
+	P_SYSTEM_APPEARANCE,
     
     __P_LAST,
 };
