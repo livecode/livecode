@@ -1072,8 +1072,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
     if (window == 0 && r.x == -32768)
     {
         // Switch to a box drawing cursor and take control of the pointer
-//        x11::Cursor t_cursor = x11::XCreateFontCursor(x11::gdk_x11_display_get_xdisplay(dpy), XC_plus);
-        // MDW 2020.07.26 [[ bugfix_17257 ]]
+        // MDW 2020.07.29 [[ bugfix_17257 ]]
         GdkCursor *t_cursor = gdk_cursor_new_from_name(dpy, "crosshair");
         if (gdk_pointer_grab(t_root, False,
                              GdkEventMask(GDK_POINTER_MOTION_MASK|GDK_BUTTON_PRESS_MASK|GDK_BUTTON_RELEASE_MASK),
@@ -1093,10 +1092,6 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
         gdk_gc_set_subwindow(t_gc, GDK_INCLUDE_INFERIORS);
         int16_t t_start_x = 0;
         int16_t t_start_y = 0;
-        gint t_x = 0;
-        gint t_y = 0;
-        gint t_width = 0;
-        gint t_height = 0;
         bool t_drawing = false;
         bool t_done = false;
         
@@ -1167,8 +1162,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
                     break;
                     
                 case GDK_BUTTON_PRESS:
-        // MDW 2020.07.26 [[ bugfix_17257 ]]
-                    //x11::gdk_x11_grab_server();
+                    // MDW 2020.07.29 [[ bugfix_17257 ]]
                     MCeventtime = gdk_event_get_time(t_event);
                     t_start_x = t_event_button->x;
                     t_start_y = t_event_button->y;
@@ -1179,13 +1173,12 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
                     
                 case GDK_BUTTON_RELEASE:
                     MCeventtime = gdk_event_get_time(t_event);
-                    // setmods(t_event_button->state, 0, t_event_button->button, True);
+                    // MDW 2020.07.29 [[ bugfix_17257 ]]
                     gdk_draw_rectangle(t_root, t_gc, FALSE, t_rect.x, t_rect.y, t_rect.width - 1, t_rect.height - 1);
                     r = MCU_compute_rect(t_start_x, t_start_y, t_event_button->x, t_event_button->y);
                     if (r.width < 4 && r.height < 4)
                         r.width = r.height = 0;
-        // MDW 2020.07.26 [[ bugfix_17257 ]]
-                    //x11::gdk_x11_ungrab_server();
+                    // MDW 2020.07.29 [[ bugfix_17257 ]]
                     t_done = true;
                     break;
                     
@@ -1194,12 +1187,14 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef di
                     break;
 
 				default:
+                    // ignore all other events
 					break;
             }
             
             // The event needs to be released
             gdk_event_free(t_event);
         }
+
         // Release the grabs and other resources that were acquired
         gdk_display_pointer_ungrab(dpy, GDK_CURRENT_TIME);
         gdk_cursor_unref(t_cursor);
