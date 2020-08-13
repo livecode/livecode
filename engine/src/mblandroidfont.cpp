@@ -457,9 +457,8 @@ static bool create_custom_font_from_path(MCStringRef p_path, FT_Library p_librar
         for (uint32_t i = 0; i < FT_Get_Sfnt_Name_Count(t_font_face); i++)
         {
             // Attempt to fetch the name of the font.  The name is name id 4 as defined in https://developer.apple.com/fonts/TTRefMan/RM06/Chap6name.html
-            // It appears that the platform to use here is 1 (Macintosh according to the spec).
             FT_Get_Sfnt_Name(t_font_face, i, &t_sft_name);
-            if (t_sft_name.name_id == 4 && t_sft_name.platform_id == 1 && t_sft_name.encoding_id == 0 && t_sft_name.language_id == 0 && t_sft_name.string_len != 0)
+            if (t_sft_name.name_id == 4 && t_sft_name.string_len != 0)
             {
                 t_success = MCStringCreateWithNativeChars((char_t *)t_sft_name.string, t_sft_name.string_len, t_font->name);
                 break;
