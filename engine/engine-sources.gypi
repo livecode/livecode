@@ -32,6 +32,8 @@
 			'src/customprinter.cpp',
 			'src/font.cpp',
 			'src/fonttable.cpp',
+			'src/glcontext.cpp',
+			'src/glcontext.h',
 			'src/gradient.cpp',
 			'src/graphics_util.cpp',
 			'src/graphicscontext.cpp',
@@ -1151,6 +1153,7 @@
 					[
 						'src/fiber.cpp',
 						'src/tilecachegl.cpp',
+						'src/glcontext.cpp',
 						'src/player-legacy.cpp',
 						
 						'src/desktop-ans.cpp',
@@ -1175,6 +1178,7 @@
 						'src/sysunxrandom.cpp',
 						'src/sysunxregion.cpp',
 						'src/tilecachegl.cpp',
+						'src/glcontext.cpp',
 					],
 				},
 			],
@@ -1205,6 +1209,7 @@
 					[
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
+						'src/glcontext.cpp',
 						
 						'src/desktop.cpp',
 						'src/desktop-ans.cpp',
@@ -1283,6 +1288,7 @@
 						'src/notify.cpp',
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
+						'src/glcontext.cpp',
 						
 						'src/desktop.cpp',
 						'src/desktop-ans.cpp',
