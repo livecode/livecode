@@ -485,9 +485,9 @@ void MCStack::SetVisible(MCExecContext& ctxt, uint32_t part, bool setting)
 		MCscreen->sync(getw());
         
 #ifdef _WINDOWS_DESKTOP
-        // On Windows force a reload, otherwise a stack with a windowshape does not show
-        if (setting)
-            loadwindowshape();
+        // On Windows force a redraw, otherwise a stack with a windowshape does not show
+        if (setting && (windowshapeid != 0))
+            dirtyall();
 #endif
 	}
 }
