@@ -37,7 +37,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 
+/* TODO - Don't attempt to build on 32bit armv7 - needs ndk update */
+#if !defined(__arm__)
 #define USE_MCGLHARDWAREBUFFER
+#endif
 
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES

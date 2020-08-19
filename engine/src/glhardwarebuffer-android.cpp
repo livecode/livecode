@@ -14,6 +14,13 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+/* TODO - Don't attempt to build on 32bit armv7 - needs ndk update */
+#if !defined(__arm__)
+#define MCANDROIDUSEHARDWAREBUFFER
+#endif
+
+#if defined(MCANDROIDUSEHARDWAREBUFFER)
+
 #define GL_GLEXT_PROTOTYPES
 #define EGL_EGLEXT_PROTOTYPES
 #include <GLES3/gl3.h>
@@ -268,3 +275,44 @@ void MCGLHardwareBufferUnlock(MCGLHardwareBufferRef p_buffer)
 		MCLog("error unlocking hardwarebuffer: %d", t_error);
 	p_buffer->lock = nil;
 }
+
+#else // defined(MCANDROIDUSEHARDWAREBUFFER)
+
+#include <foundation.h>
+#include <GLES3/gl3.h>
+#include "glhardwarebuffer.h"
+
+bool MCGLHardwareBufferIsSupported(void)
+{
+	return false;
+}
+
+bool MCGLHardwareBufferCreate(uindex_t p_width, uindex_t p_height, MCGLHardwareBufferRef &r_buffer)
+{
+	return false;
+}
+
+void MCGLHardwareBufferDestroy(MCGLHardwareBufferRef p_buffer)
+{
+}
+
+bool MCGLHardwareBufferBindToGLTexture(MCGLHardwareBufferRef p_buffer, GLuint p_texture)
+{
+	return false;
+}
+
+bool MCGLHardwareBufferGetStride(MCGLHardwareBufferRef p_buffer, uindex_t &r_stride)
+{
+	return false;
+}
+
+bool MCGLHardwareBufferLock(MCGLHardwareBufferRef p_buffer, void *&r_ptr)
+{
+	return false;
+}
+
+void MCGLHardwareBufferUnlock(MCGLHardwareBufferRef p_buffer)
+{
+}
+
+#endif // defined(MCANDROIDUSEHARDWAREBUFFER)
