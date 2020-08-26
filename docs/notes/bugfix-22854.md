@@ -1,0 +1,1 @@
+# Fix crash deleting the touch target on mobile

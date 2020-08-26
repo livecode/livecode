@@ -1042,6 +1042,7 @@ void _SyncEvaluateJavaScript(WKWebView *p_view, NSString *p_javascript, id &r_re
 			}
 			
 			t_evaluating = false;
+			MCBrowserRunloopBreakWait();
 		}];
 	});
 	

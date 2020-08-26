@@ -1290,13 +1290,93 @@ public:
 		if (nil == m_owner)
 			return;
 		
-		// clearing the menu model prevents the context menu from opening
-		if (!m_owner->GetEnableContextMenu())
+		extern void MCCefMenuFilterItems(CefRefPtr<CefMenuModel> p_menu);
+
+		if (m_owner->GetEnableContextMenu())
+			MCCefMenuFilterItems(p_model);
+		else
 			p_model->Clear();
 	}
 	
 	IMPLEMENT_REFCOUNTING(MCCefBrowserClient);
 };
+
+void MCCefMenuFilterItems(CefRefPtr<CefMenuModel> p_menu)
+{
+	// Remove unwanted items from the default menu,
+	// keeping text editing and autocorrect options
+
+	cef_menu_item_type_t t_prev_type = MENUITEMTYPE_NONE;
+
+	uindex_t t_item_count = p_menu->GetCount();
+	uindex_t t_index = 0;
+	while (t_index < t_item_count)
+	{
+		bool t_remove = false;
+		cef_menu_item_type_t t_type = p_menu->GetTypeAt(t_index);
+		if (t_type == MENUITEMTYPE_SUBMENU)
+		{
+			CefRefPtr<CefMenuModel> t_submenu;
+			t_submenu = p_menu->GetSubMenuAt(t_index);
+			MCCefMenuFilterItems(t_submenu);
+			// remove filtered submenu if empty
+			t_remove = t_submenu->GetCount() == 0;
+		}
+		else if (t_type == MENUITEMTYPE_SEPARATOR)
+		{
+			// remove separator if last item in menu was a separator
+			if (t_prev_type == MENUITEMTYPE_SEPARATOR)
+				t_remove = true;
+		}
+		else
+		{
+			int t_command_id;
+			t_command_id = p_menu->GetCommandIdAt(t_index);
+			switch (t_command_id)
+			{
+			case MENU_ID_UNDO:
+			case MENU_ID_REDO:
+			case MENU_ID_CUT:
+			case MENU_ID_COPY:
+			case MENU_ID_PASTE:
+			case MENU_ID_DELETE:
+			case MENU_ID_SELECT_ALL:
+				break;
+
+			case MENU_ID_SPELLCHECK_SUGGESTION_0:
+			case MENU_ID_SPELLCHECK_SUGGESTION_1:
+			case MENU_ID_SPELLCHECK_SUGGESTION_2:
+			case MENU_ID_SPELLCHECK_SUGGESTION_3:
+			case MENU_ID_SPELLCHECK_SUGGESTION_4:
+			case MENU_ID_NO_SPELLING_SUGGESTIONS:
+			case MENU_ID_ADD_TO_DICTIONARY:
+				break;
+
+			default:
+				t_remove = true;
+				break;
+			}
+		}
+
+		if (t_remove)
+		{
+			p_menu->RemoveAt(t_index);
+			t_item_count--;
+		}
+		else
+		{
+			// remember the type of this item
+			t_prev_type = t_type;
+			t_index++;
+		}
+	}
+
+	// if the last item is a separator then remove it
+	if (t_prev_type == MENUITEMTYPE_SEPARATOR)
+	{
+		p_menu->RemoveAt(t_item_count - 1);
+	}
+}
 
 bool MCCefBrowserBase::Initialize()
 {
@@ -1357,7 +1437,7 @@ MCCefBrowserBase::MCCefBrowserBase()
 	m_instance_id = 0;
 	
 	m_send_advanced_messages = false;
-	m_show_context_menu = false;
+	m_show_context_menu = true;
 	m_allow_new_window = false;
 	
 	m_javascript_handlers = nil;

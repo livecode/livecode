@@ -238,13 +238,14 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
    
    local tResult
    put the dialogData into tResult
+   -- all keys/values in tResult are already URL encoded
    
    if tResult["code"] is not empty then
       local tParams
       put "grant_type=authorization_code" into tParams
       put "&client_id=" & urlEncode(pClientID) after tParams
       put "&client_secret=" & urlEncode(pClientSecret) after tParams
-      put "&code=" & urlEncode(tResult["code"]) after tParams
+      put "&code=" & tResult["code"] after tParams
       put "&redirect_uri=" & urlEncode(kRedirectURL & ":" & pPort & "/") after tParams
       
       local tResponse
