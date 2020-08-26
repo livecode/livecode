@@ -3492,9 +3492,11 @@ void MCInterfaceDoRelayer(MCExecContext& ctxt, int p_relation, MCObjectPtr p_sou
 		t_new_target_handle = t_new_target != nil ? t_new_target : nil;
 
 		// Make sure we remove focus from the control.
+		// Note: Unlike KFOCUSED, the MFOCUSED flag is only set on the focused
+		// control and its (control) ancestors *not* the card.
 		MCObjectHandle t_kfocused_handle = nil;
 		bool t_was_mfocused, t_was_kfocused;
-		t_was_mfocused = t_card -> getstate(CS_MFOCUSED) == True;
+		t_was_mfocused = t_source_handle -> getstate(CS_MFOCUSED) == True;
 		t_was_kfocused = t_card -> getstate(CS_KFOCUSED) == True;
 		if (t_was_mfocused)
 			t_card -> munfocus();
