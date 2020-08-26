@@ -18,7 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 mergeInto(LibraryManager.library, {
 
-	$LiveCodeEvents__deps: ['$LiveCodeAsync', '$LiveCodeDC'],
+	$LiveCodeEvents__deps: ['$LiveCodeAsync', '$LiveCodeDC', '$LiveCodeUtil'],
 	$LiveCodeEvents: {
 
 		// true if ensureInit() has ever been run
@@ -26,6 +26,12 @@ mergeInto(LibraryManager.library, {
 
 		// contains mouse event data
 		_mouseEvent: null,
+
+		// text element used to capture input events
+		_inputelement: null,
+
+		// current target of keyboard / input events
+		_inputtarget: null,
 
 		// This function is used to call a function for each event
 		// type to handler mapping defined for LiveCode on Emscripten.
@@ -45,8 +51,17 @@ mergeInto(LibraryManager.library, {
 				['mouseenter', LiveCodeEvents._handleMouseEvent],
 				['mouseleave', LiveCodeEvents._handleMouseEvent],
 
-				// FIXME "keypress" events are deprecated
-				['keypress', LiveCodeEvents._handleKeyboardEvent],
+				['contextmenu', LiveCodeEvents._handleContextMenu],
+			];
+
+			var mapLength = mapping.length;
+			for (var i = 0; i < mapLength; i++) {
+				func(mapping[i][0], mapping[i][1], mapping[i][2]);
+			}
+		},
+
+		_inputEventForEach: function(pFunc) {
+			var mapping = [
 				['keyup', LiveCodeEvents._handleKeyboardEvent],
 				['keydown', LiveCodeEvents._handleKeyboardEvent],
 
@@ -56,13 +71,11 @@ mergeInto(LibraryManager.library, {
 				['compositionstart', LiveCodeEvents._handleComposition],
 				['compositionupdate', LiveCodeEvents._handleComposition],
 				['compositionend', LiveCodeEvents._handleComposition],
-				
-				['contextmenu', LiveCodeEvents._handleContextMenu],
 			];
 
 			var mapLength = mapping.length;
 			for (var i = 0; i < mapLength; i++) {
-				func(mapping[i][0], mapping[i][1]);
+				pFunc(mapping[i][0], mapping[i][1]);
 			}
 		},
 
@@ -74,9 +87,6 @@ mergeInto(LibraryManager.library, {
 
 			// Make sure the canvas is treated as focusable...
 			pElement.tabIndex = 0;
-
-			// Make it a target for text input events
-			pElement.setAttribute('contentEditable', 'true');
 
 			// Force the canvas to use a normal mouse cursor by
 			// default
@@ -101,6 +111,25 @@ mergeInto(LibraryManager.library, {
 			document.addEventListener("mouseup", LiveCodeEvents._handleDocumentMouseEvent);
 			document.addEventListener("mousemove", LiveCodeEvents._handleDocumentMouseEvent);
 			
+			// Create the hidden input element
+			var tInput = document.createElement('input');
+			tInput.type = 'text';
+			tInput.style.position = 'fixed';
+			tInput.style.display = 'block';
+			tInput.style.zIndex = 0;
+			tInput.style.opacity = 0;
+			tInput.style.setProperty('left', '0px', 'important');
+			tInput.style.setProperty('top', '0px', 'important');
+			tInput.style.setProperty('width', '1px', 'important');
+			tInput.style.setProperty('height', '1px', 'important');
+
+			LiveCodeEvents._inputelement = tInput;
+			document.body.appendChild(tInput);
+
+			LiveCodeEvents._inputEventForEach(function(type, handler) {
+				tInput.addEventListener(type, handler);
+			});
+
 			LiveCodeEvents._initialised = true;
 		},
 
@@ -108,6 +137,9 @@ mergeInto(LibraryManager.library, {
 			if (!LiveCodeEvents._initialised) {
 				return;
 			}
+
+			document.body.removeChild(LiveCodeEvents._inputelement);
+			LiveCodeEvents._inputelements = null;
 
 			LiveCodeEvents._initialised = false;;
 		},
@@ -128,11 +160,10 @@ mergeInto(LibraryManager.library, {
 			return LiveCodeEvents._getStackForWindow(window);
 		},
 
-		_encodeModifiers: function(uiEvent) {
+		_encodeModifiers: function(pShift, pAlt, pCtrl, pMeta) {
 			return Module.ccall('MCEmscriptenEventEncodeModifiers', 'number',
 								['number', 'number', 'number', 'number'],
-								[uiEvent.shiftKey, uiEvent.altKey,
-								 uiEvent.ctrlKey, uiEvent.metaKey]);
+								[pShift, pAlt, pCtrl, pMeta]);
 		},
 
 		// ----------------------------------------------------------------
@@ -148,9 +179,42 @@ mergeInto(LibraryManager.library, {
 						 [stack, owner]);
 		},
 
+		// When a LC canvas acquires focus, mark it as the current key focus target, then pass focus to the hidden input field
+		_setInputFocus: function(pTarget) {
+			if (pTarget != LiveCodeEvents._inputtarget)
+			{
+				if (LiveCodeEvents._inputtarget != null)
+				{
+					var tOldTarget = LiveCodeEvents._inputtarget;
+					LiveCodeEvents._inputtarget = null;
+					LiveCodeEvents._postKeyFocus(LiveCodeEvents._getStackForCanvas(tOldTarget), false);
+					tOldTarget.blur();
+				}
+
+				if (pTarget != null)
+				{
+					LiveCodeEvents._inputtarget = pTarget;
+					LiveCodeEvents._postKeyFocus(LiveCodeEvents._getStackForCanvas(pTarget), true);
+				}
+			}
+
+			if (LiveCodeEvents._inputelement != null)
+				LiveCodeEvents._inputelement.focus({"preventScroll": true});
+		},
+
 		_handleFocusEvent: function(e) {
 			LiveCodeAsync.delay(function() {
 				var stack = LiveCodeEvents._getStackForCanvas(e.target);
+
+				// clear the current focus target when the hidden input field loses focus to a non-LC element.
+				if (e.target == LiveCodeEvents._inputelement &&
+					(e.type == 'blur' || e.type == 'focusout') &&
+					LiveCodeEvents._getStackForCanvas(e.relatedTarget) == null)
+				{
+					_setInputFocus(null);
+					return;
+				}
+
 				// ignore events for non-lc elements
 				if (!stack)
 					return;
@@ -158,11 +222,21 @@ mergeInto(LibraryManager.library, {
 				switch (e.type) {
 				case 'focus':
 				case 'focusin':
-					LiveCodeEvents._postKeyFocus(stack, true);
+					LiveCodeEvents._setInputFocus(e.target);
 					break;
 				case 'blur':
 				case 'focusout':
-					LiveCodeEvents._postKeyFocus(stack, false);
+					// ignore passing focus to hidden input field
+					if (e.relatedTarget == LiveCodeEvents._inputelement)
+						return;
+
+					// if losing focus to another LC stack don't remove focus here, as focus will
+					// be reassigned in the 'focusin' event sent to that stack canvas
+					var tFocusStack = LiveCodeEvents._getStackForCanvas(e.relatedTarget);
+					if (tFocusStack != null)
+						return;
+
+					LiveCodeEvents._setInputFocus(null);
 					break;
 				default:
 					console.debug('Unexpected focus event type: ' + e.type);
@@ -498,52 +572,68 @@ mergeInto(LibraryManager.library, {
 		},
 
 		// Wrapper for MCEventQueuePostKeyPress()
-		_postKeyPress: function(stack, modifiers, char_code, key_code) {
+		_postKeyPress: function(stack, modifiers, char_code, key_code, key_state) {
 			Module.ccall('MCEventQueuePostKeyPress',
 						 'number', // bool
 						 ['number',  // MCStack *stack
 						  'number',  // uint32_t modifiers
 						  'number',  // uint32_t char_code
-						  'number'], // uint32_t key_code
-						 [stack, modifiers, char_code, key_code]);
+						  'number', // uint32_t key_code
+						  'number'], // MCEventKeyState key_state
+						 [stack, modifiers, char_code, key_code, key_state]);
 		},
 
 		_handleKeyboardEvent: function(e) {
 			LiveCodeAsync.delay(function() {
 
-				var stack = LiveCodeEvents._getStackForCanvas(e.target);
-				var mods = LiveCodeEvents._encodeModifiers(e);
+				const kKeyStateDown = 0;
+				const kKeyStateUp = 1;
+				const kKeyStatePressed = 2;
+
+				var stack = LiveCodeEvents._getStackForCanvas(LiveCodeEvents._inputtarget);
+				/* TODO - reenable alt key detection
+				 * As there is no direct way to tell the difference between an alt+<key>
+				 * combination that produces a different character, and holding alt down
+				 * while typing that character directly, for now we ignore the state of
+				 * the alt key so that typing such characters is possible.
+				 */
+				var mods = LiveCodeEvents._encodeModifiers(e.shiftKey, false, e.ctrlKey, e.metaKey);
+
+				// Ignore alt key presses
+				if (e.key == 'Alt')
+					return;
+				
+				// ignore key events during IME composing
+				if (e.isComposing || e.keyCode === 229)
+					return;
 
 				// ignore events for non-lc elements
 				if (!stack)
 					return;
 
 				switch (e.type) {
-				case 'keypress':
-					var char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
-					var key_code = LiveCodeEvents._encodeKeyboardKeyCode(e);
-					LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code);
-					break;
 				case 'keyup':
+					char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
+					key_code = LiveCodeEvents._encodeKeyboardKeyCode(e);
+					LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code, kKeyStateUp);
+					break;
 				case 'keydown':
 					char_code = LiveCodeEvents._encodeKeyboardCharCode(e);
 					key_code = LiveCodeEvents._encodeKeyboardKeyCode(e);
 
-					// If this is a browser using old-style keyboard events, we won't get
-					// a 'keypress' message for special keys
-					if (!('key' in e) && e.type === 'keydown' && 0xFE00 <= key_code && key_code <= 0xFFFF) {
-						// Dispatch the keypress to the engine
-						LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code);
+					// post synthetic keyup event if this is a repeat (i.e. held down) key event
+					if (e.repeat)
+						LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code, kKeyStateUp);
 
-						// Suppress the default behaviour for this key
-						e.preventDefault();
-					}
-
+					LiveCodeEvents._postKeyPress(stack, mods, char_code, key_code, kKeyStateDown);
 					break;
 				default:
 					console.debug('Unexpected keyboard event type: ' + e.type);
 					return;
 				}
+
+				// Clear text input field after capturing key event
+				LiveCodeEvents._inputelement.value = "";
 			});
 			LiveCodeAsync.resume();
 
@@ -570,20 +660,20 @@ mergeInto(LibraryManager.library, {
 		},
 
 		_stringToUTF16: function(string) {
-			var buffer = _malloc(2 * string.length + 2);
-			Module.stringToUTF16(string, buffer, 2*string.length + 2);
+			var buffer = LiveCodeUtil.stringToUTF16(string);
 			return [buffer, string.length];
 		},
 
 		_handleComposition: function(compositionEvent) {
 			LiveCodeAsync.delay(function() {
 				// Stack that we're targeting
-				var stack = LiveCodeEvents._getStackForCanvas(compositionEvent.target);
+				var stack = LiveCodeEvents._getStackForCanvas(LiveCodeEvents._inputtarget);
 
 				// ignore events for non-lc elements
 				if (!stack)
 					return;
 
+				console.log('composition event: ' + compositionEvent.type + " '" + compositionEvent.data + "'");
 				var encodedString;
 				var chars, length;
 				switch (compositionEvent.type) {
@@ -592,7 +682,6 @@ mergeInto(LibraryManager.library, {
 						encodedString = LiveCodeEvents._stringToUTF16(compositionEvent.data);
 						chars = encodedString[0];
 						length = encodedString[1];
-						console.debug('Composition event: ' + compositionEvent.type + ' ' + Module.UTF16ToString(chars));
 						LiveCodeEvents._postImeCompose(stack, true, 0, chars, length);
 						_free(chars);
 						break;
@@ -600,9 +689,11 @@ mergeInto(LibraryManager.library, {
 						encodedString = LiveCodeEvents._stringToUTF16(compositionEvent.data);
 						chars = encodedString[0];
 						length = encodedString[1];
-						console.debug('Composition event: ' + compositionEvent.type + ' ' + Module.UTF16ToString(chars));
 						LiveCodeEvents._postImeCompose(stack, false, 0, chars, length);
 						_free(chars);
+
+						// Clear text input field once composition ends
+						LiveCodeEvents._inputelement.value = "";
 						break;
 					default:
 						console.debug('Unexpected composition event type: ' + compositionEvent.type)
@@ -706,7 +797,7 @@ mergeInto(LibraryManager.library, {
 
 				var target = LiveCodeEvents._eventTarget(e);
 				var stack = LiveCodeEvents._getStackForCanvas(target);
-				var mods = LiveCodeEvents._encodeModifiers(e);
+				var mods = LiveCodeEvents._encodeModifiers(e.shiftKey, e.altKey, e.ctrlKey, e.metaKey);
 				var pos = LiveCodeEvents._encodeMouseCoordinates(e);
 
 				// ignore events for non-lc elements
@@ -721,7 +812,8 @@ mergeInto(LibraryManager.library, {
 				case 'mousedown':
 					// In the case of mouse down, specifically request
 					// keyboard focus
-					e.target.focus();
+					LiveCodeEvents._setInputFocus(target);
+
 					LiveCodeEvents._postMousePosition(stack, e.timeStamp, mods, pos[0], pos[1]);
 					var state = LiveCodeEvents._encodeMouseState(e.type);
 					LiveCodeEvents._postMousePress(stack, e.timeStamp, mods,

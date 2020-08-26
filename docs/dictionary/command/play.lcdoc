@@ -102,6 +102,11 @@ by using the put <command> :
 > and <videoClip> for details. To play a wider variety of formats, 
 > use a <player> object.
 
+Changes:
+The use of <QuickTime> was deprecated in version 8.1 of LiveCode. As
+the `play videoClip ..` form of the <play> command was relying on 
+<QuickTime>, it is no longer supported.
+
 References: audioClip (object), beep (command), callbacks (property), 
 command (glossary), current card (glossary), currentTime (property), 
 dontRefresh (property), environment variable (glossary), 
@@ -110,10 +115,10 @@ import (command), iphoneSetAudioCategory (command), looping (property),
 MCISendString (function), message (glossary), 
 playDestination (property), player (object), playLoudness (property), 
 playRate (property), playStarted (message), playStopped (message), 
-prepare (command), QTVersion (function), result (function), 
-return (glossary), revStopAnimation (command), showSelection (property), 
-sound (function), start (command), stop (command), Unix (glossary), 
-videoClip (object)
+prepare (command), QTVersion (function),  QuickTime (glossary), 
+result (function), return (glossary), revStopAnimation (command), 
+showSelection (property), sound (function), start (command), 
+stop (command), Unix (glossary), videoClip (object)
 
 Tags: multimedia
 

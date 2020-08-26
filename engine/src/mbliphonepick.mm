@@ -120,6 +120,20 @@ UIViewController *MCIPhoneGetViewController(void);
 	m_use_checkmark = p_use;
 }
 
+- (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view
+{
+    UILabel* t_label = (UILabel*)view;
+    if (!t_label)
+    {
+        t_label = [[UILabel alloc] init];
+        t_label.adjustsFontSizeToFitWidth = YES;
+        t_label.textAlignment = NSTextAlignmentCenter;
+        [t_label setText:[[viewArray objectAtIndex:component] objectAtIndex:row]];
+    }
+    
+    return t_label;
+}
+
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
 	// HC-2011-10-03 [[ Picker Buttons ]] Showing the bar dynamicly, to indicate if any initial selections have been made.
