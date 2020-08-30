@@ -779,13 +779,13 @@ bool MCBlock::fit(coord_t x, coord_t maxwidth, findex_t& r_break_index, bool& r_
 	coord_t t_width_float;
 	t_width_float = 0;
 
-	findex_t i;
+	uindex_t i;
 	i = m_index;
 	
 	codepoint_t t_next_char;
 	t_next_char = parent->GetCodepointAtIndex(i);
 	
-	findex_t t_break_index;
+	uindex_t t_break_index;
 	t_break_index = m_index;
 
 	bool t_can_fit;
@@ -1644,7 +1644,7 @@ void MCBlock::setbackcolor(const MCColor *newcolor)
 
 coord_t MCBlock::GetCursorX(findex_t fi)
 {
-	findex_t j = fi - m_index;
+	uindex_t j = fi - m_index;
 	if (j > m_size)
 		j = m_size;
     
@@ -1680,7 +1680,7 @@ findex_t MCBlock::GetCursorIndex(coord_t x, Boolean chunk, Boolean last, bool mo
 			return m_index + 1;
     }
 
-	findex_t i = m_index;
+	uindex_t i = m_index;
 	
 	// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
 	//   complete runs.

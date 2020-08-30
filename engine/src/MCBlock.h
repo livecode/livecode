@@ -61,7 +61,7 @@ protected:
 	MCParagraph *parent;
 	uint4 flags;
 	Blockatts *atts;
-	findex_t m_index, m_size;
+	uindex_t m_index, m_size;
 	coord_t width;
     coord_t origin;
 	uint2 opened;
