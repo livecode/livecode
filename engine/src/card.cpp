@@ -1646,6 +1646,9 @@ void MCCard::relayercontrol_remove(MCControl *p_control)
 	
 	// Remove the control from the card's objptr list.
 	t_control_ptr -> remove(objptrs);
+	// make sure this card no longer points to the removed control
+	clearfocus(t_control_ptr, nullptr);
+	
 	delete t_control_ptr;
 
 	// Remove the control from the stack's list.

@@ -965,7 +965,6 @@
 		# Sources only used in Commercial Android builds
 		'engine_commercial_java_files':
 		[
-			'src/java/com/runrev/android/AdModule.java',
 			'src/java/com/runrev/android/billing/amazon/AmazonBillingProvider.java',
 			'src/java/com/runrev/android/billing/amazon/MyPurchasingObserver.java',
 		],

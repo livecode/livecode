@@ -1,0 +1,1 @@
+# Fix crash in HTML5 standalones when getting / setting the effective rect of a stack

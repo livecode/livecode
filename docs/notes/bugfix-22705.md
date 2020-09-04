@@ -1,0 +1,1 @@
+# Fix crash focusing on an unopen stack
