@@ -1905,6 +1905,10 @@ command MergeManifestArray @xManifestArrayA, pAdditionalsA
                put tNewA[tKey] into tExistingA[tKey]
             end repeat
             put tExistingA into xManifestArrayA[tActivityIndex]["@attributes"]
+            if tData["@children"] is an array then
+               MergeManifestArray xManifestArrayA[tActivityIndex]["@children"], \
+                     tData["@children"]
+            end if
             break
          default
             insertIntoList tData, xManifestArrayA, tEndOfBlock
