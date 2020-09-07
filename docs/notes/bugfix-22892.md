@@ -1,1 +1,1 @@
-# Further explained the workings of is an integer
+# Corrected the definition of is a number and integer
