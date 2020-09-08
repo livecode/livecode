@@ -56,11 +56,11 @@ A <value> is a(n):
 * color if it is a valid <color reference>
 * date if it is in one of the formats produced by the <date> or <time>
   functions 
-* <integer(keyword)> if it consists of digits (with an optional leading
-  minus sign), or an hexadecimal number (such as 0x0F9B)
-* number if it consists of digits, optional leading minus sign, optional
-  decimal point, and optional "E" or "e" (scientific notation), or an
-  optional leading minus sign and infinity or inf
+* number if it is a result of a numeric operation, or a string representing a
+  decimal number (e.g. 100.01 or -10), a hexadecimal number (e.g. 0x1FB)
+  or a number in scientific notation (e.g. 100.001e-10).
+* <integer(keyword)> if it is a number and the number has no (non-zero)
+  fractional part (e.g. 100.000 is an integer, but 100.001 is not an integer).
 * <point> if it consists of two numbers separated by a comma
 * <rectangle|rect> if it consists of four numbers separated by commas
 * <ASCII> string if it does not contain any characters greater than
