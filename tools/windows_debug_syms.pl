@@ -22,6 +22,8 @@ while (my $line = <$FILE>)
 	# Replace the .exe or .dll suffix of each file with .pdb
 	$line =~ s/\.(exe|dll)$/\.pdb/;
 	
+	$line =~ s/(LiveCode-Business|LiveCode-Indy|LiveCode-CommunityPlus)\.pdb$/LiveCode-Commercial\.pdb/;
+	
 	# Output the filename
 	print "$line\n";
 }
