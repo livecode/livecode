@@ -37,16 +37,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 
+#define USE_MCGLHARDWAREBUFFER
+
 #define GL_GLEXT_PROTOTYPES
+#define EGL_EGLEXT_PROTOTYPES
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
+
 #include <EGL/egl.h>
+
+// required for GL_TEXTURE_EXTERNAL_OES definition
+#include <GLES2/gl2ext.h>
 
 #else
 #error tilecachegl3.x.cpp not supported on this platform
 #endif
 
 #include "glcontext.h"
+#include "glhardwarebuffer.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -63,6 +71,11 @@ struct vertex_buffer
 struct super_tile
 {
 	GLuint texture;
+	GLenum texture_target;
+	MCGLProgramType texture_program_type;
+#if defined(USE_MCGLHARDWAREBUFFER)
+	MCGLHardwareBufferRef hw_buffer;
+#endif
 	vertex_buffer<MCGLTextureVertex> vertex_buffer;
 	uint32_t free_count;
 	uint8_t free_list[1];
@@ -127,6 +140,15 @@ struct MCTileCacheOpenGLCompositorContext
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCTileCacheOpenGLCompositorHardwareBufferIsSupported(MCTileCacheOpenGLCompositorContext *self);
+bool MCTileCacheOpenGLCompositorInitHardwareBuffer(MCTileCacheOpenGLCompositorContext *self, uindex_t p_size, super_tile *p_super_tile);
+bool MCTileCacheOpenGLCompositorUpdateHardwareBuffer(super_tile *p_super_tile, int32_t p_tile_size, int32_t p_size, const void *p_bits, uint32_t p_stride, GLint p_x, GLint p_y);
+void MCTileCacheOpenGLCompositorUnlockHardwareBuffer(super_tile *p_super_tile);
+void MCTileCacheOpenGLCompositorFreeHardwareBuffer(super_tile *p_super_tile);
+
+
+////////////////////////////////////////////////////////////////////////////////
+
 static inline void MCTileCacheOpenGLCompositorDecodeTile(MCTileCacheOpenGLCompositorContext *self, uintptr_t p_tile, uint32_t& r_super_tile, uint32_t& r_sub_tile)
 {
 	r_super_tile = (p_tile & 0xffff) - 1;
@@ -181,18 +203,28 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	if (!MCMemoryAllocate(offsetof(super_tile, free_list) + self -> super_tile_arity, t_super_tile))
 		return false;
 	
-	
-	// Generate a texture id, and bind an empty texture.
+	// Generate a texture id.
 	glGenTextures(1, &t_super_tile -> texture);
-	glBindTexture(GL_TEXTURE_2D, t_super_tile -> texture);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	
-	// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kSuperTileSize, kSuperTileSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nil);
-	
+
+	if (!MCTileCacheOpenGLCompositorInitHardwareBuffer(self, kSuperTileSize, t_super_tile))
+	{
+		// Fall back to super_tile based on standard GL texture
+		MCLog("failed to allocate hardware buffer - will fallback to standard GL texture");
+
+		// Bind an empty texture.
+		glBindTexture(GL_TEXTURE_2D, t_super_tile -> texture);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		
+		// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, kSuperTileSize, kSuperTileSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nil);
+
+		t_super_tile->texture_target = GL_TEXTURE_2D;
+		t_super_tile->texture_program_type = kMCGLProgramTypeTexture;
+	}
+
 	// Fill in the free list - subtile 0 is the one we will allocate.
 	for(uint32_t i = 1; i < self -> super_tile_arity; i++)
 		t_super_tile -> free_list[i - 1] = i;
@@ -237,12 +269,17 @@ static void MCTileCacheOpenGLCompositorFlushSuperTiles(MCTileCacheOpenGLComposit
 		if (self -> super_tiles[i] == nil)
 			continue;
 		
+		MCTileCacheOpenGLCompositorUnlockHardwareBuffer(self->super_tiles[i]);
+
 		if (p_force || self -> super_tiles[i] -> free_count == self -> super_tile_arity)
 		{
 			// deleting the currently bound texture reverts the binding to zero
 			if (self->current_texture == self->super_tiles[i]->texture)
 				self->current_texture = 0;
 			glDeleteTextures(1, &self -> super_tiles[i] -> texture);
+
+			MCTileCacheOpenGLCompositorFreeHardwareBuffer(self->super_tiles[i]);
+
 			MCMemoryDelete(self -> super_tiles[i]);
 			self -> super_tiles[i] = nil;
 			
@@ -288,7 +325,7 @@ bool MCTileCacheOpenGLCompositor_EndTiling(void *p_context)
 {
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
-	
+
 	// Flush any empty textures.
 	MCTileCacheOpenGLCompositorFlushSuperTiles(self, false);
 	
@@ -301,44 +338,57 @@ bool MCTileCacheOpenGLCompositor_AllocateTile(void *p_context, int32_t p_size, c
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 
-	// If the stride is exactly one tile wide, we don't need a copy.
-	void *t_data;
-	t_data = nil;
-	if (p_stride == p_size * sizeof(uint32_t))
-		t_data = (void *)p_bits;
-	else if (MCMemoryAllocate(p_size * p_size * sizeof(uint32_t), t_data))
-	{
-		// Copy across each scanline of the tile into the buffer.
-		for(int32_t y = 0; y < p_size; y++)
-			memcpy((uint8_t *)t_data + y * p_size * sizeof(uint32_t), (uint8_t *)p_bits + p_stride * y, p_size * sizeof(uint32_t));
-	}
-	
-	void *t_tile;
 	uint32_t t_tile_id;
-	t_tile = nil;
-	if (t_data != nil && MCTileCacheOpenGLCompositorCreateTile(self, t_tile_id))
+	if (!MCTileCacheOpenGLCompositorCreateTile(self, t_tile_id))
+		return false;
+
+	// Fetch the super/sub indices of the tile.
+	uint32_t t_super_tile_index, t_sub_tile_index;
+	MCTileCacheOpenGLCompositorDecodeTile(self, t_tile_id, t_super_tile_index, t_sub_tile_index);
+	
+	uint32_t t_tile_count = kSuperTileSize / self->tile_size;
+
+	// Calculate its location.
+	GLint t_x, t_y;
+	t_x = t_sub_tile_index % t_tile_count;
+	t_y = t_sub_tile_index / t_tile_count;
+	
+	super_tile *t_super_tile;
+	t_super_tile = self->super_tiles[t_super_tile_index];
+
+	if (!MCTileCacheOpenGLCompositorUpdateHardwareBuffer(t_super_tile, self->tile_size, p_size, p_bits, p_stride, t_x, t_y))
 	{
-		// Fetch the super/sub indices of the tile.
-		uint32_t t_super_tile_index, t_sub_tile_index;
-		MCTileCacheOpenGLCompositorDecodeTile(self, t_tile_id, t_super_tile_index, t_sub_tile_index);
-		
+		// If the stride is exactly one tile wide, we don't need a copy.
+		void *t_data;
+		t_data = nil;
+		if (p_stride == p_size * sizeof(uint32_t))
+			t_data = (void *)p_bits;
+		else
+		{
+			if (!MCMemoryAllocate(p_size * p_size * sizeof(uint32_t), t_data))
+			{
+				// failed to allocate memory - destroy tile & return
+				MCTileCacheOpenGLCompositorDestroyTile(self, t_tile_id);
+				return false;
+			}
+
+			// Copy across each scanline of the tile into the buffer.
+			for(int32_t y = 0; y < p_size; y++)
+				memcpy((uint8_t *)t_data + y * p_size * sizeof(uint32_t), (uint8_t *)p_bits + p_stride * y, p_size * sizeof(uint32_t));
+		}
+
 		// Now fetch the texture and bind it if necessary.
 		GLuint t_texture;
 		t_texture = self -> super_tiles[t_super_tile_index] -> texture;
 		if (t_texture != self -> current_texture)
 		{
-			glBindTexture(GL_TEXTURE_2D, t_texture);
+			glBindTexture(t_super_tile->texture_target, t_texture);
 			self -> current_texture = t_texture;
 		}
 		
-		// Calculate its location.
-		GLint t_x, t_y;
-		t_x = t_sub_tile_index % (kSuperTileSize / self -> tile_size);
-		t_y = t_sub_tile_index / (kSuperTileSize / self -> tile_size);
-		
 		// Fill the texture.
 		// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
-		glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_RGBA, GL_UNSIGNED_BYTE, t_data);
+		glTexSubImage2D(t_super_tile->texture_target, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_RGBA, GL_UNSIGNED_BYTE, t_data);
 		// SN-2015-04-13: [[ Bug 14879 ]] This function seems to fail sometimes,
 		//  and we want to get the error here, not in
 		//  MCTileCacheOpenGLCompositorFlushSuperTiles as it happens in the
@@ -347,17 +397,12 @@ bool MCTileCacheOpenGLCompositor_AllocateTile(void *p_context, int32_t p_size, c
 		if (t_error != GL_NO_ERROR)
 			MCLog("glTextSubImage2D(x,x,%d,%d,%d,%d,...) returned error 0x%X", t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, t_error);
 
-		// Set the tile id.
-		t_tile = (void *)t_tile_id;
+		if (t_data != p_bits)
+			MCMemoryDeallocate(t_data);
 	}
 	
-	if (t_data != p_bits)
-		MCMemoryDeallocate(t_data);
-	
-	if (t_tile == nil)
-		return false;
-	
-	r_tile = t_tile;
+	// Set the tile id.
+	r_tile = (void *)t_tile_id;
 	
 	return true;
 }
@@ -377,14 +422,14 @@ static bool MCTileCacheOpenGLCompositorFlushTextureVertexBuffer(MCTileCacheOpenG
 
 	if (p_super_tile->texture != self->current_texture)
 	{
-		glBindTexture(GL_TEXTURE_2D, p_super_tile->texture);
+		glBindTexture(p_super_tile->texture_target, p_super_tile->texture);
 		self -> current_texture = p_super_tile->texture;
 	}
 
 	if (self->is_filling)
 	{
 		self->is_filling = false;
-		MCGLContextSelectProgram(self->gl_context, kMCGLProgramTypeTexture);
+		MCGLContextSelectProgram(self->gl_context, p_super_tile->texture_program_type);
 	}
 	
 	glBufferData(GL_ARRAY_BUFFER, sizeof(MCGLTextureVertex) * p_super_tile->vertex_buffer.count, p_super_tile->vertex_buffer.vertices, GL_STREAM_DRAW);
@@ -479,6 +524,13 @@ static void MCTileCacheOpenGLCompositor_PrepareFrame(MCTileCacheOpenGLCompositor
 	MCGLContextSelectProgram(self->gl_context, kMCGLProgramTypeTexture);
 	MCGLContextSetWorldTransform(self->gl_context, t_world_transform);
 	MCGLContextSetTextureTransform(self->gl_context, t_texture_transform);
+	
+	if (MCTileCacheOpenGLCompositorHardwareBufferIsSupported(self))
+	{
+		MCGLContextSelectProgram(self->gl_context, kMCGLProgramTypeExternalTexture);
+		MCGLContextSetWorldTransform(self->gl_context, t_world_transform);
+		MCGLContextSetTextureTransform(self->gl_context, t_texture_transform);
+	}
 	
 	// Initialize the blend function we would use.
 	glDisable(GL_BLEND);
@@ -753,5 +805,129 @@ bool MCTileCacheOpenGLCompositorConfigure(MCTileCacheRef p_tilecache, MCTileCach
 	
 	return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if defined(USE_MCGLHARDWAREBUFFER)
+
+bool MCTileCacheOpenGLCompositorHardwareBufferIsSupported(MCTileCacheOpenGLCompositorContext *self)
+{
+	return MCGLHardwareBufferIsSupported() &&
+		MCGLContextGetProgramSupported(self->gl_context, kMCGLProgramTypeExternalTexture);
+}
+
+bool MCTileCacheOpenGLCompositorInitHardwareBuffer(MCTileCacheOpenGLCompositorContext *self, uindex_t p_size, super_tile *x_super_tile)
+{
+	bool t_success = true;
+
+	bool t_hw_buffer_support = MCGLHardwareBufferIsSupported();
+	bool t_external_texture_support = MCGLContextGetProgramSupported(self->gl_context, kMCGLProgramTypeExternalTexture);
+	MCLog("have hardware buffer: %s, have external textures: %s", t_hw_buffer_support?"true":"false", t_external_texture_support?"true":"false");
+	
+	t_success = t_hw_buffer_support && t_external_texture_support;
+
+	MCGLHardwareBufferRef t_hw_buffer = nil;
+	if (t_success)
+	{
+		// create hardware buffer
+		t_success = MCGLHardwareBufferCreate(kSuperTileSize, kSuperTileSize, t_hw_buffer);
+	}
+
+	if (t_success)
+	{
+		// Bind buffer to GL texture
+		t_success = MCGLHardwareBufferBindToGLTexture(t_hw_buffer, x_super_tile->texture);
+	}
+
+	if (t_success)
+	{
+		x_super_tile->hw_buffer = t_hw_buffer;
+		x_super_tile->texture_target = GL_TEXTURE_EXTERNAL_OES;
+		x_super_tile->texture_program_type = kMCGLProgramTypeExternalTexture;
+	}
+	else
+	{
+		if (t_hw_buffer != nil)
+			MCGLHardwareBufferDestroy(t_hw_buffer);
+
+		x_super_tile->hw_buffer = nil;
+	}
+
+	return t_success;
+}
+
+bool MCTileCacheOpenGLCompositorUpdateHardwareBuffer(super_tile *p_super_tile, int32_t p_tile_size, int32_t p_size, const void *p_bits, uint32_t p_stride, GLint p_x, GLint p_y)
+{
+	if (p_super_tile == nil || p_super_tile->hw_buffer == nil)
+		return false;
+
+	// Attempt to lock the buffer - fail if lock fails
+	void *t_buff_ptr = nil;
+	if (!MCGLHardwareBufferLock(p_super_tile->hw_buffer, t_buff_ptr))
+	{
+		MCLog("failed to lock hardware buffer");
+		return false;
+	}
+
+	uindex_t t_stride;
+	if (!MCGLHardwareBufferGetStride(p_super_tile->hw_buffer, t_stride))
+	{
+		MCLog("failed to get hardware buffer stride");
+		return false;
+	}
+
+	// Adjust buffer ptr to top-left of target rect
+	t_buff_ptr = (uint8_t*)t_buff_ptr + p_tile_size * p_y * t_stride + p_tile_size * p_x * sizeof(uint32_t);
+
+	// Copy pixel data to hardware buffer
+	for (int32_t y = 0; y < p_size; y++)
+		memcpy((uint8_t*)t_buff_ptr + y * t_stride, (uint8_t*)p_bits + y * p_stride, p_size * sizeof(uint32_t));
+
+	return true;
+}
+
+void MCTileCacheOpenGLCompositorUnlockHardwareBuffer(super_tile *p_super_tile)
+{
+	if (p_super_tile == nil || p_super_tile->hw_buffer == nil)
+		return;
+
+	MCGLHardwareBufferUnlock(p_super_tile->hw_buffer);
+}
+
+void MCTileCacheOpenGLCompositorFreeHardwareBuffer(super_tile *p_super_tile)
+{
+	if (p_super_tile == nil || p_super_tile->hw_buffer == nil)
+		return;
+
+	MCGLHardwareBufferDestroy(p_super_tile->hw_buffer);
+	p_super_tile->hw_buffer = nil;
+}
+
+#else
+
+bool MCTileCacheOpenGLCompositorHardwareBufferIsSupported(MCTileCacheOpenGLCompositorContext *self)
+{
+	return false;
+}
+
+bool MCTileCacheOpenGLCompositorInitHardwareBuffer(MCTileCacheOpenGLCompositorContext *self, uindex_t p_size, super_tile *x_super_tile)
+{
+	return false;
+}
+
+bool MCTileCacheOpenGLCompositorUpdateHardwareBuffer(super_tile *p_super_tile, int32_t p_tile_size, int32_t p_size, const void *p_bits, uint32_t p_stride, GLint p_x, GLint p_y)
+{
+	return false;
+}
+
+void MCTileCacheOpenGLCompositorUnlockHardwareBuffer(super_tile *p_super_tile)
+{
+}
+
+void MCTileCacheOpenGLCompositorFreeHardwareBuffer(super_tile *p_super_tile)
+{
+}
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
