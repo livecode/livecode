@@ -47,6 +47,31 @@ struct MCGLProgramConfig
 	MCGAffineTransform texture_transform;
 };
 
+struct color_program_t
+{
+	// Program
+	GLuint program;
+
+	// Uniform
+	GLuint world_transform;
+
+	// Vertex array object
+	GLuint vao;
+};
+
+struct texture_program_t
+{
+	// Program
+	GLuint program;
+
+	// Uniformas
+	GLuint world_transform;
+	GLuint texture_transform;
+
+	// Certex array object
+	GLuint vao;
+};
+
 struct __MCGLContext
 {
 	// The version of OpenGL in use.
@@ -56,21 +81,13 @@ struct __MCGLContext
 	// Context initialization
 	bool is_initialized;
 
-	// programs
-	GLuint color_program;
-	GLuint texture_program;
-
-	// uniforms
-	GLuint c_transform;
-	GLuint t_transform;
-	GLuint t_texture_transform;
+	// Programs
+	color_program_t color_program;
+	texture_program_t texture_program;
+	texture_program_t external_texture_program;
 
 	// buffer
 	GLuint buffer;
-
-	// Vertex Array Objects
-	GLuint color_vao;
-	GLuint texture_vao;
 
 	// current context state
 	MCGLProgramConfig config;
@@ -110,7 +127,7 @@ bool MCGLCheckError(const char *p_prefix)
 		t_error = glGetError();
 	}
 
-	return true;
+	return false;
 }
 
 static bool MCGLCompileShader(GLuint p_shader_type, const char *p_source, GLuint &r_shader)
@@ -281,6 +298,184 @@ static MCGLShaderSourceInfo s_texture_shaders[] = {
 	{GL_FRAGMENT_SHADER, s_texture_fragment_shader_source},
 };
 
+static const char *s_external_texture_fragment_shader_source =
+R"glsl(#version 300 es
+
+#extension GL_OES_EGL_image_external_essl3 : require
+
+precision mediump float;
+uniform mat3x2 pTextureTransform;
+
+in vec2 pVertexTextureCoord;
+
+out vec4 outColor;
+
+uniform samplerExternalOES tex;
+
+void main()
+{
+	outColor = texture(tex, pTextureTransform * vec3(pVertexTextureCoord, 1.0));
+}
+)glsl";
+
+static MCGLShaderSourceInfo s_external_texture_shaders[] = {
+	{GL_VERTEX_SHADER, s_texture_vertex_shader_source},
+	{GL_FRAGMENT_SHADER, s_external_texture_fragment_shader_source},
+};
+
+static void MCGLContextFreeColorProgram(color_program_t &x_program)
+{
+	glDeleteProgram(x_program.program);
+	glDeleteVertexArrays(1, &x_program.vao);
+	MCMemoryClear(x_program);
+}
+
+static bool MCGLContextCreateColorProgram(GLuint p_buffer, color_program_t &r_program)
+{
+	bool t_success;
+	t_success = true;
+
+	color_program_t t_program;
+
+	/* Compile shader program for drawing solid color */
+	t_program.program = 0;
+	if (t_success)
+	{
+		t_success = MCGLCompileProgram(s_color_shaders, 2, t_program.program);
+		/* UNCHECKED */ MCGLDebugCheckError("compile color program: ");
+	}
+
+	/* Fetch uniform values */
+	t_program.world_transform = 0;
+	if (t_success)
+	{
+		t_program.world_transform  = glGetUniformLocation(t_program.program, "pTransform");
+		/* UNCHECKED */ MCGLDebugCheckError("get color program uniform locations: ");
+	}
+
+	/* Create vertex arrays to manage attributes */
+	t_program.vao = 0;
+	if (t_success)
+	{
+		glGenVertexArrays(1, &t_program.vao);
+		/* UNCHECKED */ MCGLDebugCheckError("create VAO: ");
+	}
+
+	/* Set up vertex attributes */
+	if (t_success)
+	{
+		GLint t_position;
+		GLint t_color;
+		t_position = glGetAttribLocation(t_program.program, "pPosition");
+		t_color = glGetAttribLocation(t_program.program, "pColor");
+		t_success = t_position != -1 && t_color != -1;
+		if (t_success)
+		{
+			glBindVertexArray(t_program.vao);
+			glBindBuffer(GL_ARRAY_BUFFER, p_buffer);
+			glEnableVertexAttribArray(t_position);
+			glVertexAttribPointer(t_position, 2, GL_SHORT, GL_FALSE, sizeof(MCGLColorVertex), 0);
+			glEnableVertexAttribArray(t_color);
+			glVertexAttribPointer(t_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(MCGLColorVertex), (void*)(2 * sizeof(GLshort)));
+		}
+		/* UNCHECKED */ MCGLDebugCheckError("set up color VAO: ");
+	}
+
+	if (t_success)
+	{
+		r_program = t_program;
+
+		MCLog("color program: %d, uniform: %d, vao: %d", t_program.program, t_program.world_transform, t_program.vao);
+	}
+	else
+	{
+		MCGLContextFreeColorProgram(t_program);
+		/* UNCHECKED */ MCGLDebugCheckError("color program cleanup: ");
+	}
+
+	return t_success;
+}
+
+static void MCGLContextFreeTextureProgram(texture_program_t &x_program)
+{
+	glDeleteProgram(x_program.program);
+	glDeleteVertexArrays(1, &x_program.vao);
+	MCMemoryClear(x_program);
+}
+
+static bool MCGLContextCreateTextureProgram(GLuint p_buffer, bool p_external_texture, texture_program_t &r_program)
+{
+	bool t_success;
+	t_success = true;
+
+	/* Select the shader set to compile into the program based on 
+	 * whether or not external textures will be used */
+	MCGLShaderSourceInfo *t_shaders;
+	if (p_external_texture)
+		t_shaders = s_external_texture_shaders;
+	else
+		t_shaders = s_texture_shaders;
+
+	/* Compile shader programs for drawing solid color & texture */
+	texture_program_t t_program;
+	t_program.program = 0;
+	if (t_success)
+		t_success = MCGLCompileProgram(t_shaders, 2, t_program.program);
+	/* UNCHECKED */ MCGLDebugCheckError("compile texture program: ");
+
+	/* Fetch uniform values */
+	t_program.world_transform = 0;
+	t_program.texture_transform = 0;
+	if (t_success)
+	{
+		t_program.world_transform = glGetUniformLocation(t_program.program, "pTransform");
+		t_program.texture_transform = glGetUniformLocation(t_program.program, "pTextureTransform");
+		/* UNCHECKED */ MCGLDebugCheckError("get uniform locations: ");
+	}
+
+	/* Create vertex arrays to manage attributes */
+	t_program.vao = 0;
+	if (t_success)
+	{
+		glGenVertexArrays(1, &t_program.vao);
+		/* UNCHECKED */ MCGLDebugCheckError("create VAOs: ");
+	}
+
+	/* Set up vertex attributes */
+	if (t_success)
+	{
+		GLint t_position;
+		GLint t_texture_coord;
+		t_position = glGetAttribLocation(t_program.program, "pPosition");
+		t_texture_coord = glGetAttribLocation(t_program.program, "pTextureCoord");
+		t_success = t_position != -1 && t_texture_coord != -1;
+		if (t_success)
+		{
+			glBindVertexArray(t_program.vao);
+			glBindBuffer(GL_ARRAY_BUFFER, p_buffer);
+			glEnableVertexAttribArray(t_position);
+			glVertexAttribPointer(t_position, 2, GL_SHORT, GL_FALSE, sizeof(MCGLTextureVertex), nil);
+			glEnableVertexAttribArray(t_texture_coord);
+			glVertexAttribPointer(t_texture_coord, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(MCGLTextureVertex), (void*)(2 * sizeof(GLshort)));
+		}
+		/* UNCHECKED */ MCGLDebugCheckError("set up texture VAO: ");
+	}
+
+	if (t_success)
+	{
+		r_program = t_program;
+
+		MCLog("texture program: %d, uniforms: [%d, %d], vao: %d", t_program.program, t_program.world_transform, t_program.texture_transform, t_program.vao);
+	}
+	else
+	{
+		MCGLContextFreeTextureProgram(t_program);
+		/* UNCHECKED */ MCGLDebugCheckError("texture program cleanup: ");
+	}
+
+	return t_success;
+}
+
 bool MCGLContextInit(MCGLContextRef self)
 {
 	MCLog("MCGLContextInit(<%p>)");
@@ -301,33 +496,6 @@ bool MCGLContextInit(MCGLContextRef self)
 	glGetIntegerv(GL_MINOR_VERSION, &self->opengl_minor_version);
 	/* UNCHECKED */ MCGLDebugCheckError("get version: ");
 	
-	/* Compile shader programs for drawing solid color & texture */
-	GLuint t_color_program;
-	t_color_program = 0;
-	if (t_success)
-		t_success = MCGLCompileProgram(s_color_shaders, 2, t_color_program);
-	/* UNCHECKED */ MCGLDebugCheckError("compile color shaders: ");
-
-	GLuint t_texture_program;
-	t_texture_program = 0;
-	if (t_success)
-		t_success = MCGLCompileProgram(s_texture_shaders, 2, t_texture_program);
-	/* UNCHECKED */ MCGLDebugCheckError("compile texture shaders: ");
-
-	/* Fetch uniform values */
-	GLuint t_cprog_world_transform;
-	t_cprog_world_transform = 0;
-	GLuint t_tprog_world_transform;
-	t_tprog_world_transform = 0;
-	GLuint t_tprog_texture_transform;
-	t_tprog_texture_transform = 0;
-	if (t_success)
-	{
-		t_cprog_world_transform = glGetUniformLocation(t_color_program, "pTransform");
-		t_tprog_world_transform = glGetUniformLocation(t_texture_program, "pTransform");
-		t_tprog_texture_transform = glGetUniformLocation(t_texture_program, "pTextureTransform");
-		/* UNCHECKED */ MCGLDebugCheckError("get uniform locations: ");
-	}
 
 	/* Create input buffers */
 	GLuint t_buffer;
@@ -338,83 +506,39 @@ bool MCGLContextInit(MCGLContextRef self)
 		/* UNCHECKED */ MCGLDebugCheckError("create buffers: ");
 	}
 
-	/* Create vertex arrays to manage attributes */
-	GLuint t_color_vao;
-	t_color_vao = 0;
-	GLuint t_texture_vao;
-	t_texture_vao = 0;
+	/* Create programs */
+	color_program_t t_color_program;
+	MCMemoryClear(t_color_program);
 	if (t_success)
-	{
-		glGenVertexArrays(1, &t_color_vao);
-		glGenVertexArrays(1, &t_texture_vao);
-		/* UNCHECKED */ MCGLDebugCheckError("create VAOs: ");
-	}
+		t_success = MCGLContextCreateColorProgram(t_buffer, t_color_program);
+	texture_program_t t_texture_program;
+	MCMemoryClear(t_texture_program);
+	if (t_success)
+		t_success = MCGLContextCreateTextureProgram(t_buffer, false, t_texture_program);
 
-	/* Set up vertex attributes */
+	/* Create optional external texture program */
+	texture_program_t t_external_texture_program;
+	MCMemoryClear(t_external_texture_program);
 	if (t_success)
 	{
-		GLint t_position;
-		GLint t_color;
-		t_position = glGetAttribLocation(t_color_program, "pPosition");
-		t_color = glGetAttribLocation(t_color_program, "pColor");
-		t_success = t_position != -1 && t_color != -1;
-		if (t_success)
-		{
-			glBindVertexArray(t_color_vao);
-			glBindBuffer(GL_ARRAY_BUFFER, t_buffer);
-			glEnableVertexAttribArray(t_position);
-			glVertexAttribPointer(t_position, 2, GL_SHORT, GL_FALSE, sizeof(MCGLColorVertex), 0);
-			glEnableVertexAttribArray(t_color);
-			glVertexAttribPointer(t_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(MCGLColorVertex), (void*)(2 * sizeof(GLshort)));
-		}
-		/* UNCHECKED */ MCGLDebugCheckError("set up color VAO: ");
-	}
-
-	if (t_success)
-	{
-		GLint t_position;
-		GLint t_texture_coord;
-		t_position = glGetAttribLocation(t_texture_program, "pPosition");
-		t_texture_coord = glGetAttribLocation(t_texture_program, "pTextureCoord");
-		t_success = t_position != -1 && t_texture_coord != -1;
-		if (t_success)
-		{
-			glBindVertexArray(t_texture_vao);
-			glBindBuffer(GL_ARRAY_BUFFER, t_buffer);
-			glEnableVertexAttribArray(t_position);
-			glVertexAttribPointer(t_position, 2, GL_SHORT, GL_FALSE, sizeof(MCGLTextureVertex), nil);
-			glEnableVertexAttribArray(t_texture_coord);
-			glVertexAttribPointer(t_texture_coord, 2, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(MCGLTextureVertex), (void*)(2 * sizeof(GLshort)));
-		}
-		/* UNCHECKED */ MCGLDebugCheckError("set up texture VAO: ");
+		/* UNCHECKED */ MCGLContextCreateTextureProgram(t_buffer, true, t_external_texture_program);
 	}
 
 	if (t_success)
 	{
 		self->color_program = t_color_program;
 		self->texture_program = t_texture_program;
+		self->external_texture_program = t_external_texture_program;
 
-		self->c_transform = t_cprog_world_transform;
-		self->t_transform = t_tprog_world_transform;
-		self->t_texture_transform = t_tprog_texture_transform;
-
-		MCLog("uniforms: %d, %d, %d",
-			self->c_transform,
-			self->t_transform,
-			self->t_texture_transform);
 		self->buffer = t_buffer;
-
-		self->color_vao = t_color_vao;
-		self->texture_vao = t_texture_vao;
 
 		self->is_initialized = true;
 	}
 	else
 	{
-		glDeleteProgram(t_color_program);
-		glDeleteProgram(t_texture_program);
-		glDeleteVertexArrays(1, &t_color_vao);
-		glDeleteVertexArrays(1, &t_texture_vao);
+		MCGLContextFreeColorProgram(t_color_program);
+		MCGLContextFreeTextureProgram(t_texture_program);
+		MCGLContextFreeTextureProgram(t_external_texture_program);
 		glDeleteBuffers(1, &t_buffer);
 		/* UNCHECKED */ MCGLDebugCheckError("init cleanup: ");
 	}
@@ -426,10 +550,10 @@ static void MCGLContextFinalize(MCGLContextRef p_context)
 {
 	MCGLContextSelectProgram(p_context, kMCGLProgramTypeNone);
 
-	glDeleteProgram(p_context->color_program);
-	glDeleteProgram(p_context->texture_program);
-	glDeleteVertexArrays(1, &p_context->color_vao);
-	glDeleteVertexArrays(1, &p_context->texture_vao);
+	MCGLContextFreeColorProgram(p_context->color_program);
+	MCGLContextFreeTextureProgram(p_context->texture_program);
+	MCGLContextFreeTextureProgram(p_context->external_texture_program);
+
 	glDeleteBuffers(1, &p_context->buffer);
 }
 
@@ -464,9 +588,33 @@ void MCGLContextReset(MCGLContextRef p_context)
 	MCMemoryClear(p_context, sizeof(__MCGLContext));
 }
 
+bool MCGLContextGetProgramSupported(MCGLContextRef p_context, MCGLProgramType p_program)
+{
+	if (p_context == nil)
+		return false;
+
+	switch (p_program)
+	{
+		case kMCGLProgramTypeNone:
+			return true;
+
+		case kMCGLProgramTypeColor:
+			return p_context->color_program.program != 0;
+
+		case kMCGLProgramTypeTexture:
+			return p_context->texture_program.program != 0;
+
+		case kMCGLProgramTypeExternalTexture:
+			return p_context->external_texture_program.program != 0;
+	}
+}
+
 bool MCGLContextSelectProgram(MCGLContextRef p_context, MCGLProgramType p_program)
 {
 	if (p_context == nil)
+		return false;
+
+	if (!MCGLContextGetProgramSupported(p_context, p_program))
 		return false;
 
 	p_context->config.program = p_program;
@@ -481,15 +629,22 @@ bool MCGLContextSelectProgram(MCGLContextRef p_context, MCGLProgramType p_progra
 
 		case kMCGLProgramTypeColor:
 			// select color program and related vao and buffer
-			glUseProgram(p_context->color_program);
-			glBindVertexArray(p_context->color_vao);
+			glUseProgram(p_context->color_program.program);
+			glBindVertexArray(p_context->color_program.vao);
 			glBindBuffer(GL_ARRAY_BUFFER, p_context->buffer);
 			break;
 
 		case kMCGLProgramTypeTexture:
 			// select texture program and related vao and buffer
-			glUseProgram(p_context->texture_program);
-			glBindVertexArray(p_context->texture_vao);
+			glUseProgram(p_context->texture_program.program);
+			glBindVertexArray(p_context->texture_program.vao);
+			glBindBuffer(GL_ARRAY_BUFFER, p_context->buffer);
+			break;
+
+		case kMCGLProgramTypeExternalTexture:
+			// select external texture program and related vao and buffer
+			glUseProgram(p_context->external_texture_program.program);
+			glBindVertexArray(p_context->external_texture_program.vao);
 			glBindBuffer(GL_ARRAY_BUFFER, p_context->buffer);
 			break;
 	}
@@ -508,10 +663,13 @@ static inline bool MCGLContextUpdateTransform(MCGLContextRef p_context)
 			return false;
 
 		case kMCGLProgramTypeColor:
-			return MCGLUniformAffineTransform(p_context->c_transform, t_transform);
+			return MCGLUniformAffineTransform(p_context->color_program.world_transform, t_transform);
 
 		case kMCGLProgramTypeTexture:
-			return MCGLUniformAffineTransform(p_context->t_transform, t_transform);
+			return MCGLUniformAffineTransform(p_context->texture_program.world_transform, t_transform);
+
+		case kMCGLProgramTypeExternalTexture:
+			return MCGLUniformAffineTransform(p_context->external_texture_program.world_transform, t_transform);
 	}
 }
 
@@ -565,12 +723,19 @@ bool MCGLContextSetTextureTransform(MCGLContextRef p_context, const MCGAffineTra
 	if (p_context == nil)
 		return false;
 
-	if (p_context->config.program != kMCGLProgramTypeTexture)
-		return false;
-
 	p_context->config.texture_transform = p_transform;
 
-	return MCGLUniformAffineTransform(p_context->t_texture_transform, p_context->config.texture_transform);
+	switch (p_context->config.program)
+	{
+		case kMCGLProgramTypeTexture:
+			return MCGLUniformAffineTransform(p_context->texture_program.texture_transform, p_context->config.texture_transform);
+
+		case kMCGLProgramTypeExternalTexture:
+			return MCGLUniformAffineTransform(p_context->external_texture_program.texture_transform, p_context->config.texture_transform);
+
+		default:
+			return false;
+	}
 }
 
 bool MCGLContextConcatTextureTransform(MCGLContextRef p_context, const MCGAffineTransform &p_transform)
@@ -579,10 +744,5 @@ bool MCGLContextConcatTextureTransform(MCGLContextRef p_context, const MCGAffine
 	if (p_context == nil)
 		return false;
 
-	if (p_context->config.program != kMCGLProgramTypeTexture)
-		return false;
-
-	p_context->config.texture_transform = MCGAffineTransformConcat(p_context->config.texture_transform, p_transform);
-
-	return MCGLUniformAffineTransform(p_context->t_texture_transform, p_context->config.texture_transform);
+	return MCGLContextSetTextureTransform(p_context, MCGAffineTransformConcat(p_context->config.texture_transform, p_transform));
 }

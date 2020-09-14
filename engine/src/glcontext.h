@@ -40,6 +40,7 @@ enum MCGLProgramType
 	kMCGLProgramTypeNone,
 	kMCGLProgramTypeColor,
 	kMCGLProgramTypeTexture,
+	kMCGLProgramTypeExternalTexture,
 };
 
 extern bool MCGLCheckError(const char *p_prefix);
@@ -56,8 +57,8 @@ extern bool MCGLContextConcatWorldTransform(MCGLContextRef p_context, const MCGA
 extern bool MCGLContextSetTextureTransform(MCGLContextRef p_context, const MCGAffineTransform &p_transform);
 extern bool MCGLContextConcatTextureTransform(MCGLContextRef p_context, const MCGAffineTransform &p_transform);
 
+extern bool MCGLContextGetProgramSupported(MCGLContextRef p_context, MCGLProgramType p_program);
 extern bool MCGLContextSelectProgram(MCGLContextRef p_context, MCGLProgramType p_program);
-
 
 extern void MCPlatformEnableOpenGLMode(void);
 extern void MCPlatformDisableOpenGLMode(void);
