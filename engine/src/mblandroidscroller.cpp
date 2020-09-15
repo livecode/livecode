@@ -77,6 +77,8 @@ public:
     void GetShowHorizontalIndicator(MCExecContext& ctxt, bool& r_value);
     void SetShowVerticalIndicator(MCExecContext& ctxt, bool p_value);
     void GetShowVerticalIndicator(MCExecContext& ctxt, bool& r_value);
+    void SetCanCancelTouches(MCExecContext& ctxt, bool p_value);
+    void GetCanCancelTouches(MCExecContext& ctxt, bool& r_value);
     
     void GetTracking(MCExecContext& ctxt, bool& r_value);
     void GetDragging(MCExecContext& ctxt, bool& r_value);
@@ -109,6 +111,7 @@ MCPropertyInfo MCAndroidScrollerControl::kProperties[] =
     DEFINE_RW_CTRL_PROPERTY(P_SHOW_VERTICAL_INDICATOR, Bool, MCAndroidScrollerControl, ShowVerticalIndicator)
     DEFINE_RO_CTRL_PROPERTY(P_TRACKING, Bool, MCAndroidScrollerControl, Tracking)
     DEFINE_RO_CTRL_PROPERTY(P_DRAGGING, Bool, MCAndroidScrollerControl, Dragging)
+    DEFINE_RW_CTRL_PROPERTY(P_CAN_CANCEL_TOUCHES, Bool, MCAndroidScrollerControl, CanCancelTouches)
 };
 
 MCObjectPropertyTable MCAndroidScrollerControl::kPropertyTable =
@@ -254,7 +257,22 @@ void MCAndroidScrollerControl::GetScrollingEnabled(MCExecContext& ctxt, bool& r_
     if (t_view)
         MCAndroidObjectRemoteCall(t_view, "getScrollingEnabled", "b", &r_value);
 }
-
+void MCAndroidScrollerControl::SetCanCancelTouches(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+	t_view = GetView();
+   
+	if (t_view)
+		MCAndroidObjectRemoteCall(t_view, "setCanCancelTouches", "vb", nil, p_value);
+}
+void MCAndroidScrollerControl::GetCanCancelTouches(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view)
+        MCAndroidObjectRemoteCall(t_view, "getCanCancelTouches", "b", &r_value);
+}
 void MCAndroidScrollerControl::SetShowHorizontalIndicator(MCExecContext& ctxt, bool p_value)
 {
     jobject t_view;
