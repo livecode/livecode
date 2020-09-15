@@ -31,38 +31,41 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <pthread.h>
 
 #if defined(_IOS_MOBILE)
-#include <CoreGraphics/CoreGraphics.h>
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
+
+#import <OpenGLES/ES3/gl.h>
+#import <OpenGLES/ES3/glext.h>
+
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
+
 #define GL_GLEXT_PROTOTYPES
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
 #include <EGL/egl.h>
+
 #else
-#error tilecachegl.cpp not supported on this platform
+#error tilecachegl3.x.cpp not supported on this platform
 #endif
 
-extern void MCPlatformEnableOpenGLMode(void);
-extern void MCPlatformDisableOpenGLMode(void);
+#include "glcontext.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #define kSuperTileSize 256
+#define kVertexBufferSize 16 * 4
+
+template <class T>
+struct vertex_buffer
+{
+	T vertices[kVertexBufferSize];
+	uindex_t count;
+};
 
 struct super_tile
 {
 	GLuint texture;
+	vertex_buffer<MCGLTextureVertex> vertex_buffer;
 	uint32_t free_count;
 	uint8_t free_list[1];
-};
-
-enum MCTileCacheOpenGLVersion
-{
-	kMCTileCacheOpenGLVersionUnknown = 0,
-	kMCTileCacheOpenGLVersion1_0 = 1,
-	kMCTileCacheOpenGLVersion1_1 = 2,
 };
 
 struct MCTileCacheOpenGLCompositorContext
@@ -86,55 +89,41 @@ struct MCTileCacheOpenGLCompositorContext
 	// The height of the viewport.
 	int32_t viewport_height;
 	
-	// The last color applied, or 0 if it was a texture
-	uint32_t current_color;
-	
 	// The current opacity (only needed for rects)
 	uint32_t current_opacity;
 	
-    // If true, then blending is enabled.
-    bool is_blending : 1;
-    
-    // If true, then we are configured for filling rather than texturing.
-    bool is_filling : 1;
+	// If true, then blending is enabled.
+	bool is_blending : 1;
 	
-    // The vertex data that is used.
-    GLshort vertex_data[16];
+	// If true, then we are configured for filling rather than texturing.
+	bool is_filling : 1;
+	
+	// The color vertex buffer
+	vertex_buffer<MCGLColorVertex> color_vertex_buffer;
 
-	// The version of OpenGL in use.
-	MCTileCacheOpenGLVersion opengl_version;
-	
 	// This is set to true if the super tiles need to be forced flushed
 	// (due to a Flush call).
 	bool needs_flush;
 	
+	// If this is true, rendering is flipped in the y direction (relative to
+	// 'normal' for LiveCode origin).
+	bool flip_y;
+	
+	// The gl context
+	MCGLContextRef gl_context;
+
 	// The original framebuffer (used when doing a snapshot).
-	GLuint original_framebuffer;
+	GLuint original_draw_framebuffer;
+	GLuint original_read_framebuffer;
 	
 	// The snapshot framebuffer and renderbuffer (only valid between
 	// BeginSnapshot and EndSnapshot).
 	GLuint snapshot_framebuffer;
 	GLuint snapshot_renderbuffer;
 	
-	// If this is true, rendering is flipped in the y direction (relative to
-	// 'normal' for LiveCode origin).
-	bool flip_y;
-	
 	// The origin of the current render (used by snapshot).
 	GLint origin_x, origin_y;
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-// The 'glv' version of Color4ub provides auto-fallback to Color4f on 1.0
-// versions.
-static inline void glvColor4ub(MCTileCacheOpenGLVersion p_version, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
-{
-	if (p_version > kMCTileCacheOpenGLVersion1_0)
-		glColor4ub(r, g, b, a);
-	else
-		glColor4f(r / 255.0, g / 255.0, b / 255.0, a / 255.0);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -189,9 +178,9 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	
 	// We failed to find an empty super-tile so we must allocate a new one.
 	super_tile *t_super_tile;
-	if (!MCMemoryAllocate(8 + self -> super_tile_arity, t_super_tile))
+	if (!MCMemoryAllocate(offsetof(super_tile, free_list) + self -> super_tile_arity, t_super_tile))
 		return false;
-    
+	
 	
 	// Generate a texture id, and bind an empty texture.
 	glGenTextures(1, &t_super_tile -> texture);
@@ -200,15 +189,17 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
+	
 	// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kSuperTileSize, kSuperTileSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nil);
-    
+	
 	// Fill in the free list - subtile 0 is the one we will allocate.
 	for(uint32_t i = 1; i < self -> super_tile_arity; i++)
 		t_super_tile -> free_list[i - 1] = i;
 	t_super_tile -> free_count = self -> super_tile_arity - 1;
 	
+	t_super_tile->vertex_buffer.count = 0;
+
 	// Set the slot.
 	self -> super_tiles[t_super_tile_index] = t_super_tile;
 	
@@ -254,7 +245,7 @@ static void MCTileCacheOpenGLCompositorFlushSuperTiles(MCTileCacheOpenGLComposit
 			glDeleteTextures(1, &self -> super_tiles[i] -> texture);
 			MCMemoryDelete(self -> super_tiles[i]);
 			self -> super_tiles[i] = nil;
-            
+			
 		}
 	}
 }
@@ -288,8 +279,7 @@ bool MCTileCacheOpenGLCompositor_BeginTiling(void *p_context)
 	}
 	
 	// Clear any error flags from OpenGL so we can detect failure.
-	while(glGetError() != GL_NO_ERROR)
-		;
+	/* UNCHECKED */ MCGLCheckError(nil);
 	
 	return true;
 }
@@ -303,15 +293,7 @@ bool MCTileCacheOpenGLCompositor_EndTiling(void *p_context)
 	MCTileCacheOpenGLCompositorFlushSuperTiles(self, false);
 	
 	// If an OpenGL error occurred, then return false.
-	GLenum t_error;
-	t_error = glGetError();
-	if (t_error != GL_NO_ERROR)
-	{
-		MCLog("EndTiling - glError() == %d", t_error);
-		return false;
-	}
-	
-	return true;
+	return MCGLCheckError("EndTiling - ");
 }
 
 bool MCTileCacheOpenGLCompositor_AllocateTile(void *p_context, int32_t p_size, const void *p_bits, uint32_t p_stride, void*& r_tile)
@@ -344,10 +326,10 @@ bool MCTileCacheOpenGLCompositor_AllocateTile(void *p_context, int32_t p_size, c
 		GLuint t_texture;
 		t_texture = self -> super_tiles[t_super_tile_index] -> texture;
 		if (t_texture != self -> current_texture)
-        {
+		{
 			glBindTexture(GL_TEXTURE_2D, t_texture);
-            self -> current_texture = t_texture;
-        }
+			self -> current_texture = t_texture;
+		}
 		
 		// Calculate its location.
 		GLint t_x, t_y;
@@ -356,14 +338,14 @@ bool MCTileCacheOpenGLCompositor_AllocateTile(void *p_context, int32_t p_size, c
 		
 		// Fill the texture.
 		// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
-        glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_RGBA, GL_UNSIGNED_BYTE, t_data);
-        // SN-2015-04-13: [[ Bug 14879 ]] This function seems to fail sometimes,
-        //  and we want to get the error here, not in
-        //  MCTileCacheOpenGLCompositorFlushSuperTiles as it happens in the
-        //  stack attached to the bug report.
-        GLenum t_error = glGetError();
-        if (t_error != GL_NO_ERROR)
-            MCLog("glTextSubImage2D(x,x,%d,%d,%d,%d,...) returned error 0x%X", t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, t_error);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_RGBA, GL_UNSIGNED_BYTE, t_data);
+		// SN-2015-04-13: [[ Bug 14879 ]] This function seems to fail sometimes,
+		//  and we want to get the error here, not in
+		//  MCTileCacheOpenGLCompositorFlushSuperTiles as it happens in the
+		//  stack attached to the bug report.
+		GLenum t_error = glGetError();
+		if (t_error != GL_NO_ERROR)
+			MCLog("glTextSubImage2D(x,x,%d,%d,%d,%d,...) returned error 0x%X", t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, t_error);
 
 		// Set the tile id.
 		t_tile = (void *)t_tile_id;
@@ -388,63 +370,119 @@ void MCTileCacheOpenGLCompositor_DeallocateTile(void *p_context, void *p_tile)
 	MCTileCacheOpenGLCompositorDestroyTile(self, (uintptr_t)p_tile);
 }
 
-static void MCTileCacheOpenGLCompositor_PrepareFrame(MCTileCacheOpenGLCompositorContext *self)
+static bool MCTileCacheOpenGLCompositorFlushTextureVertexBuffer(MCTileCacheOpenGLCompositorContext *self, super_tile *p_super_tile)
+{
+	if (p_super_tile->vertex_buffer.count == 0)
+		return true;
+
+	if (p_super_tile->texture != self->current_texture)
+	{
+		glBindTexture(GL_TEXTURE_2D, p_super_tile->texture);
+		self -> current_texture = p_super_tile->texture;
+	}
+
+	if (self->is_filling)
+	{
+		self->is_filling = false;
+		MCGLContextSelectProgram(self->gl_context, kMCGLProgramTypeTexture);
+	}
+	
+	glBufferData(GL_ARRAY_BUFFER, sizeof(MCGLTextureVertex) * p_super_tile->vertex_buffer.count, p_super_tile->vertex_buffer.vertices, GL_STREAM_DRAW);
+
+	for (uindex_t i = 0; i < p_super_tile->vertex_buffer.count; i += 4)
+	{
+		glDrawArrays(GL_TRIANGLE_STRIP, i, 4);
+	}
+
+	p_super_tile->vertex_buffer.count = 0;
+
+	return true;
+}
+
+static bool MCTileCacheOpenGLCompositorFlushColorVertexBuffer(MCTileCacheOpenGLCompositorContext *self)
+{
+	if (self->color_vertex_buffer.count == 0)
+		return true;
+
+	if (!self->is_filling)
+	{
+		self->is_filling = true;
+		MCGLContextSelectProgram(self->gl_context, kMCGLProgramTypeColor);
+	}
+
+	glBufferData(GL_ARRAY_BUFFER, sizeof(MCGLColorVertex) * self->color_vertex_buffer.count, self->color_vertex_buffer.vertices, GL_STREAM_DRAW);
+
+	for (uindex_t i = 0; i < self->color_vertex_buffer.count; i += 4)
+	{
+		glDrawArrays(GL_TRIANGLE_STRIP, i, 4);
+	}
+
+	self->color_vertex_buffer.count = 0;
+
+	return true;
+}
+
+static bool MCTileCacheOpenGLCompositorFlushVertexBuffers(MCTileCacheOpenGLCompositorContext *self)
+{
+	if (!MCTileCacheOpenGLCompositorFlushColorVertexBuffer(self))
+		return false;
+
+	for (uindex_t i = 0; i < self->super_tile_count; i++)
+	{
+		if (self->super_tiles[i] != nil && !MCTileCacheOpenGLCompositorFlushTextureVertexBuffer(self, self->super_tiles[i]))
+			return false;
+	}
+
+	return true;
+}
+
+static void MCTileCacheOpenGLCompositor_PrepareFrame(MCTileCacheOpenGLCompositorContext *self, MCGAffineTransform p_world_transform)
 {
 #if defined(_ANDROID_MOBILE)
-    EGLint t_height;
-    eglQuerySurface(eglGetCurrentDisplay(),
-                    eglGetCurrentSurface(EGL_DRAW),
-                    EGL_HEIGHT,
-                    &t_height);
-    
-    self -> viewport_height = t_height;
+	/* On android the soft keyboard changes the surface height but we do not
+	 * update the tilecache height to match. To handle this we get the current
+	 * surface height to enusre the correct transform is applied. */
+	EGLint t_height;
+	eglQuerySurface(eglGetCurrentDisplay(),
+					eglGetCurrentSurface(EGL_DRAW),
+					EGL_HEIGHT,
+					&t_height);
+
+	self -> viewport_height = t_height;
 #else
-    self -> viewport_height = MCTileCacheGetViewport(self -> tilecache) . height;
+	self -> viewport_height = MCTileCacheGetViewport(self -> tilecache) . height;
 #endif
 	self -> current_texture = 0;
-	self -> current_color = 0xffffffff;
 	self -> current_opacity = 255;
 	self -> is_filling = false;
 	self -> is_blending = false;
 	
-	// Get the OpenGL version, if unknown.
-	if (self -> opengl_version == kMCTileCacheOpenGLVersionUnknown)
+	// Set the texture matrix.
+	MCGFloat t_texture_scale;
+	t_texture_scale = ((float)self->tile_size) / ((float)kSuperTileSize);
+	MCGAffineTransform t_texture_transform;
+	t_texture_transform = MCGAffineTransformMakeScale(t_texture_scale, t_texture_scale);
+
+	MCGAffineTransform t_world_transform;
+	t_world_transform = MCGAffineTransformMakeIdentity();
+	if (!self->flip_y)
 	{
-		// MW-2012-08-30: [[ Bug ]] If the OpenGLES version string contains 1.1 then
-		//   its version 1.1, else assume 1.0.
-		if (strstr((const char *)glGetString(GL_VERSION), "1.1") != nil)
-			self -> opengl_version = kMCTileCacheOpenGLVersion1_1;
-		else
-			self -> opengl_version = kMCTileCacheOpenGLVersion1_0;
+		t_world_transform = MCGAffineTransformPostTranslate(t_world_transform, 0.0, self->viewport_height);
+		t_world_transform = MCGAffineTransformPostScale(t_world_transform, 1.0, -1.0);
 	}
+	t_world_transform = MCGAffineTransformConcat(t_world_transform, p_world_transform);
+
+	// initialize variables of color & texture shader programs
+	MCGLContextSelectProgram(self->gl_context, kMCGLProgramTypeColor);
+	MCGLContextSetWorldTransform(self->gl_context, t_world_transform);
+
+	MCGLContextSelectProgram(self->gl_context, kMCGLProgramTypeTexture);
+	MCGLContextSetWorldTransform(self->gl_context, t_world_transform);
+	MCGLContextSetTextureTransform(self->gl_context, t_texture_transform);
 	
-    // Set the texture matrix.
-    glMatrixMode(GL_TEXTURE);
-    glLoadIdentity();
-    glScalef(self -> tile_size / (float)kSuperTileSize, self -> tile_size / (float)kSuperTileSize, 1.0f);
-    
-    // Set the modelview matrix.
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	if (!self -> flip_y)
-	{
-		glTranslatef(0.0f, self -> viewport_height, 0.0f);
-		glScalef(1.0f, -1.0f, 1.0f);
-    }
-	
-	// We start off with texturing on.
-	glEnable(GL_TEXTURE_2D);
-	
-	// We start off with 255,255,255,255 as the color.
-	glvColor4ub(self -> opengl_version, 255, 255, 255, 255);
-    
-    // Initialize the blend function we would use.
+	// Initialize the blend function we would use.
 	glDisable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-	
-	// Initialize the vertex data pointers.
-	glVertexPointer(2, GL_SHORT, 8, self -> vertex_data);
-	glTexCoordPointer(2, GL_SHORT, 8, self -> vertex_data + 2);
 }
 
 bool MCTileCacheOpenGLCompositor_BeginFrame(void *p_context, MCStackSurface *p_surface, MCGRegionRef p_dirty)
@@ -461,7 +499,7 @@ bool MCTileCacheOpenGLCompositor_BeginFrame(void *p_context, MCStackSurface *p_s
 	self -> origin_x = 0;
 	self -> origin_y = 0;
 	
-	MCTileCacheOpenGLCompositor_PrepareFrame(self);
+	MCTileCacheOpenGLCompositor_PrepareFrame(self, MCGAffineTransformMakeIdentity());
 	
 	return true;
 }
@@ -471,17 +509,11 @@ bool MCTileCacheOpenGLCompositor_EndFrame(void *p_context, MCStackSurface *p_sur
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 	
+	MCTileCacheOpenGLCompositorFlushVertexBuffers(self);
+
 	p_surface -> UnlockTarget();
 	
-	GLenum t_error;
-	t_error = glGetError();
-	if (t_error != GL_NO_ERROR)
-	{
-		MCLog("EndTiling - glError() == %d", t_error);
-		return false;
-	}
-	
-	return true;
+	return MCGLCheckError("EndFrame - ");
 }
 
 bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_area, MCGRaster &p_target)
@@ -489,23 +521,25 @@ bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_ar
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 	
-	glGetIntegerv(GL_FRAMEBUFFER_BINDING_OES, (GLint *)&self -> original_framebuffer);
+	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, (GLint *)&self -> original_draw_framebuffer);
+	glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, (GLint *)&self -> original_read_framebuffer);
 	
-	glGenFramebuffersOES(1, &self -> snapshot_framebuffer);
-	glBindFramebufferOES(GL_FRAMEBUFFER_OES, self -> snapshot_framebuffer);
+	glGenFramebuffers(1, &self -> snapshot_framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, self -> snapshot_framebuffer);
 	
-	glGenRenderbuffersOES(1, &self -> snapshot_renderbuffer);
-	glBindRenderbufferOES(GL_RENDERBUFFER_OES, self -> snapshot_renderbuffer);
-	glRenderbufferStorageOES(GL_RENDERBUFFER_OES, GL_RGBA8_OES, p_area . width, p_area . height);
-	glFramebufferRenderbufferOES(GL_FRAMEBUFFER_OES, GL_COLOR_ATTACHMENT0_OES, GL_RENDERBUFFER_OES, self -> snapshot_renderbuffer);
+	glGenRenderbuffers(1, &self -> snapshot_renderbuffer);
+	glBindRenderbuffer(GL_RENDERBUFFER, self -> snapshot_renderbuffer);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, p_area . width, p_area . height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, self -> snapshot_renderbuffer);
 
 	GLenum t_status;
-	t_status = glCheckFramebufferStatusOES(GL_FRAMEBUFFER_OES);
-	if (t_status != GL_FRAMEBUFFER_COMPLETE_OES)
+	t_status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (t_status != GL_FRAMEBUFFER_COMPLETE)
 	{
-		glBindFramebufferOES(GL_FRAMEBUFFER_OES, self -> original_framebuffer);
-		glDeleteRenderbuffersOES(1, &self -> snapshot_renderbuffer);
-		glDeleteFramebuffersOES(1, &self -> snapshot_framebuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self -> original_draw_framebuffer);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, self -> original_read_framebuffer);
+		glDeleteRenderbuffers(1, &self -> snapshot_renderbuffer);
+		glDeleteFramebuffers(1, &self -> snapshot_framebuffer);
 		return false;
 	}
 	
@@ -514,12 +548,12 @@ bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_ar
 	self -> origin_x = -p_area . x;
 	self -> origin_y = -p_area . y;
 	
-	MCTileCacheOpenGLCompositor_PrepareFrame(self);
-	
 	// MW-2013-06-07: [[ Bug 10705 ]] Make sure we translate the viewport so the correct area
 	//   gets rendered (and snapshotted).
-	glMatrixMode(GL_MODELVIEW);
-	glTranslatef(-p_area . x, -p_area . y, 0.0f);
+	MCGAffineTransform t_world_transform;
+	t_world_transform = MCGAffineTransformMakeTranslation(-p_area.x, -p_area.y);
+
+	MCTileCacheOpenGLCompositor_PrepareFrame(self, t_world_transform);
 	
 	return true;
 }
@@ -529,14 +563,17 @@ bool MCTileCacheOpenGLCompositor_EndSnapshot(void *p_context, MCRectangle p_area
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 	
+	MCTileCacheOpenGLCompositorFlushVertexBuffers(self);
+	
 	/* OVERHAUL - REVISIT: check byte order? */
 	// t_bitmap -> is_swapped = true;
 	glReadPixels(0, 0, p_area . width, p_area . height, GL_RGBA, GL_UNSIGNED_BYTE, p_target . pixels);
 	
-	glBindFramebufferOES(GL_FRAMEBUFFER_OES, self -> original_framebuffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self -> original_draw_framebuffer);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, self -> original_read_framebuffer);
 
-	glDeleteRenderbuffersOES(1, &self -> snapshot_renderbuffer);
-	glDeleteFramebuffersOES(1, &self -> snapshot_framebuffer);
+	glDeleteRenderbuffers(1, &self -> snapshot_renderbuffer);
+	glDeleteFramebuffers(1, &self -> snapshot_framebuffer);
 	
 	return true;
 }
@@ -546,6 +583,7 @@ bool MCTileCacheOpenGLCompositor_BeginLayer(void *p_context, const MCRectangle& 
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 
+	MCTileCacheOpenGLCompositorFlushVertexBuffers(self);
 	glEnable(GL_SCISSOR_TEST);
 	
 	// MW-2012-09-18: [[ Bug 10202 ]] If the ink is no-op then ensure nothing happens.
@@ -560,11 +598,11 @@ bool MCTileCacheOpenGLCompositor_BeginLayer(void *p_context, const MCRectangle& 
 			glScissor(p_clip . x + self -> origin_x, p_clip . y + self -> origin_y, p_clip . width, p_clip . height);
 	}
 	
-    if (!self -> is_blending)
-    {
-        self -> is_blending = true;
-        glEnable(GL_BLEND);
-    }
+	if (!self -> is_blending)
+	{
+		self -> is_blending = true;
+		glEnable(GL_BLEND);
+	}
 		
 	self -> current_opacity = p_opacity;
 	
@@ -576,6 +614,8 @@ bool MCTileCacheOpenGLCompositor_EndLayer(void *p_context)
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 	
+	MCTileCacheOpenGLCompositorFlushVertexBuffers(self);
+
 	self -> current_opacity = 255;
 	
 	glDisable(GL_SCISSOR_TEST);
@@ -585,59 +625,41 @@ bool MCTileCacheOpenGLCompositor_EndLayer(void *p_context)
 
 bool MCTileCacheOpenGLCompositor_CompositeTile(void *p_context, int32_t p_x, int32_t p_y, void *p_tile)
 {
-    if (p_tile == nil)
-        return false;
-    
+	if (p_tile == nil)
+		return false;
+	
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 
 	uint32_t t_super_tile_index, t_sub_tile_index;
 	MCTileCacheOpenGLCompositorDecodeTile(self, (uintptr_t)p_tile, t_super_tile_index, t_sub_tile_index);
 	
-	GLuint t_texture;
-	t_texture = self -> super_tiles[t_super_tile_index] -> texture;
-	if (t_texture != self -> current_texture)
-    {
-		glBindTexture(GL_TEXTURE_2D, t_texture);
-        self -> current_texture = t_texture;
-    }
+	super_tile *t_super_tile;
+	t_super_tile = self->super_tiles[t_super_tile_index];
+
+	if (t_super_tile->vertex_buffer.count + 4 > kVertexBufferSize)
+	{
+		if (!MCTileCacheOpenGLCompositorFlushTextureVertexBuffer(self, t_super_tile))
+			return false;
+	}
 	
-    if (self -> is_filling)
-    {
-        self -> is_filling = false;
-		glEnable(GL_TEXTURE_2D);
-    }
-    
-    // MW-2014-03-14: [[ Bug 11880 ]] The color field we store is premultiplied by the current
-    //   opacity.
-	uint32_t t_new_color;
-	t_new_color = packed_scale_bounded(0xffffffff, self -> current_opacity);
-    if (self -> current_color != t_new_color)
-    {
-        self -> current_color = t_new_color;
-		
-		// MW-2012-08-30: [[ Bug 10341 ]] The color must be premultiplied - in this case this
-		//   means iterating the opacity over all components.
-		glvColor4ub(self -> opengl_version, self -> current_opacity, self -> current_opacity, self -> current_opacity, self -> current_opacity);
-    }
-    
-    int32_t t_tile_x, t_tile_y;
-    t_tile_x = t_sub_tile_index % (kSuperTileSize / self -> tile_size);
-    t_tile_y = t_sub_tile_index / (kSuperTileSize / self -> tile_size);
-    
-    GLshort *v;
-    v = self -> vertex_data;
-    *v++ = p_x, *v++ = p_y + self -> tile_size;
-    *v++ = t_tile_x, *v++ = t_tile_y + 1;
-    *v++ = p_x + self -> tile_size, *v++ = p_y + self -> tile_size;
-    *v++ = t_tile_x + 1, *v++ = t_tile_y + 1;
-    *v++ = p_x, *v++ = p_y;
-    *v++ = t_tile_x, *v++ = t_tile_y;
-    *v++ = p_x + self -> tile_size, *v++ = p_y;
-    *v++ = t_tile_x + 1, *v++ = t_tile_y;
+	int32_t t_tile_x, t_tile_y;
+	t_tile_x = t_sub_tile_index % (kSuperTileSize / self -> tile_size);
+	t_tile_y = t_sub_tile_index / (kSuperTileSize / self -> tile_size);
 	
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	
+	MCGLTextureVertex *t_vertices;
+	t_vertices = &t_super_tile->vertex_buffer.vertices[t_super_tile->vertex_buffer.count];
+	t_vertices[0].position[0] = p_x;                   t_vertices[0].position[1] = p_y + self->tile_size;
+	t_vertices[0].texture_position[0] = t_tile_x;      t_vertices[0].texture_position[1] = t_tile_y + 1;
+	t_vertices[1].position[0] = p_x + self->tile_size; t_vertices[1].position[1] = p_y + self->tile_size;
+	t_vertices[1].texture_position[0] = t_tile_x + 1;  t_vertices[1].texture_position[1] = t_tile_y + 1;
+	t_vertices[2].position[0] = p_x;                   t_vertices[2].position[1] = p_y;
+	t_vertices[2].texture_position[0] = t_tile_x;      t_vertices[2].texture_position[1] = t_tile_y;
+	t_vertices[3].position[0] = p_x + self->tile_size; t_vertices[3].position[1] = p_y;
+	t_vertices[3].texture_position[0] = t_tile_x + 1;  t_vertices[3].texture_position[1] = t_tile_y;
+
+	t_super_tile->vertex_buffer.count += 4;
+
 	return true;
 }
 
@@ -646,39 +668,35 @@ bool MCTileCacheOpenGLCompositor_CompositeRect(void *p_context, int32_t p_x, int
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 	
-    if (!self -> is_filling)
-    {
-        self -> is_filling = true;
-		glDisable(GL_TEXTURE_2D);
-    }
-    
-    // MW-2014-03-14: [[ Bug 11880 ]] The color field we store is premultiplied by the current
-    //   opacity.
-    uint32_t t_new_color;
-    t_new_color = packed_scale_bounded(p_color, self -> current_opacity);
-	if (self -> current_color != t_new_color)
+	if (self->color_vertex_buffer.count + 4 > kVertexBufferSize)
 	{
-		self -> current_color = t_new_color;
-		
-		// IM-2013-08-23: [[ RefactorGraphics ]] Use MCGPixelUnpackNative to fix color swap issues
-		uint8_t a, r, g, b;
-		MCGPixelUnpackNative(t_new_color, r, g, b, a);
-		
-		glvColor4ub(self -> opengl_version, r, g, b, a);
+		if (!MCTileCacheOpenGLCompositorFlushColorVertexBuffer(self))
+			return false;
 	}
-	
-    GLshort *v;
-    v = self -> vertex_data;
-	*v++ = p_x, *v++ = p_y + self -> tile_size;
-	v += 2;
-	*v++ = p_x + self -> tile_size, *v++ = p_y + self -> tile_size;
-	v += 2;
-	*v++ = p_x, *v++ = p_y;
-	v += 2;
-	*v++ = p_x + self -> tile_size, *v++ = p_y;
 
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	
+	// MW-2014-03-14: [[ Bug 11880 ]] The color field we store is premultiplied by the current
+	//   opacity.
+	uint32_t t_new_color;
+	t_new_color = packed_scale_bounded(p_color, self->current_opacity);
+	uint32_t t_rgba_color;
+	{
+		uint8_t r, g, b, a;
+		MCGPixelUnpackNative(t_new_color, r, g, b, a);
+		t_rgba_color = MCGPixelPack(kMCGPixelFormatRGBA, r, g, b, a);
+	}
+
+	MCGLColorVertex *t_vectors = &self->color_vertex_buffer.vertices[self->color_vertex_buffer.count];
+	t_vectors[0].position[0] = p_x; t_vectors[0].position[1] = p_y + self->tile_size;
+	t_vectors[0].color = t_rgba_color;
+	t_vectors[1].position[0] = p_x + self->tile_size; t_vectors[1].position[1] = p_y + self->tile_size;
+	t_vectors[1].color = t_rgba_color;
+	t_vectors[2].position[0] = p_x; t_vectors[2].position[1] = p_y;
+	t_vectors[2].color = t_rgba_color;
+	t_vectors[3].position[0] = p_x + self->tile_size; t_vectors[3].position[1] = p_y;
+	t_vectors[3].color = t_rgba_color;
+
+	self->color_vertex_buffer.count += 4;
+
 	return true;
 }
 
@@ -729,6 +747,9 @@ bool MCTileCacheOpenGLCompositorConfigure(MCTileCacheRef p_tilecache, MCTileCach
 	r_compositor . end_snapshot = MCTileCacheOpenGLCompositor_EndSnapshot;
 	
 	MCPlatformEnableOpenGLMode();
+	t_context->gl_context = MCPlatformGetOpenGLContext();
+
+	MCAssert(t_context->gl_context != nil);
 	
 	return true;
 }

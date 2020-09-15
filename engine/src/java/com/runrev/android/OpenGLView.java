@@ -34,6 +34,8 @@ public class OpenGLView extends SurfaceView implements SurfaceHolder.Callback
 {
 	// Instance variables
 	
+	private static final int EGL_CONTEXT_CLIENT_VERSION = 0x00003098;
+	
 	private EGL10 m_egl;
 	private EGLDisplay m_egl_display;
 	private EGLSurface m_egl_surface;
@@ -127,8 +129,13 @@ public class OpenGLView extends SurfaceView implements SurfaceHolder.Callback
 		// For debugging.
 		dumpConfig("Using EGLConfig", m_egl, m_egl_display, m_egl_config);
 		
+		int[] t_attr = new int[] {
+			EGL_CONTEXT_CLIENT_VERSION, 3,
+			EGL10.EGL_NONE,
+		};
+		
 		// Now create the OpenGL ES context.
-		m_egl_context = m_egl . eglCreateContext(m_egl_display, m_egl_config, EGL10 . EGL_NO_CONTEXT, null);
+		m_egl_context = m_egl . eglCreateContext(m_egl_display, m_egl_config, EGL10 . EGL_NO_CONTEXT, t_attr);
 		
 		// We don't have a surface (just yet).
 		m_egl_surface = null;
