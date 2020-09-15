@@ -342,10 +342,19 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
         
         [t_event release];
     }
+	
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self
+									 selector:@selector(interfaceThemeChangedNotification:)
+								     name:@"AppleInterfaceThemeChangedNotification" object:nil];
     
 	// We started up successfully, so queue the root runloop invocation
 	// message.
 	[self performSelector: @selector(runMainLoop) withObject: nil afterDelay: 0];
+}
+
+- (void)interfaceThemeChangedNotification:(NSNotification *)notification
+{
+	MCPlatformCallbackSendSystemAppearanceChanged();
 }
 
 - (void)runMainLoop
@@ -608,7 +617,21 @@ void MCPlatformGetSystemProperty(MCPlatformSystemProperty p_property, MCPlatform
         case kMCPlatformSystemPropertyVolume:
             MCMacPlatformGetGlobalVolume(*(double *)r_value);
             break;
-            
+		
+		case kMCPlatformSystemPropertySystemAppearance:
+		{
+			NSUserDefaults *t_defaults = [NSUserDefaults standardUserDefaults];
+			NSString *t_appearance = [t_defaults stringForKey:@"AppleInterfaceStyle"];
+			if (t_appearance == nil || ![t_appearance isEqualToString:@"Dark"])
+			{
+				*(int16_t *)r_value = kMCPlatformSystemAppearanceLight;
+			}
+			else
+			{
+				*(int16_t *)r_value = kMCPlatformSystemAppearanceDark;
+			}
+		}
+			break;
 		default:
 			assert(false);
 			break;
@@ -770,22 +793,26 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	
     // MW-2014-07-24: [[ Bug 12939 ]] If we are running a modal session, then don't then wait
     //   for events - event handling happens inside the modal session.
-    NSEvent *t_event;
-    
-    // MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
-    //   WebViews from working.    
-    // SN-2014-10-02: [[ Bug 13555 ]] We want the event to be sent in case it passes through
-    //   the modal session.
-    t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
-                                 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
-                                    inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
-                                   dequeue: YES];
-    
-    // Run the modal session, if it has been created yet (it might not if this
-    // wait was triggered by reacting to an event caused as part of creating
-    // the modal session, e.g. when losing window focus).
-	if (t_modal && s_modal_sessions[s_modal_session_count - 1].session != nil)
-		[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
+    NSEvent *t_event = nil;
+	if (t_modal)
+	{
+		// Run the modal session, if it has been created yet (it might not if this
+		// wait was triggered by reacting to an event caused as part of creating
+		// the modal session, e.g. when losing window focus).
+		if (s_modal_sessions[s_modal_session_count - 1].session != nil)
+			[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
+
+		t_event = nil;
+	}
+	else
+	{
+		// MW-2014-04-09: [[ Bug 10767 ]] Don't run in the modal panel runloop mode as this stops
+		//   WebViews from working.    
+		t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
+									 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
+										inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
+									   dequeue: YES];
+	}
     
 	s_in_blocking_wait = false;
 

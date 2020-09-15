@@ -18,46 +18,48 @@ local sDeviceSDKs
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
 function deployUsableIosSdk
-   return "8.2,9.2,10.2,11.2,12.1,13.1"
+   return "10.2,11.2,12.1,13.2,13.5"
 end deployUsableIosSdk
 
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
 function deployGetIphoneOSes
+   // tList will be an array with elements of the form:
+   // SDK_version,Xcode_version,Simulator_version
    local tList, tMacVersion
    put deploySanitizeSystemVersion() into tMacVersion
-   if tMacVersion < 101000 then
-      put "8.2,6.2" into tList[1]
-   else if tMacVersion < 101100 then
-      put "8.2,6.2" into tList[1]
-      // Xcode 7.2 can be installed from Mac OSX 10.10.5 onwards
-      if tMacVersion >= 101005 then
-         put "9.2,7.2" into tList[2]
-      end if
+   // Xcode 8.2 can be installed from Mac OSX 10.11.0 onwards
+   if tMacVersion < 101100 then
+      answer error "To deploy to an iOS device or simulator, you need to upgrade your Mac to at least Mac OSX 10.11.0"
    else if tMacVersion < 101200 then
-      put "10.2,8.2" into tList[1]
+      put "10.2,8.2,10.2" into tList[1]
    else if tMacVersion < 101206 then
       put empty into tList[1]
       answer error "To use Xcode 9.2, you need to upgrade your Mac to MacOS Sierra 10.12.6"
    else if tMacVersion < 101300 then
-      put "11.2,9.2" into tList[1]
+      put "11.2,9.2,11.2" into tList[1]
    else if tMacVersion < 101304 then
       put empty into tList[1]
       answer error "To use Xcode 10.1, you need to upgrade your Mac to MacOS High Sierra 10.13.4"
    else if tMacVersion < 101400 then
-      put "12.1,10.1" into tList[1]
-   else if tMacVersion < 101403 then
+      put "12.1,10.1,12.1" into tList[1]
+   else if tMacVersion < 101404 then
       put empty into tList[1]
-      answer error "To use Xcode 11.0, you need to upgrade your Mac to MacOS Mojave 10.14.3"
+      answer error "To use Xcode 11.3, you need to upgrade your Mac to MacOS Mojave 10.14.4"
+   else if tMacVersion < 101500 then
+      put "13.2,11.3,13.3" into tList[1]
+   else if tMacVersion < 101502 then
+      put empty into tList[1]
+      answer error "To use Xcode 11.5, you need to upgrade your Mac to MacOS Catalina 10.15.2"
    else
-      // Xcode 11.1 requires a Mac running Mac OS 10.14.3 or later
-      put "13.1,11.1" into tList[1]
+      // Xcode 11.5 requires a Mac running Mac OS 10.15.2 or later
+      put "13.5,11.5,13.5" into tList[1]
    end if
    
    return tList
 end deployGetIphoneOSes
 
 function deployGetIosMinimumVersions
-   return "8.0,8.1,8.2,8.3,8.4,9.0,9.1,9.2,9.3,10.0,10.1,10.2,10.3,11.0,11.1,11.2,11.3,11.4,12.0,12.1,13.0,13.1"
+   return "8.0,9.0,10.0,11.0,12.0,13.0"
 end deployGetIosMinimumVersions
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,10 +99,10 @@ function deployListTargets
    
    repeat for each key tKey in sDeploySimulators
       if tKey is among the items of tAvailableSimEngines then
-         put "iPad Simulator" && tKey & return after tTargets
-      end if
-      if tKey is among the items of tAvailableSimEngines then
-         put "iPhone Simulator" && tKey & return after tTargets
+         local tSimVersion
+         put revIDEDeployIOSGetSimulatorVersionFromSDKVersion(tKey) into tSimVersion
+         put "iPad Simulator" && tSimVersion & return after tTargets
+         put "iPhone Simulator" && tSimVersion & return after tTargets
       end if
    end repeat
    delete the last char of tTargets
@@ -109,6 +111,35 @@ function deployListTargets
    
    return tTargets
 end deployListTargets
+
+private function revIDEDeployIOSGetSimulatorVersionFromSDKVersion pSDkVersion
+   local tTriplet
+   put deployGetIphoneOSes() into tTriplet 
+   // tTriplet is an array with elements of the form:
+   // SDK_version,Xcode_version,Simulator_version
+   repeat for each element tElement in tTriplet
+      if item 1 of tElement is pSDkVersion then
+         return item 3 of tElement
+      end if
+   end repeat
+   
+   return pSDkVersion
+end revIDEDeployIOSGetSimulatorVersionFromSDKVersion
+
+private function revIDEDeployIOSGetSDKVersionFromSimulatorVersion pSimVersion
+   local tTriplet
+   put deployGetIphoneOSes() into tTriplet 
+   // tTriplet is an array with elements of the form:
+   // SDK_version,Xcode_version,Simulator_version
+   repeat for each element tElement in tTriplet
+      if item 3 of tElement is pSimVersion then
+         return item 1 of tElement
+      end if
+   end repeat
+   
+   return pSimVersion
+end revIDEDeployIOSGetSDKVersionFromSimulatorVersion
+
 
 -- Invoked when the Deploy/Simulate button is clicked on the menubar
 command deployDo pTargetStack, pSimulator, pAppBundle
@@ -175,6 +206,7 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       if pAppBundle is empty then
          put tTempFolder & slash & tSettings["name"] & ".app" into tTempAppBundle
          try
+            put revIDEDeployIOSGetSdkVersionFromSimulatorVersion(tVersion) into tVersion
             dispatch "revSaveAsMobileStandalone" to stack "revSaveAsIOSStandalone" with \
                   pTargetStack, tTempAppBundle, "Simulator" && tVersion, tSettings
          catch tException
@@ -227,7 +259,9 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       
       -- Next try to switch the sdk
       try
-         revIPhoneSetSimulatorSDK tVersion
+         local tSimVersion
+         put revIDEDeployIOSGetSimulatorVersionFromSDKVersion(tVersion) into tSimVersion
+         revIPhoneSetSimulatorSDK tSimVersion
       catch tException
          put "Unable to start simulator:" && tException into tError
       end try
@@ -280,8 +314,8 @@ command deployDo pTargetStack, pSimulator, pAppBundle
          put true into sDeploySimulatorIsRunning
          -- Make sure we bring the simulator to front
          --do "tell application" && quote & "iPhone SImulator" & quote & return & \
-               --"activate" & return & \
-               --"end tell" as "applescript" 
+         --"activate" & return & \
+         --"end tell" as "applescript" 
       else if sDeploySimulationStatus begins with "error:" then
          put "Unable to start simulation:" && word 2 to -1 of sDeploySimulationStatus into tError
       end if

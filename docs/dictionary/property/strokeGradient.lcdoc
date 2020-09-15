@@ -71,7 +71,7 @@ end points. This property is 1 by default.
 alternating repetitions of the ramp are reversed. This property is false 
 by default.
 
-*strokeGradient["wrap"] - A boolean value specifying whether the ramp is 
+* strokeGradient["wrap"] - A boolean value specifying whether the ramp is 
 repeated to fill the entire graphic a object. This property is false by 
 default.
 

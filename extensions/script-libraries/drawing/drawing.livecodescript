@@ -801,9 +801,9 @@ private command _svgCompileTransform @xContext, pTransform, pBBox, @rCompiledTra
 			put _svgTransformScale(tTransform[2], tTransform[3]) into tNextMatrix
 			break
 		case "rotate"
-			put _svgTransformTranslate(-tTransform[3], -tTransform[4]) into tNextMatrix
+			put _svgTransformTranslate(tTransform[3], tTransform[4]) into tNextMatrix
 			put _svgTransformConcat(tNextMatrix, _svgTransformRotate(tTransform[2])) into tNextMatrix
-			put _svgTransformConcat(tNextMatrix, _svgTransformTranslate(tTransform[3], tTransform[4])) into tNextMatrix
+			put _svgTransformConcat(tNextMatrix, _svgTransformTranslate(-tTransform[3], -tTransform[4])) into tNextMatrix
 			break
 		case "skewX"
 			put _svgTransformSkew(tTransform[2], 0) into tNextMatrix
@@ -1144,7 +1144,7 @@ private command _svgCompileEllipse @xContext, pElement
 	put pElement["features"]["cx"] into tCx
 	put pElement["features"]["cy"] into tCy
 	put pElement["features"]["rx"] into tRx
-	put pElement["features"]["rx"] into tRy
+	put pElement["features"]["ry"] into tRy
 	_svgCompileShape xContext, "ellipse", _svgBoxEllipse(tCx, tCy, tRx, tRy), tCx, tCy, tRx, tRy
 end _svgCompileEllipse
 

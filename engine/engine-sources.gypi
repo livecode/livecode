@@ -32,6 +32,8 @@
 			'src/customprinter.cpp',
 			'src/font.cpp',
 			'src/fonttable.cpp',
+			'src/glcontext.cpp',
+			'src/glcontext.h',
 			'src/gradient.cpp',
 			'src/graphics_util.cpp',
 			'src/graphicscontext.cpp',
@@ -48,6 +50,7 @@
 			'src/tilecache.cpp',
 			'src/tilecachecg.cpp',
 			'src/tilecachegl.cpp',
+			'src/tilecachegl3.x.cpp',
 			'src/tilecachesw.cpp',
 			'src/mcsemaphore.h',
 			'src/mctristate.h',
@@ -965,7 +968,6 @@
 		# Sources only used in Commercial Android builds
 		'engine_commercial_java_files':
 		[
-			'src/java/com/runrev/android/AdModule.java',
 			'src/java/com/runrev/android/billing/amazon/AmazonBillingProvider.java',
 			'src/java/com/runrev/android/billing/amazon/MyPurchasingObserver.java',
 		],
@@ -1151,6 +1153,8 @@
 					[
 						'src/fiber.cpp',
 						'src/tilecachegl.cpp',
+						'src/tilecachegl3.x.cpp',
+						'src/glcontext.cpp',
 						'src/player-legacy.cpp',
 						
 						'src/desktop-ans.cpp',
@@ -1175,6 +1179,8 @@
 						'src/sysunxrandom.cpp',
 						'src/sysunxregion.cpp',
 						'src/tilecachegl.cpp',
+						'src/tilecachegl3.x.cpp',
+						'src/glcontext.cpp',
 					],
 				},
 			],
@@ -1205,6 +1211,8 @@
 					[
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
+						'src/tilecachegl3.x.cpp',
+						'src/glcontext.cpp',
 						
 						'src/desktop.cpp',
 						'src/desktop-ans.cpp',
@@ -1226,6 +1234,7 @@
 					[
 						'src/player-platform.cpp',
 						'src/sysunxnetwork.cpp',
+						'src/tilecachegl.cpp',
 
 						'src/desktop.cpp',
 						'src/desktop-ans.cpp',
@@ -1249,6 +1258,7 @@
 						'src/stacke.cpp',
 						'src/sysunxdate.cpp',
 						'src/sysunxrandom.cpp',
+						'src/tilecachegl.cpp',
 						
 						'src/mbliphoneembedded.mm',
 						'src/mbliphoneembeddedtest.mm',
@@ -1283,6 +1293,8 @@
 						'src/notify.cpp',
 						'src/player-platform.cpp',
 						'src/tilecachegl.cpp',
+						'src/tilecachegl3.x.cpp',
+						'src/glcontext.cpp',
 						
 						'src/desktop.cpp',
 						'src/desktop-ans.cpp',

@@ -517,12 +517,20 @@ static bool __MCJavaProperListFromJObjectArray(jobjectArray p_obj_array, MCPrope
         MCJavaAutoLocalRef<jobject> t_object =
             s_env -> GetObjectArrayElement(p_obj_array, i);
         
-        MCAutoJavaObjectRef t_obj;
-        if (!MCJavaObjectCreate(t_object, &t_obj))
-            return false;
+        if (t_object != nullptr)
+        {
+            MCAutoJavaObjectRef t_obj;
+            if (!MCJavaObjectCreate(t_object, &t_obj))
+                return false;
 
-        if (!MCProperListPushElementOntoBack(*t_list, *t_obj))
-            return false;
+            if (!MCProperListPushElementOntoBack(*t_list, *t_obj))
+                return false;
+        }
+        else
+        {
+            if (!MCProperListPushElementOntoBack(*t_list, kMCNull))
+                return false;
+        }
     }
     
     return MCProperListCopy(*t_list, r_list);
@@ -547,7 +555,9 @@ bool MCJavaObjectCreateNullable(jobject p_object, MCJavaObjectRef &r_object)
 
 static jstring MCJavaGetJObjectClassName(jobject p_obj)
 {
-    /* Make sure the fetched class local-refs are deleted on exit */
+	MCJavaDoAttachCurrentThread();
+	
+	/* Make sure the fetched class local-refs are deleted on exit */
     MCJavaAutoLocalRef<jclass> t_class =
         s_env->GetObjectClass(p_obj);
     MCJavaAutoLocalRef<jclass> javaClassClass =
@@ -1947,10 +1957,17 @@ jobject MCJavaPrivateDoNativeListenerCallback(jlong p_handler, jstring p_method_
     MCProperListRef t_mutable_list;
     if (!MCProperListMutableCopy(*t_list, t_mutable_list))
         return nullptr;
-    
-    MCErrorRef t_error =
+	
+	/* The handler is run on the script thread and could call code which executes
+	 * MCJavaDoAttachCurrentThread() so we must ensure s_env is reset correctly for the
+	 * current thread */
+	JNIEnv *t_old_env;
+	t_old_env = s_env;
+	MCErrorRef t_error =
         MCHandlerTryToExternalInvokeWithList(static_cast<MCHandlerRef>(t_handler),
                                              t_mutable_list, &t_result);
+	s_env = t_old_env;
+	
     jobject t_return = nullptr;
     if (*t_result != nil)
     {

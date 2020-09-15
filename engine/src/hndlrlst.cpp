@@ -416,7 +416,7 @@ void MCHandlerlist::newglobal(MCNameRef p_name)
 	globals[nglobals++] = gptr;
 }
 
-Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
+Parse_stat MCHandlerlist::parse(MCObject *objptr, MCDataRef script_utf8)
 {
 	Parse_stat status = PS_NORMAL;
 
@@ -425,7 +425,7 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 	if (!MCperror -> isempty())
 		MCperror -> clear();
 
-	MCScriptPoint sp(objptr, this, script);
+	MCScriptPoint sp(objptr, this, script_utf8);
 
 	// MW-2008-11-02: Its possible for the objptr to be NULL if this is inert execution
 	//   (for example 'getdefaultprinter()' on Linux) so don't indirect in this case.
@@ -610,6 +610,16 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 	}
 
 	return status;
+}
+
+Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef p_script)
+{
+    MCAutoDataRef t_utf16_script;
+    unichar_t *t_unicode_string;
+    uint32_t t_length;
+    /* UNCHECKED */ MCStringConvertToUnicode(p_script, t_unicode_string, t_length);
+    /* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)t_unicode_string, (t_length + 1) * 2, &t_utf16_script);
+    return parse(objptr, *t_utf16_script);
 }
 
 Exec_stat MCHandlerlist::findhandler(Handler_type type, MCNameRef name, MCHandler *&handret)

@@ -53,7 +53,7 @@ end handler
 -- characters are shown in "\uXXXX" format, and other characters are
 -- shown literally.
 private handler FormatChar(in pChar as String) returns String
-   if the code of pChar > 0x1f then
+   if the code of codeunit 1 of pChar > 0x1f then
       return pChar
    else
       return "\\u" & (the code of pChar converted to base 16)
@@ -269,7 +269,7 @@ public handler JsonImport(in pJson as String) returns optional any
         put kScanEndToken into tScanState
       else if tChar is "\\" then
         put kScanInStringEscape into tScanState
-      else if the code of tChar <= 0x1f then
+      else if the code of codeunit 1 of tChar <= 0x1f then
         -- RFC 7159 requires control characters inside string literals
         -- to be escaped.  Control characters are those within the
         -- range U+0000 to U+001F inclusive

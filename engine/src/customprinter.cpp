@@ -1073,6 +1073,9 @@ static bool dotextmark_callback(void *p_context, const MCTextLayoutSpan *p_span)
 	extern int32_t MCCustomPrinterComputeFontSize(void *font);
 	t_font_size = MCCustomPrinterComputeFontSize(p_span -> font);
 	t_font_handle = p_span -> font;
+#elif defined(ANDROID)
+	t_font_size = context->font_size;
+	t_font_handle = p_span->font;
 #else
     // Neither servers nor Android have an implementation
 	t_font_size = 0;
@@ -1129,6 +1132,8 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	uint2 t_size, t_style;
     MCFontlistGetCurrent() -> getfontreqs(f, t_name, t_size, t_style);
 	t_state . font_size = t_size;
+#elif defined(ANDROID)
+	t_state . font_size = f -> size;
 #endif
 
 	compute_clip(p_mark -> clip, t_state . clip);

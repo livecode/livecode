@@ -944,6 +944,13 @@ void MCScreenDC::closeIME()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCScreenDC::getsystemappearance(MCSystemAppearance &r_appearance)
+{
+	MCPlatformGetSystemProperty(kMCPlatformSystemPropertySystemAppearance, kMCPlatformPropertyTypeInt32, &r_appearance);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern bool MCListSystemPrinters(MCStringRef &);
 extern MCPrinter *MCCreateSystemPrinter(void);
 
@@ -1107,7 +1114,11 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &p_rect, uint4 p_window, MCStrin
 
 void MCScreenDC::controlgainedfocus(MCStack *p_stack, uint32_t p_id)
 {
-	MCPlatformSwitchFocusToView(p_stack -> getwindow(), p_id);
+	MCPlatformWindowRef t_window = p_stack -> getwindow();
+	if (t_window != nullptr)
+	{
+		MCPlatformSwitchFocusToView(p_stack -> getwindow(), p_id);
+	}
 }
 
 void MCScreenDC::controllostfocus(MCStack *p_stack, uint32_t p_id)

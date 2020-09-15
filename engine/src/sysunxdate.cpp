@@ -155,7 +155,7 @@ bool MCS_secondstodatetime(double p_seconds, MCDateTime& r_datetime)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#if defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER) || defined(__EMSCRIPTEN__)
 
 #include <locale.h>
 #include <langinfo.h>

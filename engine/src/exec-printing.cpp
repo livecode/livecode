@@ -846,7 +846,7 @@ void MCPrintingGetPrintPageScale(MCExecContext& ctxt, double &r_value)
 
 void MCPrintingGetPrintPageRectangle(MCExecContext& ctxt, MCRectangle &r_value)
 {
-	r_value = MCprinter -> GetDeviceRectangle();
+	r_value = MCprinter -> GetPageRectangle();
 }
 
 void MCPrintingGetPrintJobName(MCExecContext& ctxt, MCStringRef &r_value)

@@ -85,6 +85,7 @@ private:
     bool m_scrub_back_is_pressed : 1;
     bool m_scrub_forward_is_pressed : 1;
     bool m_modify_selection_while_playing : 1;
+    double m_rate_before_scrub_buttons_pressed;
 
 	static MCPropertyInfo kProperties[];
     static MCObjectPropertyTable kPropertyTable;
@@ -435,6 +436,9 @@ public:
     
     void handle_mup(int which);
     void handle_mfocus(int x, int y);
+    
+    void push_current_rate();
+    void pop_current_rate();
     
     void popup_closed(void);
     

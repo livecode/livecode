@@ -180,4 +180,9 @@ void MCNotificationPostLaunchDataChanged()
 	/* UNCHECKED */ MCNotificationPostCustom(MCM_launch_data_changed, 0);
 }
 
+void MCNotificationPostSystemAppearanceChanged()
+{
+	/* UNCHECKED */ MCNotificationPostCustom(MCM_system_appearance_changed, 0);
+}
+
 ////////////////////////////////////////////////////////////////////////////////

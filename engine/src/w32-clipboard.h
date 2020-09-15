@@ -177,6 +177,7 @@ public:
 	virtual bool PushUpdates();
 	virtual bool PullUpdates();
 	virtual bool FlushData();
+	virtual MCWin32RawClipboardItem* CreateNewItem();
 
 	MCWin32RawClipboard();
 };

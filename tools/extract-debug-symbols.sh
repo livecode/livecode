@@ -24,10 +24,14 @@ for input in "$@" ; do
 	# Extract a copy of the debugging information
 	$OBJCOPY --only-keep-debug "$input" "$output" 
 	
-	# Because we export symbols from the engine, only debug symbols
-	# should be stripped.
-	$STRIP -x --strip-debug "$input"
-	
+	if [ "$os" == "android" -a "$BUILDTYPE" == "Debug" ] ; then
+		echo Skipping strip-debug for ${input}
+	else
+		# Because we export symbols from the engine, only debug symbols
+		# should be stripped.
+		$STRIP -x --strip-debug "$input"
+	fi
+
 	# Add a hint for the debugger so it can find the debug info
 	$OBJCOPY --remove-section=.gnu_debuglink "$input"
 	$OBJCOPY --add-gnu-debuglink="$output" "$input"

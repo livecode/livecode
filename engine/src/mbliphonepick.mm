@@ -120,6 +120,20 @@ UIViewController *MCIPhoneGetViewController(void);
 	m_use_checkmark = p_use;
 }
 
+- (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view
+{
+    UILabel* t_label = (UILabel*)view;
+    if (!t_label)
+    {
+        t_label = [[UILabel alloc] init];
+        t_label.adjustsFontSizeToFitWidth = YES;
+        t_label.textAlignment = NSTextAlignmentCenter;
+        [t_label setText:[[viewArray objectAtIndex:component] objectAtIndex:row]];
+    }
+    
+    return t_label;
+}
+
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
 	// HC-2011-10-03 [[ Picker Buttons ]] Showing the bar dynamicly, to indicate if any initial selections have been made.
@@ -503,10 +517,14 @@ return 1;
 		// make a toolbar
         // MM-2012-10-15: [[ Bug 10463 ]] Make the picker scale to the width of the device rather than a hard coded value (fixes issue with landscape iPhone 5 being 568 not 480).
 		UIToolbar *t_toolbar;
-		t_toolbar = [[UIToolbar alloc] initWithFrame: (t_is_landscape ? CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . height, t_toolbar_landscape_height) : CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height))];
+        
+        if (t_is_landscape)
+            t_toolbar = [[UIToolbar alloc] initWithFrame: CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_landscape_height)];
+        else
+            t_toolbar = [[UIToolbar alloc] initWithFrame: CGRectMake(0, 0, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_portrait_height)];
+        
 		t_toolbar.barStyle = UIBarStyleBlack;
 		t_toolbar.translucent = YES;
-
 		[t_toolbar sizeToFit];
 
 		NSMutableArray *t_toolbar_items;
@@ -562,7 +580,7 @@ return 1;
             }
             else
             {
-                [pickerView setFrame:CGRectMake(0, t_toolbar_landscape_height, [[UIScreen mainScreen] bounds] . size . height, t_pick_wheel_height)];
+                [pickerView setFrame:CGRectMake(0, t_toolbar_landscape_height, [[UIScreen mainScreen] bounds] . size . width, t_pick_wheel_height)];
                 t_rect = CGRectMake(0, [[UIScreen mainScreen] bounds] . size . height - t_toolbar_landscape_height - t_pick_wheel_height, [[UIScreen mainScreen] bounds] . size . width, t_toolbar_landscape_height + t_pick_wheel_height);
             }
             
@@ -570,7 +588,14 @@ return 1;
 
             [m_action_sheet_view addSubview: t_toolbar];
             [m_action_sheet_view addSubview: pickerView];
-            m_action_sheet_view.backgroundColor = [UIColor whiteColor];
+			if ([UIColor respondsToSelector:@selector(secondarySystemBackgroundColor)])
+			{
+				m_action_sheet_view.backgroundColor = [UIColor secondarySystemBackgroundColor];
+			}
+			else
+			{
+				m_action_sheet_view.backgroundColor = [UIColor whiteColor];
+			}
             [t_toolbar release];
 
             [MCIPhoneGetView() addSubview:m_action_sheet_view];

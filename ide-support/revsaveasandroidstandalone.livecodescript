@@ -89,7 +89,7 @@ private function updateMinimumAPI pVersionSet, pLimit
    
    answer "The minimum Android API is currently set to" && \
          pVersionSet && \
-         "but the" & tLimitType & " Android API available from LiveCode" && the version && \
+         "but the" && tLimitType & " Android API available from LiveCode" && the version && \
          "is" && pLimit & "." & LF & \
          "Do you want to update the minimum Android API to" && pLimit & "?" \
          with "No" or "Yes" \
@@ -116,7 +116,7 @@ private function __ArchABI pArch
    end switch
 end __ArchABI
 
-constant kAndroidExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql"
+constant kAndroidExternals = "revzip revxml dbsqlite dbmysql dbodbc dbpostgresql revpdfprinter"
 
 private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettings
    local tArchABIs, tArchs
@@ -169,7 +169,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
    set the itemDelimiter to comma
    
    -- Fetch the various options we need to initially build the app-bundle
-   local tName, tVersionName, tVersionCode, tExternals, tIcon, tSplash, tKey, tUnsigned, tStatusBarIcon
+   local tName, tVersionName, tVersionCode, tExternals, tDrivers, tIcon, tSplash, tKey, tUnsigned, tStatusBarIcon
    put pSettings["name"] into tName
    put pSettings["android,icon"] into tIcon
    put pSettings["android,key"] into tKey
@@ -265,12 +265,15 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
                put "revdb" & return after tExternals
             end if
             put tExternal & return after tExternals
+         else if tExternal is among the words of "revpdfprinter" then
+            put tExternal & return after tDrivers
          else
             put tExternal & return after tExternals
          end if
       end if
    end repeat
    delete the last char of tExternals
+   delete the last char of tDrivers
    
    -- Compute the stackfiles list
    lock messages
@@ -361,22 +364,27 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
          end if
          
          -- Only look for lcext files.
-         if the last item of tFile["name"] is not "lcext" then
-            next repeat
-         end if
+         switch the last item of tFile["name"]
+            case "lcext"
+               if there is no file tFile["resolved"] then
+                  throw "could not find referenced external -" && tFile["resolved"]
+               end if
+               if addExternalFromFile(tFile["resolved"], tClassesBuildFolder, tArchLibsBuildFolders) then
+                  -- Add the external to the list to load
+                  put char 1 to -7 of tFile["name"] & return after tExternals
+               end if
+               break
+            case "lcextd"
+               if there is no folder tFile["resolved"] then
+                  throw "could not find referenced external -" && tFile["resolved"]
+               end if
+               if addExternalFromFolder(tFile["resolved"], tClassesBuildFolder, tArchLibsBuildFolders) then
+                  -- Add the external to the list to load
+                  put char 1 to -8 of tFile["name"] & return after tExternals
+               end if
+               break
+         end switch 
          
-         -- Only process if the target exists
-         if there is no file tFile["resolved"] then
-            throw "could not find referenced external -" && tFile["resolved"]
-         end if
-         
-         -- MERG-2013-09-05: [[ Bug 11152 ]] Only list the external if it was successfully
-         --   extracted.
-         -- Now attempt to process the external
-         if addExternalFromFile(tFile["resolved"], tClassesBuildFolder, tArchLibsBuildFolders) then
-            -- Add the external to the list to load
-            put char 1 to -7 of tFile["name"] & return after tExternals
-         end if
       end repeat
       delete the last char of tExternals
       set the itemDelimiter to comma
@@ -579,10 +587,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       // SN-2015-09-24: [[ Bug 15875 ]] Add the screenSize configChanges value for API > 12
       //  Otherwise the app restarts on orientation change.
       local tConfigChangesProp
-      put "keyboardHidden|orientation" into tConfigChangesProp
-      if pSettings["android,minimum version"] > 12 then
-         put "|screenSize" after tConfigChangesProp
-      end if
+      put "keyboardHidden|orientation|uiMode|screenSize" into tConfigChangesProp
       replace "${CONFIG_CHANGES}" with tConfigChangesProp in tManifest
       
       // SN-2015-09-30: [[ Bug 10267 ]] Hardware Acceleration option added
@@ -847,6 +852,9 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       repeat for each line tEntry in tExternals
          put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
       end repeat
+      repeat for each line tEntry in tDrivers
+         put return & tEntry & ":" & "./lib" & tEntry after pSettings["android,library"]
+      end repeat
       
       set the itemDelimiter to comma
       repeat for each item tArch in tArchs
@@ -882,7 +890,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       -- Stackfile to use
       put the effective filename of stack pStack into tDeploy["stackfile"]
       
-       -- Splash to use (if non-commercial)
+      -- Splash to use (if non-commercial)
       if line 3 of the revLicenseInfo is among the words of "Educational Personal" then
          -- MW-2011-03-17: Make sure absolute paths work correctly
          if pSettings["android,splash"] is not empty and pathIsRelative(pSettings["android,splash"]) then
@@ -982,6 +990,19 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
             put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tArch & slash & tEntry)) \
                   into url ("binfile:" & tArchLibsBuildFolders[tArch] & slash & "lib" & tEntry & ".so")
             // SN-2015-01-22: [[ Bug 13213 ]] Throw an error in case an error occurred
+            if the result is not empty then
+               throw "Could not find " & tEntry && "library"
+            end if
+         end repeat
+         
+         -- Copy across any other driver libraries into the libs folder
+         repeat for each line tEntry in tDrivers
+            -- Only copy across the library if it's not already there
+            if there is a file (tArchLibsBuildFolders[tArch] & slash & "lib" & tEntry & ".so") then
+               next repeat
+            end if
+            put url ("binfile:" & mapFilePath(revMobileRuntimeFolder(pTarget) & slash & tArch & slash & tEntry)) \
+                  into url ("binfile:" & tArchLibsBuildFolders[tArch] & slash & "lib" & tEntry & ".so")
             if the result is not empty then
                throw "Could not find " & tEntry && "library"
             end if
@@ -1276,7 +1297,9 @@ private command addAssetsToArchive pFileData, pBaseFolder, pArchive
             revZipAddUncompressedItemWithFile pArchive, "assets/" & tFile["name"], tFile["resolved"]
          end if
       else if there is a folder tFile["resolved"] then
-         addAssetsFromFolderToArchive tFile["resolved"], "assets" & slash & tFile["name"], pArchive, tFonts
+         if not (tFile["resolved"] ends with ".lcextd") then
+            addAssetsFromFolderToArchive tFile["resolved"], "assets" & slash & tFile["name"], pArchive, tFonts
+         end if
       else
          throw "could not find referenced asset to include -" && tFile["resolved"]
       end if
@@ -1429,6 +1452,63 @@ private function addExternalFromFile pExternal, pClassesFolder, pArchLibsFolders
    
    return tLibFileA is an array
 end addExternalFromFile
+
+private function addExternalFromFolder pExternal, pClassesFolder, pArchLibsFolders
+   -- Get the name of the external.
+   local tExternalName
+   set the itemDelimiter to slash
+   get the last item of pExternal
+   set the itemDelimiter to "."
+   put the first item of it into tExternalName
+   set the itemDelimiter to slash
+   
+   -- Compute the class / lib names.
+   local tClassesFile, tLibFileA
+   put pClassesFolder & slash & "lib" & tExternalName & ".jar" into tClassesFile
+   
+   local tItems
+   put files(pExternal & "/Android") into tItems
+   
+   local tItemsFiltered
+   filter tItems with regex pattern ".*(\.jar|Classes)$" into tItemsFiltered
+   repeat for each line tItem in tItemsFiltered
+      if tItem ends with ".jar" then
+         revSBCopyFile pExternal & "/Android/" & tItem, \
+               pClassesFolder & slash & the last item of tItem 
+      else 
+         # will be Classes file
+         revSBCopyFile pExternal & "/Android/" & tItem, \
+               tClassesFile
+      end if
+   end repeat
+   
+   repeat for each key tArch in pArchLibsFolders
+      local tPattern
+      put "^(?:External-" & tArch & "|lib.+" & tArch & "\.so)$" into tPattern
+      filter tItems with regex pattern tPattern into tItemsFiltered
+      put pArchLibsFolders[tArch] & slash & "lib" & tExternalName & ".so" into tLibFileA[tArch]
+      repeat for each line tItem in tItemsFiltered
+         if tItem ends with ".so" then
+            revSBCopyFile pExternal & "/Android/" & tItem, \
+                  pClassesFolder & slash & the last item of tItem 
+         else 
+            # will be External-<Arch> file
+            revSBCopyFile pExternal & "/Android/" & tItem, \
+                  tLibFileA[tArch]
+         end if
+      end repeat
+   end repeat
+   
+   if there is a file tClassesFile then
+      repeat for each key tArch in pArchLibsFolders
+         if there is no file tLibFileA[tArch] then
+            throw "android external contains classes but no library for " & tArch
+         end if
+      end repeat
+   end if
+   
+   return tLibFileA is an array
+end addExternalFromFolder
 
 ################################################################################
 
@@ -1809,6 +1889,22 @@ command MergeManifestArray @xManifestArrayA, pAdditionalsA
             put tData["@attributes"]["android:minSDKVersion"] into tNew
             put max(tExisting, tNew) into \
                   xManifestArrayA[tUsesSDKIndex]["@attributes"]["android:minSDKVersion"]
+            break
+         case "activity"
+            local tActivityIndex
+            put FindIndex(xManifestArrayA, "activity") into tActivityIndex
+            local tExistingA, tNewA
+            put xManifestArrayA[tActivityIndex]["@attributes"] \
+                  into tExistingA
+            put tData["@attributes"] into tNewA
+            repeat for each line tKey in the keys of tNewA
+               // do not merge the "theme", "name" and "exported" attributes
+               if tKey is "android:theme" or tKey is "android:name" or tKey is "android:exported" then
+                  next repeat
+               end if
+               put tNewA[tKey] into tExistingA[tKey]
+            end repeat
+            put tExistingA into xManifestArrayA[tActivityIndex]["@attributes"]
             break
          default
             insertIntoList tData, xManifestArrayA, tEndOfBlock

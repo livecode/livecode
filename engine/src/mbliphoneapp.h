@@ -296,8 +296,6 @@ enum MCIPhoneKeyboardDisplayMode
 {
 	// The orientation of the current image view.
 	UIInterfaceOrientation m_image_orientation;
-	// The image view currently being displayed.
-	UIImageView *m_image_view;
 }
 
 - (id)init;
@@ -306,8 +304,6 @@ enum MCIPhoneKeyboardDisplayMode
 - (BOOL)shouldAutorotate;
 - (NSUInteger)supportedInterfaceOrientations;
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation;
-
-- (void)loadView;
 
 - (void)viewDidLoad;
 - (void)viewDidUnload;
@@ -320,8 +316,6 @@ enum MCIPhoneKeyboardDisplayMode
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration;
 - (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration;
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation;
-
-- (void)switchImageToOrientation: (UIInterfaceOrientation)orientation;
 
 @end
 

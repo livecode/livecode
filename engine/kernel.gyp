@@ -81,6 +81,7 @@
 						[
 							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_skia',
 							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_freetype',
+							'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_harfbuzz',
 						],
 
 						'link_settings':
@@ -193,6 +194,7 @@
 								'$(SDKROOT)/System/Library/Frameworks/AddressBook.framework',
 								'$(SDKROOT)/System/Library/Frameworks/AddressBookUI.framework',
 								'$(SDKROOT)/System/Library/Frameworks/AVFoundation.framework',
+								'$(SDKROOT)/System/Library/Frameworks/AVKit.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CFNetwork.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CoreLocation.framework',
 								'$(SDKROOT)/System/Library/Frameworks/CoreMedia.framework',
@@ -234,7 +236,7 @@
 						{
 							'libraries':
 							[
-								'-lGLESv1_CM',
+								'-lGLESv3',
 								'-lEGL',
 								'-ljnigraphics',
 								'-llog',

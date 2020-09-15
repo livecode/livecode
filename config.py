@@ -31,17 +31,16 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'x86-android-ndk16r15',
     'x86_64-android-ndk16r15',
     'universal-mac-macosx10.9', # Minimum deployment target
-    'universal-ios-iphoneos13.1',
+    'universal-ios-iphoneos13.5',
+    'universal-ios-iphoneos13.2',
     'universal-ios-iphoneos12.1',
     'universal-ios-iphoneos11.2',
     'universal-ios-iphoneos10.2',
-    'universal-ios-iphoneos9.2',
-    'universal-ios-iphonesimulator13.1',
+    'universal-ios-iphonesimulator13.5',
+    'universal-ios-iphonesimulator13.2',
     'universal-ios-iphonesimulator12.1',
     'universal-ios-iphonesimulator11.2',
     'universal-ios-iphonesimulator10.2',
-    'universal-ios-iphonesimulator9.2',
-    'universal-ios-iphonesimulator8.2',
     'x86-win32', # TODO[2017-03-23] More specific ABI
     'x86_64-win32',
     'js-emscripten-sdk1.35',
@@ -151,7 +150,7 @@ def process_env_options(opts):
         'TARGET_ARCH', 'PERL', 'ANDROID_NDK_VERSION', 'ANDROID_LIB_PATH',
         'ANDROID_NDK_PLATFORM_VERSION', 'ANDROID_PLATFORM',
         'ANDROID_SDK', 'ANDROID_NDK', 'ANDROID_BUILD_TOOLS', 'LTO',
-        'ANDROID_TOOLCHAIN', 'ANDROID_API_VERSION',
+        'ANDROID_TOOLCHAIN_DIR', 'ANDROID_TOOLCHAIN', 'ANDROID_API_VERSION',
         'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
         'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION', 'CC_PREFIX', 'CROSS',
         'SYSROOT', 'AUX_SYSROOT', 'TRIPLE', 'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
@@ -517,8 +516,11 @@ def validate_xcode_sdks(opts):
 
 # We suggest some symlinks for Android toolchain components in the
 # INSTALL-android.md file.  This checks if a directory is present
-def guess_android_tooldir(name):
-    dir = os.path.join(os.path.expanduser('~'), 'android', 'toolchain', name)
+def guess_android_tooldir(toolchain, name):
+    if toolchain is None:
+        dir = os.path.join(os.path.expanduser('~'), 'android', 'toolchain', name)
+    else:
+        dir = os.path.join(toolchain, name)
     if os.path.isdir(dir):
         return dir
     return None
@@ -603,8 +605,11 @@ def validate_android_tools(opts):
         opts['ANDROID_NDK_VERSION'] = 'r15'
 
     ndk_ver = opts['ANDROID_NDK_VERSION']
+
+    toolchain_dir = opts['ANDROID_TOOLCHAIN_DIR']
+
     if opts['ANDROID_NDK'] is None:
-        ndk = guess_android_tooldir('android-ndk')
+        ndk = guess_android_tooldir(toolchain_dir, 'android-ndk')
         if ndk is None:
             error('Android NDK not found; set $ANDROID_NDK')
         opts['ANDROID_NDK'] = ndk
@@ -613,7 +618,7 @@ def validate_android_tools(opts):
         opts['ANDROID_NDK_PLATFORM_VERSION'] = '16'
 
     if opts['ANDROID_API_VERSION'] is None:
-        opts['ANDROID_API_VERSION'] = '28'
+        opts['ANDROID_API_VERSION'] = '29'
      
     api_ver = opts['ANDROID_API_VERSION']
 
@@ -621,7 +626,7 @@ def validate_android_tools(opts):
         opts['ANDROID_PLATFORM'] = 'android-' + api_ver
 
     if opts['ANDROID_SDK'] is None:
-        sdk = guess_android_tooldir('android-sdk')
+        sdk = guess_android_tooldir(toolchain_dir, 'android-sdk')
         if sdk is None:
             error('Android SDK not found; set $ANDROID_SDK')
         opts['ANDROID_SDK'] = sdk
@@ -633,7 +638,7 @@ def validate_android_tools(opts):
         opts['ANDROID_BUILD_TOOLS'] = tools
 
     if opts['ANDROID_TOOLCHAIN'] is None:
-        dir = guess_android_tooldir(guess_standalone_toolchain_dir_name(opts['TARGET_ARCH']))
+        dir = guess_android_tooldir(toolchain_dir, guess_standalone_toolchain_dir_name(opts['TARGET_ARCH']))
         if dir is None:
             error('Android toolchain not found for architecture {}; set $ANDROID_TOOLCHAIN'.format(opts['TARGET_ARCH']))
         prefix = guess_compiler_prefix(opts['TARGET_ARCH'])

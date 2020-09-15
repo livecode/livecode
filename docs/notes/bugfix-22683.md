@@ -1,0 +1,1 @@
+# Fix incorrectly placed and sized characters in HTML5 standalones

@@ -349,13 +349,13 @@
 						[
 							{
 								'action_name': 'copy_manifest',
-								'message': 'Copying manifest file',
+								'message': 'Copying and update debuggable in manifest file',
 								
 								'inputs':
 								[
 									'rsrc/android-manifest.xml',
 								],
-								
+
 								'outputs':
 								[
 									'<(PRODUCT_DIR)/Manifest.xml',
@@ -363,7 +363,9 @@
 								
 								'action':
 								[
-									'cp', '<@(_inputs)', '<@(_outputs)',
+									'../util/set_android_debuggable.sh',
+									'<@(_inputs)',
+									'<@(_outputs)',
 								],
 							},
 							{
@@ -486,11 +488,9 @@
 							{
 								'dist_aux_files':
 								[
-									'rsrc/Default-568h@2x.png',
 									'rsrc/fontmap',
 									'rsrc/mobile-device-template.plist',
 									'rsrc/mobile-remote-notification-template.plist',
-									'rsrc/mobile-splashscreen-template.plist',
 									'rsrc/mobile-template.plist',
 									'rsrc/mobile-url-scheme-template.plist',
 									'rsrc/mobile-disable-ats-template.plist',
@@ -498,6 +498,7 @@
 									'rsrc/template-beta-report-entitlement.xcent',
 									'rsrc/template-remote-notification-entitlements.xcent',
 									'rsrc/template-remote-notification-store-entitlements.xcent',
+									'rsrc/template.storyboard',
 								],
 							},
 						},

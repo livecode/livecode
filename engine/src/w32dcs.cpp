@@ -248,6 +248,10 @@ Boolean MCScreenDC::open()
 	MCdoubletime = GetDoubleClickTime();
 	opened++;
 
+	/* Fetch any system metrics we need which are updated on WM_SETTINGCHANGE or 
+	 * WM_DISPLAYCHANGE. */
+	updatemetrics();
+
 	MCDisplay const *t_displays;
 	getdisplays(t_displays, false);
 	MCwbr = t_displays[0] . workarea;
@@ -1127,6 +1131,9 @@ void MCScreenDC::processdesktopchanged(bool p_notify, bool p_update_fonts)
 	// IM-2014-01-28: [[ HiDPI ]] Use updatedisplayinfo() method to update & compare display details
 	bool t_changed;
 	t_changed = false;
+
+	/* Update any system metrics which are used often and are cached. */
+	updatemetrics();
 
 	updatedisplayinfo(t_changed);
 

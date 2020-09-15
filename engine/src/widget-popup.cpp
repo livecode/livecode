@@ -432,7 +432,7 @@ extern "C" MC_DLLEXPORT_DEF MCValueRef MCWidgetExecPopupAtLocationWithProperties
     }
     
     MCPoint t_at;
-	t_at = t_host->getstack()->globaltostackloc(MCGPointToMCPoint(MCWidgetMapPointToGlobal(MCcurrentwidget, t_point)));
+	t_at = t_host->getstack()->stacktogloballoc(MCGPointToMCPoint(MCWidgetMapPointToGlobal(MCcurrentwidget, t_point)));
     
 	MCNewAutoNameRef t_kind;
 	/* UNCHECKED */ MCNameCreate(p_kind, &t_kind);

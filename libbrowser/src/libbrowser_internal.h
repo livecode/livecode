@@ -33,13 +33,17 @@ public:
     MCBrowserBase(void);
     virtual ~MCBrowserBase(void);
 
+	void SetNavigationRequestHandler(MCBrowserNavigationRequestHandler *p_handler);
 	void SetEventHandler(MCBrowserEventHandler *p_handler);
 	void SetJavaScriptHandler(MCBrowserJavaScriptHandler *p_handler);
 	void SetProgressHandler(MCBrowserProgressHandler *p_handler);
 
+	MCBrowserNavigationRequestHandler *GetNavigationRequestHandler(void);
 	MCBrowserEventHandler *GetEventHandler(void);
 	MCBrowserJavaScriptHandler *GetJavaScriptHandler(void);
 	MCBrowserProgressHandler *GetProgressHandler(void);
+
+	virtual bool OnNavigationRequest(MCBrowserNavigationRequest *p_request);
 
 	virtual void OnNavigationBegin(bool p_in_frame, const char *p_url);
 	virtual void OnNavigationComplete(bool p_in_frame, const char *p_url);
@@ -68,9 +72,31 @@ private:
 	
 	static MCBrowserListEntry *s_browser_list;
 	
+	MCBrowserNavigationRequestHandler *m_navigation_request_handler;
 	MCBrowserEventHandler *m_event_handler;
 	MCBrowserJavaScriptHandler *m_javascript_handler;
 	MCBrowserProgressHandler *m_progress_handler;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCBrowserNavigationRequestBase : public MCBrowserNavigationRequest
+{
+public:
+	MCBrowserNavigationRequestBase(const char *p_url, bool p_frame, MCBrowserNavigationType p_type);
+	virtual ~MCBrowserNavigationRequestBase();
+	
+	virtual const char *GetURL(void);
+	virtual bool IsFrame(void);
+	virtual MCBrowserNavigationType GetNavigationType(void);
+	
+	virtual void Continue(void) = 0;
+	virtual void Cancel(void) = 0;
+
+private:
+	char *m_url;
+	bool m_frame;
+	MCBrowserNavigationType m_navigation_type;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,6 +180,28 @@ template <class T>
 inline void MCBrowserMemoryClear(T &p_struct)
 {
 	MCBrowserMemoryClear(&p_struct, sizeof(T));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+inline void MCBrowserCStringAssign(char *&x_variable, char *p_value)
+{
+	if (x_variable == p_value)
+		return;
+		
+	if (x_variable != nil)
+		MCCStringFree(x_variable);
+	x_variable = p_value;
+}
+
+inline bool MCBrowserCStringAssignCopy(char *&x_variable, const char *p_value)
+{
+	char *t_copy;
+	if (!MCCStringClone(p_value, t_copy))
+		return false;
+	
+	MCBrowserCStringAssign(x_variable, t_copy);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

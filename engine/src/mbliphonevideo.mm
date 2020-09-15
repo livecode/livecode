@@ -39,8 +39,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import <MediaPlayer/MPMoviePlayerController.h>
-#import <MediaPlayer/MPMoviePlayerViewController.h>
+#import <AVFoundation/AVFoundation.h>
+#import <AVKit/AVKit.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED < 100000
+	typedef NSString *NSKeyValueChangeKey;
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -49,22 +55,20 @@ UIView *MCIPhoneGetView(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool g_movie_player_in_use = false;
-MPMoviePlayerViewController *g_movie_player = nil;
-
-////////////////////////////////////////////////////////////////////////////////
-
-static NSObject *s_movie_player_delegate = nil;
+static AVPlayerViewController *s_movie_player = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 @interface com_runrev_livecode_MCFullscreenMovieDelegate : NSObject
 {
 	bool m_running;
+	bool m_looping;
+	CMTime m_start_time;
+	AVPlayer *m_player;
 	UIControl *m_overlay;
 }
 
-- (id)initWithPlayer;
+- (id)initWithPlayer:(AVPlayer*)player startTime:(CMTime)startTime looping:(BOOL)looping;
 - (void)dealloc;
 
 - (void)begin: (bool)p_add_overlay;
@@ -72,33 +76,53 @@ static NSObject *s_movie_player_delegate = nil;
 - (void)stop;
 - (bool)isRunning;
 
-- (void)movieFinished: (NSNotification *) p_notification;
-- (void)moviePreloadFinished: (NSNotification *) p_notification;
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context;
+- (void)playerItemDidPlayToEndTime:(NSNotification*)notification;
+- (void)playerItemFailedToPlayToEndTime:(NSNotification*)notification;
 - (void)movieWindowTouched: (UIControl*) p_sender;
 
 @end
 
+@compatibility_alias MCFullscreenMovieDelegate com_runrev_livecode_MCFullscreenMovieDelegate;
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCFullscreenMovieDelegate *s_movie_player_delegate = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 @implementation com_runrev_livecode_MCFullscreenMovieDelegate
 
 // AL-2014-09-09: [[ Bug 13354 ]] Replace deprecated MPMoviePlayerContentPreloadDidFinishNotification
-- (id)initWithPlayer: (MPMoviePlayerController *)p_player
+- (id)initWithPlayer:(AVPlayer *)p_player startTime:(CMTime)startTime looping:(BOOL)looping
 {
 	self = [super init];
 	if (self == nil)
 		return nil;
 	
-	[[NSNotificationCenter defaultCenter] addObserver:self 
-											 selector:@selector(movieFinished:)
-												 name:MPMoviePlayerPlaybackDidFinishNotification 
-											   object:nil];
-
-	[[NSNotificationCenter defaultCenter] addObserver:self 
-											 selector:@selector(moviePreloadFinished:)
-												 name:MPMoviePlayerLoadStateDidChangeNotification 
-											   object:p_player];
+	m_player = [p_player retain];
 	
+	[m_player.currentItem
+		addObserver:self
+		forKeyPath:@"status"
+		options:NSKeyValueObservingOptionNew | NSKeyValueObservingOptionOld
+		context:nil];
+	[NSNotificationCenter.defaultCenter
+		addObserver:self
+		selector:@selector(playerItemDidPlayToEndTime:)
+		name:AVPlayerItemDidPlayToEndTimeNotification
+		object:m_player.currentItem];
+	[NSNotificationCenter.defaultCenter
+		addObserver:self
+		selector:@selector(playerItemFailedToPlayToEndTime:)
+		name:AVPlayerItemFailedToPlayToEndTimeNotification
+		object:m_player.currentItem];
+
 	m_running = true;
 	m_overlay = nil;
+	
+	m_start_time = startTime;
+	m_looping = looping;
 	
 	s_movie_player_delegate = self;
 	
@@ -108,7 +132,8 @@ static NSObject *s_movie_player_delegate = nil;
 - (void)dealloc
 {
 	s_movie_player_delegate = nil;
-	[[NSNotificationCenter defaultCenter] removeObserver: self];
+	[NSNotificationCenter.defaultCenter removeObserver: self];
+	[m_player release];
 	[super dealloc];
 }
 
@@ -150,23 +175,37 @@ static NSObject *s_movie_player_delegate = nil;
 
 //////////
 
-- (void)movieFinished: (NSNotification *) p_notification
+- (void)playerItemDidPlayToEndTime:(NSNotification *)notification
 {
+	if (m_looping)
+	{
+		[m_player seekToTime:m_start_time];
+		return;
+	}
+	
 	m_running = false;
 	
 	// MW-2011-08-16: [[ Wait ]] Tell the wait to exit (our wait has anyevent == True).
 	MCscreen -> pingwait();
 }
 
-- (void)moviePreloadFinished: (NSNotification *) p_notification
+- (void)playerItemFailedToPlayToEndTime:(NSNotification *)notification
 {
-	// AL-2014-09-09: [[ Bug 13354 ]] Replace deprecated MPMoviePlayerContentPreloadDidFinishNotification
-	if ([[p_notification object] loadState] & MPMovieLoadStateUnknown)
+	m_running = false;
+	MCscreen->pingwait();
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context
+{
+	if ([keyPath isEqualToString:@"status"])
 	{
-		m_running = false;
-		
-		// MW-2011-08-16: [[ Wait ]] Tell the wait to exit (our wait has anyevent == True).
-		MCscreen -> pingwait();
+		if (((AVPlayerItem*)object).status == AVPlayerItemStatusFailed)
+		{
+			m_running = false;
+			
+			// MW-2011-08-16: [[ Wait ]] Tell the wait to exit (our wait has anyevent == True).
+			MCscreen -> pingwait();
+		}
 	}
 }
 
@@ -178,16 +217,19 @@ static NSObject *s_movie_player_delegate = nil;
 
 @end
 
-static void configure_playback_range(MPMoviePlayerController *p_player)
+static void configure_playback_range(AVPlayerViewController *p_player, CMTime &r_start_time)
 {
 	if (!MCtemplateplayer -> getflag(F_PLAY_SELECTION))
+	{
+		r_start_time = kCMTimeZero;
 		return;
+	}
 	
 	uint32_t t_start_time, t_end_time;
 	t_start_time = MCtemplateplayer -> getstarttime();
 	t_end_time = MCtemplateplayer -> getendtime();
-	[p_player setInitialPlaybackTime: t_start_time / 1000.0];
-	[p_player setEndPlaybackTime: t_end_time / 1000.0];
+	p_player.player.currentItem.forwardPlaybackEndTime = CMTimeMake(t_end_time, 1000);
+	r_start_time = CMTimeMake(t_start_time, 1000);
 }
 
 struct play_fullscreen_t
@@ -195,8 +237,9 @@ struct play_fullscreen_t
 	NSURL *url;
 	bool looping;
 	bool with_controller;
-	MPMoviePlayerController *movie_player;
-	com_runrev_livecode_MCFullscreenMovieDelegate *delegate;
+	AVPlayerViewController *movie_player;
+	MCFullscreenMovieDelegate *delegate;
+	CMTime start_time;
 };
 
 static void play_fullscreen_movie_prewait(void *p_context)
@@ -205,49 +248,50 @@ static void play_fullscreen_movie_prewait(void *p_context)
 	ctxt = (play_fullscreen_t *)p_context;
 	
     // MM-2011-12-09: [[ Bug 9892 ]] Destroy previous movie player.  Fixes bug with iOS 5 where 
-	//		showController is ignored on second running.  Since g_movie_player is only used for native players
-    //      in iOS 4.2 or earlier, we can use g_movie_player_in_use to make sure we aren't releasing
-    //      a controller that is already in use.
-    if (g_movie_player != nil)
+	//		showController is ignored on second running.
+    if (s_movie_player != nil)
 	{
-        [g_movie_player release];
-        g_movie_player = nil;
+        [s_movie_player release];
+        s_movie_player = nil;
     }
     
 	// Make sure we have a movie player view controller with correct url
-	if (g_movie_player == nil)	
-		g_movie_player = [[MPMoviePlayerViewController alloc] initWithContentURL: ctxt -> url];
-	else
-		[[g_movie_player moviePlayer] setContentURL: ctxt -> url];
+	s_movie_player = [[AVPlayerViewController alloc] init];
+	s_movie_player.player = [AVPlayer playerWithURL:ctxt->url];
 	
-	g_movie_player_in_use = true;
+	ctxt->movie_player = s_movie_player;
 	
-	ctxt -> movie_player = [g_movie_player moviePlayer];
+	ctxt->movie_player.view.hidden = NO;
+	ctxt->movie_player.view.opaque = YES;
+	ctxt->movie_player.view.alpha = 1.0f;
+	ctxt->movie_player.view.backgroundColor = [UIColor blackColor];
 	
-	[[ctxt -> movie_player view] setHidden: NO];
-	[[ctxt -> movie_player view] setOpaque: YES];
-	[[ctxt -> movie_player view] setAlpha: 1.0f];
-	[[ctxt -> movie_player backgroundView] setBackgroundColor: [UIColor blackColor]];
-	[ctxt -> movie_player setFullscreen: YES];
-	[ctxt -> movie_player setScalingMode: MPMovieScalingModeAspectFit];
-	[ctxt -> movie_player setControlStyle: (ctxt -> with_controller ? MPMovieControlStyleFullscreen : MPMovieControlStyleNone)];
-	[ctxt -> movie_player setUseApplicationAudioSession: YES];
-	[ctxt -> movie_player setInitialPlaybackTime: -1];
-	[ctxt -> movie_player setEndPlaybackTime: -1];
-	[ctxt -> movie_player setShouldAutoplay: YES];
+	ctxt->movie_player.videoGravity = AVLayerVideoGravityResizeAspect;
+	ctxt->movie_player.showsPlaybackControls = ctxt->with_controller;
 	if (ctxt -> looping)
-		[ctxt -> movie_player setRepeatMode: MPMovieRepeatModeOne];
-	if (MCmajorosversion >= 430)
-		[ctxt -> movie_player setAllowsAirPlay: NO];
+		ctxt->movie_player.player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
 	
-	configure_playback_range(ctxt -> movie_player);
+	ctxt->movie_player.allowsPictureInPicturePlayback = NO;
+	ctxt->movie_player.player.allowsExternalPlayback = NO;
 	
-	ctxt -> delegate = [[com_runrev_livecode_MCFullscreenMovieDelegate alloc] initWithPlayer:ctxt -> movie_player];
+	CMTime t_start_time;
+	configure_playback_range(ctxt -> movie_player, t_start_time);
+	
+	ctxt -> delegate = [[MCFullscreenMovieDelegate alloc]
+		initWithPlayer:ctxt -> movie_player.player
+		startTime:t_start_time
+		looping:ctxt->looping];
 	
 	// Present the view controller and get the delegate to setup its overlay
 	// if needed.
-	[MCIPhoneGetViewController() presentModalViewController: g_movie_player animated: NO];
-	[ctxt -> delegate begin: !ctxt -> with_controller];	
+	[MCIPhoneGetViewController()
+	 	presentViewController:s_movie_player
+	 	animated:NO
+	 	completion:^{
+			[s_movie_player.player seekToTime:t_start_time];
+			[s_movie_player.player play];
+		}];
+	[ctxt -> delegate begin: !ctxt -> with_controller];
 }
 
 static void play_fullscreen_movie_postwait(void *p_context)
@@ -257,24 +301,18 @@ static void play_fullscreen_movie_postwait(void *p_context)
 	
 	// Clear up and overlay and dismiss the controller.
 	[ctxt -> delegate end];
-	[MCIPhoneGetViewController() dismissModalViewControllerAnimated: NO];
+	[MCIPhoneGetViewController() dismissViewControllerAnimated:NO completion:^{}];
 	
 	// Cleanup the delegate
 	[ctxt -> delegate release];
 	
 	// Make sure we reset the movie player to nothing.
-	[ctxt -> movie_player stop];
-	[ctxt -> movie_player setContentURL: [NSURL URLWithString: @""]];
-	
-	g_movie_player_in_use = false;
+	[ctxt->movie_player.player pause];
+	[ctxt->movie_player.player replaceCurrentItemWithPlayerItem:[AVPlayerItem playerItemWithURL:[NSURL URLWithString:@""]]];
 }
 
 static bool play_fullscreen_movie_new(NSURL *p_movie, bool p_looping, bool p_with_controller)
 {
-	// If on iOS < 4.2 don't allow this if there is a native player control
-	if (MCmajorosversion < 420 && g_movie_player_in_use)
-		return false;
-	
 	// Don't allow nested play calls
 	if (s_movie_player_delegate != nil)
 		return false;
@@ -305,19 +343,13 @@ bool MCSystemPlayVideo(MCStringRef p_video)
 	if (MCStringBeginsWithCString(p_video, (const char_t *)"http://", kMCStringOptionCompareExact)
 		|| MCStringBeginsWithCString(p_video, (const char_t *)"https://", kMCStringOptionCompareExact))
 	{
-		CFStringRef cfstrurl = nil;
-		/* UNCHECKED */ MCStringConvertToCFStringRef(p_video, cfstrurl);
-		t_url = [NSURL URLWithString: (NSString *)cfstrurl];
-		CFRelease(cfstrurl);
+		t_url = [NSURL URLWithString:MCStringConvertToAutoreleasedNSString(p_video)];
 	}
 	else
 	{
 		MCAutoStringRef t_path;
-		CFStringRef cfstrpath = nil;
 		/* UNCHECKED */ MCS_resolvepath(p_video, &t_path);
-		/* UNCHECKED */ MCStringConvertToCFStringRef(*t_path, cfstrpath);
-		t_url = [NSURL fileURLWithPath: (NSString *)cfstrpath];
-		CFRelease(cfstrpath);
+		t_url = [NSURL fileURLWithPath:MCStringConvertToAutoreleasedNSString(*t_path)];
 	}
 	
 	if (t_url == nil)

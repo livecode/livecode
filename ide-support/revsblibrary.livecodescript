@@ -1530,10 +1530,14 @@ function revSBLcextFileIsMobileExternal pFile, pPlatform
 end revSBLcextFileIsMobileExternal
 
 private function __FilterExternalsForMobile pList, pPlatform
-   filter pList with "*.lcext"
+   local tLcext
+   filter pList with "*.lcext" into tLcext
+   
+   local tLcextd
+   filter pList with "*.lcextd/" into tLcextd
    
    local tList, tError
-   repeat for each line tLine in pList
+   repeat for each line tLine in tLcext
       -- look inside the lcext zip to see if the platform is supported (in any architecture)
       if revSBLcextFileIsMobileExternal(tLine, pPlatform) then
          if tList is empty then
@@ -1543,6 +1547,18 @@ private function __FilterExternalsForMobile pList, pPlatform
          end if
       end if
    end repeat
+   
+   repeat for each line tLine in tLcextd
+      if there is a folder (tLine & pPlatform) then
+         delete the last char of tLine
+         if tList is empty then
+            put tLine into tList
+         else
+            put return & tLine after tList
+         end if
+      end if
+   end repeat
+   
    return tList
 end __FilterExternalsForMobile
 
@@ -1792,7 +1808,7 @@ private function revSBAvailableResources
       put "resource" into tInclusion["type"]
       put revSBAllDesktopPlatforms() into tInclusion["platforms"]
       if tTitle is "PDF Printer" then
-         put comma & kiOSPlatform after tInclusion["platforms"]
+         put comma & kiOSPlatform & comma & kAndroidPlatform after tInclusion["platforms"]
       end if
       addToList tInclusion, tInclusions
    end repeat

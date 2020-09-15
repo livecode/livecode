@@ -29,6 +29,7 @@ void MCPlatformHandleApplicationResume(void);
 void MCPlatformHandleApplicationRun(bool& r_continue);
 
 void MCPlatformHandleScreenParametersChanged(void);
+void MCPlatformHandleSystemAppearanceChanged(void);
 
 void MCPlatformHandleWindowCloseRequest(MCPlatformWindowRef window);
 void MCPlatformHandleWindowClose(MCPlatformWindowRef window);
@@ -125,6 +126,13 @@ void MCPlatformCallbackSendScreenParametersChanged(void)
 {
     //MCLog("Application -> ScreenParametersChanged()", 0);
 	MCPlatformHandleScreenParametersChanged();
+}
+
+//////////
+
+void MCPlatformCallbackSendSystemAppearanceChanged(void)
+{
+	MCPlatformHandleSystemAppearanceChanged();
 }
 
 //////////

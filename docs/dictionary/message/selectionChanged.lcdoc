@@ -29,6 +29,10 @@ The <selectionChanged> <message> is sent to a <field> whenever the user
 makes a text <selection> or moves the <insertion point> in the <field>,
 after the <selection> is changed.
 
+>*Note:* If the selection change is a result of the text being added or
+removed (for example, cut or paste over selected text),
+<selectionChanged> will not be sent, but rather <textChanged>.
+
 The <selectionChanged> <message> is sent to a <player(keyword)> whenever
 the user <select|selects> a portion of the sound or movie, or when a
 <handler> sets the <player(object)|player's> <startTime> or <endTime>
@@ -41,7 +45,7 @@ References: select (command), handler (glossary),
 insertion point (glossary), message (glossary), field (glossary),
 property (glossary), select (glossary), selection (keyword),
 field (keyword), player (keyword), currentTimeChanged (message),
-selectionChanged (message), selectedObjectChanged (message),
+selectedObjectChanged (message), textChanged (message), 
 arrowKey (message), player (object), selected (property),
 startTime (property), endTime (property)
 

@@ -546,7 +546,8 @@ MCFileItems::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
 {
     MCAutoStringRef t_folder;
     bool t_is_detailed = false;
-	if (m_folder)
+    bool t_is_utf8 = false;
+    if (m_folder)
     {
 		if (!ctxt.EvalExprAsStringRef(m_folder, m_files ? EE_FILES_BADFOLDER : EE_FOLDERS_BADFOLDER, &t_folder))
 			return;
@@ -560,18 +561,26 @@ MCFileItems::eval_ctxt(MCExecContext & ctxt, MCExecValue & r_value)
             }
             if (!MCStringIsEmpty(*t_kind))
             {
-                if (!MCStringIsEqualToCString(*t_kind, "detailed", kMCStringOptionCompareCaseless))
+                if (MCStringIsEqualToCString(*t_kind, "detailed", kMCStringOptionCompareCaseless))
+                {
+                    t_is_detailed = true;
+                }
+                else if (MCStringIsEqualToCString(*t_kind, "detailed-utf8", kMCStringOptionCompareCaseless))
+                {
+                    t_is_detailed = true;
+                    t_is_utf8 = true;
+                }
+                else
                 {
                     ctxt.LegacyThrow(m_files ? EE_FILES_BADKIND : EE_FOLDERS_BADKIND);
                     return;
                 }
-                t_is_detailed = true;
             }
         }
     }
     
     r_value.type = kMCExecValueTypeStringRef;
-    MCFilesEvalFileItemsOfDirectory(ctxt, *t_folder, m_files, t_is_detailed, r_value.stringref_value);
+    MCFilesEvalFileItemsOfDirectory(ctxt, *t_folder, m_files, t_is_detailed, t_is_utf8, r_value.stringref_value);
 }
 
 

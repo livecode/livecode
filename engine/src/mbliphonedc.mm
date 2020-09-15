@@ -46,14 +46,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 #import <AudioToolbox/AudioToolbox.h>
-#import <OpenGLES/ES1/gl.h>
-#import <OpenGLES/ES1/glext.h>
 #import <MediaPlayer/MPMoviePlayerViewController.h>
 
 #include "mbliphoneapp.h"
 #include "mbliphoneview.h"
 
 #include "resolution.h"
+
+#include <objc/message.h>
+
+#import <OpenGLES/ES3/gl.h>
+#import <OpenGLES/ES3/glext.h>
+#include "glcontext.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -217,6 +221,11 @@ void MCIPhoneCallOnMainFiber(void (*handler)(void *), void *context)
 bool MCIPhoneIsOnMainFiber(void)
 {
     return MCFiberIsCurrentThread(s_main_fiber);
+}
+
+bool MCIPhoneIsOnScriptFiber(void)
+{
+    return MCFiberIsCurrentThread(s_script_fiber);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -857,6 +866,24 @@ void MCScreenDC::refresh_current_window(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCScreenDC::getsystemappearance(MCSystemAppearance &r_appearance)
+{
+	/* userInterfaceStyle was introduced in iOS 12.0 */
+	typedef int (*_userInterfaceStyle)(UITraitCollection *, SEL selector);
+	UITraitCollection *t_traits = [MCIPhoneGetRootView() traitCollection];
+	if ([t_traits respondsToSelector: @selector(userInterfaceStyle)] &&
+			((_userInterfaceStyle)objc_msgSend)(t_traits, @selector(userInterfaceStyle)) == 2)
+	{
+		r_appearance = kMCSystemAppearanceDark;
+	}
+	else
+	{
+		r_appearance = kMCSystemAppearanceLight;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern void *coretext_font_create_with_name_size_and_style(MCStringRef p_name, uint32_t p_size, bool p_bold, bool p_italic);
 extern bool coretext_font_destroy(void *p_font);
 extern bool coretext_font_get_metrics(void *p_font, float& r_ascent, float& r_descent, float& r_leading, float& r_xheight);
@@ -1107,15 +1134,23 @@ MCUIDC *MCCreateScreenDC(void)
 
 static bool s_ensure_opengl = false;
 static bool s_is_opengl_display = false;
+static MCGLContextRef s_opengl_context = nil;
 
-void MCIPhoneSwitchToOpenGL(void)
+void MCPlatformEnableOpenGLMode(void)
 {
+	if (s_opengl_context == nil)
+		MCGLContextCreate(s_opengl_context);
 	s_ensure_opengl = true;
 }
 
-void MCIPhoneSwitchToUIKit(void)
+void MCPlatformDisableOpenGLMode(void)
 {
 	s_ensure_opengl = false;
+}
+
+MCGLContextRef MCPlatformGetOpenGLContext(void)
+{
+	return s_opengl_context;
 }
 
 void MCIPhoneSyncDisplayClass(void)
@@ -1134,6 +1169,8 @@ void MCIPhoneSyncDisplayClass(void)
 		s_is_opengl_display = false;
 		// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 		MCIPhoneRunBlockOnMainFiber(^(void) {
+			MCGLContextDestroy(s_opengl_context);
+			s_opengl_context = nil;
 			MCIPhoneSwitchViewToUIKit();
 		});
 	}
@@ -1195,6 +1232,11 @@ void MCIPhoneCallSelectorOnMainFiberWithObject(id p_object, SEL p_selector, id p
 void MCIPhoneRunOnMainFiber(void (*p_callback)(void *), void *p_context)
 {
 	MCFiberCall(s_main_fiber, p_callback, p_context);
+}
+
+void MCIPhoneRunOnScriptFiber(void (*p_callback)(void *), void *p_context)
+{
+    MCFiberCall(s_script_fiber, p_callback, p_context);
 }
 
 static void invoke_block(void *p_context)
