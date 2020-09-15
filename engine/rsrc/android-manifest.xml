@@ -6,6 +6,7 @@
           ${INSTALL_LOCATION}>
 ${PUSH_PERMISSIONS}
 ${USES_PERMISSION}${USES_FEATURE}
+  <uses-feature android:glEsVersion="0x00030000"/>
   <uses-sdk android:minSdkVersion="${MIN_SDK_VERSION}" android:targetSdkVersion="${TARGET_SDK_VERSION}"/>
   <supports-screens
       android:largeScreens="true"

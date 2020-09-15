@@ -52,10 +52,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcmanagedpthread.h"
 #include <android/log.h>
 #include <android/bitmap.h>
-#include <GLES/gl.h>
+#include <GLES3/gl3.h>
 #include <unistd.h>
 
 #include "libscript/script.h"
+
+#include "glcontext.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -128,6 +130,7 @@ static MCRectangle s_android_bitmap_dirty;
 static bool s_android_opengl_enabled = false;
 static bool s_android_opengl_visible = false;
 static jobject s_android_opengl_view = nullptr;
+static MCGLContextRef s_android_opengl_context = nil;
 
 // This is the JNI reference to our display/view instance.
 static jobject s_android_activity = nullptr;
@@ -1042,8 +1045,9 @@ public:
 	}
 
 protected:
-	static void FlushBits(void *p_bits, uint32_t p_stride)
+	void FlushBits(void *p_bits, uint32_t p_stride)
 	{
+		MCAssert(s_android_opengl_context != nil);
 		GLuint t_texture;
 		glGenTextures(1, &t_texture);
 		glBindTexture(GL_TEXTURE_2D, t_texture);
@@ -1056,27 +1060,17 @@ protected:
         //   TexImage2D and TexSubImage2D.
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glMatrixMode(GL_TEXTURE);
-		glLoadIdentity();
+		MCGLContextSelectProgram(s_android_opengl_context, kMCGLProgramTypeTexture);
+		MCGLContextSetWorldTransform(s_android_opengl_context, MCGAffineTransformMakeIdentity());
+		MCGLContextSetTextureTransform(s_android_opengl_context, MCGAffineTransformMakeIdentity());
 
-		glEnable(GL_TEXTURE_2D);
 		glDisable(GL_BLEND);
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-		GLfloat t_vertices[8];
-
-		GLfloat t_coords[8] =
-		{
-			0, 0,
-			1.0, 0.0,
-			0.0, 1.0,
-			1.0, 1.0
-		};
-
-		glVertexPointer(2, GL_FLOAT, 0, t_vertices);
-		glTexCoordPointer(2, GL_FLOAT, 0, t_coords);
+		MCGLTextureVertex t_vertices[4];
+		t_vertices[0].texture_position[0] = 0.0; t_vertices[0].texture_position[1] = 0.0;
+		t_vertices[1].texture_position[0] = 1.0; t_vertices[1].texture_position[1] = 0.0;
+		t_vertices[2].texture_position[0] = 0.0; t_vertices[2].texture_position[1] = 1.0;
+		t_vertices[3].texture_position[0] = 1.0; t_vertices[3].texture_position[1] = 1.0;
 
 		for(int32_t y = 0; y < (s_android_bitmap_height + 255) / 256; y++)
 			for(int32_t x = 0; x < (s_android_bitmap_width + 255) / 256; x++)
@@ -1094,11 +1088,12 @@ protected:
 				t_py = s_android_bitmap_height - y * 256 - 256;
 
 				// Setup co-ords.
-				t_vertices[0] = t_px, t_vertices[1] = t_py + 256;
-				t_vertices[2] = t_px + 256, t_vertices[3] = t_py + 256;
-				t_vertices[4] = t_px, t_vertices[5] = t_py;
-				t_vertices[6] = t_px + 256, t_vertices[7] = t_py;
+				t_vertices[0].position[0] = t_px; t_vertices[0].position[1] = t_py + 256;
+				t_vertices[1].position[0] = t_px + 256; t_vertices[1].position[1] = t_py + 256;
+				t_vertices[2].position[0] = t_px; t_vertices[2].position[1] = t_py;
+				t_vertices[3].position[0] = t_px + 256; t_vertices[3].position[1] = t_py;
 
+				glBufferData(GL_ARRAY_BUFFER, sizeof(MCGLTextureVertex) * 4, t_vertices, GL_STREAM_DRAW);
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 			}
 
@@ -1142,17 +1137,14 @@ void MCStack::view_device_updatewindow(MCRegionRef p_region)
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		glViewport(0, 0, s_android_bitmap_width, s_android_bitmap_height);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrthof(0, (GLfloat)s_android_bitmap_width, 0, (GLfloat)s_android_bitmap_height, 0, 1);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+		// create transform from {0, 0, surface_width, surface_height} to GL normaized coords
+		MCGAffineTransform t_projection;
+		t_projection = MCGAffineTransformFromRectangles(MCGRectangleMake(0, 0, s_android_bitmap_width, s_android_bitmap_height), MCGRectangleMake(-1,-1,2,2));
+		MCGLContextSetProjectionTransform(s_android_opengl_context, t_projection);
+		MCGLContextSetWorldTransform(s_android_opengl_context, MCGAffineTransformMakeIdentity());
+		MCGLContextSetTextureTransform(s_android_opengl_context, MCGAffineTransformMakeIdentity());
 
 		glDisable(GL_DEPTH_TEST);
-		glDisableClientState(GL_COLOR_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
 		MCGRegionRef t_dirty_rgn;
 		MCGRegionCreate(t_dirty_rgn);
@@ -2812,6 +2804,10 @@ static void doSurfaceDestroyedCallback(void *)
 	if (s_android_opengl_enabled)
 		MCRedrawDirtyScreen();
 
+	// Reset OpenGL context
+	if (s_android_opengl_context != nil)
+		MCGLContextReset(s_android_opengl_context);
+
 	// Discard all the OpenGL state.
 	s_java_env -> CallVoidMethod(s_android_opengl_view, s_openglview_finish_method);
 
@@ -2845,6 +2841,13 @@ static void doSurfaceChangedCallback(void *p_is_init)
 	// We can now re-enable screen updates.
 	MCRedrawEnableScreenUpdates();
 
+	if (s_android_opengl_context != nil)
+	{
+		// Reset & re-initialize the OpenGL context
+		MCGLContextReset(s_android_opengl_context);
+		/* UNCHECKED */ MCGLContextInit(s_android_opengl_context);
+	}
+
 	// Force a redraw of the current window. If this is an initializing change,
 	// re-render the whole screen.
 	if (t_is_init)
@@ -2869,12 +2872,15 @@ JNIEXPORT void JNICALL Java_com_runrev_android_OpenGLView_doSurfaceChanged(JNIEn
 	co_yield_to_engine_and_call(doSurfaceChangedCallback, (void *)t_is_init);
 }
 
-void MCAndroidEnableOpenGLMode(void)
+void MCPlatformEnableOpenGLMode(void)
 {
 	if (s_android_opengl_enabled)
 		return;
 
 	MCRedrawDisableScreenUpdates();
+
+	// Create new OpenGL context to manage shader setup, etc.
+	/* UNCHECKED */ MCGLContextCreate(s_android_opengl_context);
 
 	MCAndroidEngineRemoteCall("enableOpenGLView", "v", nil);
 
@@ -2882,7 +2888,7 @@ void MCAndroidEnableOpenGLMode(void)
 	s_android_opengl_visible = false;
 }
 
-void MCAndroidDisableOpenGLMode(void)
+void MCPlatformDisableOpenGLMode(void)
 {
 	if (!s_android_opengl_enabled)
 		return;
@@ -2892,7 +2898,16 @@ void MCAndroidDisableOpenGLMode(void)
 
 	MCAndroidEngineRemoteCall("disableOpenGLView", "v", nil);
 
+	// Release OpenGL context
+	MCGLContextDestroy(s_android_opengl_context);
+	s_android_opengl_context = nil;
+
 	MCRedrawEnableScreenUpdates();
+}
+
+MCGLContextRef MCPlatformGetOpenGLContext(void)
+{
+	return s_android_opengl_context;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
