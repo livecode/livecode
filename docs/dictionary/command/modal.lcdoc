@@ -2,7 +2,7 @@ Name: modal
 
 Type: command
 
-Syntax: modal <stack>
+Syntax: modal <stack> [without waiting]
 
 Summary:
 Opens a <stack> as a <modal dialog box>.
@@ -18,6 +18,9 @@ modal stack "Custom Answer Dialog"
 
 Example:
 modal stack x of stacksToPresent
+
+Example:
+modal stack "NewRecord" without waiting
 
 Parameters:
 stack:
@@ -56,13 +59,13 @@ are sent regardless of the setting of the <lockMessages> <property>.
 If the stack is already displayed as a modal dialog box, the <modal>
 <command> does not close and reopen it.
 
-The <modal> <command> pauses the running <handler> until the 
-<modal dialog box> is dismissed (usually by clicking a button in the 
-<modal dialog box>). To <return> information to the <handler> about 
-which <button(keyword)> was clicked, in the <button(object)|button's>
-<script>, set a <global|global variable> or <custom property>. After the
-<dialog box> is dismissed, the <handler> can query this <variable> or
-<property> and act accordingly.
+Unless the without waiting clause is used the <modal> <command> pauses
+the running <handler> until the  <modal dialog box> is dismissed (usually
+by clicking a button in the  <modal dialog box>). To <return> information
+to the <handler> about  which <button(keyword)> was clicked, in the
+<button(object)|button's> <script>, set a <global|global variable> or
+<custom property>. After the <dialog box> is dismissed, the <handler> can
+query this <variable> or <property> and act accordingly.
 
 Modal dialog boxes cannot be resized or edited. To edit a modal dialog
 box, use the topLevel <command> to display it in an <editable window>.

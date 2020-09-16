@@ -25,3 +25,13 @@ on TestSubwindowPropagatesErrors
 	end try
 	TestAssert "Error during subwindow propagates to caller", tError is "red"
 end TestSubwindowPropagatesErrors
+
+on TestSubwindowWithoutWaiting
+	local tName
+	put "Test" && uuid() into tName
+	create stack tName
+	set the script of stack tName to format("on openStack; send \"close this stack\" to me in 0;end openStack")
+	modal tName without waiting
+	TestAssert "Subwindow without waiting does not wait for close", tName is among the lines of the openStacks
+	delete stack tName
+end TestSubwindowWithoutWaiting

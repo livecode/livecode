@@ -2013,7 +2013,8 @@ void MCStack::reopenwindow()
 		openwindow(mode >= WM_PULLDOWN);
 }
 
-Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentptr, Window_position wpos,  Object_pos walign)
+Exec_stat MCStack::
+openrect(const MCRectangle &rel, Window_mode wm, MCStack *parentptr, Window_position wpos,  Object_pos walign, bool p_wait_while_open)
 {
 	if (state & (CS_IGNORE_CLOSE | CS_NO_FOCUS | CS_DELETE_STACK))
 		return ES_NORMAL;
@@ -2030,6 +2031,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			else
 				wm = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
         }
+		p_wait_while_open = wm == WM_MODAL || wm == WM_SHEET;
     }
 	if (wm == WM_TOP_LEVEL
 	        && (flags & F_CANT_MODIFY || m_is_ide_stack || !MCdispatcher->cut(True)))
@@ -2533,14 +2535,15 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 		// Only enter a modal loop if we are making local windows.
 		// the rev supplied answer/ask dialogs.
-		if ((mode == WM_MODAL || mode == WM_SHEET) &&
+		if (p_wait_while_open &&
 			MCModeMakeLocalWindows())
 		{
+			Window_mode t_mode = mode;
 			// If opening the dialog failed for some reason, this will return false.
 			if (mode_openasdialog())
 			{
 				while (opened &&
-                       (mode == WM_MODAL || mode == WM_SHEET) &&
+                       (mode == t_mode) &&
                        !MCquit &&
                        !MCabortscript)
 				{

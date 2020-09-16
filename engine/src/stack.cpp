@@ -718,7 +718,7 @@ bool MCStack::visit_children(MCObjectVisitorOptions p_options, uint32_t p_part, 
 
 void MCStack::open()
 {
-	openrect(rect, WM_LAST, NULL, WP_DEFAULT,OP_NONE);
+	openrect(rect, WM_LAST, NULL, WP_DEFAULT,OP_NONE, false);
 }
 
 void MCStack::close()

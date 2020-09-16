@@ -445,7 +445,7 @@ public:
         
         MCdispatcher -> addmenu(this);
         
-        openrect(t_rect, WM_POPUP, NULL, WP_ASRECT, OP_NONE);
+        openrect(t_rect, WM_POPUP, NULL, WP_ASRECT, OP_NONE, false);
     }
     
 private:
@@ -753,7 +753,7 @@ public:
         
         MCdispatcher -> addmenu(this);
         
-        openrect(t_rect, WM_POPUP, NULL, WP_ASRECT, OP_NONE);
+        openrect(t_rect, WM_POPUP, NULL, WP_ASRECT, OP_NONE, false);
     }
     
 private:

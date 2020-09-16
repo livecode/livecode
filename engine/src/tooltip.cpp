@@ -150,7 +150,7 @@ void MCTooltip::opentip()
 				MCttsize, (t_color . red >> 8) | (t_color . green & 0xFF00) | ((t_color . blue & 0xFF00) << 8), MCttfont,
 				tip);
 		MCscreen->addtimer(this, MCM_internal2, MCtooltime);
-		openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE);
+		openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE, false);
 		state |= CS_NO_FOCUS;
 		return;
 	}
@@ -203,7 +203,7 @@ void MCTooltip::opentip()
 		rect.height += t_fheight +3;
 	}
 
-	openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE);
+	openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE, false);
 	state |= CS_NO_FOCUS;
 
 	if (MCcurtheme != NULL && window != NULL)

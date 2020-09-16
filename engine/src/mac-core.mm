@@ -845,7 +845,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
         return s_post_waitforevent_callback(t_event != nullptr);
     }
     
-	return t_event != nil;
+	return t_event != nil || t_modal;
 }
 
 void MCMacPlatformClearLastMouseEvent(void)

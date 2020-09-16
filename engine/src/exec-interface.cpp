@@ -1611,7 +1611,7 @@ void MCInterfaceExecPopToLast(MCExecContext& ctxt)
 	Boolean oldtrace = MCtrace;
 	MCtrace = False;
 	if (sptr->setcard(cptr, True, False) == ES_NORMAL
-		        && sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE) == ES_NORMAL)
+		        && sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE, false) == ES_NORMAL)
 	{
 		MCtrace = oldtrace;
 		return;
@@ -1824,7 +1824,7 @@ static void MCInterfaceRevertStack(MCExecContext& ctxt, MCStack *p_stack)
         p_stack -> scheduledelete();
         p_stack = MCdispatcher->findstackname(*t_name);
         if (p_stack != NULL)
-            p_stack->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
+            p_stack->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE, oldmode == WM_MODAL || oldmode == WM_SHEET);
     }
     else
         ctxt . Throw();
@@ -2794,7 +2794,7 @@ void MCInterfaceExecPopupButton(MCExecContext& ctxt, MCButton *p_target, MCPoint
 	}
 }
 
-void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p_parent, MCRectangle p_rect, int p_at, int p_aligned, int p_mode)
+void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p_parent, MCRectangle p_rect, int p_at, int p_aligned, int p_mode, bool p_wait_while_open)
 {
 	if (p_mode != WM_PULLDOWN && p_mode != WM_POPUP && p_mode != WM_OPTION)
     	MCU_watchcursor(ctxt . GetObject()->getstack(), False);
@@ -2814,7 +2814,7 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 		added = True;
 	}
     
-	if (p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned) != ES_NORMAL)
+	if (p_target->openrect(p_rect, (Window_mode)p_mode, p_parent, (Window_position)p_at, (Object_pos)p_aligned, p_wait_while_open) != ES_NORMAL)
     {
         ctxt.Throw();
     }
@@ -2836,7 +2836,7 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 		MCdefaultstackptr = t_old_defaultstack;
 }
 
-void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
+void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode, bool p_wait_while_open)
 {
 	MCStack *parentptr;
     parentptr = nil;
@@ -2864,15 +2864,15 @@ void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, M
 		}
 		else
             // AL-2014-11-24: [[ Bug 14076 ]] Don't override window mode with WM_DRAWER
-			MCInterfaceExecSubwindow(ctxt, p_target, parentptr, parentptr->getrect(), p_at, p_aligned, p_mode);
+			MCInterfaceExecSubwindow(ctxt, p_target, parentptr, parentptr->getrect(), p_at, p_aligned, p_mode, p_wait_while_open);
 	}
 	else if (MCdefaultstackptr->getopened() || !MCtopstackptr)
-		MCInterfaceExecSubwindow(ctxt, p_target, MCdefaultstackptr, MCdefaultstackptr->getrect(), p_at, p_aligned, p_mode);
+		MCInterfaceExecSubwindow(ctxt, p_target, MCdefaultstackptr, MCdefaultstackptr->getrect(), p_at, p_aligned, p_mode, p_wait_while_open);
 	else
-		MCInterfaceExecSubwindow(ctxt, p_target, MCtopstackptr, MCtopstackptr->getrect(), p_at, p_aligned, p_mode);
+		MCInterfaceExecSubwindow(ctxt, p_target, MCtopstackptr, MCtopstackptr->getrect(), p_at, p_aligned, p_mode, p_wait_while_open);
 }
 
-void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
+void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode, bool p_wait_while_open)
 {
 	MCStack *sptr;
 	sptr = ctxt . GetObject()->getstack()->findstackname(p_name);
@@ -2884,37 +2884,27 @@ void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCNameRef p_na
 		return;
 	}
 	
-	MCInterfaceExecDrawerOrSheetStack(ctxt, sptr, p_parent_name, p_parent_is_thisstack, p_at, p_aligned, p_mode);
+	MCInterfaceExecDrawerOrSheetStack(ctxt, sptr, p_parent_name, p_parent_is_thisstack, p_at, p_aligned, p_mode, p_wait_while_open);
 }
 
-void MCInterfaceExecDrawerStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned)
+void MCInterfaceExecDrawerStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, bool p_wait_while_open)
 {	
-	MCInterfaceExecDrawerOrSheetStack(ctxt, p_target, p_parent_name, p_parent_is_thisstack, p_at, p_aligned, WM_DRAWER);
+	MCInterfaceExecDrawerOrSheetStack(ctxt, p_target, p_parent_name, p_parent_is_thisstack, p_at, p_aligned, WM_DRAWER, p_wait_while_open);
 }
 
-void MCInterfaceExecDrawerStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned)
+void MCInterfaceExecDrawerStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, bool p_wait_while_open)
 {	
-	MCInterfaceExecDrawerOrSheetStackByName(ctxt, p_name, p_parent_name, p_parent_is_thisstack, p_at, p_aligned, WM_DRAWER);
+	MCInterfaceExecDrawerOrSheetStackByName(ctxt, p_name, p_parent_name, p_parent_is_thisstack, p_at, p_aligned, WM_DRAWER, p_wait_while_open);
 }
 
-void MCInterfaceExecDrawerStackLegacy(MCExecContext& ctxt, MCStack *p_target, MCNameRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned)
+void MCInterfaceExecSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack, bool p_wait_while_open)
 {
-	MCInterfaceExecDrawerStack(ctxt, p_target, parent, p_parent_is_thisstack, (int)p_at, (int)p_aligned);
+	MCInterfaceExecDrawerOrSheetStack(ctxt, p_target, p_parent_name, p_parent_is_thisstack, WP_DEFAULT, OP_CENTER, WM_SHEET, p_wait_while_open);
 }
 
-void MCInterfaceExecDrawerStackByNameLegacy(MCExecContext& ctxt, MCNameRef p_name, MCNameRef parent, bool p_parent_is_thisstack, intenum_t p_at, intenum_t p_aligned)
+void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_parent_name, bool p_parent_is_thisstack, bool p_wait_while_open)
 {
-	MCInterfaceExecDrawerStackByName(ctxt, p_name, parent, p_parent_is_thisstack, (int)p_at, (int)p_aligned);
-}
-
-void MCInterfaceExecSheetStack(MCExecContext& ctxt, MCStack *p_target, MCNameRef p_parent_name, bool p_parent_is_thisstack)
-{
-	MCInterfaceExecDrawerOrSheetStack(ctxt, p_target, p_parent_name, p_parent_is_thisstack, WP_DEFAULT, OP_CENTER, WM_SHEET);
-}
-
-void MCInterfaceExecSheetStackByName(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_parent_name, bool p_parent_is_thisstack)
-{
-	MCInterfaceExecDrawerOrSheetStackByName(ctxt, p_name, p_parent_name, p_parent_is_thisstack, WP_DEFAULT, OP_CENTER, WM_SHEET);
+	MCInterfaceExecDrawerOrSheetStackByName(ctxt, p_name, p_parent_name, p_parent_is_thisstack, WP_DEFAULT, OP_CENTER, WM_SHEET, p_wait_while_open);
 }
 
 static MCStack* open_stack_relative_to(MCStack *p_target)
@@ -2927,13 +2917,13 @@ static MCStack* open_stack_relative_to(MCStack *p_target)
         return p_target;
 }
 
-void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode)
+void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode, bool p_wait_while_open)
 {
     MCStack* t_stack = open_stack_relative_to(p_target);
-    MCInterfaceExecSubwindow(ctxt, p_target, nil, t_stack->getrect(), WP_DEFAULT, OP_NONE, p_mode);
+    MCInterfaceExecSubwindow(ctxt, p_target, nil, t_stack->getrect(), WP_DEFAULT, OP_NONE, p_mode, p_wait_while_open);
 }
 
-void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p_mode)
+void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p_mode, bool p_wait_while_open)
 {
 	MCStack *sptr;
 	sptr = ctxt . GetObject()->getstack()->findstackname(p_name);
@@ -2945,7 +2935,7 @@ void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCNameRef p_name, int p
 		return;
 	}
 	
-	MCInterfaceExecOpenStack(ctxt, sptr, p_mode);
+	MCInterfaceExecOpenStack(ctxt, sptr, p_mode, p_wait_while_open);
 }
 
 void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *p_at, int p_mode)
@@ -2972,7 +2962,7 @@ void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *
 		}
 		MCRectangle t_rect;
 		t_rect = MCU_recttoroot(MCtargetptr -> getstack(), MCtargetptr -> getrect());
-		MCInterfaceExecSubwindow(ctxt, p_target, nil, t_rect, WP_DEFAULT, OP_NONE, p_mode);
+		MCInterfaceExecSubwindow(ctxt, p_target, nil, t_rect, WP_DEFAULT, OP_NONE, p_mode, false);
 		if (!MCabortscript)
 			return;
 
@@ -4345,7 +4335,7 @@ void MCInterfaceExecChooseTool(MCExecContext& ctxt, MCStringRef p_input, int p_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, int p_mode, bool p_this_stack, MCInterfaceExecGoVisibility p_visibility_type)
+void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, int p_mode, bool p_this_stack, MCInterfaceExecGoVisibility p_visibility_type, bool p_wait_while_open)
 {
 	
 	if (p_card == nil)
@@ -4503,7 +4493,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 #endif	
 	
 	if (t_stack->setcard(p_card, True, True) == ES_ERROR
-	        || t_stack->openrect(rel, wm, parentptr, WP_DEFAULT, OP_NONE) == ES_ERROR)
+	        || t_stack->openrect(rel, wm, parentptr, WP_DEFAULT, OP_NONE,p_wait_while_open) == ES_ERROR)
 	{
 		MCtrace = oldtrace;
 		stat = ES_ERROR;
@@ -4559,14 +4549,14 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window
 		ctxt . Throw();
 }
 
-void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, MCInterfaceExecGoVisibility p_visibility_type, bool p_this_stack)
+void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, MCInterfaceExecGoVisibility p_visibility_type, bool p_this_stack, bool p_wait_while_open)
 {
-	MCInterfaceExecGo(ctxt, p_card, nil, p_mode, p_this_stack, p_visibility_type);
+	MCInterfaceExecGo(ctxt, p_card, nil, p_mode, p_this_stack, p_visibility_type, p_wait_while_open);
 }
 
 void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, MCInterfaceExecGoVisibility p_visibility_type, bool p_this_stack)
 {
-	MCInterfaceExecGo(ctxt, p_card, p_window, WM_MODELESS, p_this_stack, p_visibility_type);
+	MCInterfaceExecGo(ctxt, p_card, p_window, WM_MODELESS, p_this_stack, p_visibility_type, false);
 }
 
 void MCInterfaceExecGoRecentCard(MCExecContext& ctxt)
@@ -4592,7 +4582,7 @@ void MCInterfaceExecGoHome(MCExecContext& ctxt, MCCard *p_card)
 		MCdefaultstackptr->close();
 		MCdefaultstackptr->checkdestroy();
 	}
-	MCInterfaceExecGo(ctxt, p_card, nil, 0, false, kMCInterfaceExecGoVisibilityImplicit);
+	MCInterfaceExecGo(ctxt, p_card, nil, 0, false, kMCInterfaceExecGoVisibilityImplicit, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

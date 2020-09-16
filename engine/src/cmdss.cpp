@@ -204,6 +204,19 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 						(PE_GO_NOMODE, sp);
 						return PS_ERROR;
 					}
+					
+					if (mode == WM_MODAL || mode == WM_SHEET)
+					{
+						if ((sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL) &&
+							(sp.skip_token(SP_MOVE, TT_UNDEFINED, MM_WAITING) == PS_NORMAL))
+						{
+							m_wait_while_open = false;
+						}
+						else
+						{
+							m_wait_while_open = true;
+						}
+					}
 				}
 				else
 				{
@@ -748,7 +761,7 @@ void MCGo::exec_ctxt(MCExecContext &ctxt)
 	else if (window != nil)
 		MCInterfaceExecGoCardInWindow(ctxt, cptr, *t_window, visibility_type, thisstack == True);
 	else
-        MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visibility_type, thisstack == True);
+        MCInterfaceExecGoCardAsMode(ctxt, cptr, mode, visibility_type, thisstack == True, m_wait_while_open);
 }
 
 MCHide::~MCHide()
@@ -1490,6 +1503,13 @@ Parse_stat MCSubwindow::parse(MCScriptPoint &sp)
 			return PS_ERROR;
 		}
 	}
+	else if ((mode == WM_MODAL || mode == WM_SHEET) &&
+		(sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL) &&
+		(sp.skip_token(SP_MOVE, TT_UNDEFINED, MM_WAITING) == PS_NORMAL))
+	{
+		m_wait_while_open = false;
+	}
+			 
 	return PS_NORMAL;
 }
 
@@ -1558,9 +1578,9 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 		case WM_PALETTE:
 		case WM_MODAL:
 			if (*optr_name != nil)
-				MCInterfaceExecOpenStackByName(ctxt, *optr_name, mode);
+				MCInterfaceExecOpenStackByName(ctxt, *optr_name, mode, m_wait_while_open);
 			else
-				MCInterfaceExecOpenStack(ctxt, (MCStack *)optr, mode);
+				MCInterfaceExecOpenStack(ctxt, (MCStack *)optr, mode, m_wait_while_open);
 		break;
 		case WM_SHEET:
 		case WM_DRAWER:
@@ -1572,9 +1592,9 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 				if (mode == WM_SHEET)
 				{
 					if (*optr_name != nil)
-						MCInterfaceExecSheetStackByName(ctxt, *optr_name, *t_parent_name, thisstack == True);
+						MCInterfaceExecSheetStackByName(ctxt, *optr_name, *t_parent_name, thisstack == True, m_wait_while_open);
 					else
-						MCInterfaceExecSheetStack(ctxt, (MCStack *)optr, *t_parent_name, thisstack == True);
+						MCInterfaceExecSheetStack(ctxt, (MCStack *)optr, *t_parent_name, thisstack == True, m_wait_while_open);
 				}
 				else
 				{
@@ -1630,9 +1650,9 @@ void MCSubwindow::exec_ctxt(MCExecContext &ctxt)
 						}
 					}
 					if (optr == nil)
-						MCInterfaceExecDrawerStackByName(ctxt, *optr_name, *t_parent_name, thisstack == True, t_pos, t_align);
+						MCInterfaceExecDrawerStackByName(ctxt, *optr_name, *t_parent_name, thisstack == True, t_pos, t_align, m_wait_while_open);
 					else
-						MCInterfaceExecDrawerStack(ctxt, (MCStack *)optr, *t_parent_name, thisstack == True, t_pos, t_align);
+						MCInterfaceExecDrawerStack(ctxt, (MCStack *)optr, *t_parent_name, thisstack == True, t_pos, t_align, m_wait_while_open);
 				}
 				break;
 			}

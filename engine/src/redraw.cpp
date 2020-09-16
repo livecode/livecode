@@ -1461,7 +1461,7 @@ void MCRedrawDoUpdateScreen(void)
 		if (sptr->getstate(CS_NEED_RESIZE))
 		{
 			sptr->setgeom();
-            sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE);
+            sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE, false);
 
             // SN-2015-08-31: [[ Bug 15705 ]] From 6.7.7, MCRedrawUpdateScreen
             //  also removes kMCActionUpdateScreen from MCactionsrequired,

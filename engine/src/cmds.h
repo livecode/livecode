@@ -1769,6 +1769,7 @@ class MCGo : public MCStatement
 	
 	MCChunk *widget;
 	Chunk_term direction;
+	bool m_wait_while_open;
 public:
     MCGo() :
         background(nil),
@@ -1780,7 +1781,8 @@ public:
         visibility_type(kMCInterfaceExecGoVisibilityImplicit),
         thisstack(False),
 		widget(nil),
-        direction(CT_BACKWARD)
+        direction(CT_BACKWARD),
+		m_wait_while_open(false)
     {
         ;
     };
@@ -1898,6 +1900,7 @@ class MCSubwindow : public MCStatement
 	MCExpression *properties;
 protected:
 	Window_mode mode;
+	bool m_wait_while_open;
 public:
 	MCSubwindow()
 	{
@@ -1921,6 +1924,7 @@ public:
 	MCTopLevel()
 	{
 		mode = WM_TOP_LEVEL;
+		m_wait_while_open = false;
 	}
 };
 
@@ -1930,6 +1934,7 @@ public:
 	MCModal()
 	{
 		mode = WM_MODAL;
+		m_wait_while_open = true;
 	}
 };
 
@@ -1939,6 +1944,7 @@ public:
 	MCModeless()
 	{
 		mode = WM_MODELESS;
+		m_wait_while_open = false;
 	}
 };
 
@@ -1948,6 +1954,7 @@ public:
 	MCOption()
 	{
 		mode = WM_OPTION;
+		m_wait_while_open = false;
 	}
 };
 
@@ -1957,6 +1964,7 @@ public:
 	MCPalette()
 	{
 		mode = WM_PALETTE;
+		m_wait_while_open = false;
 	}
 };
 
@@ -1966,6 +1974,7 @@ public:
 	MCPopup()
 	{
 		mode = WM_POPUP;
+		m_wait_while_open = false;
 	}
 };
 
@@ -1975,6 +1984,7 @@ public:
 	MCPulldown()
 	{
 		mode = WM_PULLDOWN;
+		m_wait_while_open = false;
 	}
 };
 
@@ -1984,6 +1994,7 @@ public:
 	MCSheet()
 	{
 		mode = WM_SHEET;
+		m_wait_while_open = true;
 	}
 };
 
@@ -1994,6 +2005,7 @@ public:
 	MCDrawer()
 	{
 		mode = WM_DRAWER;
+		m_wait_while_open = false;
 	}
 };
 
