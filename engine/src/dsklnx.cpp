@@ -995,12 +995,9 @@ public:
             return MCStringFormat(r_folder, "%@/Desktop", *t_home);
         else if (MCNameIsEqualToCaseless(p_type, MCN_home))
             return MCStringCopy(*t_home, r_folder);
-        // 2019-12-19 MDW [[ feature_linux_documents_folder ]]
         else if (MCNameIsEqualToCaseless(p_type, MCN_documents))
+            /* Assume the documents folder is ~/Documents (which is at least true for English localizations). */
             return MCStringFormat(r_folder, "%@/Documents", *t_home);
-        // 2019-12-19 MDW [[ feature_linux_documents_folder ]]
-        else if (MCNameIsEqualToCaseless(p_type, MCN_system))
-            return MCStringFormat(r_folder, "/sbin", *t_home);
         else if (MCNameIsEqualToCaseless(p_type, MCN_temporary))
             return MCStringCreateWithCString("/tmp", r_folder);
         // SN-2014-08-08: [[ Bug 13026 ]] Fix ported from 6.7
