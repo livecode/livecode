@@ -1557,6 +1557,10 @@ public class Engine extends View implements EngineApi
 			doKeyboardHidden();
 		
 		m_keyboard_sizechange = true;
+
+		// Make sure we trigger handling
+		if (m_wake_on_event)
+			doProcess(false);
 	}
 	
 	void updateOrientation(int p_orientation)
