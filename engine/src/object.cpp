@@ -5571,6 +5571,59 @@ static void MCDeletedObjectPoolDestroy(MCDeletedObjectPool *p_pool)
     MCMemoryDelete(p_pool);
 }
 
+static MCDeletedObjectPool* MCDeletedObjectPoolCleanup(MCDeletedObjectPool *p_pool)
+{
+	while (p_pool != nil && p_pool->defunct && p_pool->references == 0)
+	{
+		MCDeletedObjectPool *t_this_pool = p_pool;
+		p_pool = p_pool->parent;
+		MCDeletedObjectPoolDestroy(t_this_pool);
+	}
+	
+	return p_pool;
+}
+
+/* Release the given pool. If the pool becomes unreferenced as a result,
+ * it and any defunct unreferenced ancestors are destroyed. */
+static void MCDeletedObjectPoolRelease(MCDeletedObjectPool *p_pool)
+{
+	if (p_pool == nil)
+		return;
+	
+	p_pool->references -= 1;
+	
+	MCDeletedObjectPoolCleanup(p_pool);
+}
+
+/* Mark the given pool as defunct, destroying it (and any defunct, unreferenced
+ * ancestors) if it is unreferenced. */
+static void MCDeletedObjectPoolMakeDefunct(MCDeletedObjectPool* p_pool)
+{
+	if (p_pool == nil)
+		return;
+	
+	p_pool->defunct = true;
+	
+	MCDeletedObjectPoolCleanup(p_pool);
+}
+
+/* Release the given object pool, and return the nearest non-defunct ancestor.
+ * Any intermediate, unreferenced, defunct pools are destroyed. */
+static MCDeletedObjectPool* MCDeletedObjectPoolUnwind(MCDeletedObjectPool *p_pool)
+{
+	if (p_pool == nil)
+		return nil;
+	
+	p_pool->references -= 1;
+	
+	p_pool = MCDeletedObjectPoolCleanup(p_pool);
+	
+	while (p_pool != nil && p_pool->defunct)
+		p_pool = p_pool->parent;
+	
+	return p_pool;
+}
+
 void MCDeletedObjectsSetup(void)
 {
     // Setup occurs before the outer wait loop so if we get here we should not
@@ -5680,11 +5733,7 @@ void MCDeletedObjectsLeaveWait(bool p_dispatching)
     MCdeletedobjectpool = MCdeletedobjectpool -> parent;
     
     // The previous pool is now defunct.
-    t_pool -> defunct = true;
-    
-    // If the objectpool has no references then we can delete it.
-    if (t_pool -> references == 0)
-        MCDeletedObjectPoolDestroy(t_pool);
+    MCDeletedObjectPoolMakeDefunct(t_pool);
     
     // Now drain any objects which have accumulated in this pool.
     MCDeletedObjectsDoDrain();
@@ -5719,21 +5768,8 @@ void MCDeletedObjectsOnObjectDeleted(MCObject *p_object)
         return;
     
     // Unreference the pool.
-    t_pool -> references -= 1;
     p_object -> setdeletedobjectpool(nil);
-    
-    // Loop through any defunct pools.
-    while(t_pool -> defunct)
-    {
-        MCDeletedObjectPool *t_this_pool;
-        t_this_pool = t_pool;
-        t_pool = t_pool -> parent;
-        
-        if (t_this_pool -> references == 0)
-        {
-            MCDeletedObjectPoolDestroy(t_this_pool);
-        }
-    }
+    t_pool = MCDeletedObjectPoolUnwind(t_pool);
     
     // We now have a pool in which to place the object.
     p_object -> appendto(t_pool -> to_delete);
@@ -5750,15 +5786,7 @@ void MCDeletedObjectsOnObjectDestroyed(MCObject *p_object)
     if (t_pool == nil)
         return;
     
-    // Cleanup any defunct pools in the chain with no references.
-    t_pool -> references -= 1;
-    while(t_pool -> defunct && t_pool -> references == 0)
-    {
-        MCDeletedObjectPool *t_this_pool;
-        t_this_pool = t_pool;
-        t_pool = t_pool -> parent;
-        MCDeletedObjectPoolDestroy(t_this_pool);
-    }
+    MCDeletedObjectPoolRelease(t_pool);
 }
 
 void MCDeletedObjectsOnObjectSuspendDeletion(MCObject *p_object, void*& r_deletion_cookie)
@@ -5774,6 +5802,9 @@ void MCDeletedObjectsOnObjectSuspendDeletion(MCObject *p_object, void*& r_deleti
 	
 	MCAssert(t_pool != nil && t_pool -> parent != nil);
 	
+	// Reference parent pool to prevent deletion.
+	t_pool->parent->references += 1;
+	
 	r_deletion_cookie = t_pool;
 	p_object -> setdeletedobjectpool(t_pool -> parent);
 	p_object -> setdeletionissuspended(true);
@@ -5784,7 +5815,24 @@ void MCDeletedObjectsOnObjectResumeDeletion(MCObject *p_object, void *p_deletion
 	if (p_deletion_cookie == nil)
 		return;
 	
-	p_object -> setdeletedobjectpool((MCDeletedObjectPool *)p_deletion_cookie);
+	MCDeletedObjectPool *t_pool = (MCDeletedObjectPool*)p_deletion_cookie;
+	MCDeletedObjectPool *t_current_pool = p_object->getdeletedobjectpool();
+	
+	if (t_current_pool != nil)
+	{
+		// Restore the link to the saved deleted object pool, removing any reference
+		//    to the pool currently set on the object.
+		MCDeletedObjectPoolRelease(t_current_pool);
+
+		p_object -> setdeletedobjectpool(t_pool);
+	}
+	else
+	{
+		// If the current pool is nil then the object must have been deleted, so
+		//    remove the reference to the saved deleted object pool.
+		MCDeletedObjectPoolRelease(t_pool);
+	}
+	
 	p_object -> setdeletionissuspended(false);
 }
 
