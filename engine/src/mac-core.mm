@@ -669,6 +669,7 @@ struct MCModalSession
 
 static MCModalSession *s_modal_sessions = nil;
 static uindex_t s_modal_session_count = 0;
+static uindex_t s_modal_session_run_depth = 0;
 
 struct MCCallback
 {
@@ -799,8 +800,14 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 		// Run the modal session, if it has been created yet (it might not if this
 		// wait was triggered by reacting to an event caused as part of creating
 		// the modal session, e.g. when losing window focus).
-		if (s_modal_sessions[s_modal_session_count - 1].session != nil)
-			[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
+		// Check the modal run depth to prevent re-entering a modal session that
+		// is already being run.
+		if (s_modal_session_run_depth < s_modal_session_count && s_modal_sessions[s_modal_session_run_depth].session != nil)
+		{
+			s_modal_session_run_depth++;
+			[NSApp runModalSession: s_modal_sessions[s_modal_session_run_depth - 1].session];
+			s_modal_session_run_depth--;
+		}
 
 		t_event = nil;
 	}
