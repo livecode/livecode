@@ -25,7 +25,7 @@ edit the script of player "Show Me"
 
 Parameters:
 object:
-Any object reference. Usint the optional at syntax will pass the
+Any object reference. Use the optional at syntax will pass the
 subsequent items to the editScript handler as a second parameter. By
 convention the first two parameters should be a line number and a column
 character offset from the start of the line.
