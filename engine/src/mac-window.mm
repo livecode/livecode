@@ -651,6 +651,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseDown: (NSEvent *)event
 {
+	// Save the mouse event for use when starting drag-drop
+	MCMacPlatformSetLastMouseEvent(event);
+	
 	if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
@@ -663,6 +666,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseUp: (NSEvent *)event
 {
+    // Clear the mouse event used when starting drag-drop
+    MCMacPlatformSetLastMouseEvent(nil);
+
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
@@ -683,6 +689,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseDragged: (NSEvent *)event
 {
+    // Save the mouse event for use when starting drag-drop
+    MCMacPlatformSetLastMouseEvent(event);
+
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     

@@ -612,6 +612,7 @@ void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect)
 
 MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers);
 
+void MCMacPlatformSetLastMouseEvent(NSEvent *p_event);
 NSEvent *MCMacPlatformGetLastMouseEvent(void);
 
 NSMenu *MCMacPlatformGetIconMenu(void);
