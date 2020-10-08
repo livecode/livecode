@@ -796,6 +796,12 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
     NSEvent *t_event = nil;
 	if (t_modal)
 	{
+		// Wait for an event, but leave on the queue
+		t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
+									 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
+										inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
+									   dequeue: NO];
+		
 		// Run the modal session, if it has been created yet (it might not if this
 		// wait was triggered by reacting to an event caused as part of creating
 		// the modal session, e.g. when losing window focus).
