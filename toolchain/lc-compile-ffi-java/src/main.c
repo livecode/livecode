@@ -21,6 +21,7 @@
 #include <position.h>
 #include "literal.h"
 #include "report.h"
+#include "outputfile.h"
 
 extern void ROOT(void);
 extern void yyExtend(void);
