@@ -715,8 +715,8 @@ bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
     //  Calling the method dynamically prevents apps from being rejected by the app store
     //  but preserves functionality for testing and backwards compatibility.
     NSString *t_identifier;
-    t_identifier = objc_msgSend([UIDevice currentDevice], sel_getUid("uniqueIdentifier"));
-	
+    
+	t_identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
     return MCStringCreateWithCFStringRef((CFStringRef)t_identifier, r_identifier);
 }
 
