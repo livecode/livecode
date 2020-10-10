@@ -205,6 +205,7 @@
 							'-Werror=tautological-compare',
 							'-Werror=logical-not-parentheses',
 							'-Werror=conversion-null',
+                            '-Wno-implicit-function-declaration',
 						],
 					},
 				},
