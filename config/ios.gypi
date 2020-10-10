@@ -205,7 +205,6 @@
 							'-Werror=tautological-compare',
 							'-Werror=logical-not-parentheses',
 							'-Werror=conversion-null',
-                            '-Wno-implicit-function-declaration',
 						],
 					},
 				},
@@ -217,6 +216,7 @@
 						'WARNING_CFLAGS':
 						[
 							'-Wno-return-type',
+							'-Wno-implicit-function-declaration',
 						],
 					},
 				},
