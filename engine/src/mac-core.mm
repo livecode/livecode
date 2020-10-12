@@ -823,26 +823,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	s_in_blocking_wait = false;
 
 	if (t_event != nil)
-	{
-		if ([t_event type] == NSLeftMouseDown || [t_event type] == NSLeftMouseDragged)
-		{
-            if (s_last_mouse_event != nullptr)
-                [s_last_mouse_event release];
-			s_last_mouse_event = t_event;
-			[t_event retain];
-			[NSApp sendEvent: t_event];
-		}
-		else
-		{
-			if ([t_event type] == NSLeftMouseUp)
-			{
-				[s_last_mouse_event release];
-				s_last_mouse_event = nil;
-			}
-			
-			[NSApp sendEvent: t_event];
-		}
-	}
+		[NSApp sendEvent: t_event];
 	
 	[t_pool release];
 	
@@ -852,17 +833,6 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
     }
     
 	return t_event != nil;
-}
-
-void MCMacPlatformClearLastMouseEvent(void)
-{
-    if (s_last_mouse_event == nil)
-    {
-        return;
-    }
-    
-    [s_last_mouse_event release];
-    s_last_mouse_event = nil;
 }
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
@@ -1178,6 +1148,15 @@ bool MCPlatformGetWindowWithId(uint32_t p_id, MCPlatformWindowRef& r_window)
 uint32_t MCPlatformGetEventTime(void)
 {
 	return [[NSApp currentEvent] timestamp] * 1000.0;
+}
+
+void MCMacPlatformSetLastMouseEvent(NSEvent *p_event)
+{
+	if (p_event)
+		[p_event retain];
+	if (s_last_mouse_event)
+		[s_last_mouse_event release];
+	s_last_mouse_event = p_event;
 }
 
 NSEvent *MCMacPlatformGetLastMouseEvent(void)
