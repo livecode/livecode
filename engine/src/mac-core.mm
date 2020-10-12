@@ -667,8 +667,9 @@ struct MCModalSession
 	bool is_done;
 };
 
-static MCModalSession *s_modal_sessions = nil;
-static uindex_t s_modal_session_count = 0;
+static MCAutoArray<MCModalSession> s_modal_sessions;
+static MCAutoArray<MCModalSession> s_modal_sessions_pending_cleanup;
+static uindex_t s_modal_session_run_depth = 0;
 
 struct MCCallback
 {
@@ -786,7 +787,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	s_in_blocking_wait = true;
 	
 	bool t_modal;
-	t_modal = s_modal_session_count > 0;
+	t_modal = s_modal_sessions.Size() > 0;
 	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
@@ -805,8 +806,17 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 		// Run the modal session, if it has been created yet (it might not if this
 		// wait was triggered by reacting to an event caused as part of creating
 		// the modal session, e.g. when losing window focus).
-		if (s_modal_sessions[s_modal_session_count - 1].session != nil)
-			[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
+		// Check the modal run depth to prevent re-entering a modal session that
+		// is already being run.
+		if (s_modal_session_run_depth < s_modal_sessions.Size() && s_modal_sessions[s_modal_session_run_depth].session != nil)
+		{
+			s_modal_session_run_depth++;
+			[NSApp runModalSession: s_modal_sessions[s_modal_session_run_depth - 1].session];
+			s_modal_session_run_depth--;
+			
+			// clean up modal sessions
+			MCMacPlatformCleanupModalSessions();
+		}
 
 		t_event = nil;
 	}
@@ -842,38 +852,59 @@ void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
     //   current mouse window.
 	MCMacPlatformSyncMouseBeforeDragging();
     
-	/* UNCHECKED */ MCMemoryResizeArray(s_modal_session_count + 1, s_modal_sessions, s_modal_session_count);
+	MCModalSession t_session;
 	
-	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
-	s_modal_sessions[s_modal_session_count - 1] . window = p_window;
+	t_session.is_done = false;
+	t_session.window = p_window;
 	p_window -> Retain();
 	// IM-2015-01-30: [[ Bug 14140 ]] lock the window frame to prevent it from being centered on the screen.
 	p_window->SetFrameLocked(true);
-	s_modal_sessions[s_modal_session_count - 1] . session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+
+	t_session.session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+	/* UNCHECKED */ s_modal_sessions.Push(t_session);
+
 	p_window->SetFrameLocked(false);
 }
 
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
 {
 	uindex_t t_index;
-	for(t_index = 0; t_index < s_modal_session_count; t_index++)
+	for(t_index = 0; t_index < s_modal_sessions.Size(); t_index++)
 		if (s_modal_sessions[t_index] . window == p_window)
 			break;
 	
-	if (t_index == s_modal_session_count)
+	if (t_index == s_modal_sessions.Size())
 		return;
 	
 	s_modal_sessions[t_index] . is_done = true;
 	
-	for(uindex_t t_final_index = s_modal_session_count; t_final_index > 0; t_final_index--)
+	/* Pop all modal sessions which are now complete. All those which are
+	 * get pushed onto a list to be destroyed later. */
+	while (s_modal_sessions.Size() > 0)
 	{
-		if (!s_modal_sessions[t_final_index - 1] . is_done)
+		if (!s_modal_sessions[s_modal_sessions.Size() - 1] . is_done)
 			return;
 		
-		[NSApp endModalSession: s_modal_sessions[t_final_index - 1] . session];
-		[s_modal_sessions[t_final_index - 1] . window -> GetHandle() orderOut: nil];
-		s_modal_sessions[t_final_index - 1] . window -> Release();
-		s_modal_session_count -= 1;
+		MCModalSession t_session;
+		/* UNCHECKED */ s_modal_sessions.Pop(t_session);
+		/* UNCHECKED */ s_modal_sessions_pending_cleanup.Push(t_session);
+		
+		[NSApp endModalSession: t_session.session];
+	}
+}
+
+/* Process all modal sessions which are pending destruction. This
+ * ensures that windows don't get hidden and destroyed at the wrong
+ * time (e.g. within a nested modal session!). */
+void MCMacPlatformCleanupModalSessions(void)
+{
+	while (s_modal_sessions_pending_cleanup.Size() > 0)
+	{
+		MCModalSession t_session;
+		/* UNCHECKED */ s_modal_sessions_pending_cleanup.Pop(t_session);
+		
+		[t_session.window->GetHandle() orderOut: nil];
+		t_session.window->Release();
 	}
 }
 
