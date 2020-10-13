@@ -1195,6 +1195,11 @@ NSEvent *MCMacPlatformGetLastMouseEvent(void)
 	return s_last_mouse_event;
 }
 
+void MCMacPlatformClearLastMouseEvent(void)
+{
+	MCMacPlatformSetLastMouseEvent(nil);
+}
+
 void MCPlatformFlushEvents(MCPlatformEventMask p_mask)
 {
 	NSUInteger t_ns_mask;
