@@ -66,9 +66,9 @@ installer LiveCode
 //		set TargetArchitecture to armv6-hf
 //		include Runtime
 //		include Externals
-	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/x86-32" do
+	with TargetFolder as "[[ToolsFolder]]/Runtime/Mac OS X/x86-64" do
 		set TargetPlatform to MacOSX
-		set TargetArchitectures to i386
+		set TargetArchitectures to x86_64
 		include Runtime
 		include Externals
 	if TargetPlatform is MacOSX then
