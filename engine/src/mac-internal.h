@@ -615,6 +615,7 @@ MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifier
 
 void MCMacPlatformSetLastMouseEvent(NSEvent *p_event);
 NSEvent *MCMacPlatformGetLastMouseEvent(void);
+void MCMacPlatformClearLastMouseEvent(void);
 
 NSMenu *MCMacPlatformGetIconMenu(void);
 
