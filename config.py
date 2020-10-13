@@ -276,7 +276,7 @@ def host_platform(opts):
 def guess_xcode_arch(target_sdk):
     sdk, ver = re.match('^([^\d]*)(\d*)', target_sdk).groups()
     if sdk == 'macosx':
-        return 'i386 x86_64'
+        return 'x86_64'
     if sdk == 'iphoneos':
         if int(ver) < 8:
             return 'armv7'
