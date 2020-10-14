@@ -771,6 +771,9 @@ Example:
     else
         // do secondary button action
     end if
+
+Description:
+Use the click button to get the index of the mouse button which started the mouse click. Note that the 'current' form has not yet been implemented.
 */
 syntax TheClickButton is expression
     "the" ( "current" <IsCurrent=true> | <IsCurrent=false> ) "click" "button"
