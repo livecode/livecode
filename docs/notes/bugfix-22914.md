@@ -1,0 +1,1 @@
+# Fix `keyboardActivated` and `keyboardDeactivated` not breaking `wait for messages` on Android.
