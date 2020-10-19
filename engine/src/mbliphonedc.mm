@@ -48,7 +48,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <AudioToolbox/AudioToolbox.h>
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES1/glext.h>
-#import <MediaPlayer/MPMoviePlayerViewController.h>
 
 #include "mbliphoneapp.h"
 #include "mbliphoneview.h"

@@ -415,56 +415,27 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
     NSArray *t_allowed_push_notifications_array;
     t_allowed_push_notifications_array = [t_info_dict objectForKey: @"CFSupportedRemoteNotificationTypes"];
    
-    if (t_allowed_push_notifications_array != nil)
-    {
-        // MM-2014-09-30: [[ iOS 8 Support ]] Use new iOS 8 registration methods for push notifications.
-        if (![[UIApplication sharedApplication] respondsToSelector :@selector(registerUserNotificationSettings:)])
-        {
-            UIRemoteNotificationType t_allowed_notifications = UIRemoteNotificationTypeNone;
-            for (NSString *t_push_notification_string in t_allowed_push_notifications_array)
-            {
-                if ([t_push_notification_string isEqualToString: @"CFBadge"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIRemoteNotificationTypeBadge);
-                else if ([t_push_notification_string isEqualToString: @"CFSound"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIRemoteNotificationTypeSound);
-                else if ([t_push_notification_string isEqualToString: @"CFAlert"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIRemoteNotificationTypeAlert);
-            }
-            
-            // IM-2012-02-13 don't try to register if there are no allowed push notification types
-            if (t_allowed_notifications != UIRemoteNotificationTypeNone)
-            {
-                // Inform the device what kind of push notifications we can handle.
-                
-                // MW-2013-07-29: [[ Bug 10979 ]] Dynamically call the 'registerForRemoteNotificationTypes' to
-                //   avoid app-store warnings.
-                objc_msgSend([UIApplication sharedApplication], sel_getUid("registerForRemoteNotificationTypes:"), t_allowed_notifications);
-            }
-        }
-#ifdef __IPHONE_8_0
-        else
-        {
-            UIUserNotificationType t_allowed_notifications;
-            t_allowed_notifications = UIUserNotificationTypeNone;
-            for (NSString *t_push_notification_string in t_allowed_push_notifications_array)
-            {
-                if ([t_push_notification_string isEqualToString: @"CFBadge"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeBadge);
-                else if ([t_push_notification_string isEqualToString: @"CFSound"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeSound);
-                else if ([t_push_notification_string isEqualToString: @"CFAlert"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeAlert);
-            }
-            if (t_allowed_notifications != UIUserNotificationTypeNone)
-            {
-                m_is_remote_notification = true;
-                UIUserNotificationSettings *t_push_settings;
-                t_push_settings = [UIUserNotificationSettings settingsForTypes: t_allowed_notifications categories:nil];
-                [[UIApplication sharedApplication] registerUserNotificationSettings: t_push_settings];
-            }
-        }
-#endif
-    }
+	if (t_allowed_push_notifications_array != nil)
+	{
+		UIUserNotificationType t_allowed_notifications;
+		t_allowed_notifications = UIUserNotificationTypeNone;
+		for (NSString *t_push_notification_string in t_allowed_push_notifications_array)
+		{
+			if ([t_push_notification_string isEqualToString: @"CFBadge"])
+				t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeBadge);
+			else if ([t_push_notification_string isEqualToString: @"CFSound"])
+				t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeSound);
+			else if ([t_push_notification_string isEqualToString: @"CFAlert"])
+				t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeAlert);
+		}
+		if (t_allowed_notifications != UIUserNotificationTypeNone)
+		{
+			m_is_remote_notification = true;
+			UIUserNotificationSettings *t_push_settings;
+			t_push_settings = [UIUserNotificationSettings settingsForTypes: t_allowed_notifications categories:nil];
+			[[UIApplication sharedApplication] registerUserNotificationSettings: t_push_settings];
+		}
+	}
 
     // MM-2014-09-26: [[ iOS 8 Support ]] Move the registration for orientation updates to here from init. Was causing issues with iOS 8.
     // Tell the device we want orientation notifications.
