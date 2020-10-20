@@ -537,14 +537,14 @@ bool MCUIDC::s_display_info_effective = false;
 
 // IM-2014-01-24: [[ HiDPI ]] Refactor to implement caching of display info in MCUIDC instead of subclasses
 // IM-2014-01-24: [[ HiDPI ]] Change to use logical coordinates - device coordinate conversion no longer needed
-uint4 MCUIDC::getdisplays(const MCDisplay *&r_displays, bool p_effective)
+uint4 MCUIDC::getdisplays(const MCDisplay *&r_displays, bool p_effective, bool p_safe_area)
 {
 	if (p_effective != s_display_info_effective || !platform_displayinfocacheable())
 		cleardisplayinfocache();
 	
-	if (s_displays == nil)
+	if (s_displays == nil || p_safe_area)
 	{
-		/* UNCHECKED */ platform_getdisplays(p_effective, s_displays, s_display_count);
+		/* UNCHECKED */ platform_getdisplays(p_effective, s_displays, s_display_count, p_safe_area);
 		s_display_info_effective = p_effective;
 	}
 	
@@ -584,7 +584,7 @@ bool MCUIDC::platform_displayinfocacheable(void)
 
 //////////
 
-bool MCUIDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+bool MCUIDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count, Boolean p_safe_area)
 {
 	return false;
 }

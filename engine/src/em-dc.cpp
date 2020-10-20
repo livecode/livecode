@@ -251,7 +251,7 @@ MCScreenDC::platform_getwindowgeometry(Window p_window,
  * Display management
  * ================================================================ */
 
-bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count, Boolean p_safe_area)
 {
 	MCDisplay *t_display = nil;
 	if (!MCMemoryNew(t_display))

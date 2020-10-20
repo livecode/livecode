@@ -957,11 +957,31 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	CGRect t_viewport;
 	t_viewport = [[UIScreen mainScreen] bounds];
 	
-    // MW-2014-10-02: [[ iOS 8 Support ]] iOS 8 already takes into account orientation when returning the bounds.
-	if (MCmajorosversion < 800 && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
-		return CGRectMake(0.0f, 0.0f, t_viewport . size . height, t_viewport . size . width);
-	
 	return t_viewport;
+}
+
+- (CGRect)fetchWorkAreaBounds
+{
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
+	if (@available(iOS 11.0, *))
+	{
+		CGRect t_viewport;
+		t_viewport = [[UIScreen mainScreen] bounds];
+		
+		UIWindow *t_window = [[UIApplication sharedApplication] windows][0];
+		CGFloat t_top_padding = t_window.safeAreaInsets.top;
+		CGFloat t_bottom_padding = t_window.safeAreaInsets.bottom;
+		
+		CGFloat t_status_bar_size;
+		if (m_status_bar_hidden || (MCmajorosversion >= 700 && !m_status_bar_solid)|| ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
+			t_status_bar_size = 0.0f;
+		else
+			t_status_bar_size = 20.0f;
+		
+		return CGRectMake(0.0f, t_top_padding + t_status_bar_size, t_viewport . size . width, t_viewport . size . height - t_top_padding - t_bottom_padding - t_status_bar_size);
+	}
+#endif
+	return self.fetchViewBounds;
 }
 
 - (CGRect)fetchViewBounds
@@ -978,11 +998,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 		t_status_bar_size = 0.0f;
 	else
 		t_status_bar_size = 20.0f;
-	
-    // MM-2014-09-26: [[ iOS 8 Support ]] iOS 8 already takes into account orientation when returning the bounds.
-	if (MCmajorosversion < 800 && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
-		return CGRectMake(0.0f, t_status_bar_size, t_viewport . size . height, t_viewport . size . width - t_status_bar_size);
-	
+		
 	return CGRectMake(0.0f, t_status_bar_size, t_viewport . size . width, t_viewport . size . height - t_status_bar_size);
 }
 
@@ -1862,6 +1878,11 @@ UIInterfaceOrientation MCIPhoneGetOrientation(void)
 CGRect MCIPhoneGetViewBounds(void)
 {
 	return [[MCIPhoneApplication sharedApplication] fetchViewBounds];
+}
+
+CGRect MCIPhoneGetWorkAreaBounds(void)
+{
+	return [[MCIPhoneApplication sharedApplication] fetchWorkAreaBounds];
 }
 
 CGRect MCIPhoneGetScreenBounds(void)

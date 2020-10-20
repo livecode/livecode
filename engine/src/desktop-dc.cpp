@@ -212,7 +212,7 @@ uint16_t MCScreenDC::platform_getheight(void)
 	return t_viewport . height;
 }
 
-bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count)
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count, Boolean p_safe_area)
 {
 	bool t_success;
 	t_success = true;

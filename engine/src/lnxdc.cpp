@@ -307,7 +307,7 @@ bool MCScreenDC::apply_partial_struts(MCDisplay *p_displays, uint32_t p_display_
 }
 
 // IM-2014-01-29: [[ HiDPI ]] Placeholder method for Linux HiDPI support
-bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_display_count)
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_display_count, Boolean p_safe_area)
 {
 	return device_getdisplays(p_effective, r_displays, r_display_count);
 }

@@ -430,7 +430,7 @@ public:
 	uint2 getwidth();
 	uint2 getheight();
 	
-	uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
+	uint4 getdisplays(MCDisplay const *& p_displays, bool effective, bool p_safe_area = false);
 	
 	// IM-2014-01-28: [[ HiDPI ]] Update the currently held display info, returning whether or not an changes have occurred
 	void updatedisplayinfo(bool &r_changed);
@@ -462,7 +462,7 @@ public:
 	
 	virtual uint16_t platform_getwidth(void);
 	virtual uint16_t platform_getheight(void);
-	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count, Boolean p_safe_area = false);
 	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
 	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable);
 	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);

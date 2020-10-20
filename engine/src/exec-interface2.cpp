@@ -1933,7 +1933,7 @@ void MCInterfaceSetTool(MCExecContext& ctxt, MCStringRef p_value)
 void MCInterfaceGetScreenRect(MCExecContext& ctxt, bool p_working, bool p_effective, MCRectangle& r_value)
 {
 	const MCDisplay *t_displays;
-	MCscreen -> getdisplays(t_displays, p_effective);
+	MCscreen -> getdisplays(t_displays, p_effective, true);
 
     if (t_displays)
     {
