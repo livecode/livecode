@@ -664,12 +664,12 @@ struct MCModalSession
 {
 	NSModalSession session;
 	MCMacPlatformWindow *window;
+	bool is_running;
 	bool is_done;
 };
 
-static MCAutoArray<MCModalSession> s_modal_sessions;
-static MCAutoArray<MCModalSession> s_modal_sessions_pending_cleanup;
-static uindex_t s_modal_session_run_depth = 0;
+static MCAutoArray<MCModalSession*> s_modal_sessions;
+static MCAutoArray<MCModalSession*> s_modal_sessions_pending_cleanup;
 
 struct MCCallback
 {
@@ -803,16 +803,18 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 										inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
 									   dequeue: NO];
 		
+		// Fetch the most deeply-nested modal session to run
+		MCModalSession *t_session = s_modal_sessions[s_modal_sessions.Size() - 1];
+
 		// Run the modal session, if it has been created yet (it might not if this
 		// wait was triggered by reacting to an event caused as part of creating
 		// the modal session, e.g. when losing window focus).
-		// Check the modal run depth to prevent re-entering a modal session that
-		// is already being run.
-		if (s_modal_session_run_depth < s_modal_sessions.Size() && s_modal_sessions[s_modal_session_run_depth].session != nil)
+		// Do not run the session again if it is already running.
+		if (!t_session->is_running && t_session->session != nil)
 		{
-			s_modal_session_run_depth++;
-			[NSApp runModalSession: s_modal_sessions[s_modal_session_run_depth - 1].session];
-			s_modal_session_run_depth--;
+			t_session->is_running = true;
+			[NSApp runModalSession: t_session->session];
+			t_session->is_running = false;
 			
 			// clean up modal sessions
 			MCMacPlatformCleanupModalSessions();
@@ -852,15 +854,18 @@ void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
     //   current mouse window.
 	MCMacPlatformSyncMouseBeforeDragging();
     
-	MCModalSession t_session;
+	MCModalSession *t_session = nil;
 	
-	t_session.is_done = false;
-	t_session.window = p_window;
+	/* UNCHECKED */ MCMemoryNew(t_session);
+	
+	t_session->is_done = false;
+	t_session->is_running = false;
+	t_session->window = p_window;
 	p_window -> Retain();
 	// IM-2015-01-30: [[ Bug 14140 ]] lock the window frame to prevent it from being centered on the screen.
 	p_window->SetFrameLocked(true);
 
-	t_session.session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+	t_session->session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
 	/* UNCHECKED */ s_modal_sessions.Push(t_session);
 
 	p_window->SetFrameLocked(false);
@@ -870,26 +875,26 @@ void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
 {
 	uindex_t t_index;
 	for(t_index = 0; t_index < s_modal_sessions.Size(); t_index++)
-		if (s_modal_sessions[t_index] . window == p_window)
+		if (s_modal_sessions[t_index]->window == p_window)
 			break;
 	
 	if (t_index == s_modal_sessions.Size())
 		return;
 	
-	s_modal_sessions[t_index] . is_done = true;
+	s_modal_sessions[t_index]->is_done = true;
 	
 	/* Pop all modal sessions which are now complete. All those which are
 	 * get pushed onto a list to be destroyed later. */
 	while (s_modal_sessions.Size() > 0)
 	{
-		if (!s_modal_sessions[s_modal_sessions.Size() - 1] . is_done)
+		if (!s_modal_sessions[s_modal_sessions.Size() - 1]->is_done)
 			return;
 		
-		MCModalSession t_session;
+		MCModalSession *t_session;
 		/* UNCHECKED */ s_modal_sessions.Pop(t_session);
 		/* UNCHECKED */ s_modal_sessions_pending_cleanup.Push(t_session);
 		
-		[NSApp endModalSession: t_session.session];
+		[NSApp endModalSession: t_session->session];
 	}
 }
 
@@ -900,11 +905,13 @@ void MCMacPlatformCleanupModalSessions(void)
 {
 	while (s_modal_sessions_pending_cleanup.Size() > 0)
 	{
-		MCModalSession t_session;
+		MCModalSession *t_session = nil;
 		/* UNCHECKED */ s_modal_sessions_pending_cleanup.Pop(t_session);
 		
-		[t_session.window->GetHandle() orderOut: nil];
-		t_session.window->Release();
+		[t_session->window->GetHandle() orderOut: nil];
+		t_session->window->Release();
+
+		MCMemoryDelete(t_session);
 	}
 }
 
