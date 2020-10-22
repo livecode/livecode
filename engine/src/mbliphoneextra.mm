@@ -711,13 +711,9 @@ bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
 
 bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
 {
-    // MM-2013-05-21: [[ Bug 10895 ]] The method uniqueIdentifier of UIDevice is now deprecated (as of May 2013).
-    //  Calling the method dynamically prevents apps from being rejected by the app store
-    //  but preserves functionality for testing and backwards compatibility.
-    NSString *t_identifier;
-    t_identifier = objc_msgSend([UIDevice currentDevice], sel_getUid("uniqueIdentifier"));
-	
-    return MCStringCreateWithCFStringRef((CFStringRef)t_identifier, r_identifier);
+	// Deprecated in LC 6.0
+	r_identifier = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier)
