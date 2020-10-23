@@ -42,7 +42,7 @@ releases the mouse button, at which point the control will receive a
 mouseUp message.
 
 If a subsequent script action deletes the control, or if the control
-becoms invisible, the grab will be automatically cancelled and in this
+becomes invisible, the grab will be automatically cancelled and in this
 case no message will be sent to the control.
 
 References: click (command), drag (command), move (command),
