@@ -42,7 +42,6 @@
 		'STRIP_INSTALLED_PRODUCT': 'NO',
 		'CLANG_CXX_LANGUAGE_STANDARD': 'c++0x',
 		
-		'CODE_SIGN_STYLE': 'Manual',
 		'CODE_SIGN_IDENTITY[sdk=iphoneos*]': 'iPhone Developer',
 		'DEVELOPMENT_TEAM': 'KR649NSGHP',
 	},
@@ -116,9 +115,6 @@
 					'xcode_settings':
 					{
 						'MACH_O_TYPE': 'staticlib',
-						'CODE_SIGN_STYLE': 'Manual',
-						'CODE_SIGN_IDENTITY[sdk=iphoneos*]': 'iPhone Developer',
-						'DEVELOPMENT_TEAM': 'KR649NSGHP',
 					},
 
 					'postbuilds':
