@@ -198,6 +198,7 @@ are supported:
 
 * "home": The current user's home folder
 * "desktop": The current user's desktop folder
+* "documents": The current user's documents folder
 * "temporary": The folder where temporary files can be placed
 * "engine": The folder containing the LiveCode engine and the executable
   files copied in the <standalone application>
@@ -233,6 +234,7 @@ Changes:
 - The "resources" <folderIdentifier> was added in version 6.7.5.
 - Support for using the <specialFolderPath> function on HTML5 systems
   was added in version 8.0.0.
+- Support for special folder <documents> on linux was added in version 9.7.
 
 
 References: revSetDatabaseDriverPath (command), files (function),
