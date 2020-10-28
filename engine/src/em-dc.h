@@ -80,7 +80,7 @@ public:
 
 	/* ---------- Display management */
 
-	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count, Boolean p_safe_area = false);
 
 	/* ---------- Event loop */
 	virtual Boolean wait(real64_t p_duration,

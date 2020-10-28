@@ -389,6 +389,7 @@ UIView *MCIPhoneGetView(void);
 UIView *MCIPhoneGetRootView(void);
 UIView *MCIPhoneGetDisplayView(void);
 CGRect MCIPhoneGetViewBounds(void);
+CGRect MCIPhoneGetWorkAreaBounds(void);
 CGRect MCIPhoneGetScreenBounds(void);
 void MCIPhoneActivateKeyboard(void);
 void MCIPhoneDeactivateKeyboard(void);

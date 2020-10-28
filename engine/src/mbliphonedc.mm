@@ -307,7 +307,7 @@ Window MCScreenDC::getroot()
 }
 
 // IM-2014-01-30: [[ HiDPI ]] Refactor to return in logical coordinates, with addition of screen pixel scale
-bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count, Boolean p_safe_area)
 {
 	bool t_success;
 	t_success = true;
@@ -328,7 +328,10 @@ bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, 
 		t_displays[0].pixel_scale = MCIPhoneGetDeviceScale();
 		
 		t_displays[0].viewport = MCRectangleFromCGRect(MCIPhoneGetScreenBounds());
-		t_displays[0].workarea = MCRectangleFromCGRect(MCIPhoneGetViewBounds());
+        if (p_safe_area)
+            t_displays[0].workarea = MCRectangleFromCGRect(MCIPhoneGetWorkAreaBounds());
+        else
+            t_displays[0].workarea = MCRectangleFromCGRect(MCIPhoneGetViewBounds());
 		
 		if (p_effective)
 			t_displays[0].workarea.height -= s_current_keyboard_height;
@@ -344,7 +347,6 @@ bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, 
 	}
 	else
 		MCMemoryDeleteArray(t_displays);
-	
 	return t_success;
 }
 

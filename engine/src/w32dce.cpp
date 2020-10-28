@@ -120,7 +120,7 @@ static BOOL CALLBACK DescribeMonitorsCallback(HMONITOR p_monitor, HDC p_monitor_
 }
 
 // IM-2014-01-28: [[ HiDPI ]] Refactored to handle display info caching in MCUIDC superclass
-bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count, Boolean p_safe_area)
 {
 	bool t_success;
 	t_success = true;

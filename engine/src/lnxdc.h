@@ -250,7 +250,7 @@ public:
 	// IM-2014-01-29: [[ HiDPI ]] Update device_* methods to platform-specific logical coord based methods
 	virtual uint16_t platform_getwidth(void);
 	virtual uint16_t platform_getheight(void);
-	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool platform_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count, Boolean p_safe_area = false);
 	virtual bool platform_getwindowgeometry(Window w, MCRectangle &drect);
 	virtual void platform_boundrect(MCRectangle &rect, Boolean title, Window_mode m, Boolean resizable);
 	virtual void platform_querymouse(int16_t &r_x, int16_t &r_y);
