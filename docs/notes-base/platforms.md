@@ -62,7 +62,7 @@ Currently, the supported versions of Xcode are:
 * Xcode 9.2 on MacOS 10.12 (Note: You need to upgrade to 10.12.6)
 * Xcode 10.1 on MacOS 10.13 (Note: You need to upgrade to 10.13.4)
 * Xcode 11.3 on MacOS 10.14 (Note: You need to upgrade to 10.14.4) 
-* Xcode 11.4 on MacOS 10.15 (Note: You need to upgrade to 10.15.2) 
+* Xcode 12.1 on MacOS 10.15 (Note: You need to upgrade to 10.15.4) 
 
 It is also possible to set other versions of Xcode, to allow testing
 on a wider range of iOS simulators. For instance, on MacOS 10.12
@@ -75,7 +75,7 @@ We currently support building against the following versions of the iOS SDK:
 * 11.2 (included in Xcode 9.2)
 * 12.1 (included in Xcode 10.1)
 * 13.2 (included in Xcode 11.3)
-* 13.5 (included in Xcode 11.5)
+* 14.1 (included in Xcode 12.1)
 
 ## Android
 
