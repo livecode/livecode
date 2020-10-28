@@ -246,13 +246,6 @@ UIViewController *MCIPhoneGetViewController(void);
 		[datePicker setCalendar:[t_locale objectForKey:NSLocaleCalendar]];
 		[datePicker setTimeZone:[NSTimeZone localTimeZone]];
         
-       
-        
-        // PM-2014-10-22: [[ Bug 13750 ]] Make sure the view under the pickerView is not visible (iphone 4 only)
-        NSString *t_device_model_name = MCIPhoneGetDeviceModelName();
-        if ([t_device_model_name isEqualToString:@"iPhone 4"] || [t_device_model_name isEqualToString:@"iPhone 4(Rev A)"] || [t_device_model_name isEqualToString:@"iPhone 4(CDMA)"])
-            datePicker.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.90];
-		
 		// set up the style and parameters for the date picker
 		if (p_style == nil || MCCStringEqual([p_style cStringUsingEncoding:NSMacOSRomanStringEncoding], "dateTime"))
 			[datePicker setDatePickerMode:UIDatePickerModeDateAndTime];

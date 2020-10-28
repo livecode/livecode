@@ -505,11 +505,6 @@ return 1;
 			m_bar_visible = true;
 		}
 
-        // PM-2014-10-22: [[ Bug 13750 ]] Make sure the view under the pickerView is not visible (iphone 4 only)
-        NSString *t_device_model_name = MCIPhoneGetDeviceModelName();
-        if ([t_device_model_name isEqualToString:@"iPhone 4"] || [t_device_model_name isEqualToString:@"iPhone 4(Rev A)"] || [t_device_model_name isEqualToString:@"iPhone 4(CDMA)"])
-            pickerView.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.90];
-        
 		// set the label item
 		for (t_i = 0; t_i < [m_selected_index count]; t_i++)
 			[pickerView selectRow:[[m_selected_index objectAtIndex:t_i] integerValue] inComponent:t_i animated:NO];

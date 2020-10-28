@@ -542,6 +542,13 @@ bool MCSystemVibrate (int32_t p_number_of_vibrates)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+bool MCSystemGetDeviceModel(MCStringRef& r_model)
+{
+    NSString *t_device_model_name = MCIPhoneGetDeviceModelName();
+	
+	return MCStringCreateWithCFStringRef((CFStringRef)t_device_model_name, r_model);
+}
+
 bool MCSystemGetDeviceResolution(MCStringRef& p_resolution)
 {
 	UIScreenMode *t_mode;

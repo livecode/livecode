@@ -655,6 +655,12 @@ bool MCSystemGetPixelDensity(real64_t& r_density)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCSystemGetDeviceModel(MCStringRef& p_model)
+{
+    // Not implemented
+    return false;
+}
+
 bool MCSystemGetDeviceResolution(MCStringRef& p_resolution)
 {
     // Not implemented
