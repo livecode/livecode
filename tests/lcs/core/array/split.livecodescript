@@ -250,3 +250,14 @@ on TestBug22586
 	split tVar by return and ":   "
 	TestAssert "unicode split by unfound multi-char delimiter does not crash", true
 end TestBug22586
+
+on TestBug22962
+	local tVar
+	put "foo" into tVar
+	split tVar by return and ": "
+	TestAssert "native split by unfound multi-char delimiter", the keys of tVar is "foo"
+
+	put "foo" & numToCodePoint(0x2192) into tVar
+	split tVar by return and ": "
+	TestAssert "unicode split by unfound multi-char delimiter", the keys of tVar is "foo" & numToCodePoint(0x2192)
+end TestBug22962

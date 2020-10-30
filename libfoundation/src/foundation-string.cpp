@@ -5199,7 +5199,10 @@ static void split_find_end_of_element_and_key_native(const char_t *sptr, const c
     
     // key not found
     if (sptr == eptr - p_key_length + 1)
-        r_key_ptr = sptr;
+	{
+        r_key_ptr = eptr;
+		r_end_ptr = eptr;
+	}
     
 	split_find_end_of_element_native(sptr, eptr, del, p_del_length, r_end_ptr, p_options);
 }
