@@ -44,9 +44,9 @@ pixels to be rendered causing the IDE to run slowly.
 > building a standalone. To have scaleFactor applied to a standalone upon
 > opening, it must be coded in a preOpenStack handler. For example:
 
-   on preOpenStack
-      set the scaleFactor of me to 0.75
-   end preOpenStack
+    on preOpenStack
+        set the scaleFactor of me to 0.75
+    end preOpenStack
 
 References: iphoneUseDeviceResolution (command),
 usePixelScaling (property), systemPixelScale (property)
