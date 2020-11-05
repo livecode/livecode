@@ -1690,6 +1690,10 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 	[m_delegate release];
 }
 
+bool MCMacPlatformWindow::s_hiding = false;
+MCMacPlatformWindow *MCMacPlatformWindow::s_hiding_focused = nil;
+MCMacPlatformWindow *MCMacPlatformWindow::s_hiding_unfocused = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCWindowView *MCMacPlatformWindow::GetView(void)
@@ -1791,12 +1795,29 @@ void MCMacPlatformWindow::ProcessDidDeminiaturize(void)
 
 void MCMacPlatformWindow::ProcessDidBecomeKey(void)
 {
-	HandleFocus();
+	if (s_hiding)
+	{
+		this->Retain();
+		if (s_hiding_focused != nil)
+			s_hiding_focused->Release();
+		s_hiding_focused = this;
+	}
+	else
+		HandleFocus();
 }
 
 void MCMacPlatformWindow::ProcessDidResignKey(void)
 {
-    HandleUnfocus();
+	if (s_hiding)
+	{
+		this->Retain();
+		if (s_hiding_unfocused != nil)
+			s_hiding_unfocused->Release();
+		s_hiding_unfocused = this;
+		
+	}
+	else
+		HandleUnfocus();
 }
 
 void MCMacPlatformWindow::ProcessMouseMove(NSPoint p_location_cocoa)
@@ -2086,6 +2107,8 @@ void MCMacPlatformWindow::DoShowAsSheet(MCPlatformWindowRef p_parent)
 
 void MCMacPlatformWindow::DoHide(void)
 {
+	s_hiding = true;
+	
 	if (m_parent != nil)
 	{
 		[NSApp endSheet: m_window_handle];
@@ -2097,6 +2120,7 @@ void MCMacPlatformWindow::DoHide(void)
 	else if (m_style == kMCPlatformWindowStyleDialog)
 	{
 		MCMacPlatformEndModalSession(this);
+		[m_window_handle orderOut: nil];
 	}
     else if (m_style == kMCPlatformWindowStylePopUp)
     {
@@ -2112,6 +2136,22 @@ void MCMacPlatformWindow::DoHide(void)
 		// CW-2015-09-21: [[ Bug 15979 ]] Call close instead of orderOut here to properly close
 		// windows that have been iconified.
 		[m_window_handle close];
+	}
+	
+	MCMacPlatformWindow *t_window_losing_focus = s_hiding_unfocused;
+	s_hiding_unfocused = nil;
+	MCMacPlatformWindow *t_window_gaining_focus = s_hiding_focused;
+	s_hiding_focused = nil;
+	s_hiding = false;
+	if (t_window_losing_focus)
+	{
+		t_window_losing_focus->HandleUnfocus();
+		t_window_losing_focus->Release();
+	}
+	if (t_window_gaining_focus)
+	{
+		t_window_gaining_focus->HandleFocus();
+		t_window_gaining_focus->Release();
 	}
 	
 	MCMacPlatformHandleMouseAfterWindowHidden();

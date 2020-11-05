@@ -574,6 +574,10 @@ private:
 	MCPlatformWindowRef m_parent;
 	
 	friend class MCMacPlatformSurface;
+	
+	static bool s_hiding;
+	static MCMacPlatformWindow *s_hiding_focused;
+	static MCMacPlatformWindow *s_hiding_unfocused;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

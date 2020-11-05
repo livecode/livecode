@@ -908,7 +908,6 @@ void MCMacPlatformCleanupModalSessions(void)
 		MCModalSession *t_session = nil;
 		/* UNCHECKED */ s_modal_sessions_pending_cleanup.Pop(t_session);
 		
-		[t_session->window->GetHandle() orderOut: nil];
 		t_session->window->Release();
 
 		MCMemoryDelete(t_session);
