@@ -586,7 +586,6 @@ void MCMacPlatformScheduleCallback(void (*)(void*), void *);
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *window);
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *window);
-void MCMacPlatformCleanupModalSessions(void);
 
 void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef window);
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
