@@ -1980,6 +1980,16 @@ void MCMacPlatformWindow::DoSynchronize(void)
 		// COCOA-TODO: At the moment force a re-display here to stop redraw artifacts.
 		//   The engine will disable screen updates appropriately to ensure atomicity.
 		[m_window_handle setFrame: t_cocoa_frame display: YES];
+
+		// The new frame rect may be rejected or modified by the underlying NSWindow
+		//   implementation, so query the new value and update m_content accordingly
+		if (!NSEqualRects(t_cocoa_frame, m_window_handle.frame))
+		{
+			NSRect t_new_cocoa_content;
+			t_new_cocoa_content = [m_window_handle contentRectForFrameRect:m_window_handle.frame];
+
+			MCMacPlatformMapScreenNSRectToMCRectangle(t_new_cocoa_content, m_content);
+		}
 	}
 	
 	if (m_changes . title_changed)
