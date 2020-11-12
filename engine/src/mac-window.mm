@@ -1918,7 +1918,12 @@ void MCMacPlatformWindow::DoRealize(void)
         [m_panel_handle setFloatingPanel: [NSApp isActive]];
     else
         [m_window_handle setLevel: t_window_level];
-	[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
+	bool t_is_opaque = m_is_opaque && m_mask == nil;
+	[m_window_handle setOpaque: t_is_opaque];
+	if (t_is_opaque)
+		[m_window_handle setBackgroundColor: NSColor.windowBackgroundColor];
+	else
+		[m_window_handle setBackgroundColor: NSColor.clearColor];
 	[m_window_handle setHasShadow: m_has_shadow];
 	if (!m_has_zoom_widget)
 		[[m_window_handle standardWindowButton: NSWindowZoomButton] setEnabled: NO];
@@ -1962,7 +1967,12 @@ void MCMacPlatformWindow::DoSynchronize(void)
         // MW-2014-07-29: [ Bug 12997 ]] Make sure we invalidate the whole window when
         //   the mask changes.
         [[m_window_handle contentView] setNeedsDisplay: YES];
-		[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
+		bool t_is_opaque = m_is_opaque && m_mask == nil;
+		[m_window_handle setOpaque: t_is_opaque];
+		if (t_is_opaque)
+			[m_window_handle setBackgroundColor: NSColor.windowBackgroundColor];
+		else
+			[m_window_handle setBackgroundColor: NSColor.clearColor];
 		if (m_has_shadow)
 			m_shadow_changed = true;
 	}
