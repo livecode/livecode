@@ -714,7 +714,7 @@ function revFolderNameMakeLegal pName
 end revFolderNameMakeLegal
 
 // List of all desktop target platforms + architecture
-constant kDesktopTargets = "Windows,Windows x86-64,MacOSX x86-32,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
+constant kDesktopTargets = "Windows,Windows x86-64,MacOSX x86-64,Linux,Linux x64,Linux armv6-hf"
 function revSBDesktopTargets
    return kDesktopTargets
 end revSBDesktopTargets
