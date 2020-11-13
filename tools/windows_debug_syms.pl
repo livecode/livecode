@@ -22,6 +22,9 @@ while (my $line = <$FILE>)
 	# Replace the .exe or .dll suffix of each file with .pdb
 	$line =~ s/\.(exe|dll)$/\.pdb/;
 	
+	# Ensure commercial engine .pdbs have the expected filename (i.e. "LiveCode-Commercial.pdb")
+	$line =~ s/(LiveCode-Business|LiveCode-Indy|LiveCode-CommunityPlus)\.pdb$/LiveCode-Commercial\.pdb/;
+
 	# Output the filename
 	print "$line\n";
 }

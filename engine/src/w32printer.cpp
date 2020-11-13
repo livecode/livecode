@@ -829,7 +829,7 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			{
                 // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
                 // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-				if (!(p_mark -> rectangle . inset % 2))
+				if (p_mark -> rectangle . inset % 2)
 					p_mark -> rectangle . inset ++;
 				p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2,
 															   p_mark -> rectangle . bounds . y + p_mark -> rectangle . inset / 2, 
@@ -849,7 +849,7 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			{
                 // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
                 // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-				if (!(p_mark -> round_rectangle . inset % 2))
+				if (p_mark -> round_rectangle . inset % 2)
 					p_mark -> round_rectangle . inset ++;
 				p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2,
 																	 p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . inset / 2, 
@@ -857,8 +857,6 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 																	 p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset);
 			}
 			
-			int4 t_adjust;
-			t_adjust = p_mark -> stroke != NULL ? 0 : 1;
 			RoundRect(t_dc, p_mark -> round_rectangle . bounds . x, p_mark -> round_rectangle . bounds . y,
 											p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . bounds . width,
 											p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . bounds . height, p_mark -> round_rectangle . radius,
@@ -871,7 +869,7 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			{
                 // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
                 // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-				if (!(p_mark -> arc . inset % 2))
+				if (p_mark -> arc . inset % 2)
 					p_mark -> arc . inset ++;
 				p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2,
 														 p_mark -> arc . bounds . y + p_mark -> arc . inset / 2, 

@@ -1534,8 +1534,17 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			}
 		}
 
-		// On NT systems 'cmd.exe' is the command processor
-		MCValueAssign(MCshellcmd, MCSTR("cmd.exe"));
+		/* Default the shellCommand to the value of the COMSPEC environment
+		 * variable. */
+		MCAutoStringRef t_comspec;
+		if (MCS_getenv(MCSTR("COMSPEC"), &t_comspec))
+		{
+			MCValueAssign(MCshellcmd, *t_comspec);
+		}
+		else
+		{
+			MCValueAssign(MCshellcmd, kMCEmptyString);
+		}
 
 		// MW-2005-05-26: Store a global variable containing major OS version...
 		OSVERSIONINFOA osv;

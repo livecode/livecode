@@ -31,12 +31,12 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'x86-android-ndk16r15',
     'x86_64-android-ndk16r15',
     'universal-mac-macosx10.9', # Minimum deployment target
-    'universal-ios-iphoneos13.5',
+    'universal-ios-iphoneos14.1',
     'universal-ios-iphoneos13.2',
     'universal-ios-iphoneos12.1',
     'universal-ios-iphoneos11.2',
     'universal-ios-iphoneos10.2',
-    'universal-ios-iphonesimulator13.5',
+    'universal-ios-iphonesimulator14.1',
     'universal-ios-iphonesimulator13.2',
     'universal-ios-iphonesimulator12.1',
     'universal-ios-iphonesimulator11.2',
@@ -276,7 +276,7 @@ def host_platform(opts):
 def guess_xcode_arch(target_sdk):
     sdk, ver = re.match('^([^\d]*)(\d*)', target_sdk).groups()
     if sdk == 'macosx':
-        return 'i386 x86_64'
+        return 'x86_64'
     if sdk == 'iphoneos':
         if int(ver) < 8:
             return 'armv7'

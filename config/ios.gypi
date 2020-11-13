@@ -216,6 +216,7 @@
 						'WARNING_CFLAGS':
 						[
 							'-Wno-return-type',
+							'-Wno-implicit-function-declaration',
 						],
 					},
 				},

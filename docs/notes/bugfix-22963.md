@@ -1,0 +1,1 @@
+# Fix incorrect result when split does not find multi-char delimiter

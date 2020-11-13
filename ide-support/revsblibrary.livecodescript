@@ -1021,7 +1021,7 @@ function revEngineCheck pEngine
          case "MacOSX PowerPC-32"
          case "MacOSX x86-32"
          case "MacOSX x86-64"
-            return there is a directory (tPath & "/Mac OS X/x86-32/Standalone.app")
+            return there is a directory (tPath & "/Mac OS X/x86-64/Standalone.app")
          case "Windows"
             if there is a file (tPath & "/Windows/x86-32/Standalone") then
                return true
@@ -3050,7 +3050,7 @@ function revSBEnginePath pPlatform
             // SN-2015-07-09: [[ StandaloneDeployment ]] Gypified Standalone-<edition>.app building does not
             //  allow to create broken applications, so that the executable file in it bears the edition.
             put the upper of char 1 of tEdition into char 1 of tEdition
-            return tRuntimePath & "/Mac OS X/x86-32/Standalone.app/Contents/MacOS/Standalone-" & tEdition
+            return tRuntimePath & "/Mac OS X/x86-64/Standalone.app/Contents/MacOS/Standalone-" & tEdition
             break
          case "Windows"
             return tRuntimePath & "/Windows/x86-32/Standalone"
