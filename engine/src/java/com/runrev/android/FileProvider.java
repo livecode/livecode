@@ -112,6 +112,11 @@ public class FileProvider
 
 	private boolean validQuery(String[] projection)
 	{
+		if (projection == null)
+		{
+			return true;
+		}
+
 		boolean t_valid = true;
 		for (int i = 0; i < projection . length && t_valid; ++i)
 		{
@@ -173,14 +178,25 @@ public class FileProvider
 		String t_uri_string = uri.toString();
 		HashMap<String, String> t_infos = m_infos.get(t_uri_string);
 
-		String t_values[] = new String[projection.length];
-		for (int i = 0; i < projection.length; ++i)
-			t_values[i] = t_infos.get(projection[i]);
+		String t_values[];
+		MatrixCursor t_cursor;
+		if (projection == null)
+		{
+			t_values = t_infos.values().toArray(new String[0]);
+			t_cursor = new MatrixCursor(t_infos.keySet().toArray(new String[0]));
+		}
+		else
+		{
+			t_values = new String[projection.length];
+			for (int i = 0; i < projection.length; ++i)
+				t_values[i] = t_infos.get(projection[i]);
+
+			t_cursor = new MatrixCursor(projection);
+		}
 		// Log.i("revandroid", "query for " + uri.toString());
 		// for (int i = 0; i < t_values . length; ++i)
 		// 	Log.i("revandroid", "\t" + t_values[i]);
 
-		MatrixCursor t_cursor = new MatrixCursor(projection);
 		t_cursor . addRow(t_values);
 
 		return t_cursor;
