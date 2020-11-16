@@ -286,7 +286,7 @@ Boolean MCNativeTheme::load()
 		}
 	}
 	
-	if (MCmajorosversion >= 0x0600)
+	if (MCmajorosversion >= MCOSVersionMake(6,0,0))
 		mMenuTheme = (MCWinSysHandle)openTheme(NULL, L"Menu");
 
 	return GetTheme(WTHEME_TYPE_PUSHBUTTON) != NULL;
@@ -405,7 +405,7 @@ MCWinSysHandle MCNativeTheme::GetTheme(Widget_Type wtype)
 	case WTHEME_TYPE_OPTIONBUTTON:
 	case WTHEME_TYPE_OPTIONBUTTONTEXT:
 	case WTHEME_TYPE_OPTIONBUTTONARROW:
-		if (MCmajorosversion < 0x0600)
+		if (MCmajorosversion < MCOSVersionMake(6,0,0))
 			return NULL;
 	case WTHEME_TYPE_COMBOBUTTON:
 	case WTHEME_TYPE_COMBO:
@@ -1010,7 +1010,7 @@ Boolean MCNativeTheme::drawscrollcontrols(MCDC *dc, const MCWidgetInfo &winfo, c
 	getscrollbarrects(winfo, drect, sbincarrowrect, sbdecarrowrect, sbthumbrect,sbinctrackrect,sbdectrackrect);
 
 	uint4 sbpartdefaultstate = winfo.state & WTHEME_STATE_DISABLED ? WTHEME_STATE_DISABLED: WTHEME_STATE_CLEAR;
-	if ((winfo . state & WTHEME_STATE_CONTROL_HOVER) != 0 && MCmajorosversion >= 0x0600)
+	if ((winfo . state & WTHEME_STATE_CONTROL_HOVER) != 0 && MCmajorosversion >= MCOSVersionMake(6,0,0))
 		sbpartdefaultstate |= WTHEME_STATE_CONTROL_HOVER;
 	
 	memset(&twinfo,0,sizeof(MCWidgetInfo)); //clear widget info
@@ -1547,11 +1547,11 @@ uint32_t MCNativeTheme::getthemedrawinfosize(void)
 
 int32_t MCNativeTheme::fetchtooltipstartingheight(void)
 {
-	if (MCmajorosversion < 0x0500)
+	if (MCmajorosversion < MCOSVersionMake(5,0,0))
 		return 0;
 
 	// MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for XP.
-	if (MCmajorosversion < 0x600)
+	if (MCmajorosversion < MCOSVersionMake(6,0,0))
 		return 2;
 
 	return 3;
@@ -1559,7 +1559,7 @@ int32_t MCNativeTheme::fetchtooltipstartingheight(void)
 
 bool MCNativeTheme::applythemetotooltipwindow(Window p_window, const MCRectangle& p_rect)
 {
-	if (MCmajorosversion < 0x0600)
+	if (MCmajorosversion < MCOSVersionMake(6,0,0))
 		return false;
 
 	// IM-2014-04-21: [[ Bug 12235 ]] Scale themed tooltip rect to screen coords
@@ -1584,7 +1584,7 @@ bool MCNativeTheme::applythemetotooltipwindow(Window p_window, const MCRectangle
 
 bool MCNativeTheme::drawtooltipbackground(MCContext *p_context, const MCRectangle& p_rect)
 {
-	if (MCmajorosversion < 0x0600)
+	if (MCmajorosversion < MCOSVersionMake(6,0,0))
 		return false;
 
 	MCWidgetInfo t_info;
@@ -1603,7 +1603,7 @@ bool MCNativeTheme::drawtooltipbackground(MCContext *p_context, const MCRectangl
 
 bool MCNativeTheme::settooltiptextcolor(MCContext *p_context)
 {
-	if (MCmajorosversion < 0x0600)
+	if (MCmajorosversion < MCOSVersionMake(6,0,0))
 		return false;
 
 	MCColor t_color;

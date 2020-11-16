@@ -40,9 +40,9 @@
 // Returns the name of the legacy font
 static NSString* get_legacy_font_name()
 {
-    if (MCmajorosversion < 0x10A0)
+    if (MCmajorosversion < MCOSVersionMake(10,10,0))
         return @"Lucida Grande";
-    if (MCmajorosversion > 0x10B0)
+    if (MCmajorosversion > MCOSVersionMake(10,11,0))
         return @"San Francisco";
     else
         return @"Helvetica Neue";

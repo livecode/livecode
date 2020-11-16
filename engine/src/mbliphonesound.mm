@@ -233,7 +233,7 @@ bool MCSystemSoundFinalize()
                                                  selector:@selector(audioPlayerDidReachEnd:)
                                                      name:AVPlayerItemDidPlayToEndTimeNotification
                                                    object:[m_player currentItem]];
-        if (MCmajorosversion >= 500)
+        if (MCmajorosversion >= MCOSVersionMake(5,0,0))
         {
 #ifdef __IPHONE_5_0
             // MM-2012-03-23: [[ Bug ]] AVPlayerItemFailedToPlayToEndTimeNotification only added in 4.3 - use string represnetation instead

@@ -1761,7 +1761,7 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
     // If we are on Lion+ then check to see if the mouse location is outside
     // of any of the system tracking rects (used for resizing etc.)
     extern uint4 MCmajorosversion;
-    if (MCmajorosversion >= 0x1070)
+    if (MCmajorosversion >= MCOSVersionMake(10,7,0))
     {
         // MW-2014-06-11: [[ Bug 12437 ]] Make sure we only check tracking rectangles if we have
         //   a resizable frame.

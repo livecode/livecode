@@ -241,7 +241,7 @@ UIViewController *MCIPhoneGetViewController(void);
 
 - (void)doDismissController
 {
-	if (MCmajorosversion >= 500)
+	if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 		[MCIPhoneGetViewController() dismissViewControllerAnimated:YES completion:^(){m_finished = true;}];
 	else
         [MCIPhoneGetViewController() dismissModalViewControllerAnimated:YES];
@@ -250,7 +250,7 @@ UIViewController *MCIPhoneGetViewController(void);
 - (void)dismissController
 {
     // HSC-2012-05-14: [[ BZ 10213 ]] Delayed continuation until view disappeared. 
-    if (MCmajorosversion >= 500)
+    if (MCmajorosversion >= MCOSVersionMake(5,0,0))
     {
         m_finished = false;
 		MCIPhoneCallSelectorOnMainFiber(self, @selector(doDismissController));
@@ -414,7 +414,7 @@ UIViewController *MCIPhoneGetViewController(void);
     // Fetch all calendars that are available.
     NSArray *t_calendars;
 #ifdef __IPHONE_6_0
-    if (MCmajorosversion >= 600)
+    if (MCmajorosversion >= MCOSVersionMake(6,0,0))
         t_calendars = [m_event_store calendarsForEntityType: EKEntityTypeEvent];
     else
 #endif
