@@ -5199,7 +5199,10 @@ static void split_find_end_of_element_and_key_native(const char_t *sptr, const c
     
     // key not found
     if (sptr == eptr - p_key_length + 1)
-        r_key_ptr = sptr;
+	{
+        r_key_ptr = eptr;
+		r_end_ptr = eptr;
+	}
     
 	split_find_end_of_element_native(sptr, eptr, del, p_del_length, r_end_ptr, p_options);
 }
@@ -5263,9 +5266,9 @@ bool MCStringSplitNative(MCStringRef self, MCStringRef p_elem_del, MCStringRef p
 			if (!MCNameCreateWithNativeChars(t_sptr, t_key_end - t_sptr, &t_name))
 				return false;
             
-			if (t_key_end != t_element_end)
+			if (t_key_end <= t_element_end - p_key_del -> char_count)
 				t_key_end += p_key_del -> char_count;
-            
+
 			MCAutoStringRef t_string;
 			if (!MCStringCreateWithNativeChars(t_key_end, t_element_end - t_key_end, &t_string))
 				return false;

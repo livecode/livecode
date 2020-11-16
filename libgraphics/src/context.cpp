@@ -686,18 +686,6 @@ void MCGContextBegin(MCGContextRef self, bool p_need_layer)
 	SkMatrix t_device_matrix;
 	t_device_matrix = self -> layer -> canvas -> getTotalMatrix();
 	
-	// Create a suitable bitmap.
-	SkBitmap t_new_bitmap;
-	t_new_bitmap.setInfo(SkImageInfo::MakeN32Premul(t_device_clip.width(), t_device_clip.height()));
-	if (!t_new_bitmap.tryAllocPixels())
-	{
-		self -> is_valid = false;
-		return;
-	}
-	
-	// Clear the pixel buffer.
-	memset(t_new_bitmap . getPixels(), 0, t_new_bitmap . rowBytes() * t_new_bitmap . height());
-	
 	// Create a new layer the same size as the device clip
 	MCGContextLayerRef t_new_layer;
 	SkIRect t_clip_rect;

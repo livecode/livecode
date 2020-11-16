@@ -664,11 +664,12 @@ struct MCModalSession
 {
 	NSModalSession session;
 	MCMacPlatformWindow *window;
+	bool is_running;
 	bool is_done;
 };
 
-static MCModalSession *s_modal_sessions = nil;
-static uindex_t s_modal_session_count = 0;
+static MCAutoArray<MCModalSession*> s_modal_sessions;
+static MCAutoArray<MCModalSession*> s_modal_sessions_pending_cleanup;
 
 struct MCCallback
 {
@@ -786,7 +787,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	s_in_blocking_wait = true;
 	
 	bool t_modal;
-	t_modal = s_modal_session_count > 0;
+	t_modal = s_modal_sessions.Size() > 0;
 	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
@@ -796,11 +797,28 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
     NSEvent *t_event = nil;
 	if (t_modal)
 	{
+		// Wait for an event, but leave on the queue
+		t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
+									 untilDate: [NSDate dateWithTimeIntervalSinceNow: p_duration]
+										inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
+									   dequeue: NO];
+		
+		// Fetch the most deeply-nested modal session to run
+		MCModalSession *t_session = s_modal_sessions[s_modal_sessions.Size() - 1];
+
 		// Run the modal session, if it has been created yet (it might not if this
 		// wait was triggered by reacting to an event caused as part of creating
 		// the modal session, e.g. when losing window focus).
-		if (s_modal_sessions[s_modal_session_count - 1].session != nil)
-			[NSApp runModalSession: s_modal_sessions[s_modal_session_count - 1] . session];
+		// Do not run the session again if it is already running.
+		if (!t_session->is_running && t_session->session != nil)
+		{
+			t_session->is_running = true;
+			[NSApp runModalSession: t_session->session];
+			t_session->is_running = false;
+			
+			// clean up modal sessions
+			MCMacPlatformCleanupModalSessions();
+		}
 
 		t_event = nil;
 	}
@@ -817,26 +835,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	s_in_blocking_wait = false;
 
 	if (t_event != nil)
-	{
-		if ([t_event type] == NSLeftMouseDown || [t_event type] == NSLeftMouseDragged)
-		{
-            if (s_last_mouse_event != nullptr)
-                [s_last_mouse_event release];
-			s_last_mouse_event = t_event;
-			[t_event retain];
-			[NSApp sendEvent: t_event];
-		}
-		else
-		{
-			if ([t_event type] == NSLeftMouseUp)
-			{
-				[s_last_mouse_event release];
-				s_last_mouse_event = nil;
-			}
-			
-			[NSApp sendEvent: t_event];
-		}
-	}
+		[NSApp sendEvent: t_event];
 	
 	[t_pool release];
 	
@@ -848,17 +847,6 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	return t_event != nil;
 }
 
-void MCMacPlatformClearLastMouseEvent(void)
-{
-    if (s_last_mouse_event == nil)
-    {
-        return;
-    }
-    
-    [s_last_mouse_event release];
-    s_last_mouse_event = nil;
-}
-
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
 {
     // MW-2014-07-24: [[ Bug 12898 ]] The context of the click is changing, so make sure we sync
@@ -866,38 +854,64 @@ void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
     //   current mouse window.
 	MCMacPlatformSyncMouseBeforeDragging();
     
-	/* UNCHECKED */ MCMemoryResizeArray(s_modal_session_count + 1, s_modal_sessions, s_modal_session_count);
+	MCModalSession *t_session = nil;
 	
-	s_modal_sessions[s_modal_session_count - 1] . is_done = false;
-	s_modal_sessions[s_modal_session_count - 1] . window = p_window;
+	/* UNCHECKED */ MCMemoryNew(t_session);
+	
+	t_session->is_done = false;
+	t_session->is_running = false;
+	t_session->window = p_window;
 	p_window -> Retain();
 	// IM-2015-01-30: [[ Bug 14140 ]] lock the window frame to prevent it from being centered on the screen.
 	p_window->SetFrameLocked(true);
-	s_modal_sessions[s_modal_session_count - 1] . session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+
+	t_session->session = [NSApp beginModalSessionForWindow: (NSWindow *)(p_window -> GetHandle())];
+	/* UNCHECKED */ s_modal_sessions.Push(t_session);
+
 	p_window->SetFrameLocked(false);
 }
 
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
 {
 	uindex_t t_index;
-	for(t_index = 0; t_index < s_modal_session_count; t_index++)
-		if (s_modal_sessions[t_index] . window == p_window)
+	for(t_index = 0; t_index < s_modal_sessions.Size(); t_index++)
+		if (s_modal_sessions[t_index]->window == p_window)
 			break;
 	
-	if (t_index == s_modal_session_count)
+	if (t_index == s_modal_sessions.Size())
 		return;
 	
-	s_modal_sessions[t_index] . is_done = true;
+	s_modal_sessions[t_index]->is_done = true;
 	
-	for(uindex_t t_final_index = s_modal_session_count; t_final_index > 0; t_final_index--)
+	/* Pop all modal sessions which are now complete. All those which are
+	 * get pushed onto a list to be destroyed later. */
+	while (s_modal_sessions.Size() > 0)
 	{
-		if (!s_modal_sessions[t_final_index - 1] . is_done)
+		if (!s_modal_sessions[s_modal_sessions.Size() - 1]->is_done)
 			return;
 		
-		[NSApp endModalSession: s_modal_sessions[t_final_index - 1] . session];
-		[s_modal_sessions[t_final_index - 1] . window -> GetHandle() orderOut: nil];
-		s_modal_sessions[t_final_index - 1] . window -> Release();
-		s_modal_session_count -= 1;
+		MCModalSession *t_session;
+		/* UNCHECKED */ s_modal_sessions.Pop(t_session);
+		/* UNCHECKED */ s_modal_sessions_pending_cleanup.Push(t_session);
+		
+		[NSApp endModalSession: t_session->session];
+	}
+}
+
+/* Process all modal sessions which are pending destruction. This
+ * ensures that windows don't get hidden and destroyed at the wrong
+ * time (e.g. within a nested modal session!). */
+void MCMacPlatformCleanupModalSessions(void)
+{
+	while (s_modal_sessions_pending_cleanup.Size() > 0)
+	{
+		MCModalSession *t_session = nil;
+		/* UNCHECKED */ s_modal_sessions_pending_cleanup.Pop(t_session);
+		
+		[t_session->window->GetHandle() orderOut: nil];
+		t_session->window->Release();
+
+		MCMemoryDelete(t_session);
 	}
 }
 
@@ -1174,9 +1188,23 @@ uint32_t MCPlatformGetEventTime(void)
 	return [[NSApp currentEvent] timestamp] * 1000.0;
 }
 
+void MCMacPlatformSetLastMouseEvent(NSEvent *p_event)
+{
+	if (p_event)
+		[p_event retain];
+	if (s_last_mouse_event)
+		[s_last_mouse_event release];
+	s_last_mouse_event = p_event;
+}
+
 NSEvent *MCMacPlatformGetLastMouseEvent(void)
 {
 	return s_last_mouse_event;
+}
+
+void MCMacPlatformClearLastMouseEvent(void)
+{
+	MCMacPlatformSetLastMouseEvent(nil);
 }
 
 void MCPlatformFlushEvents(MCPlatformEventMask p_mask)

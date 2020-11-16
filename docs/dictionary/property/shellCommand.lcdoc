@@ -22,8 +22,8 @@ set the shellCommand to "/bin/sh/ksh"
 Value:
 The <shellCommand> is a string.
 By default, the <shellCommand> <property> is set to "/bin/sh" (the
-Bourne shell) on <Unix|Unix systems>, and "command.com" on Windows
-systems. 
+Bourne shell) on <Unix|Unix systems>, and to the value of the COMSPEC
+environment variable on <Windows|Windows systems>. 
 
 Description:
 Use the <shellCommand> <property> to <execute> a command with a

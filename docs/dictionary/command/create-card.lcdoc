@@ -22,7 +22,7 @@ Example:
 create card "Main"
 
 Example:
-create card (field "ouput")
+create card (field "output")
 
 Example:
 create card "Main" in stack "Stack"
@@ -59,4 +59,3 @@ command (glossary), card (keyword), templateCard (keyword), it (keyword),
 newCard (message), stack (object), ID (property), defaultStack (property)
 
 Tags: objects
-

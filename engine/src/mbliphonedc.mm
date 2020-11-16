@@ -46,7 +46,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
 #import <AudioToolbox/AudioToolbox.h>
-#import <MediaPlayer/MPMoviePlayerViewController.h>
 
 #include "mbliphoneapp.h"
 #include "mbliphoneview.h"

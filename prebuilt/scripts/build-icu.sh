@@ -151,6 +151,11 @@ function buildICU {
 				;;
 		esac	
 
+		# Make sure U_HAVE_STRTOD_L is 0 on android
+ 		if [ "${PLATFORM}" == "android" ] ; then
+ 			sed -i -e "s/U_HAVE_STRTOD_L=1/U_HAVE_STRTOD_L=0/" icudefs.mk
+ 		fi
+ 		
 		echo "Building ICU for ${NAME}"
 		export VERBOSE=1
 		${EMMAKE} make clean && \

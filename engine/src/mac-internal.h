@@ -582,6 +582,7 @@ void MCMacPlatformScheduleCallback(void (*)(void*), void *);
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *window);
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *window);
+void MCMacPlatformCleanupModalSessions(void);
 
 void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef window);
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
@@ -612,7 +613,9 @@ void MCMacPlatformMapScreenNSRectToMCRectangle(NSRect rect, MCRectangle& r_rect)
 
 MCPlatformModifiers MCMacPlatformMapNSModifiersToModifiers(NSUInteger p_modifiers);
 
+void MCMacPlatformSetLastMouseEvent(NSEvent *p_event);
 NSEvent *MCMacPlatformGetLastMouseEvent(void);
+void MCMacPlatformClearLastMouseEvent(void);
 
 NSMenu *MCMacPlatformGetIconMenu(void);
 

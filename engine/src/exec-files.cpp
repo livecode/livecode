@@ -645,6 +645,13 @@ void MCFilesEvalShell(MCExecContext& ctxt, MCStringRef p_command, MCStringRef& r
 		return;
 	}
 
+	if (MCStringIsEmpty(MCshellcmd))
+	{
+		MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, "no shell");
+		ctxt . Throw();
+		return;
+	}
+
 	if (MCS_runcmd(p_command, r_output) != IO_NORMAL)
 	{
 		MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, p_command);
