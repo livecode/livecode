@@ -384,7 +384,7 @@ static void windows_cache_locale(void)
 	s_datetime_locale -> date_formats[2] = windows_query_date_format(LOCALE_SLONGDATE, false);
 
 	// AL-2013-02-08: [[ Bug 9942 ]] Allow appropriate versions of Windows to retrieve the short time format.
-	if (MCmajorosversion >= 0x0601)
+	if (MCmajorosversion >= MCOSVersionMake(6,1,0))
 		s_datetime_locale -> time_formats[0] = string_prepend(windows_query_time_format(LOCALE_SSHORTTIME), '!');
 	else
 		s_datetime_locale -> time_formats[0] = string_prepend(windows_query_time_format(LOCALE_STIMEFORMAT), '!');

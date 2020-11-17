@@ -206,7 +206,7 @@ Boolean MCScreenDC::open()
 	background_pixel.red = background_pixel.green = background_pixel.blue = 0xC0C0;
     MCStringRef t_key2;
 
-	if (MCmajorosversion > 400)
+	if (MCmajorosversion > MCOSVersionMake(4,0,0))
 		t_key2 = MCSTR("HKEY_CURRENT_USER\\Control Panel\\Colors\\MenuBar");
 	else
 		t_key2 = MCSTR("HKEY_CURRENT_USER\\Control Panel\\Colors\\Menu");
@@ -834,7 +834,7 @@ static DwmIsCompositionEnabledPtr s_dwm_is_composition_enabled = NULL;
 
 static bool WindowsIsCompositionEnabled(void)
 {
-	if (MCmajorosversion < 0x0600)
+	if (MCmajorosversion < MCOSVersionMake(6,0,0))
 		return false;
 
 	if (s_dwmapi_library == NULL)
@@ -1110,7 +1110,7 @@ void MCScreenDC::settaskbarstate(bool p_visible)
 	HWND taskbarwnd = FindWindowA("Shell_traywnd", "");
 	SetWindowPos(taskbarwnd, 0, 0, 0, 0, 0, SWP_NOACTIVATE | (p_visible ? SWP_SHOWWINDOW : SWP_HIDEWINDOW));
 
-	if (MCmajorosversion >= 0x0600)
+	if (MCmajorosversion >= MCOSVersionMake(6,0,0))
 	{
 		HWND t_start_window;
 		t_start_window = FindWindowExA(NULL, NULL, "Button", "Start");

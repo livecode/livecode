@@ -117,7 +117,7 @@ static void dopopupanswerdialog_prewait(void *p_context)
     NSString *t_prompt;
     t_prompt = MCStringConvertToAutoreleasedNSString(ctxt -> message == nil ? kMCEmptyString : ctxt -> message );
 
-    if (MCmajorosversion < 800)
+    if (MCmajorosversion < MCOSVersionMake(8,0,0))
     {
         ctxt -> delegate = [[com_runrev_livecode_MCModalDelegate alloc] init];
         ctxt -> alert_view = [[UIAlertView alloc] initWithTitle:t_title message:t_prompt delegate:ctxt -> delegate cancelButtonTitle:nil otherButtonTitles:nil];
@@ -183,7 +183,7 @@ static void dopopupanswerdialog_postwait(void *p_context)
 	popupanswerdialog_t *ctxt;
 	ctxt = (popupanswerdialog_t *)p_context;
 	
-    if (MCmajorosversion < 800)
+    if (MCmajorosversion < MCOSVersionMake(8,0,0))
     {
         int32_t t_result;
         ctxt -> result = [ctxt -> delegate index];
@@ -426,13 +426,13 @@ static void dopopupaskdialog_prewait(void *p_context)
 	NSString *t_initial;
 	t_initial = MCStringConvertToAutoreleasedNSString((ctxt -> initial == nil ? kMCEmptyString : ctxt -> initial) );
     
-    if (MCmajorosversion < 800)
+    if (MCmajorosversion < MCOSVersionMake(8,0,0))
     {
         ctxt -> delegate = [[com_runrev_livecode_MCModalDelegate alloc] init];
         
         UITextField *t_text_field;
         UIAlertView *t_alert;
-        if (MCmajorosversion < 500)
+        if (MCmajorosversion < MCOSVersionMake(5,0,0))
         {
             ctxt-> alert = [[com_runrev_livecode_MCTextAlertView alloc] initWithTitle:t_title
                                                         message:t_message
@@ -546,7 +546,7 @@ static void dopopupaskdialog_postwait(void *p_context)
     MCAutoStringRef t_message_text;
     CFStringRef t_result;
     t_result = nil;
-	if (MCmajorosversion < 500)
+	if (MCmajorosversion < MCOSVersionMake(5,0,0))
 	{
         t_result = [ctxt -> alert getText];
         
@@ -561,7 +561,7 @@ static void dopopupaskdialog_postwait(void *p_context)
         
         [ctxt -> alert release];
 	}
-	else if (MCmajorosversion < 800)
+	else if (MCmajorosversion < MCOSVersionMake(8,0,0))
 	{
 #ifdef __IPHONE_5_0
         if (ctxt -> text_field != nil)

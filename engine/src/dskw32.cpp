@@ -365,7 +365,7 @@ bool MCS_registry_root_to_hkey(MCStringRef p_root, HKEY& r_hkey, uint32_t& x_acc
 		if (MCStringIsEqualToCString(p_root, Regkeys[i].token, kMCCompareCaseless))
 		{
 			r_hkey = Regkeys[i].key;
-			if (MCmajorosversion >= 0x0501)
+			if (MCmajorosversion >= MCOSVersionMake(5,1,0))
 				x_access_mode |= Regkeys[i].mode;
 			return true;
 		}
@@ -1551,15 +1551,15 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		memset(&osv, 0, sizeof(OSVERSIONINFOA));
 		osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
 		GetVersionExA(&osv);
-		MCmajorosversion = osv . dwMajorVersion << 8 | osv . dwMinorVersion;
+		MCmajorosversion = MCOSVersionMake(osv.dwMajorVersion, osv.dwMinorVersion, 0);
 
 		// MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for Windows.
-		if (MCmajorosversion >= 0x0500)
+		if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 		{
 			MCttsize = 11;
 			MCValueAssign(MCttfont, MCSTR("Tahoma"));
 		}
-		else if (MCmajorosversion >= 0x0600)
+		else if (MCmajorosversion >= MCOSVersionMake(6,0,0))
 		{
 			MCttsize = 11;
 			MCValueAssign(MCttfont, MCSTR("Segoe UI"));
@@ -1617,7 +1617,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
     
 	virtual bool GetVersion(MCStringRef& r_string)
     {
-        return MCStringFormat(r_string, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
+        return MCStringFormat(r_string, "NT %d.%d", MCOSVersionGetMajor(MCmajorosversion), MCOSVersionGetMinor(MCmajorosversion));
     }
     
 	virtual bool GetMachine(MCStringRef& r_string)
@@ -3004,7 +3004,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 t_cmdline = (MCStringRef) MCValueRetain(MCNameGetString(p_name));
             
             // There's no such thing as Elevation before Vista (majorversion 6)
-            if (!p_elevated || MCmajorosversion < 0x0600)
+            if (!p_elevated || MCmajorosversion < MCOSVersionMake(6,0,0))
             {
                 HANDLE hChildStdinRd = NULL;
                 HANDLE hChildStdoutWr = NULL;

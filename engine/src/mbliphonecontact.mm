@@ -413,7 +413,7 @@ bool MCContactAddContact(MCArrayRef p_contact, int32_t& r_chosen)
     ABAddressBookRef t_address_book = nil;
     
     // PM-2014-10-08: [[ Bug 13621 ]] ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
-    if (MCmajorosversion < 600)
+    if (MCmajorosversion < MCOSVersionMake(6,0,0))
     {
         // Fetch the address book
         t_address_book = ABAddressBookCreate();
@@ -465,7 +465,7 @@ bool MCContactDeleteContact(int32_t p_person_id)
     ABAddressBookRef t_address_book = nil;
     
     // PM-2014-10-08: [[ Bug 13621 ]] ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
-    if (MCmajorosversion < 600)
+    if (MCmajorosversion < MCOSVersionMake(6,0,0))
     {
         // Fetch the address book
         t_address_book = ABAddressBookCreate();
@@ -505,7 +505,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
     ABAddressBookRef t_address_book = nil;
     
     // PM-2014-10-08: [[ Bug 13621 ]] ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
-    if (MCmajorosversion < 600)
+    if (MCmajorosversion < MCOSVersionMake(6,0,0))
     {
         // Fetch the address book
         t_address_book = ABAddressBookCreate();
@@ -601,7 +601,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 
 - (void)doDismissController
 {
-	if (MCmajorosversion >= 500)
+	if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 		[MCIPhoneGetViewController() dismissViewControllerAnimated:YES completion:^(){m_finished = true;}];
 	else
         [MCIPhoneGetViewController() dismissModalViewControllerAnimated:YES];
@@ -610,7 +610,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 - (void)dismissController
 {
     // HSC-2012-05-14: [[ BZ 10213 ]] Delayed continuation until view disappeared. 
-    if (MCmajorosversion >= 500)
+    if (MCmajorosversion >= MCOSVersionMake(5,0,0))
     {
         m_finished = false;
 		MCIPhoneCallSelectorOnMainFiber(self, @selector(doDismissController));
@@ -678,7 +678,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		// Show the picker
 		m_running = true;
 		
-        if (MCmajorosversion >= 500)
+        if (MCmajorosversion >= MCOSVersionMake(5,0,0))
         {
             [MCIPhoneGetViewController() presentViewController:m_pick_contact animated:YES completion:nil];
         }
@@ -692,7 +692,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 #ifdef __IPHONE_8_0
     // PM-2014-11-10: [[ Bug 13979 ]] On iOS 8, we need to request authorization to be able to get a record identifier
     // The ABAddressBookRef created with ABAddressBookCreateWithOptions will initially not have access to contact data. The app must then call ABAddressBookRequestAccessWithCompletion to request this access.
-    if (MCmajorosversion >= 800)
+    if (MCmajorosversion >= MCOSVersionMake(8,0,0))
     {
         ABAddressBookRef t_address_book = ABAddressBookCreateWithOptions(NULL, NULL);
         requestAuthorization(t_address_book);
@@ -705,7 +705,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		MCscreen -> wait(1.0, False, True);
 	
     // PM-2014-10-10: [[ Bug 13639 ]] On iOS 8, the ABPeoplePickerNavigationController is dismissed in peoplePickerNavigationController:didSelectPerson. If [self dismissController] is called, then the completion block of dismissViewControllerAnimated:completion:^(){} in doDismissController is never called. So m_finish never becomes true and the app freezes
-    if (MCmajorosversion < 800)
+    if (MCmajorosversion < MCOSVersionMake(8,0,0))
         [self dismissController];
 	
     // Return the result
@@ -801,7 +801,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
     ABAddressBookRef t_address_book = nil;
     
     // ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
-    if (MCmajorosversion < 600)
+    if (MCmajorosversion < MCOSVersionMake(6,0,0))
     {
         // Fetch the address book
         t_address_book = ABAddressBookCreate();
@@ -1193,7 +1193,7 @@ bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef &r_contact_data)
     ABAddressBookRef t_address_book = nil;
     
     // PM-2014-10-08: [[ Bug 13621 ]] ABAddressBookCreate is deprecated in iOS 6. Use ABAddressBookCreateWithOptions instead
-    if (MCmajorosversion < 600)
+    if (MCmajorosversion < MCOSVersionMake(6,0,0))
     {
         // Fetch the address book
         t_address_book = ABAddressBookCreate();

@@ -149,7 +149,7 @@ static HANDLE Win32OpenPrinter(MCStringRef p_name)
 
 static void WindowsGetDefaultPrinter(MCStringRef &r_printer)
 {
-	if (MCmajorosversion >= 0x0500)
+	if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 		Win32GetDefaultPrinter(r_printer);
 	else
 	{
@@ -1468,7 +1468,7 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
 	MCPrinterDialogResult t_result;
 	bool t_apply;
 	t_apply = false;
-	if (MCmajorosversion >= 0x0500)
+	if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 	{
 		// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
 		PRINTDLGEXW t_dlg;

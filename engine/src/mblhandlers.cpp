@@ -3596,7 +3596,7 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 		else if (MCCStringEqualCaseless(t_option_list, "audiobook"))
 			t_media_types += kMCMediaTypeAudiobooks;
 #ifdef __IPHONE_5_0
-		if (MCmajorosversion >= 500)
+		if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 		{
 			if (MCCStringEqualCaseless(t_option_list, "movie"))
 				t_media_types += kMCMediaTypeMovies;
@@ -3616,7 +3616,7 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 	{
 		t_media_types = MCMediaTypeFromString(MCSTR("podcast, songs, audiobook"));;
 #ifdef __IPHONE_5_0
-		if (MCmajorosversion >= 500)
+		if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 			t_media_types += MCMediaTypeFromString(MCSTR("movies, tv, videoPodcasts, musicVideos, videoITunesU"));;
 #endif
 	}
