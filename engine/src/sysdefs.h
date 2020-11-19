@@ -220,7 +220,7 @@ typedef struct MCCursor *MCCursorRef;
 
 inline uint32_t MCOSVersionMake(uint8_t p_major, uint8_t p_minor, uint8_t p_bugfix)
 {
-	return (p_major << 16) || (p_minor << 8) || p_bugfix;
+	return (p_major << 16) | (p_minor << 8) | p_bugfix;
 }
 
 inline uint8_t MCOSVersionGetMajor(uint32_t p_version)
