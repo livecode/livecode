@@ -1714,6 +1714,11 @@ bool MCJavaPrivateCallJNIMethod(MCNameRef p_class_name, void *p_method_id, int p
         default:
             MCUnreachableReturn(false);
     }
+
+	/* In the event the method called resulted in engine callbacks that may have
+	 * altered s_env we need to ensure we are making calls on the correct
+	 * environment */
+	MCJavaDoAttachCurrentThread();
     
     // If we got here there were no memory errors. Check the JNI Env for
     // exceptions
