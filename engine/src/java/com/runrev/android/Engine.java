@@ -1792,6 +1792,12 @@ public class Engine extends View implements EngineApi
             // use a FileProvider instead
             t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, t_type, false, ParcelFileDescriptor.MODE_READ_ONLY);
 		}
+        else if (p_url.startsWith("tel:"))
+        {
+            String t_tel;
+            t_tel = p_url.substring(p_url.indexOf(":") + 1);
+            t_uri = Uri.parse("tel:" + Uri.encode(t_tel));
+        }
         else
         {
             t_uri = Uri.parse(p_url);
