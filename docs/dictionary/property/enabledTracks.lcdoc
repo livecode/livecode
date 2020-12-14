@@ -5,14 +5,14 @@ Type: property
 Syntax: set the enabledTracks of <player> to <tracksList>
 
 Summary:
-Specifies which tracks in a <QuickTime> movie are available to be
+Specifies which tracks in a movie are available to be
 played. 
 
 Associations: player
 
 Introduced: 1.0
 
-OS: mac, linux
+OS: mac, windows, linux
 
 Platforms: desktop, server
 
@@ -25,7 +25,7 @@ track ID (a positive <integer>).
 
 Description:
 Use the <enabledTracks> <property> to control the user's ability to play
-a <QuickTime> movie.
+a movie.
 
 A movie can contain multiple tracks intended to be played at the same
 time (for example, an audio and a video track), or tracks that are
@@ -33,10 +33,11 @@ separate (for example, an alternative audio track). You can list the
 tracks in a movie using the tracks <property>.
 
 Changes:
-This property was removed from the Windows platform in version 8.1.0,
-due to the change of player implementation from QuickTime to DirectShow.
+This property was added to the Windows platform in version 9.7.0, due
+to the change of player implementation from DirectShow to
+MediaFoundation.
 
-References: QuickTime (glossary), property (glossary), integer (keyword),
+References: property (glossary), integer (keyword),
 trackCount (property)
 
 Tags: multimedia

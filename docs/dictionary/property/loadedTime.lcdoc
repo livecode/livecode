@@ -12,7 +12,7 @@ Associations: player
 
 Introduced: 6.7
 
-OS: mac, windows
+OS: mac
 
 Platforms: desktop
 
@@ -27,7 +27,9 @@ Use the <loadedTime> <property> to find out up to which time a movie or
 sound can be played.
 
 Changes:
-Support for this property on Windows was added in version 8.1.0.
+Support for this property on Windows was removed in version 9.7.0 due
+to the change of player implementation from DirectShow to
+MediaFoundation.
 
 References: property (glossary), player (keyword), looping (property),
 endTime (property), showSelection (property), callbacks (property),

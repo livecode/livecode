@@ -1636,6 +1636,28 @@ void MCAVFoundationPlayer::SetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
     [t_playerItemTrack setEnabled:*(bool *)p_value];
 }
 
+MCPlatformPlayerMediaType MCAVMediaTypeToMCPlatformPlayerMediaType(NSString *p_av_type)
+{
+	if ([p_av_type isEqualToString: AVMediaTypeVideo])
+		return kMCPlatformPlayerMediaTypeVideo;
+	else if ([p_av_type isEqualToString: AVMediaTypeAudio])
+		return kMCPlatformPlayerMediaTypeAudio;
+	else if ([p_av_type isEqualToString: AVMediaTypeMuxed])
+		return kMCPlatformPlayerMediaTypeMuxed;
+	else if ([p_av_type isEqualToString: AVMediaTypeText])
+		return kMCPlatformPlayerMediaTypeText;
+	else if ([p_av_type isEqualToString: AVMediaTypeSubtitle])
+		return kMCPlatformPlayerMediaTypeSubtitle;
+	else if ([p_av_type isEqualToString: AVMediaTypeClosedCaption])
+		return kMCPlatformPlayerMediaTypeClosedCaption;
+	else if ([p_av_type isEqualToString: AVMediaTypeMetadata])
+		return kMCPlatformPlayerMediaTypeMetadata;
+	else if ([p_av_type isEqualToString: AVMediaTypeTimecode])
+		return kMCPlatformPlayerMediaTypeTimecode;
+
+	MCUnreachableReturn((MCPlatformPlayerMediaType)0);
+}
+
 void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTrackProperty p_property, MCPlatformPropertyType p_type, void *r_value)
 {
     // PM-2015-03-23: [[ Bug 15052 ]] Get the value of the enabledTracks property from the AVPlayerItemTrack
@@ -1650,23 +1672,19 @@ void MCAVFoundationPlayer::GetTrackProperty(uindex_t p_index, MCPlatformPlayerTr
 		case kMCPlatformPlayerTrackPropertyId:
 			*(uint32_t *)r_value = [t_asset_track trackID];
 			break;
-		case kMCPlatformPlayerTrackPropertyMediaTypeName:
-		{
-            NSString *t_mediaType;
-            t_mediaType = [t_asset_track mediaType];
-            MCStringCreateWithCFStringRef((CFStringRef)t_mediaType, *(MCStringRef*)r_value);
-		}
+		case kMCPlatformPlayerTrackPropertyMediaType:
+			*(MCPlatformPlayerMediaTypes*)r_value = MCAVMediaTypeToMCPlatformPlayerMediaType(t_asset_track.mediaType);
             break;
 		case kMCPlatformPlayerTrackPropertyOffset:
         {
 			CMTimeRange t_timeRange = [t_asset_track timeRange];
-            *(uint32_t *)r_value = CMTimeToLCTime(t_timeRange . start);
+            *(MCPlatformPlayerDuration *)r_value = CMTimeToLCTime(t_timeRange . start);
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyDuration:
         {
             CMTimeRange t_timeRange = [t_asset_track timeRange];
-            *(uint32_t *)r_value = CMTimeToLCTime(t_timeRange . duration);
+            *(MCPlatformPlayerDuration *)r_value = CMTimeToLCTime(t_timeRange . duration);
         }
 			break;
 		case kMCPlatformPlayerTrackPropertyEnabled:

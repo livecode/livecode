@@ -1870,28 +1870,34 @@ void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 		{
 			uindex_t t_track_count;
 			MCPlatformCountPlayerTracks(m_platform_player, t_track_count);
-			for(uindex_t i = 0; i < t_track_count; i++)
+
+			// convert array of track ids to boolean array of enabled states
+			MCAutoArray<bool> t_new_enabled;
+			/* UNCHECKED */ t_new_enabled.New(t_track_count);
+			for (uindex_t i = 0; i < p_count; i++)
 			{
-				bool t_enabled;
-				t_enabled = false;
-				MCPlatformSetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
-			}
-			
-            for (uindex_t i = 0; i < t_track_count; i++)
-            {
-				// If the list of enabledtracks we set contains 0 (empty), just skip it
 				if (p_tracks_id[i] == 0)
 					continue;
-					
-                uindex_t t_index;
-                if (!MCPlatformFindPlayerTrackWithId(m_platform_player, p_tracks_id[i], t_index))
-                    return;
-                
-                bool t_enabled;
-                t_enabled = true;
-                MCPlatformSetPlayerTrackProperty(m_platform_player, t_index, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
-            }
-            
+
+				uindex_t t_index;
+				if (!MCPlatformFindPlayerTrackWithId(m_platform_player, p_tracks_id[i], t_index))
+					return;
+
+				t_new_enabled[t_index] = true;
+			}
+
+			for (uindex_t i = 0; i < t_track_count; i++)
+			{
+				bool t_enabled;
+				MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+
+				if (t_enabled != t_new_enabled[i])
+				{
+					t_enabled = t_new_enabled[i];
+					MCPlatformSetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
+				}
+			}
+
 			MCRectangle t_movie_rect;
 			MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyMovieRect, kMCPlatformPropertyTypeRectangle, &t_movie_rect);
 			MCRectangle trect = resize(t_movie_rect);
@@ -2036,6 +2042,32 @@ bool MCPlayer::changezoom(real8 zoom)
     return isbuffering();
 }
 
+static const char *MCPlayerGetMediaTypeString(MCPlatformPlayerMediaType p_type)
+{
+	switch (p_type)
+	{
+	case kMCPlatformPlayerMediaTypeVideo:
+		return "vide";
+	case kMCPlatformPlayerMediaTypeAudio:
+		return "soun";
+	case kMCPlatformPlayerMediaTypeText:
+		return "text";
+	case kMCPlatformPlayerMediaTypeMuxed:
+		return "muxx";
+	case kMCPlatformPlayerMediaTypeMetadata:
+		return "meta";
+	case kMCPlatformPlayerMediaTypeSubtitle:
+		return "sbtl";
+	case kMCPlatformPlayerMediaTypeTimecode:
+		return "tmcd";
+	case kMCPlatformPlayerMediaTypeClosedCaption:
+		return "clcp";
+	default:
+		// Unknown media type
+		MCUnreachableReturn("");
+	}
+}
+
 void MCPlayer::gettracks(MCStringRef &r_tracks)
 {
     if (getstate(CS_PREPARED) && m_platform_player != nil)
@@ -2048,15 +2080,15 @@ void MCPlayer::gettracks(MCStringRef &r_tracks)
         for(uindex_t i = 0; i < t_track_count; i++)
         {
             MCAutoStringRef t_track;
-            MCAutoStringRef t_name;
+            MCPlatformPlayerMediaTypes t_type;
             
             uint32_t t_id;
-            uint32_t t_offset, t_duration;
+            MCPlatformPlayerDuration t_offset, t_duration;
             MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyId, kMCPlatformPropertyTypeUInt32, &t_id);
-            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaTypeName, kMCPlatformPropertyTypeNativeCString, &(&t_name));
-            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypeUInt32, &t_offset);
-            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypeUInt32, &t_duration);
-            /* UNCHECKED */ MCStringFormat(&t_track, "%u,%@,%u,%u", t_id, *t_name, t_offset, t_duration);
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyMediaType, kMCPlatformPropertyTypePlayerMediaTypes, &t_type);
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyOffset, kMCPlatformPropertyTypePlayerDuration, &t_offset);
+            MCPlatformGetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyDuration, kMCPlatformPropertyTypePlayerDuration, &t_duration);
+            /* UNCHECKED */ MCStringFormat(&t_track, "%u,%s,%u,%u", t_id, MCPlayerGetMediaTypeString((MCPlatformPlayerMediaType)t_type), t_offset, t_duration);
             /* UNCHECKED */ MCListAppend(*t_tracks_list, *t_track);
         }
         /* UNCHECKED */ MCListCopyAsString(*t_tracks_list, r_tracks);

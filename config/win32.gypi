@@ -155,8 +155,8 @@
 			'_CRT_SECURE_NO_DEPRECATE',
 			'_CRT_DISABLE_PERFCRIT_LOCKS',
 			'__LITTLE_ENDIAN__',
-			'WINVER=0x0601',        # Windows 7
-			'_WIN32_WINNT=0x0601',  # Windows 7
+			'WINVER=0x0608',        # Windows 8
+			'_WIN32_WINNT=0x0608',  # Windows 8
 		],
 		
 		'target_conditions':

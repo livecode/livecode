@@ -1021,22 +1021,26 @@ enum MCPlatformPlayerMediaType
 	kMCPlatformPlayerMediaTypeVideoBit,
 	kMCPlatformPlayerMediaTypeAudioBit,
 	kMCPlatformPlayerMediaTypeTextBit,
-	kMCPlatformPlayerMediaTypeQTVRBit,
-	kMCPlatformPlayerMediaTypeSpriteBit,
-	kMCPlatformPlayerMediaTypeFlashBit,
+	kMCPlatformPlayerMediaTypeMuxedBit,
+	kMCPlatformPlayerMediaTypeSubtitleBit,
+	kMCPlatformPlayerMediaTypeClosedCaptionBit,
+	kMCPlatformPlayerMediaTypeTimecodeBit,
+	kMCPlatformPlayerMediaTypeMetadataBit,
 
 	kMCPlatformPlayerMediaTypeVideo = 1 << kMCPlatformPlayerMediaTypeVideoBit,
 	kMCPlatformPlayerMediaTypeAudio = 1 << kMCPlatformPlayerMediaTypeAudioBit,
 	kMCPlatformPlayerMediaTypeText = 1 << kMCPlatformPlayerMediaTypeTextBit,
-	kMCPlatformPlayerMediaTypeQTVR = 1 << kMCPlatformPlayerMediaTypeQTVRBit,
-	kMCPlatformPlayerMediaTypeSprite = 1 << kMCPlatformPlayerMediaTypeSpriteBit,
-	kMCPlatformPlayerMediaTypeFlash = 1 << kMCPlatformPlayerMediaTypeFlashBit,
+	kMCPlatformPlayerMediaTypeMuxed = 1 << kMCPlatformPlayerMediaTypeMuxedBit,
+	kMCPlatformPlayerMediaTypeSubtitle = 1 << kMCPlatformPlayerMediaTypeSubtitleBit,
+	kMCPlatformPlayerMediaTypeClosedCaption = 1 << kMCPlatformPlayerMediaTypeClosedCaptionBit,
+	kMCPlatformPlayerMediaTypeTimecode = 1 << kMCPlatformPlayerMediaTypeTimecodeBit,
+	kMCPlatformPlayerMediaTypeMetadata = 1 << kMCPlatformPlayerMediaTypeMetadataBit,
 };
 
 enum MCPlatformPlayerTrackProperty
 {
 	kMCPlatformPlayerTrackPropertyId,
-	kMCPlatformPlayerTrackPropertyMediaTypeName,
+	kMCPlatformPlayerTrackPropertyMediaType,
 	kMCPlatformPlayerTrackPropertyOffset,
 	kMCPlatformPlayerTrackPropertyDuration,
 	kMCPlatformPlayerTrackPropertyEnabled,
