@@ -48,7 +48,7 @@
 			'dependencies':
 			[
 				'../libfoundation/libfoundation.gyp:libFoundation',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_ffi',
+				'../thirdparty/libffi/libffi.gyp:libffi',
 			],
 			
 			'include_dirs':

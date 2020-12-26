@@ -154,6 +154,7 @@ def process_env_options(opts):
         'AR', 'CC', 'CXX', 'LINK', 'OBJCOPY', 'OBJDUMP',
         'STRIP', 'JAVA_SDK', 'NODE_JS', 'BUILD_EDITION', 'CC_PREFIX', 'CROSS',
         'SYSROOT', 'AUX_SYSROOT', 'TRIPLE', 'MS_SPEECH_SDK5', 'QUICKTIME_SDK',
+        'BUILD_THIRDPARTY',
         )
     for v in vars:
         opts[v] = os.getenv(v)
@@ -721,6 +722,9 @@ def core_gyp_args(opts):
     args.append('-Dbuild_edition=' + opts['BUILD_EDITION'])
 
     args.append('-Duniform_arch=' + opts['UNIFORM_ARCH'])
+
+    if opts['BUILD_THIRDPARTY'] is not None:
+        args.append('-Duse_prebuilt_thirdparty=0')
 
     return args
 

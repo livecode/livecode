@@ -30,9 +30,9 @@
             [
                 '../libexternal/libexternal.gyp:libExternal',
                 '../libexternal/libexternal.gyp:libExternal-symbol-exports',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_xml',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_xslt',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
+				'../thirdparty/libxml/libxml.gyp:libxml',
+				'../thirdparty/libxslt/libxslt.gyp:libxslt',
+				'../thirdparty/libz/libz.gyp:libz',
 			],
 			
 			'include_dirs':
@@ -80,9 +80,9 @@
 			[
 				'../libexternal/libexternal.gyp:libExternal',
                 '../libexternal/libexternal.gyp:libExternal-symbol-exports',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_xml',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_xslt',
-				'../prebuilt/thirdparty.gyp:thirdparty_prebuilt_z',
+				'../thirdparty/libxml/libxml.gyp:libxml',
+				'../thirdparty/libxslt/libxslt.gyp:libxslt',
+				'../thirdparty/libz/libz.gyp:libz',
 			],
 			
 			'include_dirs':

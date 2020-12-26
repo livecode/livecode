@@ -57,6 +57,9 @@ elif [ "$PLATFORM" == "win32" ]; then
 	LIBPATH=""
 fi
 
+# Configure project files to build thirdparty libraries
+export BUILD_THIRDPARTY=1
+
 make -C .. config-$MAKE_TARGET
 
 if [ "$PLATFORM" == "mac" ] || [ "$PLATFORM" == "ios" ] ; then

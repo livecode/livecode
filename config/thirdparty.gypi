@@ -21,5 +21,7 @@
 		'use_system_libxslt%':		0,
 		'use_system_libz%':		0,
 		'use_system_libzip%':		0,
+
+		'use_prebuilt_thirdparty%': 1,
 	},
 }
