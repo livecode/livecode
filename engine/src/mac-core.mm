@@ -785,6 +785,9 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	
 	s_in_blocking_wait = true;
 	
+	// Track whether a modal session was closed or not
+	bool t_modal_closed = false;
+	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
@@ -824,6 +827,18 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 			s_running_modal_sessions.Push(t_ns_session);
 			[NSApp runModalSession: t_ns_session];
 			/* UNCHECKED */ s_running_modal_sessions.Pop(t_ns_session);
+			
+			// Check if the session is still in the list of active sessions
+			bool t_modal_session_open = false;
+			for (uindex_t i = 0; i < s_modal_sessions.Size(); i++)
+			{
+				if (s_modal_sessions[i].session == t_ns_session)
+				{
+					t_modal_session_open = true;
+					break;
+				}
+			}
+			t_modal_closed = !t_modal_session_open;
 		}
 
 		t_event = nil;
@@ -850,7 +865,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
         return s_post_waitforevent_callback(t_event != nullptr);
     }
     
-	return t_event != nil;
+	return t_modal_closed || t_event != nil;
 }
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
