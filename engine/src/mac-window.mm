@@ -2216,7 +2216,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 	
 	// Force a re-display, this will cause drawRect to be invoked on our view
 	// which in term will result in a redraw window callback being sent.
-	[m_view displayIfNeeded];
+	[m_view displayIfNeededInRect: [m_view mapMCRectangleToNSRect:MCRegionGetBoundingBox(m_dirty_region)]];
 	
 	// Re-enable screen updates if needed.
 	if (t_shadow_changed)
