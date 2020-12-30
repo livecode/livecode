@@ -1,0 +1,1 @@
+# Fix long pause after closing modal dialog on MacOS X

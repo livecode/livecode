@@ -960,7 +960,7 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
 	
 	// MW-2013-10-01: [[ Bug 11136 ]] Make sure we don't do anything if on anything less
 	//   than 5.0.
-	if (MCmajorosversion < 500)
+	if (MCmajorosversion < MCOSVersionMake(5,0,0))
 		return ES_NORMAL;
 	
 	// MW-2013-10-01: [[ Bug 11136 ]] Fetch the symbols we cannot link to for 4.3.

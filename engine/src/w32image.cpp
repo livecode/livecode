@@ -405,7 +405,7 @@ bool MCImageBitmapToMetafile(MCImageBitmap *p_bitmap, MCWinSysMetafileHandle &r_
 bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCDataRef &r_dragimage)
 {
 	uint32_t t_header_size;
-	if (MCmajorosversion <= 0x0500)
+	if (MCmajorosversion <= MCOSVersionMake(5,0,0))
 		t_header_size = sizeof(BITMAPINFOHEADER);
 	else
 		t_header_size = sizeof(BITMAPV4HEADER);
@@ -433,7 +433,7 @@ bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCDataRef &r_dragimage)
 	// For pre-Vista versions, we composite each pixel against white then set
 	// all transparent pixels to a color key value. This value at the moment
 	// is a fixed, arbitrarily chosen value.
-	if (MCmajorosversion <= 0x0500)
+	if (MCmajorosversion <= MCOSVersionMake(5,0,0))
 	{
 		char *t_ptr;
 		t_ptr = t_out_bits;

@@ -156,7 +156,7 @@ bool MCSystemPickMedia(MCMediaType p_media_type, bool p_multiple, MCStringRef& r
 	if (p_media_type & kMCMediaTypeAudiobooks) // audioBook
 		t_media_types += MPMediaTypeAudioBook;
 #ifdef __IPHONE_5_0
-	if (MCmajorosversion >= 500)
+	if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 	{
 		if (p_media_type & kMCMediaTypeMovies) // movie
 			t_media_types += MPMediaTypeMovie;
@@ -175,7 +175,7 @@ bool MCSystemPickMedia(MCMediaType p_media_type, bool p_multiple, MCStringRef& r
 	{
 		t_media_types = MPMediaTypeAnyAudio;
 #ifdef __IPHONE_5_0
-		if (MCmajorosversion >= 500)
+		if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 			t_media_types += MPMediaTypeAnyVideo;
 #endif		
 	}

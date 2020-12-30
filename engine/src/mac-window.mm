@@ -1690,6 +1690,10 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 	[m_delegate release];
 }
 
+bool MCMacPlatformWindow::s_hiding = false;
+MCMacPlatformWindow *MCMacPlatformWindow::s_hiding_focused = nil;
+MCMacPlatformWindow *MCMacPlatformWindow::s_hiding_unfocused = nil;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCWindowView *MCMacPlatformWindow::GetView(void)
@@ -1791,12 +1795,29 @@ void MCMacPlatformWindow::ProcessDidDeminiaturize(void)
 
 void MCMacPlatformWindow::ProcessDidBecomeKey(void)
 {
-	HandleFocus();
+	if (s_hiding)
+	{
+		this->Retain();
+		if (s_hiding_focused != nil)
+			s_hiding_focused->Release();
+		s_hiding_focused = this;
+	}
+	else
+		HandleFocus();
 }
 
 void MCMacPlatformWindow::ProcessDidResignKey(void)
 {
-    HandleUnfocus();
+	if (s_hiding)
+	{
+		this->Retain();
+		if (s_hiding_unfocused != nil)
+			s_hiding_unfocused->Release();
+		s_hiding_unfocused = this;
+		
+	}
+	else
+		HandleUnfocus();
 }
 
 void MCMacPlatformWindow::ProcessMouseMove(NSPoint p_location_cocoa)
@@ -1918,7 +1939,12 @@ void MCMacPlatformWindow::DoRealize(void)
         [m_panel_handle setFloatingPanel: [NSApp isActive]];
     else
         [m_window_handle setLevel: t_window_level];
-	[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
+	bool t_is_opaque = m_is_opaque && m_mask == nil;
+	[m_window_handle setOpaque: t_is_opaque];
+	if (t_is_opaque)
+		[m_window_handle setBackgroundColor: NSColor.windowBackgroundColor];
+	else
+		[m_window_handle setBackgroundColor: NSColor.clearColor];
 	[m_window_handle setHasShadow: m_has_shadow];
 	if (!m_has_zoom_widget)
 		[[m_window_handle standardWindowButton: NSWindowZoomButton] setEnabled: NO];
@@ -1962,7 +1988,12 @@ void MCMacPlatformWindow::DoSynchronize(void)
         // MW-2014-07-29: [ Bug 12997 ]] Make sure we invalidate the whole window when
         //   the mask changes.
         [[m_window_handle contentView] setNeedsDisplay: YES];
-		[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
+		bool t_is_opaque = m_is_opaque && m_mask == nil;
+		[m_window_handle setOpaque: t_is_opaque];
+		if (t_is_opaque)
+			[m_window_handle setBackgroundColor: NSColor.windowBackgroundColor];
+		else
+			[m_window_handle setBackgroundColor: NSColor.clearColor];
 		if (m_has_shadow)
 			m_shadow_changed = true;
 	}
@@ -1980,6 +2011,16 @@ void MCMacPlatformWindow::DoSynchronize(void)
 		// COCOA-TODO: At the moment force a re-display here to stop redraw artifacts.
 		//   The engine will disable screen updates appropriately to ensure atomicity.
 		[m_window_handle setFrame: t_cocoa_frame display: YES];
+
+		// The new frame rect may be rejected or modified by the underlying NSWindow
+		//   implementation, so query the new value and update m_content accordingly
+		if (!NSEqualRects(t_cocoa_frame, m_window_handle.frame))
+		{
+			NSRect t_new_cocoa_content;
+			t_new_cocoa_content = [m_window_handle contentRectForFrameRect:m_window_handle.frame];
+
+			MCMacPlatformMapScreenNSRectToMCRectangle(t_new_cocoa_content, m_content);
+		}
 	}
 	
 	if (m_changes . title_changed)
@@ -2086,6 +2127,8 @@ void MCMacPlatformWindow::DoShowAsSheet(MCPlatformWindowRef p_parent)
 
 void MCMacPlatformWindow::DoHide(void)
 {
+	s_hiding = true;
+	
 	if (m_parent != nil)
 	{
 		[NSApp endSheet: m_window_handle];
@@ -2097,6 +2140,7 @@ void MCMacPlatformWindow::DoHide(void)
 	else if (m_style == kMCPlatformWindowStyleDialog)
 	{
 		MCMacPlatformEndModalSession(this);
+		[m_window_handle orderOut: nil];
 	}
     else if (m_style == kMCPlatformWindowStylePopUp)
     {
@@ -2112,6 +2156,22 @@ void MCMacPlatformWindow::DoHide(void)
 		// CW-2015-09-21: [[ Bug 15979 ]] Call close instead of orderOut here to properly close
 		// windows that have been iconified.
 		[m_window_handle close];
+	}
+	
+	MCMacPlatformWindow *t_window_losing_focus = s_hiding_unfocused;
+	s_hiding_unfocused = nil;
+	MCMacPlatformWindow *t_window_gaining_focus = s_hiding_focused;
+	s_hiding_focused = nil;
+	s_hiding = false;
+	if (t_window_losing_focus)
+	{
+		t_window_losing_focus->HandleUnfocus();
+		t_window_losing_focus->Release();
+	}
+	if (t_window_gaining_focus)
+	{
+		t_window_gaining_focus->HandleFocus();
+		t_window_gaining_focus->Release();
 	}
 	
 	MCMacPlatformHandleMouseAfterWindowHidden();
@@ -2156,7 +2216,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 	
 	// Force a re-display, this will cause drawRect to be invoked on our view
 	// which in term will result in a redraw window callback being sent.
-	[m_view displayIfNeeded];
+	[m_view displayIfNeededInRect: [m_view mapMCRectangleToNSRect:MCRegionGetBoundingBox(m_dirty_region)]];
 	
 	// Re-enable screen updates if needed.
 	if (t_shadow_changed)

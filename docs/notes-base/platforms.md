@@ -53,6 +53,7 @@ The Mac engine supports:
 * 10.13.x (High Sierra)
 * 10.14.x (Mojave)
 * 10.15.x (Catalina)
+* 11.x (Big Sur)
 
 ## iOS
 iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcode is installed and has been set in LiveCode *Preferences* (in the *Mobile Support* pane).

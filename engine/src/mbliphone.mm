@@ -641,7 +641,7 @@ IO_handle MCIPhoneSystem::OpenFd(uint32_t p_fd, intenum_t p_mode)
     
     // MM-2012-11-22: [[ Bug 10540 ]] - For iOS 6, use MCStdioFileDescriptorHandle for stdio streams.
     //  This just wraps NSLog for output.  No input supported.
-    if (MCmajorosversion < 600)
+    if (MCmajorosversion < MCOSVersionMake(6,0,0))
         t_handle = new MCStdioFileHandle(t_stream);
     else
         t_handle = new MCStdioFileDescriptorHandle();

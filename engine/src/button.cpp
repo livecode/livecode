@@ -2242,7 +2242,7 @@ void MCButton::makemenu(sublist *bstack, int2 &stackdepth, uint2 menuflags, MCFo
 
 	uint2 ty;
 	uint2 menuwidth, menuheight;
-	if (isxp && MCmajorosversion >= 0x0600)
+	if (isxp && MCmajorosversion >= MCOSVersionMake(6,0,0))
 	{
 		ty = 3;
 		m -> maxwidth += 22 + 4 + 2 + 4 + 17; // Icon - pad - Gutter - pad - ... - Submenu

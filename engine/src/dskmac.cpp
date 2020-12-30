@@ -1017,7 +1017,7 @@ static bool same_var(const char *p_left, const char *p_right)
 static char **fix_environ(void)
 {
     char **t_new_environ;
-    if (MCmajorosversion > 0x1090)
+    if (MCmajorosversion > MCOSVersionMake(10,9,0))
     {
         // Build a new environ, making sure that each var only takes the
         // first definition in the list. We don't have to care about memory
@@ -2425,7 +2425,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     
                     // On Snow Leopard check for a coercion to a file list first as otherwise
                     // we get a bad URL!
-                    if (MCmajorosversion >= 0x1060)
+                    if (MCmajorosversion >= MCOSVersionMake(10,6,0))
                     {
                         // SN-2014-10-07: [[ Bug 13587 ]] fetch_as_as_fsref_list updated to return an MCList
                         MCAutoListRef t_list;
@@ -2784,22 +2784,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         MCinfinity = HUGE_VAL;
         
-        // SN-2014-10-08: [[ YosemiteUpdate ]] gestaltSystemVersion stops to 9 after any Minor/Bugfix >= 10
-        //  We want to keep the same way the os version is built, which is 0xMMmb
-        //     - MM reads the decimal major version number
-        //     - m  reads the hexadecimal minor version number
-        //     - b  reads the hexadecimal bugfix number.
         SInt32 t_major, t_minor, t_bugfix;
         if (Gestalt(gestaltSystemVersionMajor, &t_major) == noErr &&
             Gestalt(gestaltSystemVersionMinor, &t_minor) == noErr &&
             Gestalt(gestaltSystemVersionBugFix, &t_bugfix) == noErr)
         {
-            if (t_major < 10)
-                MCmajorosversion = t_major * 0x100;
-            else
-                MCmajorosversion = (t_major / 10) * 0x1000 + (t_major - 10) * 0x100;
-            MCmajorosversion += t_minor * 0x10;
-            MCmajorosversion += t_bugfix * 0x1;
+			MCmajorosversion = MCOSVersionMake(t_major, t_minor, t_bugfix);
         }
 		
         MCaqua = True; // Move to MCScreenDC

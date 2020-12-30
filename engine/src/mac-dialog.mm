@@ -592,7 +592,7 @@ void MCPlatformBeginFolderOrFileDialog(MCPlatformFileDialogKind p_kind, MCPlatfo
     else
     {
         extern uint4 MCmajorosversion;
-        if (MCmajorosversion >= 0x10B0 && p_kind != kMCPlatformFileDialogKindSave)
+        if (MCmajorosversion >= MCOSVersionMake(10,11,0) && p_kind != kMCPlatformFileDialogKindSave)
             [t_panel setMessage:MCStringConvertToAutoreleasedNSString(p_prompt)];
         else
             [t_panel setTitle: MCStringConvertToAutoreleasedNSString(p_prompt)];

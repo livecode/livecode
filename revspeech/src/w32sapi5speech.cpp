@@ -390,19 +390,55 @@ bool WindowsSAPI5Narrator::Busy(void)
 	if (!bInited)
 		return false;
 
-	SPVOICESTATUS spstat;
-	HRESULT hr = m_cpVoice->GetStatus(&spstat,NULL);
-
-    if( SUCCEEDED( hr ) )
-	{
-		isspeaking = (spstat.dwRunningState & SPRS_IS_SPEAKING) != 0;
-		
-		return isspeaking;
-	}
-	else
-	{
+	if (!ProcessEvents())
 		return false;
+
+	return isspeaking;
+}
+
+inline void free_speech_event(SPEVENT &p_event)
+{
+	switch (p_event.elParamType)
+	{
+	case SPET_LPARAM_IS_POINTER:
+	case SPET_LPARAM_IS_STRING:
+		CoTaskMemFree(reinterpret_cast<void*>(p_event.lParam));
+		break;
+	case SPET_LPARAM_IS_TOKEN:
+	case SPET_LPARAM_IS_OBJECT:
+		reinterpret_cast<IUnknown*>(p_event.lParam)->Release();
+		break;
 	}
+	MCMemoryClear(&p_event, sizeof(SPEVENT));
+}
+
+bool WindowsSAPI5Narrator::ProcessEvents(void)
+{
+	if (!bInited)
+		return false;
+
+	SPEVENT t_event;
+	ULONG t_fetched;
+	HRESULT t_result = S_OK;
+	while (t_result == S_OK)
+	{
+		t_result = m_cpVoice->GetEvents(1, &t_event, &t_fetched);
+		if (t_result == S_OK)
+		{
+			switch (t_event.eEventId)
+			{
+			case SPEI_START_INPUT_STREAM:
+				isspeaking = true;
+				break;
+			case SPEI_END_INPUT_STREAM:
+				isspeaking = false;
+				break;
+			}
+			free_speech_event(t_event);
+		}
+	}
+
+	return SUCCEEDED(t_result);
 }
 
 // Parameters

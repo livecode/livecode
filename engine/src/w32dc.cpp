@@ -120,7 +120,7 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	switch(p_feature)
 	{
 	case PLATFORM_FEATURE_WINDOW_TRANSPARENCY:
-		return MCmajorosversion >= 0x0500;
+		return MCmajorosversion >= MCOSVersionMake(5,0,0);
 	break;
 
 	case PLATFORM_FEATURE_OS_COLOR_DIALOGS:

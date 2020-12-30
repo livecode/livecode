@@ -266,13 +266,19 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	// PM-2016-09-08: [[ Bug 18327 ]] Take into account if x.y.z version of iOS has more than one digits in x,y,z
     NSArray *t_sys_version_array = [[UIDevice currentDevice].systemVersion componentsSeparatedByString:@"."];
     
-    MCmajorosversion = [[t_sys_version_array objectAtIndex:0] intValue] * 100;
-    MCmajorosversion += [[t_sys_version_array objectAtIndex:1] intValue] * 10;
-    
+    uint8_t t_major;
+    t_major = [[t_sys_version_array objectAtIndex:0] intValue];
+
+	uint8_t t_minor;
+    t_minor = [[t_sys_version_array objectAtIndex:1] intValue];
+
+    uint8_t t_bugfix;
     if ([t_sys_version_array count] == 3)
-    {
-        MCmajorosversion += [[t_sys_version_array objectAtIndex:2] intValue];
-    }
+		t_bugfix = [[t_sys_version_array objectAtIndex:2] intValue];
+	else
+		t_bugfix = 0;
+	
+	MCmajorosversion = MCOSVersionMake(t_major, t_minor, t_bugfix);
     
     m_keyboard_display = kMCIPhoneKeyboardDisplayModeOver;
     m_keyboard_type = UIKeyboardTypeDefault;
@@ -929,7 +935,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	t_viewport = [[UIScreen mainScreen] bounds];
 	
     // MW-2014-10-02: [[ iOS 8 Support ]] iOS 8 already takes into account orientation when returning the bounds.
-	if (MCmajorosversion < 800 && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
+	if (MCmajorosversion < MCOSVersionMake(8,0,0) && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
 		return CGRectMake(0.0f, 0.0f, t_viewport . size . height, t_viewport . size . width);
 	
 	return t_viewport;
@@ -945,13 +951,13 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
     // MM-2013-09-25: [[ iOS7Support ]] The status bar is always overlaid ontop of the view, irrespective of its style.
     // PM-2015-02-17: [[ Bug 14482 ]] If the style is "solid", do not put status bar on top of the view
 	CGFloat t_status_bar_size;
-	if (m_status_bar_hidden || (MCmajorosversion >= 700 && !m_status_bar_solid)|| ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
+	if (m_status_bar_hidden || (MCmajorosversion >= MCOSVersionMake(7,0,0) && !m_status_bar_solid)|| ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
 		t_status_bar_size = 0.0f;
 	else
 		t_status_bar_size = 20.0f;
 	
     // MM-2014-09-26: [[ iOS 8 Support ]] iOS 8 already takes into account orientation when returning the bounds.
-	if (MCmajorosversion < 800 && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
+	if (MCmajorosversion < MCOSVersionMake(8,0,0) && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
 		return CGRectMake(0.0f, t_status_bar_size, t_viewport . size . height, t_viewport . size . width - t_status_bar_size);
 	
 	return CGRectMake(0.0f, t_status_bar_size, t_viewport . size . width, t_viewport . size . height - t_status_bar_size);
@@ -1572,7 +1578,7 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
 	
     // MM-2012-09-25: [[ iOS 6.0 ]] When the startup view controller is visible, it appears that didRotateFromInterfaceOrientation is not called.
     //   Set current orientation here instead.
-    if (MCmajorosversion >= 600)
+    if (MCmajorosversion >= MCOSVersionMake(6,0,0))
         m_current_orientation = m_pending_orientation;
 }
 
