@@ -574,7 +574,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put "<provider " & return into tProvider
       put "      android:name=" & quote & pSettings["android,identifier"] & ".AppProvider" & quote & return after tProvider
       put "      android:authorities=" & quote & pSettings["android,identifier"] & ".fileprovider" & quote & return after tProvider
-      put "      android:exported=" & quote & "true" & quote & return after tProvider
+      put "      android:exported=" & quote & "false" & quote & return after tProvider
       put "      android:grantUriPermissions=" & quote & "true" & quote & " >" & return after tProvider
       // Add meta-data tag
       put "      <meta-data" & return after tProvider

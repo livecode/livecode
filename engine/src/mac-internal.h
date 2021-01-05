@@ -574,6 +574,10 @@ private:
 	MCPlatformWindowRef m_parent;
 	
 	friend class MCMacPlatformSurface;
+	
+	static bool s_hiding;
+	static MCMacPlatformWindow *s_hiding_focused;
+	static MCMacPlatformWindow *s_hiding_unfocused;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -582,7 +586,6 @@ void MCMacPlatformScheduleCallback(void (*)(void*), void *);
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *window);
 void MCMacPlatformEndModalSession(MCMacPlatformWindow *window);
-void MCMacPlatformCleanupModalSessions(void);
 
 void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef window);
 void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);

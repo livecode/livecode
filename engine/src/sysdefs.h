@@ -215,6 +215,29 @@ typedef struct MCCursor *MCCursorRef;
 
 //////////////////////////////////////////////////////////////////////
 //
+//  SYSTEM OS VERSION FUNCTIONS
+//
+
+inline uint32_t MCOSVersionMake(uint8_t p_major, uint8_t p_minor, uint8_t p_bugfix)
+{
+	return (p_major << 16) | (p_minor << 8) | p_bugfix;
+}
+
+inline uint8_t MCOSVersionGetMajor(uint32_t p_version)
+{
+	return (p_version >> 16) & 0xFF;
+}
+inline uint8_t MCOSVersionGetMinor(uint32_t p_version)
+{
+	return (p_version >> 8) & 0xFF;
+}
+inline uint8_t MCOSVersionGetBugfix(uint32_t p_version)
+{
+	return p_version & 0xFF;
+}
+
+//////////////////////////////////////////////////////////////////////
+//
 //  PLATFORM SPECIFIC DEFINES AND INCLUDES
 //
 
