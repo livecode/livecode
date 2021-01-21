@@ -10,7 +10,7 @@ LiveCode supports the following versions of Windows:
 * Windows 8.x (Desktop)
 * Windows 10
 
-**Note:** On 64-bit Windows installations, LiveCode runs as a 32-bit application through the WoW layer.
+**Note:** On 64-bit Windows installations, LiveCode can run either as a 32-bit application through the WoW layer or as a native 64-bit Windows application, depending on the installer that is chosen.
 
 ## Linux
 
