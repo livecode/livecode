@@ -67,6 +67,9 @@ with the <string> "revdberr".
 > "Database" library checkbox and those of the database drivers you are 
 > using are checked.
 
+>*Important:* The name of the holderVariable must be placed inside
+> quotation marks.
+
 Changes:
 The ability to specify array elements as holder variables was added in
 version 2.9
