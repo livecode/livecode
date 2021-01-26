@@ -1344,7 +1344,15 @@ static NSString* s_player_keys[] =
 
 - (void)setCurrentItem:(AVPlayerItem *)item
 {
-	if (item == m_player_item)
+    AVURLAsset *t_existing_asset;
+    if (m_player_item != nil)
+        t_existing_asset = (AVURLAsset *)m_player_item.asset;
+    else
+        t_existing_asset = nil;
+    
+	AVURLAsset *t_new_asset = (AVURLAsset *)item.asset;
+	
+	if ([t_existing_asset.URL isEqual: t_new_asset.URL])
 		return;
 	
 	if (m_player_item != nil)
