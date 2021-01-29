@@ -67,8 +67,13 @@ with the <string> "revdberr".
 > "Database" library checkbox and those of the database drivers you are 
 > using are checked.
 
->*Important:* The name of the holderVariable must be placed inside
-> quotation marks.
+>*Important:* The name of the holderVariable must be a quoted string. 
+> If the holderVariable is in an array, the key must either not be 
+> a variable itself or separated from the quoted parts. For example, 
+> if the `i` in `tArray[i]` were itself a variable, holderVariable 
+> would have to be written as:
+
+    "tArray[" & i & "]"
 
 Changes:
 The ability to specify array elements as holder variables was added in
