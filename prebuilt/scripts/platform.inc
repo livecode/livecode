@@ -34,7 +34,7 @@ fi
 # Which platform are we actually targeting?
 case "${PLATFORM}" in
 	mac)
-		export UNIVERSAL_ARCHS="i386 x86_64"
+		export UNIVERSAL_ARCHS="x86_64"
 		;;
 	linux)
 		export ARCHS="i386 x86_64"
