@@ -181,12 +181,14 @@ mkdir -p "$SRCROOT/binaries"
 
 SUFFIX="-${SDK_MAJORVERSION}_${SDK_MINORVERSION}"
 if [ "$SDK_PLATFORM" == "iphonesimulator" ]; then
-    /usr/bin/codesign --verbose -f -s "$CODE_SIGN_IDENTITY" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib"
-    RESULT=$?
-    if [ $RESULT != 0 ]; then
-    	echo "error: code signing"
-		exit $RESULT
-	 fi
+    if [ "$CODE_SIGNING_REQUIRED" != "NO" ]; then
+        /usr/bin/codesign --verbose -f -s "$CODE_SIGN_IDENTITY" "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib"
+        RESULT=$?
+        if [ $RESULT != 0 ]; then
+        	echo "error: code signing"
+    		exit $RESULT
+    	 fi
+    fi
     
     cp "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$SRCROOT/binaries/$PRODUCT_NAME-Simulator$SUFFIX.dylib"
     cp "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.dylib" "$SRCROOT/binaries"
