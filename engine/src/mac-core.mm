@@ -788,17 +788,31 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	// Track whether a modal session was closed or not
 	bool t_modal_closed = false;
 	
-	// Pseudo-modal views require event dispatching, even when launched within a modal session
-	bool t_pseudo_modal;
-	t_pseudo_modal = MCMacPlatformApplicationPseudoModalFor() != nil;
-	
+	// Check if there is a runnable modal session, this will be the most recently created
+	//     session if it is not already being run.
+	bool t_run_modal = false;
+	if (s_modal_sessions.Size() > 0)
+	{
+		t_run_modal = true;
+		MCModalSession t_session = s_modal_sessions[s_modal_sessions.Size() - 1];
+		// Test if the session is currently running. If it is then don't run it again
+		for (uindex_t t_index = 0; t_index < s_running_modal_sessions.Size(); t_index++)
+		{
+			if (s_running_modal_sessions[t_index] == t_session.session)
+			{
+				t_run_modal = false;
+				break;
+			}
+		}
+	}
+
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
-    // MW-2014-07-24: [[ Bug 12939 ]] If we are running a modal session, then don't then wait
-    //   for events - event handling happens inside the modal session.
-    NSEvent *t_event = nil;
-	if (s_modal_sessions.Size() > 0 && !t_pseudo_modal)
+	// MW-2014-07-24: [[ Bug 12939 ]] If we are running a modal session, then don't then wait
+	//   for events - event handling happens inside the modal session.
+	NSEvent *t_event = nil;
+	if (t_run_modal)
 	{
 		// Wait for an event, but leave on the queue
 		t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
@@ -815,18 +829,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 		NSModalSession t_ns_session;
 		t_ns_session = t_session.session;
 		
-		/* Test if the session is currently running. If it is then don't run it again */
-		bool t_session_is_running = false;
-		for (uindex_t t_index = 0; t_index < s_running_modal_sessions.Size(); t_index++)
-		{
-			if (s_running_modal_sessions[t_index] == t_ns_session)
-			{
-				t_session_is_running = true;
-				break;
-			}
-		}
-		
-		if (!t_session_is_running && t_ns_session != nil)
+		if (t_ns_session != nil)
 		{
 			s_running_modal_sessions.Push(t_ns_session);
 			[NSApp runModalSession: t_ns_session];
