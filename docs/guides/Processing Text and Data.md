@@ -990,7 +990,7 @@ XML is simply a data tree. It must start with a root node, be well
 formed and nested. Tags may not overlap. For more information on XML see
 <http://en.wikipedia.org/wiki/XML>
 
-Figure 52 below shows a typical XML tree. In this example we have
+Figure 56 below shows a typical XML tree. In this example we have
 represented a simple stack file as XML. The stack file has a single
 stack with two cards. On the first card there is a field named "Hello"
 with the contents "Hello World!". There is a second card, which is blank.
@@ -1128,7 +1128,7 @@ example, using the following function with sample tree depicted above:
 
 	put revXMLRootNode(1) into tRootNode
 
-Results in *tVar* containing: *stackFile*
+Results in *tRootNode* containing: *stackFile*
 
 **Retrieving the First Child Element in a Node**
 
