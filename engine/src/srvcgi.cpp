@@ -993,10 +993,16 @@ static bool cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 		t_length = atoi(MCStringGetCString(*t_content_length));
 		
 		uint32_t t_read = 0;
+		uint32_t t_offset = 0;
 		
 		char *t_data;
 		t_data = new (nothrow) char[t_length];
-		t_success = t_stdin->Read(t_data, t_length, t_read) && t_length == t_read;
+		while (t_stdin->Read(t_data, t_length - t_offset, t_read) && t_offset < t_length)
+		{
+			/* read until length satisfied */
+			t_offset += t_read;
+		}
+		t_success = t_length == t_offset;
 
 		// Store the raw POST data
 		if (t_success)
