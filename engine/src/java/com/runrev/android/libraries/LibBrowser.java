@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 package com.runrev.android.libraries;
 
-import com.runrev.android.Engine;
+import com.runrev.android.*;
 import com.runrev.android.nativecontrol.NativeControlModule;
 
 import android.app.AlertDialog;
@@ -29,12 +29,17 @@ import android.util.*;
 import android.view.*;
 import android.webkit.*;
 import android.widget.*;
+import android.net.*;
+import android.os.*;;
+import android.media.*;
+import android.provider.*;
 
 import java.lang.reflect.*;
 import java.net.*;
 import java.security.*;
 import java.util.*;
 import java.util.regex.*;
+import java.io.*;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -236,8 +241,129 @@ class LibBrowserWebView extends WebView
 				return !m_allow_user_interaction;
 			}
 		});
-	
-		m_chrome_client = new WebChromeClient() {
+
+		class MCWebChromeClient extends WebChromeClient implements LiveCodeActivity.OnActivityResultListener
+		{
+			private static final int WEBVIEW_INPUT_FILE_RESULT = 9999;
+			private ValueCallback<Uri[]> m_browser_file_path_callback = null;
+			private File m_temp_image_file = null;
+
+			public void onActivityResult (int p_request_code, int p_result_code, Intent p_data)
+			{
+				LiveCodeActivity t_activity = (LiveCodeActivity)getContext();
+				t_activity.removeOnActivityResultListener(p_request_code);
+
+				switch (p_request_code)
+				{
+					case WEBVIEW_INPUT_FILE_RESULT:
+						Uri[] t_uris = null;
+						if (p_result_code == Activity.RESULT_OK)
+						{
+							if (p_data.getData() != null)
+							{
+								t_uris = WebChromeClient.FileChooserParams.parseResult(p_result_code, p_data);
+							}
+							else if (m_temp_image_file != null)
+							{
+								t_uris = new Uri[] {Uri.fromFile(m_temp_image_file)};
+							}
+						}
+
+						m_browser_file_path_callback.onReceiveValue(t_uris);
+						m_browser_file_path_callback = null;
+
+						if (m_temp_image_file != null)
+						{
+							FileProvider.getProvider(getContext()).removePath(m_temp_image_file.getPath());
+							m_temp_image_file = null;
+						}
+					default:
+						break;
+				}
+			}
+
+			@Override
+			public boolean onShowFileChooser(WebView p_webview, ValueCallback<Uri[]> p_file_path_callback, WebChromeClient.FileChooserParams p_file_chooser_params)
+			{
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+				{
+					try {
+						LiveCodeActivity t_activity = (LiveCodeActivity)getContext();
+
+						Intent t_intent = p_file_chooser_params.createIntent();
+
+						List<Intent> t_extra_intents = new ArrayList<Intent>();
+
+						Intent t_gallery_intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+						t_gallery_intent.setType("image/*");
+						t_extra_intents.add(t_gallery_intent);
+
+						boolean t_have_temp_file = false;
+						try
+						{
+							// try external cache first
+							m_temp_image_file = File.createTempFile("img", ".jpg", t_activity.getExternalCacheDir());
+							m_temp_image_file.setWritable(true, false);
+							t_have_temp_file = true;
+						}
+						catch (IOException e)
+						{
+							m_temp_image_file = null;
+							t_have_temp_file = false;
+						}
+
+						if (!t_have_temp_file)
+						{
+							try
+							{
+								// now try internal cache - should succeed but may not have enough space on the device for large image files
+								m_temp_image_file = File.createTempFile("img", ".jpg", t_activity.getCacheDir());
+								m_temp_image_file.setWritable(true, false);
+								t_have_temp_file = true;
+							}
+							catch (IOException e)
+							{
+								m_temp_image_file = null;
+								t_have_temp_file = false;
+							}
+						}
+
+						if (t_have_temp_file)
+						{
+							String t_path = m_temp_image_file.getPath();
+
+							Uri t_uri;
+							t_uri = FileProvider.getProvider(getContext()).addPath(t_path, t_path, "image/jpeg", false, ParcelFileDescriptor.MODE_READ_WRITE);
+
+							Intent t_image_capture = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+							t_image_capture.putExtra(MediaStore.EXTRA_OUTPUT, t_uri);
+							t_image_capture.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+							t_extra_intents.add(t_image_capture);
+						}
+
+						Intent t_chooser_intent = Intent.createChooser(t_intent, "Select a file");;
+						t_chooser_intent.putExtra(Intent.EXTRA_INITIAL_INTENTS, t_extra_intents.toArray(new Parcelable[] {}));
+
+						if (t_chooser_intent.resolveActivity(t_activity.getPackageManager()) == null)
+						{
+							return false;
+						}
+
+						m_browser_file_path_callback = p_file_path_callback;
+						t_activity.setOnActivityResultListener(this, WEBVIEW_INPUT_FILE_RESULT);
+						t_activity.startActivityForResult(t_chooser_intent,  WEBVIEW_INPUT_FILE_RESULT);
+
+						return true;
+					}
+					catch (Exception e)
+					{
+
+					}
+				}
+				return false;
+			}
+
 			@Override
 			public void onShowCustomView(View view, CustomViewCallback callback)
 			{
@@ -362,9 +488,10 @@ class LibBrowserWebView extends WebView
 				doProgressChanged(p_view.getUrl(), p_progress);
 				wakeEngineThread();
 			}
-			
-		};
-		
+		}
+
+		m_chrome_client = new MCWebChromeClient();
+
 		setWebChromeClient(m_chrome_client);
 		getSettings().setJavaScriptEnabled(true);
         getSettings().setAllowFileAccessFromFileURLs(true);
