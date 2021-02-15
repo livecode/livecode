@@ -1108,6 +1108,10 @@ protected:
 
 void MCStack::view_device_updatewindow(MCRegionRef p_region)
 {
+	// Check if stack should be drawn before rendering
+	if (getextendedstate(ECS_DONTDRAW))
+		return;
+
 	// IM-2014-01-31: [[ HiDPI ]] If using a callback, render to the Android bitmap view
 	if (s_updatewindow_callback != nil || !s_android_opengl_enabled)
 	{
