@@ -1601,6 +1601,11 @@ public:
 	virtual bool Seek(int64_t offset, int p_dir)
 	{
         // TODO Add MCSystemFileHandle::SetStream(char *newptr) ?
+		if (m_is_eof)
+		{
+			clearerr(m_stream);
+			m_is_eof = false;
+		}
 		return fseeko(m_stream, offset, p_dir < 0 ? SEEK_END : (p_dir > 0 ? SEEK_SET : SEEK_CUR)) == 0;
 	}
 	
