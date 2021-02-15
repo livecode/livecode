@@ -296,6 +296,12 @@ public:
 		if (MCCefPlatformGetHiDPIEnabled())
 			p_command_line->AppendSwitch(MC_CEF_HIDPI_SWITCH);
 	}
+	
+	virtual void OnBeforeCommandLineProcessing(const CefString &p_process_type, CefRefPtr<CefCommandLine> p_command_line) OVERRIDE
+	{
+		// Enable WebRTC
+		p_command_line->AppendSwitch("enable-media-stream");
+	}
 
 	IMPLEMENT_REFCOUNTING(MCCefBrowserApp);
 };

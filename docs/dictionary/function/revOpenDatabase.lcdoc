@@ -209,7 +209,7 @@ Use the <revOpenDatabase> function to start working with a database.
 > 'SSL Encryption' from among the available 'script libraries' in the
 > standalone application settings panel.
 
-The version of SQLite has been updated to 3.26.0.
+The version of SQLite has been updated to 3.34.0.
 
 The SQLite RTREE and FTS5 modules are now available.
 
