@@ -131,7 +131,7 @@ public class Engine extends View implements EngineApi
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
 	private NFCModule m_nfc_module;
-    private RelativeLayout m_view_layout;
+    private AbsoluteLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
     
@@ -1095,7 +1095,7 @@ public class Engine extends View implements EngineApi
 			FrameLayout t_main_view;
 			t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
 			
-			m_view_layout = new RelativeLayout(getContext());
+			m_view_layout = new AbsoluteLayout(getContext());
 			t_main_view.addView(m_view_layout, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 			t_main_view.bringChildToFront(m_view_layout);
 		}
@@ -1105,7 +1105,7 @@ public class Engine extends View implements EngineApi
 	
 	Object createNativeLayerContainer()
 	{
-		return new RelativeLayout(getContext());
+		return new AbsoluteLayout(getContext());
 	}
 	
 	// insert the view into the container, layered below p_view_above if not null.
@@ -1120,7 +1120,7 @@ public class Engine extends View implements EngineApi
 		else
 			t_index = t_container.getChildCount();
 		
-		t_container.addView((View)p_view, t_index, new RelativeLayout.LayoutParams(0, 0));
+		t_container.addView((View)p_view, t_index, new AbsoluteLayout.LayoutParams(0, 0, 0, 0));
 	}
 	
 	void removeNativeViewFromContainer(Object p_view)
@@ -1137,11 +1137,7 @@ public class Engine extends View implements EngineApi
 	
 	void setNativeViewRect(Object p_view, int left, int top, int width, int height)
 	{
-		RelativeLayout.LayoutParams t_layout = new RelativeLayout.LayoutParams(width, height);
-		t_layout.leftMargin = left;
-		t_layout.topMargin = top;
-		t_layout.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-		t_layout.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		AbsoluteLayout.LayoutParams t_layout = new AbsoluteLayout.LayoutParams(width, height, left, top);
 		
 		View t_view = (View)p_view;
 		
