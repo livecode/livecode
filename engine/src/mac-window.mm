@@ -1588,6 +1588,9 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	//////////
 	
 	MCGRegionDestroy(t_update_region);
+	
+	// Send event to break wait in NSApp::nextEventMatchingMask in MCMacPlatformWindow::DoUpdate
+	MCMacPlatformSyncUpdateAfterDraw(self.window.windowNumber);
 }
 
 //////////
@@ -2198,6 +2201,12 @@ bool MCMacDoUpdateRegionCallback(void *p_context, const MCRectangle &p_rect)
 	
 	return true;
 }
+
+void MCMacPlatformHandleDrawSync(NSWindow *window)
+{
+	/* NOOP */
+}
+
 void MCMacPlatformWindow::DoUpdate(void)
 {	
 	// If the shadow has changed (due to the mask changing) we must disable
@@ -2214,9 +2223,18 @@ void MCMacPlatformWindow::DoUpdate(void)
 	s_rect_count = 0;
 	MCRegionForEachRect(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
-	// Force a re-display, this will cause drawRect to be invoked on our view
-	// which in term will result in a redraw window callback being sent.
-	[m_view displayIfNeededInRect: [m_view mapMCRectangleToNSRect:MCRegionGetBoundingBox(m_dirty_region)]];
+	// Enter runloop to trigger a redraw. This will cause drawRect to be invoked on our view
+	// which in turn will result in a redraw window callback being sent.
+	// The timeout value of 0.02ms is specified to avoid hitting the 60hz redraw limit.
+	if (![m_delegate inUserReshape])
+	{
+		NSEvent *t_event;
+		t_event = [NSApp nextEventMatchingMask: NSApplicationDefinedMask
+									 untilDate: [NSDate dateWithTimeIntervalSinceNow: 0.02]
+										inMode: NSEventTrackingRunLoopMode
+									   dequeue: NO];
+		t_event = nil;
+	}
 	
 	// Re-enable screen updates if needed.
 	if (t_shadow_changed)

@@ -592,6 +592,7 @@ void MCMacPlatformHandleMousePress(uint32_t p_button, bool p_is_down);
 void MCMacPlatformHandleMouseMove(MCPoint p_screen_location);
 void MCMacPlatformHandleMouseScroll(CGFloat dx, CGFloat dy);
 void MCMacPlatformHandleMouseSync(void);
+void MCMacPlatformHandleDrawSync(NSWindow *window);
 void MCMacPlatformHandleMouseAfterWindowHidden(void);
 
 void MCMacPlatformHandleMouseForResizeStart(void);
@@ -599,6 +600,8 @@ void MCMacPlatformHandleMouseForResizeEnd(void);
 
 void MCMacPlatformSyncMouseBeforeDragging(void);
 void MCMacPlatformSyncMouseAfterTracking(void);
+
+void MCMacPlatformSyncUpdateAfterDraw(NSInteger windowNumber);
 
 void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
 
