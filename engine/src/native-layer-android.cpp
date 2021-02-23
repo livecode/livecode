@@ -141,6 +141,7 @@ bool MCNativeLayerAndroid::doPaint(MCGContextRef p_context)
 
 void MCNativeLayerAndroid::doSetViewportGeometry(const MCRectangle& p_rect)
 {
+	doSetGeometry(m_rect);
 }
 
 void MCNativeLayerAndroid::doSetGeometry(const MCRectangle &p_rect)
