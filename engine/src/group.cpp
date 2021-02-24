@@ -3069,6 +3069,8 @@ void MCGroup::relayercontrol(MCControl *p_source, MCControl *p_target)
 
 	if (!computeminrect(False))
 		p_source -> layer_redrawall();
+
+	p_source->layerchanged();
 }
 
 void MCGroup::relayercontrol_remove(MCControl *p_control)
@@ -3096,6 +3098,8 @@ void MCGroup::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 
 	if (!computeminrect(False))
 		p_control -> layer_redrawall();
+
+	p_control->layerchanged();
 }
 
 bool MCGroup::getNativeContainerLayer(MCNativeLayer *&r_layer)
