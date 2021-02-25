@@ -505,6 +505,8 @@ public:
 	// IM-2015-01-30: [[ Bug 14140 ]] Locking the frame will prevent the window from being moved or resized
 	void SetFrameLocked(bool p_locked);
 	
+	void DrawSync(void);
+	
 protected:
 	virtual void DoRealize(void);
 	virtual void DoSynchronize(void);
@@ -542,7 +544,7 @@ private:
 	
     // The window's content view.
     MCWindowView *m_view;
-    
+	
 	struct
 	{
 		// When the mask changes and the window has a shadow we have to
@@ -559,6 +561,10 @@ private:
 		
 		// When the frame is locked, any changes to the window rect will be prevented.
 		bool m_frame_locked : 1;
+
+		// This is used to signal to DoUpdate that a redraw has been performed
+		// in response to an update request.
+		bool m_waiting_for_draw : 1;
 	};
 	
 	// A window might map to one of several different classes, so we use a

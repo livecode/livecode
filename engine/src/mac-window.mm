@@ -1590,6 +1590,7 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	MCGRegionDestroy(t_update_region);
 	
 	// Send event to break wait in NSApp::nextEventMatchingMask in MCMacPlatformWindow::DoUpdate
+	t_window->DrawSync();
 	MCMacPlatformSyncUpdateAfterDraw(self.window.windowNumber);
 }
 
@@ -1676,6 +1677,8 @@ MCMacPlatformWindow::MCMacPlatformWindow(void)
 	m_synchronizing = false;
 	m_has_sheet = false;
 	m_frame_locked = false;
+	
+	m_waiting_for_draw = false;
 	
 	m_parent = nil;
 }
@@ -2207,6 +2210,11 @@ void MCMacPlatformHandleDrawSync(NSWindow *window)
 	/* NOOP */
 }
 
+void MCMacPlatformWindow::DrawSync()
+{
+	m_waiting_for_draw = false;
+}
+
 void MCMacPlatformWindow::DoUpdate(void)
 {	
 	// If the shadow has changed (due to the mask changing) we must disable
@@ -2228,12 +2236,16 @@ void MCMacPlatformWindow::DoUpdate(void)
 	// The timeout value of 0.02ms is specified to avoid hitting the 60hz redraw limit.
 	if (![m_delegate inUserReshape])
 	{
-		NSEvent *t_event;
-		t_event = [NSApp nextEventMatchingMask: NSApplicationDefinedMask
-									 untilDate: [NSDate dateWithTimeIntervalSinceNow: 0.02]
-										inMode: NSEventTrackingRunLoopMode
-									   dequeue: NO];
-		t_event = nil;
+		m_waiting_for_draw = true;
+		while (m_waiting_for_draw)
+		{
+			NSEvent *t_event;
+			t_event = [NSApp nextEventMatchingMask: NSApplicationDefinedMask
+										 untilDate: [NSDate dateWithTimeIntervalSinceNow: 0.02]
+											inMode: NSEventTrackingRunLoopMode
+										   dequeue: NO];
+			t_event = nil;
+		}
 	}
 	
 	// Re-enable screen updates if needed.
