@@ -1699,6 +1699,7 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 bool MCMacPlatformWindow::s_hiding = false;
 MCMacPlatformWindow *MCMacPlatformWindow::s_hiding_focused = nil;
 MCMacPlatformWindow *MCMacPlatformWindow::s_hiding_unfocused = nil;
+bool MCMacPlatformWindow::s_showing_sheet = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2128,6 +2129,7 @@ void MCMacPlatformWindow::DoShowAsSheet(MCPlatformWindowRef p_parent)
 	m_parent -> Retain();
 	((MCMacPlatformWindow *)m_parent) -> m_has_sheet = true;
 	
+	s_showing_sheet = true;
 	[NSApp beginSheet: m_window_handle modalForWindow: t_parent -> m_window_handle modalDelegate: m_delegate didEndSelector: @selector(didEndSheet:returnCode:contextInfo:) contextInfo: nil];
 }
 
@@ -2142,6 +2144,7 @@ void MCMacPlatformWindow::DoHide(void)
 		((MCMacPlatformWindow *)m_parent) -> m_has_sheet = false;
 		m_parent -> Release();
 		m_parent = nil;
+		s_showing_sheet = false;
 	}
 	else if (m_style == kMCPlatformWindowStyleDialog)
 	{
@@ -2234,7 +2237,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 	// Enter runloop to trigger a redraw. This will cause drawRect to be invoked on our view
 	// which in turn will result in a redraw window callback being sent.
 	// The timeout value of 0.02ms is specified to avoid hitting the 60hz redraw limit.
-	if (![m_delegate inUserReshape])
+	if (!s_inside_focus_event && !s_showing_sheet && ![m_delegate inUserReshape])
 	{
 		m_waiting_for_draw = true;
 		while (m_waiting_for_draw)

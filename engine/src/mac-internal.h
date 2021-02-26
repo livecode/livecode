@@ -584,6 +584,7 @@ private:
 	static bool s_hiding;
 	static MCMacPlatformWindow *s_hiding_focused;
 	static MCMacPlatformWindow *s_hiding_unfocused;
+	static bool s_showing_sheet;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
