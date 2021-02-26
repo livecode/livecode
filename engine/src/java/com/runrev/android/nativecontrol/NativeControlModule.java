@@ -32,7 +32,7 @@ public class NativeControlModule
 {
     public static final String TAG = "revandroid.NativeControlModule";
     protected static Engine m_engine;
-    protected static RelativeLayout m_layout;
+    protected static AbsoluteLayout m_layout;
     protected ViewGroup m_parent;
 	protected ArrayList<NativeControl> m_controls;
     
@@ -49,7 +49,7 @@ public class NativeControlModule
     {
         if (m_layout == null)
         {
-            m_layout = new RelativeLayout(m_engine.getContext());
+            m_layout = new AbsoluteLayout(m_engine.getContext());
             
             m_parent . addView(m_layout,
                                   new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
@@ -63,7 +63,7 @@ public class NativeControlModule
         NativeControl t_control = (NativeControl)p_control;
         
         //Log.i(TAG, String.format("native control layer: %d", ((ViewGroup)m_layout.getParent()).indexOfChild(m_layout)));
-        m_layout.addView(t_control.getView(), new RelativeLayout.LayoutParams(0, 0));
+        m_layout.addView(t_control.getView(), new AbsoluteLayout.LayoutParams(0, 0, 0, 0));
 		
 		m_controls.add(t_control);
     }
@@ -136,11 +136,7 @@ public class NativeControlModule
         
     public static ViewGroup.LayoutParams createLayoutParams(int left, int top, int right, int bottom)
     {
-        RelativeLayout.LayoutParams t_layout = new RelativeLayout.LayoutParams(right - left, bottom - top);
-        t_layout.leftMargin = left;
-        t_layout.topMargin = top;
-        t_layout.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-        t_layout.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		AbsoluteLayout.LayoutParams t_layout = new AbsoluteLayout.LayoutParams(right - left, bottom - top, left, top);
         return t_layout;
     }
     
@@ -167,7 +163,7 @@ public class NativeControlModule
 		return (Activity)getContext();
 	}
 	
-	public static RelativeLayout getNativeControlContainer()
+	public static AbsoluteLayout getNativeControlContainer()
 	{
 		return m_layout;
 	}
