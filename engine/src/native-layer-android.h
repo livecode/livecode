@@ -49,9 +49,6 @@ private:
 	
     // Performs a relayering operation
     virtual void doRelayer();
-    
-    // Show/hide operations
-    void addToMainView();
 	
 	bool getParentView(jobject &r_view);
 };
