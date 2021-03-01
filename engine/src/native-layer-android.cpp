@@ -88,12 +88,16 @@ void MCAndroidViewSetRect(jobject p_view, const MCRectangle &p_rect, const MCRec
 void MCAndroidViewAddToContainer(jobject p_view, jobject p_view_above, jobject p_container)
 {
     MCAndroidEngineRemoteCall("addNativeViewToContainer", "vooo", nil, p_view, p_view_above, p_container);
-    MCAndroidObjectRemoteCall(p_view, "setVisibility", "vi", nil, 0);
 }
 
 void MCAndroidViewRemoveFromContainer(jobject p_view)
 {
 	MCAndroidEngineRemoteCall("removeNativeViewFromContainer", "vo", nil, p_view);
+}
+
+void MCAndroidViewSetVisible(jobject p_view, bool p_visible)
+{
+    MCAndroidObjectRemoteCall(p_view, "setVisibility", "vi", nil, p_visible ? 0 : 4);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,9 +117,12 @@ MCNativeLayerAndroid::~MCNativeLayerAndroid()
 
 void MCNativeLayerAndroid::doAttach()
 {
-    if (m_view == nil)
-        return;
-	
+	if (m_view == nil)
+		return;
+
+	// Act as if there was a re-layer to put the widget in the right place
+	doRelayer();
+
 	doSetVisible(ShouldShowLayer());
 }
 
@@ -161,14 +168,13 @@ void MCNativeLayerAndroid::doSetVisible(bool p_visible)
 {
     if (m_view == NULL)
         return;
-    
-    if (p_visible)
+
+	MCAndroidViewSetVisible(m_view, p_visible);
+
+	if (p_visible)
 	{
-        addToMainView();
 		doSetGeometry(m_object->getrect());
 	}
-    else
-		MCAndroidViewRemoveFromContainer(m_view);
 }
 
 void MCNativeLayerAndroid::doRelayer()
@@ -222,11 +228,6 @@ bool MCNativeLayerAndroid::getParentView(jobject &r_view)
 		r_view = t_view;
 		return true;
 	}
-}
-
-void MCNativeLayerAndroid::addToMainView()
-{
-    doRelayer();
 }
 
 bool MCNativeLayerAndroid::GetNativeView(void *&r_view)
