@@ -1968,21 +1968,25 @@ bool MCWindowsPrinter::FetchDialogData(HGLOBAL& r_devmode_handle, HGLOBAL& r_dev
 	if (t_success)
 	{
 		MCAutoStringRef t_string;
-		/* UNCHECKED */ MCStringFormat(&t_string, "%@\0FILE:\0", m_name);
+		MCStringCreateMutable(0, &t_string);
+		MCStringAppend(*t_string, m_name);
+		MCStringAppendChar(*t_string, '\0');
+		MCStringAppend(*t_string, MCSTR("FILE:"));
+		MCStringAppendChar(*t_string, '\0');
 
 		int t_devnames_size;
 		// SN-2014-07-24: [[ Bug 12916 ]] Closing the Page Setup dialog causes a crash
 		//  The size is indeed in unichars, not chars
 		//t_devnames_size = sizeof(DEVNAMES) + strlen(t_string) + 7;
-		t_devnames_size = sizeof(DEVNAMES) + sizeof(unichar_t) * MCStringGetLength(*t_string);
-		t_devnames_handle = GlobalAlloc(GMEM_MOVEABLE, t_devnames_size);
+		t_devnames_size = sizeof(DEVNAMES) / sizeof(unichar_t) + MCStringGetLength(*t_string);
+		t_devnames_handle = GlobalAlloc(GMEM_MOVEABLE, t_devnames_size * sizeof(unichar_t));
 		if (t_devnames_handle != NULL)
 		{
 			DEVNAMES *t_devnames;
 			t_devnames = (DEVNAMES *)GlobalLock(t_devnames_handle);
 			t_devnames -> wDriverOffset = t_devnames_size -	1;
 			t_devnames -> wOutputOffset = GetDeviceOutputType() == PRINTER_OUTPUT_FILE ? t_devnames_size - 6 : t_devnames_size - 1;
-			t_devnames -> wDeviceOffset = sizeof(DEVNAMES);
+			t_devnames -> wDeviceOffset = sizeof(DEVNAMES) / sizeof(unichar_t);
 			t_devnames -> wDefault = 0;
 
 			// SN-2014-08-07: [[ Bug 13084 ]] The pointer arithmetic wasn't right
