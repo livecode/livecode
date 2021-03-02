@@ -22,6 +22,7 @@
 #include "region.h"
 #include "graphics.h"
 #include "unicode.h"
+#include "globals.h"
 
 #include "platform.h"
 #include "platform-internal.h"
@@ -1589,9 +1590,12 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	MCGRegionDestroy(t_update_region);
 	
-	// Send event to break wait in NSApp::nextEventMatchingMask in MCMacPlatformWindow::DoUpdate
-	t_window->DrawSync();
-	MCMacPlatformSyncUpdateAfterDraw(self.window.windowNumber);
+	if (MCmajorosversion >= MCOSVersionMake(10,16,0))
+	{
+		// Send event to break wait in NSApp::nextEventMatchingMask in MCMacPlatformWindow::DoUpdate
+		t_window->DrawSync();
+		MCMacPlatformSyncUpdateAfterDraw(self.window.windowNumber);
+	}
 }
 
 //////////
@@ -2219,7 +2223,7 @@ void MCMacPlatformWindow::DrawSync()
 }
 
 void MCMacPlatformWindow::DoUpdate(void)
-{	
+{
 	// If the shadow has changed (due to the mask changing) we must disable
 	// screen updates otherwise we get a flicker.
 	// IM-2015-02-23: [[ WidgetPopup ]] Assume shadow changes when redrawing a non-opaque widget
@@ -2234,23 +2238,32 @@ void MCMacPlatformWindow::DoUpdate(void)
 	s_rect_count = 0;
 	MCRegionForEachRect(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
-	// Enter runloop to trigger a redraw. This will cause drawRect to be invoked on our view
-	// which in turn will result in a redraw window callback being sent.
-	// The timeout value of 0.02ms is specified to avoid hitting the 60hz redraw limit.
-	if (!s_inside_focus_event && !s_showing_sheet && ![m_delegate inUserReshape])
+	if (MCmajorosversion >= MCOSVersionMake(10,16,0))
 	{
-		m_waiting_for_draw = true;
-		while (m_waiting_for_draw)
+		// Frequent redraws with displayIfNeeded causes graphical glitches on Macos Big Sur, so instead
+		// we enter the runloop to trigger a redraw. This will cause drawRect to be invoked on our view
+		// which in turn will result in a redraw window callback being sent.
+		// The timeout value of 0.02ms is specified to avoid hitting the 60hz redraw limit.
+		if (!s_inside_focus_event && !s_showing_sheet && ![m_delegate inUserReshape])
 		{
-			NSEvent *t_event;
-			t_event = [NSApp nextEventMatchingMask: NSApplicationDefinedMask
-										 untilDate: [NSDate dateWithTimeIntervalSinceNow: 0.02]
-											inMode: NSEventTrackingRunLoopMode
-										   dequeue: NO];
-			t_event = nil;
+			m_waiting_for_draw = true;
+			while (m_waiting_for_draw)
+			{
+				NSEvent *t_event;
+				t_event = [NSApp nextEventMatchingMask: NSApplicationDefinedMask
+											 untilDate: [NSDate dateWithTimeIntervalSinceNow: 0.02]
+												inMode: NSEventTrackingRunLoopMode
+											   dequeue: NO];
+				t_event = nil;
+			}
 		}
 	}
-	
+	else
+	{
+		// Use displayIfNeeded to trigger a redraw
+		[m_view displayIfNeeded];
+	}
+
 	// Re-enable screen updates if needed.
 	if (t_shadow_changed)
     {
