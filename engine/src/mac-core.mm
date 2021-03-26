@@ -2005,6 +2005,11 @@ void MCMacPlatformSyncUpdateAfterDraw(NSInteger windowNumber)
 	[NSApp postEvent:t_event atStart:YES];
 }
 
+bool MCMacPlatformIsDrawSyncEvent(NSEvent *event)
+{
+	return [event type] == NSApplicationDefined && [event subtype] == kMCMacPlatformDrawSyncEvent;
+}
+
 void MCMacPlatformSyncMouseAfterTracking(void)
 {
 	NSEvent *t_event;
