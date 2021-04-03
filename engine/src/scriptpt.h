@@ -28,6 +28,11 @@ typedef struct
 }
 LT;
 
+extern LT **MCkeywordtablepointers;
+extern uint4 MCkeywordtablepointerssize;
+extern uint2 *MCkeywordtablesizes;
+extern uint4 MCkeywordtablesizessize;
+
 typedef enum {
     kCValueTypeReal,
     kCValueTypeInteger,

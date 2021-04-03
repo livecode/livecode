@@ -30,18 +30,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define ST_MNB ST_ID
 #endif
 
-
 // Some of these tables need to be accessed from other compilation units and C++
 // mandates that variables declared as "const" have internal linkage unless also
 // declared as "extern".
-extern const LT command_table[];
 extern const Cvalue *constant_table;
-extern const LT factor_table[];
-extern const LT * const table_pointers[];
-extern const uint2 table_sizes[];
 extern const uint8_t type_table[];
 extern const uint8_t unicode_type_table[];
-
 
 // MW-2011-06-22: [[ SERVER ]] We mark '?' as ST_TAG so we can parse server
 //   style scripts. If the SP's tagged property is false, it reverts to ST_ID.
@@ -296,7 +290,7 @@ const static LT ask_table[] =
         {"warning", TT_UNDEFINED, AT_WARNING}
     };
 
-const LT command_table[] =
+const static LT command_table[] =
     {
 		{"_internal", TT_STATEMENT, S_INTERNAL},
         {"accept", TT_STATEMENT, S_ACCEPT},
@@ -452,7 +446,6 @@ const LT command_table[] =
         {"wait", TT_STATEMENT, S_WAIT},
         {"write", TT_STATEMENT, S_WRITE}
     };
-extern const uint4 command_table_size = ELEMENTS(command_table);
 
 const static LT convert_table[] =
     {
@@ -534,7 +527,7 @@ const static LT export_table[] =
         {"xwd", TT_UNDEFINED, EX_XWD}
     };
 
-const LT factor_table[] =
+const static LT factor_table[] =
     {
         {"&", TT_BINOP, O_CONCAT},
         {"&&", TT_BINOP, O_CONCAT_SPACE},
@@ -1879,8 +1872,6 @@ const LT factor_table[] =
         {"\263", TT_BINOP, O_GE}
     };
 
-extern const uint4 factor_table_size = ELEMENTS(factor_table);
-
 const static LT find_table[] =
     {
         {"characters", TT_CHUNK, FM_CHARACTERS},
@@ -2382,7 +2373,7 @@ const static LT server_table[] =
 	{"unicode", TT_SERVER, SK_UNICODE},
 };
 
-const LT * const table_pointers[] =
+const static LT * const table_pointers[] =
 {
     accept_table,
     ae_table,
@@ -2419,9 +2410,9 @@ const LT * const table_pointers[] =
     visual_table,
 	server_table
 };
-extern const uint4 table_pointers_size = ELEMENTS(table_pointers);
+const static uint4 table_pointers_size = ELEMENTS(table_pointers);
 
-const uint2 table_sizes[] =
+const static uint2 table_sizes[] =
 {
     ELEMENTS(accept_table),
     ELEMENTS(ae_table),
@@ -2458,4 +2449,11 @@ const uint2 table_sizes[] =
     ELEMENTS(visual_table),
 	ELEMENTS(server_table),
 };
-extern const uint4 table_sizes_size = ELEMENTS(table_sizes);
+const static uint4 table_sizes_size = ELEMENTS(table_sizes);
+
+/* All keyword tables are const static in this translation unit, but we allow
+ * access to them through well-defined global variables. */
+LT **MCkeywordtablepointers = (LT **)table_pointers;
+uint4 MCkeywordtablepointerssize = table_pointers_size;
+uint2 *MCkeywordtablesizes = (uint2 *)table_sizes;
+uint4 MCkeywordtablesizessize = table_sizes_size;
