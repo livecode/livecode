@@ -609,6 +609,7 @@ void MCMacPlatformSyncMouseBeforeDragging(void);
 void MCMacPlatformSyncMouseAfterTracking(void);
 
 void MCMacPlatformSyncUpdateAfterDraw(NSInteger windowNumber);
+bool MCMacPlatformIsDrawSyncEvent(NSEvent *event);
 
 void MCMacPlatformHandleModifiersChanged(MCPlatformModifiers modifiers);
 

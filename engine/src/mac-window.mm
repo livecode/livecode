@@ -1592,9 +1592,8 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	
 	if (MCmajorosversion >= MCOSVersionMake(10,16,0))
 	{
-		// Send event to break wait in NSApp::nextEventMatchingMask in MCMacPlatformWindow::DoUpdate
+		// Notify platform window class of draw
 		t_window->DrawSync();
-		MCMacPlatformSyncUpdateAfterDraw(self.window.windowNumber);
 	}
 }
 
@@ -2219,7 +2218,12 @@ void MCMacPlatformHandleDrawSync(NSWindow *window)
 
 void MCMacPlatformWindow::DrawSync()
 {
+	if (!m_waiting_for_draw)
+		return;
+	
 	m_waiting_for_draw = false;
+	// Send event to break wait in NSApp::nextEventMatchingMask in MCMacPlatformWindow::DoUpdate
+	MCMacPlatformSyncUpdateAfterDraw(m_window_handle.windowNumber);
 }
 
 void MCMacPlatformWindow::DoUpdate(void)
@@ -2236,6 +2240,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 	// Mark the bounding box of the dirty region for needing display.
 	// COCOA-TODO: Make display update more specific.
 	s_rect_count = 0;
+	m_waiting_for_draw = true;
 	MCRegionForEachRect(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
 	if (MCmajorosversion >= MCOSVersionMake(10,16,0))
@@ -2246,20 +2251,33 @@ void MCMacPlatformWindow::DoUpdate(void)
 		// The timeout value of 0.02ms is specified to avoid hitting the 60hz redraw limit.
 		if (!s_inside_focus_event && !s_showing_sheet && ![m_delegate inUserReshape])
 		{
-			m_waiting_for_draw = true;
+			// Since we remove all ApplicationDefined events from the queue we need to
+			// re-queue the events we're not interested in once the redraw has occured.
+			// This array is used to hold the popped events until they can be pushed back
+			// onto the queue.
+			NSMutableArray *t_popped_events = [[NSMutableArray alloc] init];
 			while (m_waiting_for_draw)
 			{
 				NSEvent *t_event;
 				t_event = [NSApp nextEventMatchingMask: NSApplicationDefinedMask
 											 untilDate: [NSDate dateWithTimeIntervalSinceNow: 0.02]
 												inMode: NSEventTrackingRunLoopMode
-											   dequeue: NO];
+											   dequeue: YES];
+				if (t_event != nil && !MCMacPlatformIsDrawSyncEvent(t_event))
+					[t_popped_events addObject:t_event];
 				t_event = nil;
 			}
+			while (t_popped_events.count > 0)
+			{
+				[NSApp postEvent:t_popped_events.lastObject atStart:YES];
+				[t_popped_events removeLastObject];
+			}
+			[t_popped_events release];
 		}
 	}
 	else
 	{
+		m_waiting_for_draw = false;
 		// Use displayIfNeeded to trigger a redraw
 		[m_view displayIfNeeded];
 	}
