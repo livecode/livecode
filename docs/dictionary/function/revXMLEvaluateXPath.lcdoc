@@ -20,7 +20,7 @@ OS: mac, windows, linux, ios, android
 Platforms: desktop, server, mobile
 
 Example:
-put "/bookstore/book/[price&lt;40]/" into pXPathExpression
+put "/bookstore/book[price&lt;40]/" into pXPathExpression
 put revXMLEvaluateXPath(pDocID, pXPathExpression)
 
 Description:
@@ -63,7 +63,7 @@ instance, given xml data of
     
 then
 
-    put "/bookstore/book/[price&lt;40]/" into pXPathExpression
+    put "/bookstore/book[price&lt;40]/" into pXPathExpression
     put revXMLEvaluateXPath(pDocID, pXPathExpression)
 
 gives you 
