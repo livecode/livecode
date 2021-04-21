@@ -200,10 +200,14 @@ command OAuth2 pAuthURL, pTokenURL, pClientID, pClientSecret, pScopes, pPort, pP
       set the script of it to tCancelScript
       reset the templateGraphic
    end if
-   
-   create widget tUniqueRef as "com.livecode.widget.browser"
-   set the rect of widget tUniqueRef to tBrowserRect
-   set the url of widget tUniqueRef to tURL
+
+   if the platform is not "Linux" then
+      create widget tUniqueRef as "com.livecode.widget.browser"
+      set the rect of widget tUniqueRef to tBrowserRect
+      set the url of widget tUniqueRef to tURL
+   else
+      launch url tUrl
+   end if
    
    unlock screen
    
