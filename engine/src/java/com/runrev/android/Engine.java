@@ -79,6 +79,12 @@ import java.security.cert.CertificateException;
 
 public class Engine extends View implements EngineApi
 {
+	public interface LifecycleListener
+	{
+		public abstract void OnResume();
+		public abstract void OnPause();
+	}
+
 	public static final String TAG = "revandroid.Engine";
 
 	// This is true if the engine is not suspended.
@@ -125,7 +131,7 @@ public class Engine extends View implements EngineApi
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
 	private NFCModule m_nfc_module;
-    private RelativeLayout m_view_layout;
+    private AbsoluteLayout m_view_layout;
 
     private PowerManager.WakeLock m_wake_lock;
     
@@ -142,6 +148,8 @@ public class Engine extends View implements EngineApi
 	private int m_jpeg_quality;
 	
 	private int m_night_mode;
+
+	private List<LifecycleListener> m_lifecycle_listeners;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -248,6 +256,8 @@ public class Engine extends View implements EngineApi
 		m_night_mode =
 			p_context.getResources().getConfiguration().uiMode &
 			Configuration.UI_MODE_NIGHT_MASK;
+
+		m_lifecycle_listeners = new ArrayList<LifecycleListener>();
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1085,7 +1095,7 @@ public class Engine extends View implements EngineApi
 			FrameLayout t_main_view;
 			t_main_view = ((LiveCodeActivity)getContext()).s_main_layout;
 			
-			m_view_layout = new RelativeLayout(getContext());
+			m_view_layout = new AbsoluteLayout(getContext());
 			t_main_view.addView(m_view_layout, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 			t_main_view.bringChildToFront(m_view_layout);
 		}
@@ -1095,7 +1105,7 @@ public class Engine extends View implements EngineApi
 	
 	Object createNativeLayerContainer()
 	{
-		return new RelativeLayout(getContext());
+		return new AbsoluteLayout(getContext());
 	}
 	
 	// insert the view into the container, layered below p_view_above if not null.
@@ -1110,7 +1120,7 @@ public class Engine extends View implements EngineApi
 		else
 			t_index = t_container.getChildCount();
 		
-		t_container.addView((View)p_view, t_index, new RelativeLayout.LayoutParams(0, 0));
+		t_container.addView((View)p_view, t_index, new AbsoluteLayout.LayoutParams(0, 0, 0, 0));
 	}
 	
 	void removeNativeViewFromContainer(Object p_view)
@@ -1127,11 +1137,7 @@ public class Engine extends View implements EngineApi
 	
 	void setNativeViewRect(Object p_view, int left, int top, int width, int height)
 	{
-		RelativeLayout.LayoutParams t_layout = new RelativeLayout.LayoutParams(width, height);
-		t_layout.leftMargin = left;
-		t_layout.topMargin = top;
-		t_layout.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-		t_layout.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+		AbsoluteLayout.LayoutParams t_layout = new AbsoluteLayout.LayoutParams(width, height, left, top);
 		
 		View t_view = (View)p_view;
 		
@@ -2222,9 +2228,20 @@ public class Engine extends View implements EngineApi
 					float t_width = t_bitmap.getWidth();
 					float t_height = t_bitmap.getHeight();
 					
-					InputStream t_exif_in = ((LiveCodeActivity)getContext()).getContentResolver().openInputStream(t_photo_uri);
-					
-					ExifInterface t_exif = new ExifInterface(t_exif_in);
+					/* In API Level >= 24, you have to use an input stream to make sure that access
+					 * to a photo in the library is granted. Before that you can just open the photo's
+					 * file directly. */
+					ExifInterface t_exif;
+					if (Build.VERSION.SDK_INT >= 24)
+					{
+						t_in.close();
+						t_in = ((LiveCodeActivity)getContext()).getContentResolver().openInputStream(t_photo_uri);
+						t_exif = new ExifInterface(t_in);
+					}
+					else
+					{
+						t_exif = new ExifInterface(t_photo_uri.getPath());
+					}
 					
 					int t_orientation = t_exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,
 															   ExifInterface.ORIENTATION_NORMAL);
@@ -3368,6 +3385,14 @@ public class Engine extends View implements EngineApi
 
 	public void onPause()
 	{
+		/* Pause registered listeners in reverse order of registration as
+		 * then components will be paused before any components they
+		 * depend on. */
+		for (int i = m_lifecycle_listeners.size() - 1; i >= 0; i--)
+		{
+			m_lifecycle_listeners.get(i).OnPause();
+		}
+
 		if (m_text_editor_visible)
 			hideKeyboard();
 		
@@ -3440,7 +3465,15 @@ public class Engine extends View implements EngineApi
 		
 		// IM-2013-08-16: [[ Bugfix 11103 ]] dispatch any remote notifications received while paused
 		dispatchNotifications();
-		
+
+		/* Resume registered listeners in order of registration as then
+		 * components will be resumed before any components which depend
+		 * on them. */
+		for (int i = 0; i < m_lifecycle_listeners.size(); i++)
+		{
+			m_lifecycle_listeners.get(i).OnResume();
+		}
+
 		if (m_wake_on_event)
 			doProcess(false);
 	}
@@ -3994,7 +4027,31 @@ public class Engine extends View implements EngineApi
 				return 0;
 		}
 	}
-	
+
+	////////////////////////////////////////////////////////////////////////////////
+
+	public boolean registerLifecycleListener(LifecycleListener p_listener)
+	{
+		return m_lifecycle_listeners.add(p_listener);
+	}
+
+	public boolean unregisterLifecycleListener(LifecycleListener p_listener)
+	{
+		/* We can't remove the listener directly since LifecycleListener does
+		 * not implement equals. Instead, search backwards through the array
+		 * until we find the passed listener. */
+		for (int i = m_lifecycle_listeners.size() - 1; i >= 0; i--)
+		{
+			if (m_lifecycle_listeners.get(i) == p_listener)
+			{
+				m_lifecycle_listeners.remove(i);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
     ////////////////////////////////////////////////////////////////////////////////
     
     // url launch callback

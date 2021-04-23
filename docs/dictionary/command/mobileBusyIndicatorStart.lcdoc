@@ -36,7 +36,7 @@ Specifies the message that is to appear on the busy indicator dialog.
 
 opacity:
 Specifies the opacity of the busy indicator, which can lie in the range
-0 - 100. The default value is 42. This option is only available for iOS.
+1 - 100. The default value is 42. This option is only available for iOS.
 
 Description:
 Use the <mobileBusyIndicatorStart> command to show a native busy
@@ -48,5 +48,10 @@ indicator on the top of the LiveCode stack that is running.
 You can turn the busy indicator off by calling
 <mobileBusyIndicatorStop>. 
 
-References: mobileBusyIndicatorStop (command)
+While this busy indicator is displayed, user input is blocked. This is
+different to the behavior from the indicator displayed 
+by <iphoneActivityIndicatorStart>.
 
+
+References: mobileBusyIndicatorStop (command), 
+iphoneActivityIndicatorStart (command)

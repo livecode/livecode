@@ -416,7 +416,7 @@ static int MCA_do_file_dialog(MCStringRef p_title, MCStringRef p_prompt, MCStrin
 	bool t_succeeded;
 	int t_filter_index;
 
-	if (MCmajorosversion >= 0x0600)
+	if (MCmajorosversion >= MCOSVersionMake(6,0,0))
 	{
 		static SHCreateItemFromParsingNamePtr  s_shcreateitemfromparsingname = NULL;
 		if (s_shcreateitemfromparsingname == NULL)
@@ -831,7 +831,7 @@ static unsigned int get_dll_version(const wchar_t *p_dll)
 // MW-2005-05-15: Updated for new answer command restructuring
 int MCA_folder(MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, unsigned int p_options, MCStringRef &r_value, MCStringRef &r_result)
 {
-	if (MCmajorosversion >= 0x0600 && MCModeMakeLocalWindows())
+	if (MCmajorosversion >= MCOSVersionMake(6,0,0) && MCModeMakeLocalWindows())
 		return MCA_file(p_title, p_prompt, nil, p_initial, p_options | MCA_OPTION_FOLDER_DIALOG, r_value, r_result);
 
 // MW-2005-05-27: We'll use a static (I know bad me) to store the version

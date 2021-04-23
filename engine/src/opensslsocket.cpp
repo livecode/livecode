@@ -725,9 +725,16 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
             t_port_reuse = 1;
             if (setsockopt(p_socket->fd, SOL_SOCKET, SO_REUSEPORT, (const char *)&t_port_reuse, sizeof(t_port_reuse)) != 0)
             {
-                p_socket->error = strclone("can't use the local port");
-                p_socket->doclose();
-                return false;
+				switch (errno)
+				{
+					case ENOPROTOOPT:
+						// option not supported by OS, ignore error
+						break;
+					default:
+						p_socket->error = strclone("can't use the local port");
+						p_socket->doclose();
+						return false;
+				}
             }
 #endif
 
@@ -1156,8 +1163,15 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
     on = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (const char *)&on, sizeof(on)) != 0)
     {
-        MCresult->sets("can't reuse port");
-        return NULL;
+		switch (errno)
+		{
+			case ENOPROTOOPT:
+				// option not supported by OS, ignore error
+				break;
+			default:
+				MCresult->sets("can't reuse port");
+				return NULL;
+		}
     }
 #endif
 

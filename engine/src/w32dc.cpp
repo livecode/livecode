@@ -84,6 +84,11 @@ MCScreenDC::MCScreenDC()
 	m_printer_dc = NULL;
 	m_printer_dc_locked = false;
 	m_printer_dc_changed = false;
+
+	/* Initialize metrics with sensible defaults. */
+	m_metrics_x_dpi = 96;
+	m_metrics_y_dpi = 96;
+	memset(&m_metrics_non_client, 0, sizeof(m_metrics_non_client));
 }
 
 MCScreenDC::~MCScreenDC()
@@ -115,7 +120,7 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	switch(p_feature)
 	{
 	case PLATFORM_FEATURE_WINDOW_TRANSPARENCY:
-		return MCmajorosversion >= 0x0500;
+		return MCmajorosversion >= MCOSVersionMake(5,0,0);
 	break;
 
 	case PLATFORM_FEATURE_OS_COLOR_DIALOGS:
@@ -289,28 +294,38 @@ MCStack *MCScreenDC::platform_getstackatpoint(int32_t x, int32_t y)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void *MCScreenDC::GetNativeWindowHandle(Window p_win)
+void MCScreenDC::updatemetrics(void)
 {
-	return p_win != nil ? p_win->handle.window : nil;
+	/* Get the DC representing the whole 'screen' so we can get default dpi
+	 * metrics from it. */
+	HDC t_dc;
+	t_dc = GetDC(NULL);
+	if (t_dc != NULL)
+	{
+		m_metrics_x_dpi = GetDeviceCaps(t_dc, LOGPIXELSX);
+		m_metrics_y_dpi = GetDeviceCaps(t_dc, LOGPIXELSY);
+		ReleaseDC(NULL, t_dc);
+	}
+	else
+	{
+		m_metrics_x_dpi = 96;
+		m_metrics_y_dpi = 96;
+	}
+
+	/* Fetch the 'non-client-metrics' which contains the names of fonts to use
+	 * which match the current system settings. */
+	m_metrics_non_client.cbSize = sizeof(m_metrics_non_client);
+	if (!SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(m_metrics_non_client), &m_metrics_non_client, 0))
+	{
+		memset(&m_metrics_non_client, 0, sizeof(m_metrics_non_client));
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// IM-2014-01-28: [[ HiDPI ]] Return the x & y dpi of the main screen
-bool MCWin32GetScreenDPI(uint32_t &r_xdpi, uint32_t &r_ydpi)
+void *MCScreenDC::GetNativeWindowHandle(Window p_win)
 {
-	HDC t_dc;
-	t_dc = GetDC(NULL);
-
-	if (t_dc == NULL)
-		return false;
-
-	r_xdpi = GetDeviceCaps(t_dc, LOGPIXELSX);
-	r_ydpi = GetDeviceCaps(t_dc, LOGPIXELSY);
-
-	ReleaseDC(NULL, t_dc);
-
-	return true;
+	return p_win != nil ? p_win->handle.window : nil;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -329,7 +344,8 @@ MCGFloat MCWin32GetLogicalToScreenScale(void)
 		return 1.0;
 
 	uint32_t t_x, t_y;
-	/* UNCHECKED */ MCWin32GetScreenDPI(t_x, t_y);
+	t_x = ((MCScreenDC *)MCscreen)->getscreenxdpi();
+	t_y = ((MCScreenDC *)MCscreen)->getscreenydpi();
 
 	return (MCGFloat) MCMax(t_x, t_y) / NORMAL_DENSITY;
 }
@@ -348,12 +364,8 @@ bool MCWin32GetMonitorPixelScale(HMONITOR p_monitor, MCGFloat &r_pixel_scale)
 	if (!MCWin32GetDpiForMonitor(t_result, p_monitor, kMCWin32MDTDefault, &t_xdpi, &t_ydpi) ||
 		t_result != S_OK)
 	{
-		// fallback to the global system DPI setting
-		uint32_t t_screen_xdpi, t_screen_ydpi;
-		if (!MCWin32GetScreenDPI(t_screen_xdpi, t_screen_ydpi))
-			return false;
-		t_xdpi = t_screen_xdpi;
-		t_ydpi = t_screen_ydpi;
+		t_xdpi = ((MCScreenDC *)MCscreen)->getscreenxdpi();
+		t_ydpi = ((MCScreenDC *)MCscreen)->getscreenydpi();
 	}
 
 	r_pixel_scale = (MCGFloat)MCMax(t_xdpi, t_ydpi) / NORMAL_DENSITY;

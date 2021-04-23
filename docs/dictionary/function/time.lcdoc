@@ -35,7 +35,7 @@ The short time form returns the same value as the time form.
 
 The abbreviated time form returns the same value as the time form.
 
-The <long> time form returns the hour, minute, and second separated by
+The long time form returns the hour, minute, and second separated by
 colons, a space, and "AM" or "PM".
 
 Description:

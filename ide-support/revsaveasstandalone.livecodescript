@@ -160,12 +160,17 @@ on revSaveAsStandalone pStack, pFolder, pPreview, pSuppressSuccessMsg
    -- MM-2014-03-21: [[ PPC Support Dropped ]] Assume all mac builds to now be Intel.
    if tSettings["MacOSX"] then
       delete variable tSettings["MacOSX"]
-      put true into tSettings["MacOSX x86-32"]
+      put true into tSettings["MacOSX x86-64"]
       put true into tEdited
    end if
    if tSettings["MacOSX PowerPC-32"] then
       delete variable tSettings["MacOSX PowerPC-32"]
-      put true into tSettings["MacOSX x86-32"]
+      put true into tSettings["MacOSX x86-64"]
+      put true into tEdited
+   end if
+   if tSettings["MacOSX x86-32"] then
+      delete variable tSettings["MacOSX x86-32"]
+      put true into tSettings["MacOSX x86-64"]
       put true into tEdited
    end if
    
@@ -432,11 +437,11 @@ private function revStandalonePlatformDetails pTarget
       case "MacOSX"
          -- MM-2014-03-21: [[ PPC Support Dropped ]] We now only support intel Mac builds. Assume all mac builds to be intel.
          -- MW-2013-06-13: [[ CloneAndRun ]] If not installated type, then take from the binaries folder.
-         put "Mac OS X/x86-32" into tArchFolder
+         put "Mac OS X/x86-64" into tArchFolder
          put ".bundle" into tDetailsA["loadable_extension"]
          put ".dylib" into tDetailsA["shared_extension"]
          put "MacOSX" into  tDetailsA["platform"]
-         put "x86-32" into tDetailsA["architecture"]
+         put "x86-64" into tDetailsA["architecture"]
          break
       case "Windows"
          if pTarget is "Windows" then
@@ -660,9 +665,7 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
    
    -- Architectures
    local tArchitectures
-   if sStandaloneSettingsA["MacOSX x86-32"] then put "i386," after tArchitectures
-   if sStandaloneSettingsA["MacOSX x86-64"] then put "x86-64," after tArchitectures
-   delete char -1 of tArchitectures
+   put "x86-64" into tArchitectures
    
    -- keep a copy of the standalone settings to restore after each build
    local tStandaloneSettingsA
@@ -731,10 +734,44 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
       __RestoreStackFromTemporaryLocation pStack, pRestoreFileName, tOriginalFileName
    end repeat
    
+   if the platform is "MacOS" then
+      local tAppBundle
+      set the itemDel to slash
+      put item 1 to -4 of tStandalonepath into tAppBundle
+      set the itemDel to comma
+      clearExtendedAttributes tAppBundle
+      performAdHocCodesign tAppBundle
+   end if
+   
    revStandalonePostBuild pStack, pFolder
    
    return empty
 end revSaveAsMacStandalone
+
+private command performAdHocCodesign pAppBundle
+   local tShell
+   put "codesign --deep -f -s -" && quote & pAppBundle & quote into tShell
+   get shell(tShell)
+   if the result is not zero then
+      throw "Adding ad-hoc signature failed with error:" && it
+   end if
+end performAdHocCodesign
+
+private command clearExtendedAttributes pAppBundle
+   local tShell
+   -- make sure you have permission to clear extended attributes from bundle files
+   put "chmod -R u+w" && quote & pAppBundle & quote into tShell
+   get shell(tShell)
+   if the result is not zero then
+      throw "Setting permissions failed with error:" && it
+   end if
+   
+   put "xattr -cr" && quote & pAppBundle & quote into tShell
+   get shell(tShell)
+   if the result is not zero then
+      throw "Clearing extended attributes failed with error:" && it
+   end if
+end clearExtendedAttributes
 
 command revSaveAsWindowsStandalone pStack, pRestoreFileName, pFolder, @xStandalonePaths
    local tStackFileList, tEngineSourceFile, tCount, tStackName, tStandalonePath
@@ -1717,7 +1754,7 @@ private command revSetMacOS pWhatFile, pPlatformCode, pEnginePath
       
       -- MM-2014-03-21: [[ PPC Support Dropped ]] We no longer include universal builds so set icon prefix to intel standalone.
       local tIconPrefix
-      put  revEnvironmentRuntimePath() & "/Mac OS X/x86-32/Standalone.app/Contents/Resources/Standalone" into tIconPrefix
+      put  revEnvironmentRuntimePath() & "/Mac OS X/x86-64/Standalone.app/Contents/Resources/Standalone" into tIconPrefix
       
       if sStandaloneSettingsA["OSX,iconFile"] is not empty then
          revSBCopyFile sStandaloneSettingsA["OSX,iconFile"], item 1 to -3 of pWhatFile & "/Resources/Standalone.icns", "revStandaloneProgressCallback", the long id of me
@@ -2130,7 +2167,7 @@ private command revCopyDatabaseDrivers pPlatform, pStackFilePath, pStandalonePat
          if there is not a folder (item 1 to -2 of tStandaloneFolder&"/Frameworks") then create folder (item 1 to -2 of tStandaloneFolder&"/Frameworks")
          revSBCopyFolderToDestination (item 1 to -2 of tStandaloneFolder&"/MacOS/Externals/database_drivers/VXCMD_macho.bundle/Contents/Frameworks/VSDK.framework"),(item 1 to -2 of tStandaloneFolder&"/Frameworks"), "revStandaloneProgressCallback", the long id of me
          if the result is not empty then
-            revStandaloneAddWarning ("Mac x86-32, failed to copy Valentina framework")
+            revStandaloneAddWarning ("Mac x86-64, failed to copy Valentina framework")
          end if
       end if 
    end repeat

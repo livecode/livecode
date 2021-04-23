@@ -292,7 +292,7 @@ struct MCWindowsSystem: public MCSystemInterface
 
 	virtual bool GetVersion(MCStringRef& r_string)
 	{
-		return MCStringFormat(r_string, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
+		return MCStringFormat(r_string, "NT %d.%d", MCOSVersionGetMajor(MCmajorosversion), MCOSVersionGetMinor(MCmajorosversion));
 	}
 
 	virtual bool GetMachine(MCStringRef& r_string)

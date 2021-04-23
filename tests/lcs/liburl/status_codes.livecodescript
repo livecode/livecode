@@ -16,10 +16,10 @@ end TestSetup
 
 on TestStatusCodes
    # Response Code 204
-   set the socketTimeoutInterval to 10000
+   set the socketTimeoutInterval to 60000
    put the milliseconds into tStartTime
    put URL "http://httpstat.us/204" into tData
    TestAssert "no error is reported", the result is empty
-   TestAssert "response is not delayed until socket timeout", the milliseconds - tStartTime < 9000
+   TestAssert "response is not delayed until socket timeout", the milliseconds - tStartTime < 59000
    TestAssert "data is empty", tData is empty
 end TestStatusCodes

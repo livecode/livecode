@@ -812,7 +812,7 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    --try
    -- Perform the codesigning of the main bundle
    local tResult
-   __CodesignFrameworks pAppBundle & "/Frameworks", tCertificate, tEntitlementsOption
+   __CodesignFrameworks pAppBundle & "/Frameworks", tCertificate
    put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & tCertificate & quote && \
          tEntitlementsOption && quote & pAppBundle & quote) into tResult
    -- MM-2012-10-25: [[ Bug ]] try catch finally oddness meant that any errors here were being ignored.
@@ -825,16 +825,16 @@ private command revSaveAsMobileStandaloneMain pStack, pAppBundle, pTarget, pSett
    end if
 end revSaveAsMobileStandaloneMain
 
-private command __CodesignFrameworks pPath, pCertificate, pEntitlementsOption
+private command __CodesignFrameworks pPath, pCertificate
    local tFrameworks
    put folders(pPath) into tFrameworks
    filter tFrameworks with "*.framework"
    repeat for each line tFramework in tFrameworks
-      __CodesignFrameworks pPath & "/" & tFramework & "/Frameworks", pCertificate, pEntitlementsOption
+      __CodesignFrameworks pPath & "/" & tFramework & "/Frameworks", pCertificate
       
       local tResult
       put shell("/usr/bin/codesign --deep --verbose -f -s" && quote & pCertificate & quote && \
-            pEntitlementsOption && quote & pPath & "/" & tFramework & quote) into tResult
+            quote & pPath & "/" & tFramework & quote) into tResult
       if not (tResult contains "signed bundle" or tResult contains "signed app bundle") then
          throw "codesigning failed with" && tResult
       end if
@@ -953,9 +953,11 @@ private command revDecorateImageAssets pTarget, pSettings, pBaseFolder, pAppBund
          local tExtension
          set the itemdelimiter to "."
          put the last item of tFile into tExtension
+         set the itemdelimiter to comma
          
          local tFileName
-         put format("livecode_launch_image@%s.%s", \
+         put format("livecode_launch_image%s@%s.%s", \
+               tAppearance, \
                tScale, \
                tExtension) into tFileName
          
@@ -1043,10 +1045,9 @@ end revDecorateImageAssets
 
 private function imageGetDimensions pImageFile
      local tDims
-     create invisible image
-     set the filename of it to pImageFile
-     put (the effective width of it, the effective height of it) into tDims
-     delete it
+     set the filename of the templateImage to pImageFile
+     put (the formattedWidth of the templateImage, the formattedHeight of the templateImage) into tDims
+     reset the templateImage
      return tDims
 end imageGetDimensions
 
@@ -1615,17 +1616,6 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    local tUIStyle
    if not pSettings["ios,supports dark mode"] then
       put "<key>UIUserInterfaceStyle</key><string>Light</string>" into tUIStyle
-   end if
-   
-   -- MM-2011-09-28: Make sure portrait and landscape iPad splashes are present if required.
-   --
-   if 2 is among the items of pSettings["ios,device family"] then
-      if tIPadOrientations contains "Portrait" and there is no file (pAppBundle & "/Default-Portrait.png") then
-         revStandaloneAddWarning "No iPad Portrait Splash Screen"
-      end if
-      if tIPadOrientations contains "Landscape" and there is no file (pAppBundle & "/Default-Landscape.png") then
-         revStandaloneAddWarning "No iPad Landscape Splash Screen"
-      end if
    end if
    
    if tStatusBarHidden is empty then

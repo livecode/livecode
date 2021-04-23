@@ -347,7 +347,7 @@ bool MCSystemGetLocationAuthorizationStatus(MCStringRef& r_status)
     MCAutoStringRef t_status_string;
 	
 #ifdef __IPHONE_8_0
-	if (MCmajorosversion >= 800)
+	if (MCmajorosversion >= MCOSVersionMake(8,0,0))
 	{
 		CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
 		switch (t_status)
@@ -408,7 +408,7 @@ bool MCSystemStartTrackingLocation(bool p_loosely)
             initialize_core_location();
             
             // PM-2014-10-06: [[ Bug 13590 ]] Make sure on iOS 8 we explicitly request permission to use location services
-            if (MCmajorosversion >= 800)
+            if (MCmajorosversion >= MCOSVersionMake(8,0,0))
                 requestAlwaysAuthorization();
             
             [s_location_manager startUpdatingLocation];

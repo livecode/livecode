@@ -42,7 +42,8 @@ Returns:
 altitude of the device. If any of these readings are not available, an
 empty item will be returned in its place. If <detailed> is true an array
 containing the keys latitude, longitude, altitude, timestamp, horizontal
-accuracy and vertical accuracy is returned. 
+accuracy and vertical accuracy is returned. Additionally, if values for
+them exist, the keys speed and course are included in the returned array.
 -   Heading - the heading of the
 device in degrees. If <detailed> is true an array containing the keys
 heading, magnetic heading, true heading, timestamp, x, y, z and accuracy
@@ -60,6 +61,10 @@ device sensor.
 
 The <mobileSensorReading> function returns a reading from the named
 sensor. 
+
+>*Note:* When speed is returned, the value is in meters per second.
+To convert to miles per hour, multiply the value by 2.237. To convert
+to kilometers per hour, multiply it by 3.6 instead.
 
 References: mobileStopTrackingSensor (command),
 mobileStartTrackingSensor (command), mobileCanTrackHeading (function),

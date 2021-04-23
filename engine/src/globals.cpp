@@ -1092,7 +1092,7 @@ bool X_open(int argc, MCStringRef argv[], MCStringRef envp[])
     
 #if defined(_MACOSX) && defined(FEATURE_QUICKTIME)
     // MW-2014-07-21: Make AVFoundation the default on 10.8 and above.
-    if (MCmajorosversion < 0x1080)
+    if (MCmajorosversion < MCOSVersionMake(10,8,0))
     {
         MCdontuseQT = False;
         MCdontuseQTeffects = False;

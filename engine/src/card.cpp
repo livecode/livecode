@@ -322,6 +322,8 @@ void MCCard::kfocus()
         // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
         //   (otherwise the engine state can change due to script).
         MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+		// Mark card as focused
+		setstate(true, CS_KFOCUSED);
 		kfocused->getref()->kfocus();
 	}
 	if (kfocused == NULL)
@@ -361,6 +363,8 @@ Boolean MCCard::kfocusnext(Boolean top)
                     // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
                     //   (otherwise the engine state can change due to script).
 					MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
+					// Mark card as unfocused
+					setstate(false, CS_KFOCUSED);
 					oldkfocused->getref()->kunfocus();
 					if (oldkfocused == NULL)
 						return False;
@@ -371,6 +375,8 @@ Boolean MCCard::kfocusnext(Boolean top)
             // MW-2014-07-29: [[ Bug 13001 ]] Sync the view focus before the engine state
             //   (otherwise the engine state can change due to script).
 			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+			// Mark card as focused
+			setstate(true, CS_KFOCUSED);
 			kfocused->getref()->kfocus();
 			done = True;
 			break;
@@ -420,6 +426,8 @@ Boolean MCCard::kfocusprev(Boolean bottom)
                     // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
                     //   (otherwise the engine state can change due to script).
 					MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
+					// Mark card as unfocused
+					setstate(false, CS_KFOCUSED);
 					oldkfocused->getref()->kunfocus();
 					if (oldkfocused == NULL)
 						return False;
@@ -430,6 +438,8 @@ Boolean MCCard::kfocusprev(Boolean bottom)
             // MW-2014-07-29: [[ Bug 13001 ]] Sync the view focus before the engine state
             //   (otherwise the engine state can change due to script).
 			MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+			// Mark card as focused
+			setstate(true, CS_KFOCUSED);
 			kfocused->getref()->kfocus();
 			done = True;
 			break;
@@ -453,6 +463,8 @@ void MCCard::kunfocus()
         // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
         //   (otherwise the engine state can change due to script).
         MCscreen -> controllostfocus(getstack(), oldkfocused -> getid());
+		// Mark card as unfocused
+		setstate(false, CS_KFOCUSED);
 		oldkfocused->getref()->kunfocus();
 	}
 	else
@@ -1382,6 +1394,8 @@ void MCCard::kfocusset(MCControl *target)
             // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
             //   (otherwise the engine state can change due to script).
             MCscreen -> controllostfocus(getstack(), tkfocused -> getid());
+			// Mark card as unfocused
+			setstate(false, CS_KFOCUSED);
 			tkfocused->getref()->kunfocus();
 		}
 		if (kfocused != NULL)
@@ -1395,6 +1409,8 @@ void MCCard::kfocusset(MCControl *target)
                 // MW-2014-08-12: [[ Bug 13167 ]] Sync the view focus before the engine state
                 //   (otherwise the engine state can change due to script).
                 MCscreen -> controlgainedfocus(getstack(), kfocused -> getid());
+				// Mark card as focused
+				setstate(true, CS_KFOCUSED);
 				kfocused->getref()->kfocus();
 
 				// OK-2009-04-29: [[Bug 8013]] - Its possible that kfocus() can set kfocused to NULL if the 
@@ -1617,6 +1633,8 @@ void MCCard::relayercontrol(MCControl *p_source, MCControl *p_target)
 	else
 		t_source_ptr -> appendto(objptrs);
 	layer_added(p_source, MCControlPreviousByLayer(p_source), MCControlNextByLayer(p_source));
+
+	p_source->layerchanged();
 }
 
 void MCCard::relayercontrol_remove(MCControl *p_control)
@@ -1630,6 +1648,9 @@ void MCCard::relayercontrol_remove(MCControl *p_control)
 	
 	// Remove the control from the card's objptr list.
 	t_control_ptr -> remove(objptrs);
+	// make sure this card no longer points to the removed control
+	clearfocus(t_control_ptr, nullptr);
+	
 	delete t_control_ptr;
 
 	// Remove the control from the stack's list.
@@ -1669,6 +1690,8 @@ void MCCard::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 	else
 		t_control_ptr -> appendto(objptrs);
 	layer_added(p_control, MCControlPreviousByLayer(p_control), MCControlNextByLayer(p_control));
+
+	p_control->layerchanged();
 }
 
 Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)

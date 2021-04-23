@@ -268,7 +268,7 @@ void MCStack::setopacity(uint1 p_level)
 		return;
 
 	// Do nothing if not NT
-	if (MCmajorosversion < 0x0500)
+	if (MCmajorosversion < MCOSVersionMake(5,0,0))
 		return;
 
 	if (!isopaque() || m_window_shape != NULL && !m_window_shape -> is_sharp)

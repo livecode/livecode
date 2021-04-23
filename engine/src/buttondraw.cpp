@@ -106,7 +106,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	Boolean isstdbtn = standardbtn();
 	uint2 i;
 	Boolean noback = isstdbtn && !getcindex(DI_BACK, i) && !getpindex(DI_BACK,i);
-	bool t_isvista = MCmajorosversion >= 0x0600 && MCcurtheme != NULL;
+	bool t_isvista = MCmajorosversion >= MCOSVersionMake(6,0,0) && MCcurtheme != NULL;
 
 	bool t_themed_menu = false;
 	bool t_use_alpha_layer = false;
@@ -553,7 +553,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 #ifdef _MACOSX
                 // FG-2014-10-29: [[ Bugfix 13842 ]] On Yosemite, glowing buttons
                 // should draw with white text.
-                if (IsMacLFAM() && MCmajorosversion >= 0x10A0 && MCaqua
+                if (IsMacLFAM() && MCmajorosversion >= MCOSVersionMake(10,10,0) && MCaqua
                     && !(flags & F_DISABLED) && isstdbtn && getstyleint(flags) == F_STANDARD
                     && ((state & CS_HILITED) || (state & CS_SHOW_DEFAULT))
                     && rect.height <= 24 && MCappisactive)
@@ -1783,7 +1783,7 @@ void MCButton::drawstandardbutton(MCDC *dc, MCRectangle &srect)
 	
             // On Yosemite, the default button theme is only suppressed when the
             // app is not active.
-            if (getflag(F_DEFAULT) && IsMacLFAM() && MCaqua && MCmajorosversion >= 0x10A0)
+            if (getflag(F_DEFAULT) && IsMacLFAM() && MCaqua && MCmajorosversion >= MCOSVersionMake(10,10,0))
             {
                 winfo.state &= ~WTHEME_STATE_SUPPRESSDEFAULT;
                 winfo.state |= WTHEME_STATE_HASDEFAULT;

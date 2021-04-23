@@ -3339,6 +3339,9 @@ void MCPlayer::handle_mdown(int p_which)
         }
             break;
         case kMCPlayerControllerPartScrubBack:
+            
+            push_current_rate();
+
             // PM-2014-08-12: [[ Bug 13120 ]] Cmd + click on scrub buttons starts playing in the appropriate direction
             if (hasfilename() && (MCmodifierstate & MS_CONTROL) != 0)
             {
@@ -3373,6 +3376,9 @@ void MCPlayer::handle_mdown(int p_which)
             break;
             
         case kMCPlayerControllerPartScrubForward:
+            
+            push_current_rate();
+
             // PM-2014-08-12: [[ Bug 13120 ]] Cmd + click on scrub buttons starts playing in the appropriate direction
             if (hasfilename() && (MCmodifierstate & MS_CONTROL) != 0)
             {
@@ -3415,6 +3421,21 @@ void MCPlayer::handle_mdown(int p_which)
         default:
             break;
     }
+}
+
+void MCPlayer::push_current_rate()
+{
+    // get current rate
+    double t_old_rate;
+    MCPlatformGetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_old_rate);
+    m_rate_before_scrub_buttons_pressed = t_old_rate;
+}
+
+void MCPlayer::pop_current_rate()
+{
+    // get current rate
+    double t_old_rate = m_rate_before_scrub_buttons_pressed;
+    MCPlatformSetPlayerProperty(m_platform_player, kMCPlatformPlayerPropertyPlayRate, kMCPlatformPropertyTypeDouble, &t_old_rate);
 }
 
 void MCPlayer::handle_mfocus(int x, int y)
@@ -3571,12 +3592,14 @@ void MCPlayer::handle_mup(int p_which)
     switch (m_grabbed_part)
     {
         case kMCPlayerControllerPartScrubBack:
+            pop_current_rate();
             m_scrub_back_is_pressed = false;
             playpause(m_was_paused);
             layer_redrawall();
             break;
             
         case kMCPlayerControllerPartScrubForward:
+            pop_current_rate();
             m_scrub_forward_is_pressed = false;
             playpause(m_was_paused);
             layer_redrawall();

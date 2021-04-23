@@ -1267,10 +1267,10 @@ bool MCScriptForeignHandlerInfoParse(MCStringRef p_binding, MCScriptForeignHandl
         {
             t_info->thread_affinity = t_thread_affinity;
         
-            /* The ABI for all platforms is always DEFAULT, except on Win32 where
-             * it is specified as part of the signature. */
+            /* The ABI for all platforms is always DEFAULT, except on 32-bit Win32
+             * where it is specified as part of the signature. */
             t_info->c.call_type = (int)FFI_DEFAULT_ABI;
-#ifdef _WIN32
+#if defined(_WIN32) && defined(__32_BIT__)
             t_info->c.call_type = t_cc == 0 ? (int)FFI_DEFAULT_ABI : t_cc;
 #endif
             t_info->c.function = t_function.Take();

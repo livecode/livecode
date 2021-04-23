@@ -574,7 +574,7 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       put "<provider " & return into tProvider
       put "      android:name=" & quote & pSettings["android,identifier"] & ".AppProvider" & quote & return after tProvider
       put "      android:authorities=" & quote & pSettings["android,identifier"] & ".fileprovider" & quote & return after tProvider
-      put "      android:exported=" & quote & "true" & quote & return after tProvider
+      put "      android:exported=" & quote & "false" & quote & return after tProvider
       put "      android:grantUriPermissions=" & quote & "true" & quote & " >" & return after tProvider
       // Add meta-data tag
       put "      <meta-data" & return after tProvider
@@ -1297,7 +1297,9 @@ private command addAssetsToArchive pFileData, pBaseFolder, pArchive
             revZipAddUncompressedItemWithFile pArchive, "assets/" & tFile["name"], tFile["resolved"]
          end if
       else if there is a folder tFile["resolved"] then
-         addAssetsFromFolderToArchive tFile["resolved"], "assets" & slash & tFile["name"], pArchive, tFonts
+         if not (tFile["resolved"] ends with ".lcextd") then
+            addAssetsFromFolderToArchive tFile["resolved"], "assets" & slash & tFile["name"], pArchive, tFonts
+         end if
       else
          throw "could not find referenced asset to include -" && tFile["resolved"]
       end if
@@ -1903,6 +1905,10 @@ command MergeManifestArray @xManifestArrayA, pAdditionalsA
                put tNewA[tKey] into tExistingA[tKey]
             end repeat
             put tExistingA into xManifestArrayA[tActivityIndex]["@attributes"]
+            if tData["@children"] is an array then
+               MergeManifestArray xManifestArrayA[tActivityIndex]["@children"], \
+                     tData["@children"]
+            end if
             break
          default
             insertIntoList tData, xManifestArrayA, tEndOfBlock

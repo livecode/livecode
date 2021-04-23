@@ -45,6 +45,12 @@ on the same volume.
 >*Warning:* If a file with the same file path as the newPath already exists, 
 > that file will be overwritten without confirmation.
 
+>*Cross-platform note:* On Windows, if a file with the same file path as newPath already
+> exists then the rename operation will fail. On other platforms, the existing file may be
+> overwritten. If the operation does fail, then the result will be "can't rename file".
+> Note that a rename operation may fail on any operating system, so it's important to
+> check the result afterwards.
+
 Changes:
 The ability to move a file or folder on Mac OS and Windows systems with
 the rename command was introduced in version 1.1.1. In previous

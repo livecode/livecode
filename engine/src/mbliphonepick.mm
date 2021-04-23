@@ -120,6 +120,20 @@ UIViewController *MCIPhoneGetViewController(void);
 	m_use_checkmark = p_use;
 }
 
+- (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view
+{
+    UILabel* t_label = (UILabel*)view;
+    if (!t_label)
+    {
+        t_label = [[UILabel alloc] init];
+        t_label.adjustsFontSizeToFitWidth = YES;
+        t_label.textAlignment = NSTextAlignmentCenter;
+        [t_label setText:[[viewArray objectAtIndex:component] objectAtIndex:row]];
+    }
+    
+    return t_label;
+}
+
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
 	// HC-2011-10-03 [[ Picker Buttons ]] Showing the bar dynamicly, to indicate if any initial selections have been made.
@@ -523,7 +537,7 @@ return 1;
 		
 		[t_toolbar setItems: t_toolbar_items animated: NO];
         
-        if (MCmajorosversion < 800)
+        if (MCmajorosversion < MCOSVersionMake(8,0,0))
         {
             // create the action sheet that contains the "Done" button and pick wheel
             actionSheet = [[UIActionSheet alloc] initWithTitle:nil
@@ -697,7 +711,7 @@ return 1;
     else
     {
         // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
-        if (MCmajorosversion >= 800)
+        if (MCmajorosversion >= MCOSVersionMake(8,0,0))
         {
             [pickerView removeFromSuperview];
         
@@ -746,7 +760,7 @@ return 1;
     else
     {
         // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
-        if (MCmajorosversion >= 800)
+        if (MCmajorosversion >= MCOSVersionMake(8,0,0))
         {
             [pickerView removeFromSuperview];
             

@@ -34,7 +34,7 @@ fi
 # Which platform are we actually targeting?
 case "${PLATFORM}" in
 	mac)
-		export UNIVERSAL_ARCHS="i386 x86_64"
+		export UNIVERSAL_ARCHS="x86_64"
 		;;
 	linux)
 		export ARCHS="i386 x86_64"
@@ -130,11 +130,18 @@ function setCCForTarget {
 			;;
 		android)
 			configureAndroidToolchain ${ARCH}
+			# if not defined, derive CROSS_ROOT from ANDROID_TOOLCHAIN_BASE
+			if [ -z "${CROSS_SYSROOT}" ] ; then
+				export CROSS_SYSROOT="${ANDROID_TOOLCHAIN_BASE}/sysroot"
+			fi
 
-			CC="${ANDROID_CC} ${EXTRA_CFLAGS}"
-			CXX="${ANDROID_CXX} ${EXTRA_CXXFLAGS}"
+			CC="${ANDROID_CC}"
+			CFLAGS="${ANDROID_CFLAGS} ${EXTRA_CFLAGS}"
+			CXX="${ANDROID_CXX}"
+			CXXFLAGS="${ANDROID_CXXFLAGS} ${EXTRA_CXXFLAGS}"
 			LINK="${ANDROID_LINK}"
 			LD="${LINK}"
+			LDFLAGS="${ANDROID_LDFLAGS}"
 			AR="${ANDROID_AR}"
 			OBJCOPY="${ANDROID_OBJCOPY}"
 			RANLIB="${ANDROID_RANLIB}"

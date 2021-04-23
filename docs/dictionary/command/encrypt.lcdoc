@@ -47,7 +47,7 @@ the bit value specifies the key length in bits (ie. 64, 128, 192, 256,
 etc) 
 
 It:
-On success the variable it will contain the  encrypted or decrypted
+On success the variable it will contain the encrypted or decrypted
 data. 
 
 The result:
@@ -55,7 +55,7 @@ On failure encrypt/decrypt set the result to the appropriate
 ssl error message. To use OpenSSL functionality with LiveCode, make sure
 that the openssl shared library is installed, and in a place where
 LiveCode can find it. It is pre-installed with OSX. You can download
-and build OpenSSL at www.openssl.org and sitribute with your apps.
+and build OpenSSL at www.openssl.org and distribute with your apps.
 LiveCode includes a prebuilt openssl dll which is required to use
 OpenSSL for windows (libeay32.dll) which needs to be in the application,
 current, or system directory. If LiveCode cannot load SSL, it will
@@ -70,7 +70,7 @@ determined by the keyword before it. If you specify key then the key
 needs to be the same size (in bits, eight per byte) as the specified
 <cipher> key length. The key may optionally be accompanied by the
 <IVvalue> used by some ciphers. If you specify password or don't specify
-a key mode, then a password, tyically text, will be used. The password
+a key mode, then a password, typically text, will be used. The password
 may optionally be accompanied by a <saltvalue>. The <bitvalue> specifies
 the key length in bits (for example, 64, 128, 192 or 256) and may be
 zero or empty for the default length (that is listed with the
@@ -96,4 +96,3 @@ minimum of one byte.
 
 References: decrypt (command), cipherNames (function),
 sslcertificates (property)
-

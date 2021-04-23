@@ -990,7 +990,7 @@ XML is simply a data tree. It must start with a root node, be well
 formed and nested. Tags may not overlap. For more information on XML see
 <http://en.wikipedia.org/wiki/XML>
 
-Figure 52 below shows a typical XML tree. In this example we have
+Figure 56 below shows a typical XML tree. In this example we have
 represented a simple stack file as XML. The stack file has a single
 stack with two cards. On the first card there is a field named "Hello"
 with the contents "Hello World!". There is a second card, which is blank.
@@ -1064,16 +1064,16 @@ This section discusses using the XML library in detail.
 
 In order to work with an XML document, you start by creating an XML tree
 of that document in memory. There are two functions
-**revCreateXMLTreeFromFile** and **revCreateXMLTree**. Use the former to
+**revXMLCreateTreeFromFile** and **revXMLCreateTree**. Use the former to
 load XML document from a file and create a tree in memory, use the
 latter to create an XML tree from another data source such as a
 variable, field or download.
 
-	revCreateXMLTree(XMLText, dontParseBadData, createTree, sendMessages)
-	revCreateXMLTreeFromFile(filePath, dontParseBadData, createTree, sendMessages)
+	revXMLCreateTree(XMLText, dontParseBadData, createTree, sendMessages)
+	revXMLCreateTreeFromFile(filePath, dontParseBadData, createTree, sendMessages)
 
-In **revCreateXMLTree** the *XMLText*is the string containing the XML.
-In **revCreateXMLTreeFromFile** this parameter is replaced with the
+In **revXMLCreateTree** the *XMLText*is the string containing the XML.
+In **revXMLCreateTreeFromFile** this parameter is replaced with the
 *filePath* – the file path to the XML document. Both functions return a
 single value – the ID of the tree that has been created.
 
@@ -1113,7 +1113,7 @@ information from within the tree.
 > **Note:** All the examples in this section assume that we have loaded
 > the XML tree depicted in the figure below – XML Tree Representation of a
 > Stack, above. We assume that you have loaded this tree using the
-> `revCreateXMLTree`function described above, and that this function has
+> `revXMLCreateTree`function described above, and that this function has
 > returned a value of 1 as the ID of the tree.
 
 **Retrieving the Root Node**
@@ -1128,7 +1128,7 @@ example, using the following function with sample tree depicted above:
 
 	put revXMLRootNode(1) into tRootNode
 
-Results in *tVar* containing: *stackFile*
+Results in *tRootNode* containing: *stackFile*
 
 **Retrieving the First Child Element in a Node**
 
@@ -1458,8 +1458,8 @@ more information on this function, see the *LiveCode Dictionary*.
 
 **Removing an XML Tree from Memory**
 
-To remove an XML tree from memory, use **revDeleteXMLTree**. To remove
-all XML trees from memory, use **revDeleteAllXMLTrees**. Both functions
+To remove an XML tree from memory, use **revXMLDeleteTree**. To remove
+all XML trees from memory, use **revXMLDeleteAllTrees**. Both functions
 take a single parameter – the ID of the tree to be deleted. You should
 delete a tree when you have stopped using it. For more information on
 these functions, see the *LiveCode Dictionary*.
@@ -1476,9 +1476,9 @@ unloading XML.
 
 **Adding a new Child Node**
 
-To add a new node use the **revAddXMLNode** command.
+To add a new node use the **revXMLAddNode** command.
 
-	revAddXMLNode treeID, parentNode, nodeName, nodeContents, [location]
+	revXMLAddNode treeID, parentNode, nodeName, nodeContents, [location]
 
 
 See above for an explanation of *treeID*.
@@ -1494,7 +1494,7 @@ start of the child nodes.
 
 Use this function to add a button to our example XML file as follows:
 
-	revAddXMLNode 1, "/stackFile/stack/card/", "button", ""
+	revXMLAddNode 1, "/stackFile/stack/card/", "button", ""
 
 This results in our tree containing a new button:
 
@@ -1525,13 +1525,13 @@ This results in our tree containing a new button:
 	</stackFile>
 
 To create another node at the same level as another node, use the
-**revInsertXMLNode** command instead.
+**revXMLInsertNode** command instead.
 
 **Appending XML to a tree**
 
-To add a new node use the **revAppendXML** command.
+To add a new node use the **revXMLAppend** command.
 
-	revAppendXML treeID, parentNode, newXML
+	revXMLAppend treeID, parentNode, newXML
 
 See above for an explanation of *treeID* and *parentNode*.
 
@@ -1539,9 +1539,9 @@ The *newXML* is XML you want to append to the tree.
 
 **Moving, Copying or Deleting a Node**
 
-To move a node use the **revMoveXMLNode** command.
+To move a node use the **revXMLMoveNode** command.
 
-	revMoveXMLNode treeID, sourceNode, destinationNode [, location] [, relationship]
+	revXMLMoveNode treeID, sourceNode, destinationNode [, location] [, relationship]
 
 See above for an explanation of *treeID*.
 
@@ -1556,15 +1556,15 @@ The *relationship* allows you to specify whether to place the node
 alongside the destination as a sibling or below the destination as a
 child.
 
-To copy a node use **revCopyXMLNode**.
+To copy a node use **revXMLCopyNode**.
 
-To delete a node use **revDeleteXMLNode**.
+To delete a node use **revXMLDeleteNode**.
 
 **Putting data into a Node**
 
-To put data into a node use the **revPutIntoXMLNode** command.
+To put data into a node use the **revXMLPutIntoNode** command.
 
-	revPutIntoXMLNode treeID,node,newContents
+	revXMLPutIntoNode treeID,node,newContents
 
 See above for an explanation of *treeID* and *node*.
 
@@ -1572,9 +1572,9 @@ The *newContents* is the text that the new node will contain.
 
 **Setting an Attribute**
 
-To set an attribute use the **revSetXMLAttribute** command.
+To set an attribute use the **revXMLSetAttribute** command.
 
-	revSetXMLAttribute treeID,node,attributeName,newValue
+	revXMLSetAttribute treeID,node,attributeName,newValue
 
 See above for an explanation of *treeID* and *node*.
 
@@ -1585,7 +1585,7 @@ The *newValue* is the value to set for the attribute.
 
 Using this function to add a "showBorder" property to our field:
 
-	revSetXMLAttribute 1, "/stackFile/stack/card/button", "showBorder","true"
+	revXMLSetAttribute 1, "/stackFile/stack/card/button", "showBorder","true"
 
 The field tag in our tree now looks like this:
 
