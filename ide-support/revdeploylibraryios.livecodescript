@@ -18,7 +18,7 @@ local sDeviceSDKs
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
 function deployUsableIosSdk
-   return "11.2,12.1,13.2,14.4"
+   return "11.2,12.1,13.2,14.4,14.5"
 end deployUsableIosSdk
 
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
@@ -48,9 +48,11 @@ function deployGetIphoneOSes
    else if tMacVersion < 101504 then
       put empty into tList[1]
       answer error "To use Xcode 12.4, you need to upgrade your Mac to MacOS Catalina 10.15.4"
-   else
-      // Xcode 12.4 requires a Mac running Mac OS 10.15.4 or later
+   else if tMacVersion < 110000 then 
       put "14.4,12.4,14.4" into tList[1]
+   else
+      // Xcode 12.5 requires a Mac running Mac OS 11.0 or later
+      put "14.5,12.5,14.5" into tList[1]
    end if
    
    return tList
@@ -697,6 +699,10 @@ end deployIsValidSDK
 function deploySanitizeSystemVersion
    set the itemDel to "."
    get the systemVersion   
+   // TODO: Remove this workaround once bug 22887 is fixed
+   if it is "10.16.0" then
+      get shell("sw_vers -productVersion")
+   end if
    if the length of item 2 of it is 0 then
       put 00 before item 2 of it
    else if the length of item 2 of it is 1 then
