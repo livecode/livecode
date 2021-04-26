@@ -15,7 +15,7 @@ LIBS_win32=( Thirdparty OpenSSL Curl ICU CEF )
 LIBS_linux=( Thirdparty OpenSSL Curl ICU CEF )
 LIBS_emscripten=( Thirdparty ICU )
 
-SUBPLATFORMS_ios=(iPhoneSimulator10.2 iPhoneSimulator11.2 iPhoneSimulator12.1 iPhoneSimulator13.2 iPhoneSimulator14.4 iPhoneOS10.2 iPhoneOS11.2 iPhoneOS12.1 iPhoneOS13.2 iPhoneOS14.4)
+SUBPLATFORMS_ios=(iPhoneSimulator11.2 iPhoneSimulator12.1 iPhoneSimulator13.2 iPhoneSimulator14.4 iPhoneOS11.2 iPhoneOS12.1 iPhoneOS13.2 iPhoneOS14.4)
 SUBPLATFORMS_win32=(v141_static_debug v141_static_release)
 SUBPLATFORMS_android=(ndk16r15)
 

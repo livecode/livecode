@@ -59,20 +59,18 @@ The Mac engine supports:
 iOS deployment is possible when running LiveCode IDE on a Mac, and provided Xcode is installed and has been set in LiveCode *Preferences* (in the *Mobile Support* pane).
 
 Currently, the supported versions of Xcode are:
-* Xcode 8.2 on MacOS X 10.11
 * Xcode 9.2 on MacOS 10.12 (Note: You need to upgrade to 10.12.6)
 * Xcode 10.1 on MacOS 10.13 (Note: You need to upgrade to 10.13.4)
 * Xcode 11.3 on MacOS 10.14 (Note: You need to upgrade to 10.14.4) 
 * Xcode 12.4 on MacOS 10.15 and above (Note: You need to upgrade to 10.15.4) 
 
 It is also possible to set other versions of Xcode, to allow testing
-on a wider range of iOS simulators. For instance, on MacOS 10.12
-(Sierra), you can add *Xcode 8.2* in the *Mobile Support* preferences,
-to let you test your stack on the *iOS Simulator 10.2*.
+on a wider range of iOS simulators. For instance, on MacOS 10.13
+(High Sierra), you can add *Xcode 9.2* in the *Mobile Support* preferences,
+to let you test your stack on the *iOS Simulator 11.2*.
 
 We currently support building against the following versions of the iOS SDK:
 
-* 10.2 (included in Xcode 8.2)
 * 11.2 (included in Xcode 9.2)
 * 12.1 (included in Xcode 10.1)
 * 13.2 (included in Xcode 11.3)

@@ -35,12 +35,10 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'universal-ios-iphoneos13.2',
     'universal-ios-iphoneos12.1',
     'universal-ios-iphoneos11.2',
-    'universal-ios-iphoneos10.2',
     'universal-ios-iphonesimulator14.4',
     'universal-ios-iphonesimulator13.2',
     'universal-ios-iphonesimulator12.1',
     'universal-ios-iphonesimulator11.2',
-    'universal-ios-iphonesimulator10.2',
     'x86-win32', # TODO[2017-03-23] More specific ABI
     'x86_64-win32',
     'js-emscripten-sdk1.35',
