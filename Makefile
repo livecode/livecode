@@ -173,7 +173,7 @@ ifneq ($(TRAVIS),undefined)
 	@echo "COMPILE"
 endif
 	$(XCODEBUILD) -project "build-mac$(BUILD_SUBDIR)/$(BUILD_PROJECT).xcodeproj" -configuration $(BUILDTYPE) -target default \
-	  $(XCODEBUILD_FILTER)
+	  $(XCODEBUILD_FILTER) -sdk macosx10.9
 ifneq ($(TRAVIS),undefined)
 	@echo "travis_fold:end:compile"
 endif
