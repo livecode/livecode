@@ -40,9 +40,9 @@
 // Returns the name of the legacy font
 static NSString* get_legacy_font_name()
 {
-    if (MCmajorosversion < 0x10A0)
+    if (MCmajorosversion < MCOSVersionMake(10,10,0))
         return @"Lucida Grande";
-    if (MCmajorosversion > 0x10B0)
+    if (MCmajorosversion > MCOSVersionMake(10,11,0))
         return @"San Francisco";
     else
         return @"Helvetica Neue";
@@ -197,12 +197,17 @@ bool MCPlatformGetControlThemePropColor(MCPlatformControlType p_type, MCPlatform
                     case kMCPlatformControlTypeTabPane:
                     case kMCPlatformControlTypeTabButton:
                     {
-                        // These really should update like the other menu types
-                        // do when the window isn't active but we don't have
-                        // access to the active-tab-but-inactive-window button
-                        // appearance used for "real" tabbed controls.
-                        if (p_state & kMCPlatformControlStateSelected)
-                            t_color = [NSColor selectedMenuItemTextColor];
+						if (MCmajorosversion < MCOSVersionMake(10,16,0))
+						{
+							// These really should update like the other menu types
+							// do when the window isn't active but we don't have
+							// access to the active-tab-but-inactive-window button
+							// appearance used for "real" tabbed controls.
+							if (p_state & kMCPlatformControlStateSelected)
+								t_color = [NSColor selectedMenuItemTextColor];
+							else
+								t_color = [NSColor controlTextColor];
+						}
                         else
                             t_color = [NSColor controlTextColor];
                         break;

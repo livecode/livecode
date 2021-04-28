@@ -22,6 +22,7 @@
 #include "region.h"
 #include "graphics.h"
 #include "unicode.h"
+#include "globals.h"
 
 #include "platform.h"
 #include "platform-internal.h"
@@ -651,6 +652,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseDown: (NSEvent *)event
 {
+	// Save the mouse event for use when starting drag-drop
+	MCMacPlatformSetLastMouseEvent(event);
+	
 	if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
@@ -663,6 +667,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseUp: (NSEvent *)event
 {
+    // Clear the mouse event used when starting drag-drop
+    MCMacPlatformSetLastMouseEvent(nil);
+
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
@@ -683,6 +690,9 @@ void MCMacPlatformWindowWindowMoved(NSWindow *self, MCPlatformWindowRef p_window
 
 - (void)mouseDragged: (NSEvent *)event
 {
+    // Save the mouse event for use when starting drag-drop
+    MCMacPlatformSetLastMouseEvent(event);
+
     if (MCMacPlatformApplicationPseudoModalFor() != nil)
         return;
     
@@ -1579,6 +1589,12 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	//////////
 	
 	MCGRegionDestroy(t_update_region);
+	
+	if (MCmajorosversion >= MCOSVersionMake(10,16,0))
+	{
+		// Notify platform window class of draw
+		t_window->DrawSync();
+	}
 }
 
 //////////
@@ -1665,6 +1681,8 @@ MCMacPlatformWindow::MCMacPlatformWindow(void)
 	m_has_sheet = false;
 	m_frame_locked = false;
 	
+	m_waiting_for_draw = false;
+	
 	m_parent = nil;
 }
 
@@ -1680,6 +1698,11 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 	[m_container_view release];
 	[m_delegate release];
 }
+
+bool MCMacPlatformWindow::s_hiding = false;
+MCMacPlatformWindow *MCMacPlatformWindow::s_hiding_focused = nil;
+MCMacPlatformWindow *MCMacPlatformWindow::s_hiding_unfocused = nil;
+bool MCMacPlatformWindow::s_showing_sheet = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1782,12 +1805,29 @@ void MCMacPlatformWindow::ProcessDidDeminiaturize(void)
 
 void MCMacPlatformWindow::ProcessDidBecomeKey(void)
 {
-	HandleFocus();
+	if (s_hiding)
+	{
+		this->Retain();
+		if (s_hiding_focused != nil)
+			s_hiding_focused->Release();
+		s_hiding_focused = this;
+	}
+	else
+		HandleFocus();
 }
 
 void MCMacPlatformWindow::ProcessDidResignKey(void)
 {
-    HandleUnfocus();
+	if (s_hiding)
+	{
+		this->Retain();
+		if (s_hiding_unfocused != nil)
+			s_hiding_unfocused->Release();
+		s_hiding_unfocused = this;
+		
+	}
+	else
+		HandleUnfocus();
 }
 
 void MCMacPlatformWindow::ProcessMouseMove(NSPoint p_location_cocoa)
@@ -1909,7 +1949,12 @@ void MCMacPlatformWindow::DoRealize(void)
         [m_panel_handle setFloatingPanel: [NSApp isActive]];
     else
         [m_window_handle setLevel: t_window_level];
-	[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
+	bool t_is_opaque = m_is_opaque && m_mask == nil;
+	[m_window_handle setOpaque: t_is_opaque];
+	if (t_is_opaque)
+		[m_window_handle setBackgroundColor: NSColor.windowBackgroundColor];
+	else
+		[m_window_handle setBackgroundColor: NSColor.clearColor];
 	[m_window_handle setHasShadow: m_has_shadow];
 	if (!m_has_zoom_widget)
 		[[m_window_handle standardWindowButton: NSWindowZoomButton] setEnabled: NO];
@@ -1953,7 +1998,12 @@ void MCMacPlatformWindow::DoSynchronize(void)
         // MW-2014-07-29: [ Bug 12997 ]] Make sure we invalidate the whole window when
         //   the mask changes.
         [[m_window_handle contentView] setNeedsDisplay: YES];
-		[m_window_handle setOpaque: m_is_opaque && m_mask == nil];
+		bool t_is_opaque = m_is_opaque && m_mask == nil;
+		[m_window_handle setOpaque: t_is_opaque];
+		if (t_is_opaque)
+			[m_window_handle setBackgroundColor: NSColor.windowBackgroundColor];
+		else
+			[m_window_handle setBackgroundColor: NSColor.clearColor];
 		if (m_has_shadow)
 			m_shadow_changed = true;
 	}
@@ -1971,6 +2021,16 @@ void MCMacPlatformWindow::DoSynchronize(void)
 		// COCOA-TODO: At the moment force a re-display here to stop redraw artifacts.
 		//   The engine will disable screen updates appropriately to ensure atomicity.
 		[m_window_handle setFrame: t_cocoa_frame display: YES];
+
+		// The new frame rect may be rejected or modified by the underlying NSWindow
+		//   implementation, so query the new value and update m_content accordingly
+		if (!NSEqualRects(t_cocoa_frame, m_window_handle.frame))
+		{
+			NSRect t_new_cocoa_content;
+			t_new_cocoa_content = [m_window_handle contentRectForFrameRect:m_window_handle.frame];
+
+			MCMacPlatformMapScreenNSRectToMCRectangle(t_new_cocoa_content, m_content);
+		}
 	}
 	
 	if (m_changes . title_changed)
@@ -2072,11 +2132,14 @@ void MCMacPlatformWindow::DoShowAsSheet(MCPlatformWindowRef p_parent)
 	m_parent -> Retain();
 	((MCMacPlatformWindow *)m_parent) -> m_has_sheet = true;
 	
+	s_showing_sheet = true;
 	[NSApp beginSheet: m_window_handle modalForWindow: t_parent -> m_window_handle modalDelegate: m_delegate didEndSelector: @selector(didEndSheet:returnCode:contextInfo:) contextInfo: nil];
 }
 
 void MCMacPlatformWindow::DoHide(void)
 {
+	s_hiding = true;
+	
 	if (m_parent != nil)
 	{
 		[NSApp endSheet: m_window_handle];
@@ -2084,10 +2147,12 @@ void MCMacPlatformWindow::DoHide(void)
 		((MCMacPlatformWindow *)m_parent) -> m_has_sheet = false;
 		m_parent -> Release();
 		m_parent = nil;
+		s_showing_sheet = false;
 	}
 	else if (m_style == kMCPlatformWindowStyleDialog)
 	{
 		MCMacPlatformEndModalSession(this);
+		[m_window_handle orderOut: nil];
 	}
     else if (m_style == kMCPlatformWindowStylePopUp)
     {
@@ -2103,6 +2168,22 @@ void MCMacPlatformWindow::DoHide(void)
 		// CW-2015-09-21: [[ Bug 15979 ]] Call close instead of orderOut here to properly close
 		// windows that have been iconified.
 		[m_window_handle close];
+	}
+	
+	MCMacPlatformWindow *t_window_losing_focus = s_hiding_unfocused;
+	s_hiding_unfocused = nil;
+	MCMacPlatformWindow *t_window_gaining_focus = s_hiding_focused;
+	s_hiding_focused = nil;
+	s_hiding = false;
+	if (t_window_losing_focus)
+	{
+		t_window_losing_focus->HandleUnfocus();
+		t_window_losing_focus->Release();
+	}
+	if (t_window_gaining_focus)
+	{
+		t_window_gaining_focus->HandleFocus();
+		t_window_gaining_focus->Release();
 	}
 	
 	MCMacPlatformHandleMouseAfterWindowHidden();
@@ -2129,8 +2210,24 @@ bool MCMacDoUpdateRegionCallback(void *p_context, const MCRectangle &p_rect)
 	
 	return true;
 }
+
+void MCMacPlatformHandleDrawSync(NSWindow *window)
+{
+	/* NOOP */
+}
+
+void MCMacPlatformWindow::DrawSync()
+{
+	if (!m_waiting_for_draw)
+		return;
+	
+	m_waiting_for_draw = false;
+	// Send event to break wait in NSApp::nextEventMatchingMask in MCMacPlatformWindow::DoUpdate
+	MCMacPlatformSyncUpdateAfterDraw(m_window_handle.windowNumber);
+}
+
 void MCMacPlatformWindow::DoUpdate(void)
-{	
+{
 	// If the shadow has changed (due to the mask changing) we must disable
 	// screen updates otherwise we get a flicker.
 	// IM-2015-02-23: [[ WidgetPopup ]] Assume shadow changes when redrawing a non-opaque widget
@@ -2143,12 +2240,48 @@ void MCMacPlatformWindow::DoUpdate(void)
 	// Mark the bounding box of the dirty region for needing display.
 	// COCOA-TODO: Make display update more specific.
 	s_rect_count = 0;
+	m_waiting_for_draw = true;
 	MCRegionForEachRect(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
-	// Force a re-display, this will cause drawRect to be invoked on our view
-	// which in term will result in a redraw window callback being sent.
-	[m_view displayIfNeeded];
-	
+	if (MCmajorosversion >= MCOSVersionMake(10,16,0))
+	{
+		// Frequent redraws with displayIfNeeded causes graphical glitches on Macos Big Sur, so instead
+		// we enter the runloop to trigger a redraw. This will cause drawRect to be invoked on our view
+		// which in turn will result in a redraw window callback being sent.
+		// The timeout value of 0.02ms is specified to avoid hitting the 60hz redraw limit.
+		if (!s_inside_focus_event && !s_showing_sheet && ![m_delegate inUserReshape])
+		{
+			// Since we remove all ApplicationDefined events from the queue we need to
+			// re-queue the events we're not interested in once the redraw has occured.
+			// This array is used to hold the popped events until they can be pushed back
+			// onto the queue.
+			NSMutableArray *t_popped_events = [[NSMutableArray alloc] init];
+			while (m_waiting_for_draw)
+			{
+				NSEvent *t_event;
+				t_event = [NSApp nextEventMatchingMask: NSApplicationDefinedMask
+											 untilDate: [NSDate dateWithTimeIntervalSinceNow: 0.02]
+												inMode: NSEventTrackingRunLoopMode
+											   dequeue: YES];
+				if (t_event != nil && !MCMacPlatformIsDrawSyncEvent(t_event))
+					[t_popped_events addObject:t_event];
+				t_event = nil;
+			}
+			while (t_popped_events.count > 0)
+			{
+				[NSApp postEvent:t_popped_events.lastObject atStart:YES];
+				[t_popped_events removeLastObject];
+			}
+			[t_popped_events release];
+		}
+	}
+	else
+	{
+		m_waiting_for_draw = false;
+		// Use displayIfNeeded to trigger a redraw
+		[m_view displayIfNeeded];
+	}
+
 	// Re-enable screen updates if needed.
 	if (t_shadow_changed)
     {

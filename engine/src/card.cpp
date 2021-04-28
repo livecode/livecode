@@ -1633,6 +1633,8 @@ void MCCard::relayercontrol(MCControl *p_source, MCControl *p_target)
 	else
 		t_source_ptr -> appendto(objptrs);
 	layer_added(p_source, MCControlPreviousByLayer(p_source), MCControlNextByLayer(p_source));
+
+	p_source->layerchanged();
 }
 
 void MCCard::relayercontrol_remove(MCControl *p_control)
@@ -1646,6 +1648,9 @@ void MCCard::relayercontrol_remove(MCControl *p_control)
 	
 	// Remove the control from the card's objptr list.
 	t_control_ptr -> remove(objptrs);
+	// make sure this card no longer points to the removed control
+	clearfocus(t_control_ptr, nullptr);
+	
 	delete t_control_ptr;
 
 	// Remove the control from the stack's list.
@@ -1685,6 +1690,8 @@ void MCCard::relayercontrol_insert(MCControl *p_control, MCControl *p_target)
 	else
 		t_control_ptr -> appendto(objptrs);
 	layer_added(p_control, MCControlPreviousByLayer(p_control), MCControlNextByLayer(p_control));
+
+	p_control->layerchanged();
 }
 
 Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)

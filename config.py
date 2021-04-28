@@ -31,12 +31,12 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'x86-android-ndk16r15',
     'x86_64-android-ndk16r15',
     'universal-mac-macosx10.9', # Minimum deployment target
-    'universal-ios-iphoneos13.5',
+    'universal-ios-iphoneos14.4',
     'universal-ios-iphoneos13.2',
     'universal-ios-iphoneos12.1',
     'universal-ios-iphoneos11.2',
     'universal-ios-iphoneos10.2',
-    'universal-ios-iphonesimulator13.5',
+    'universal-ios-iphonesimulator14.4',
     'universal-ios-iphonesimulator13.2',
     'universal-ios-iphonesimulator12.1',
     'universal-ios-iphonesimulator11.2',
@@ -276,7 +276,7 @@ def host_platform(opts):
 def guess_xcode_arch(target_sdk):
     sdk, ver = re.match('^([^\d]*)(\d*)', target_sdk).groups()
     if sdk == 'macosx':
-        return 'i386 x86_64'
+        return 'x86_64'
     if sdk == 'iphoneos':
         if int(ver) < 8:
             return 'armv7'
@@ -618,7 +618,7 @@ def validate_android_tools(opts):
         opts['ANDROID_NDK_PLATFORM_VERSION'] = '16'
 
     if opts['ANDROID_API_VERSION'] is None:
-        opts['ANDROID_API_VERSION'] = '28'
+        opts['ANDROID_API_VERSION'] = '29'
      
     api_ver = opts['ANDROID_API_VERSION']
 

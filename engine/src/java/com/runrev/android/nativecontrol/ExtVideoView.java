@@ -188,6 +188,10 @@ public class ExtVideoView extends SurfaceView implements MediaPlayerControl {
         mVideoHeight = 0;
         getHolder().addCallback(mSHCallback);
         getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
+        /* We always want the video's surface view to sit on top of any OpenGL
+         * surface view, so set this as a media overlay. */
+        setZOrderMediaOverlay(true);
         setFocusable(true);
         setFocusableInTouchMode(true);
         requestFocus();

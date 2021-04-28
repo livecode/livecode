@@ -52,7 +52,7 @@ has no effect on macOS 10.11 (El Capitan) and above, so make sure that any impor
 
 It:
 The <answer file> command places the absolute file path(s) of the
-selected file(s) as a return delimeted list in the it variable.
+selected file(s) as a return delimited list in the it variable.
 
 The result:
 If the user cancels the dialog, the it variable is set to
@@ -91,4 +91,3 @@ revMacFromUnixPath (function), file dialog box (glossary), it (keyword),
 systemFileSelector (property), dontUseNS (property)
 
 Tags: file system
-

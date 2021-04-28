@@ -402,7 +402,7 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
             // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
             // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
             // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
-            if (p_mark -> rectangle . inset && !(p_mark -> rectangle . inset % 2))
+            if (p_mark -> rectangle . inset && (p_mark -> rectangle . inset % 2))
 				p_mark -> rectangle . inset ++;
             // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
 			p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2,
@@ -431,7 +431,7 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
             // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
             // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
             // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
-			if (!(p_mark -> round_rectangle . inset % 2))
+			if (p_mark -> round_rectangle . inset % 2)
 				p_mark -> round_rectangle . inset ++;
             // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
 			p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2,
@@ -455,7 +455,7 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
             // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
             // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
             // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
-			if (!(p_mark -> arc . inset % 2))
+			if (p_mark -> arc . inset % 2)
 				p_mark -> arc . inset ++;
             // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
 			p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2,

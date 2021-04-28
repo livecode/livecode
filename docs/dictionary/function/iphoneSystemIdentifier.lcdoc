@@ -29,5 +29,8 @@ system identifier.
 >*Important:* As of version 6.0 the <iPhoneSystemIdentifier> function
 > has been deprecated and must not be used in new code.
 
+>*Important:* As of version 9.6.2 the <iPhoneSystemIdentifier> function
+> is no longer supported and it returns empty.
+
 References: iphoneApplicationIdentifier (function)
 

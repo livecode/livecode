@@ -1094,6 +1094,16 @@ public:
 		m_ptr[m_size - 1] = p_value;
 		return true;
 	}
+	
+	bool Pop(T &r_value)
+	{
+		if (m_size == 0)
+			return false;
+		
+		r_value = m_ptr[m_size - 1];
+		Shrink(m_size - 1);
+		return true;
+	}
 
 	//////////
 

@@ -358,17 +358,37 @@ class SensorModule
         public double getLongitude() { return m_last_location.getLongitude(); }
         public double getAltitude() { return m_last_location.getAltitude(); }
         
-        //override to make sure currently known location is sent if already started by heading tracker
-        public boolean startTracking(boolean p_loosely)
-        {
-            boolean t_result;
-            t_result = super.startTracking(p_loosely);
-            if (t_result && m_last_location != null)
-                onLocationChanged(m_last_location);
-            return t_result;
-        }
-    }
-    
+		//override to make sure currently known location is sent if already started by internal tracking
+		public boolean startTracking(boolean p_loosely)
+		{
+			// Check if already tracking at the requested level
+			int t_tracking_requested = p_loosely ? COARSE_TRACKING : FINE_TRACKING;
+
+			if (m_tracking_requested == t_tracking_requested)
+				return true;
+
+			boolean t_result;
+			t_result = super.startTracking(p_loosely);
+			if (t_result && m_last_location != null)
+				m_engine.post(new Runnable() {
+					public void run() {
+						onLocationChanged(m_last_location);
+					}
+				});
+			return t_result;
+		}
+
+		// override to clear cached last location if not tracking internallly
+		public boolean stopTracking()
+		{
+			boolean t_result;
+			t_result = super.stopTracking();
+			if (t_result && !isTracking())
+				m_last_location = null;
+			return t_result;
+		}
+	}
+	
     class HeadingTracker extends Tracker implements SensorEventListener
     {
         private Sensor m_magnetometer;

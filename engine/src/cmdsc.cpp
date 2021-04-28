@@ -185,6 +185,12 @@ void MCClipboardCmd::exec_ctxt(MCExecContext& ctxt)
                 return;
             }
             
+            if (t_obj_chunk . object -> gettype() != CT_FIELD)
+            {
+                ctxt . LegacyThrow(EE_CHUNK_BADCONTAINER);
+                return;
+            }
+            
             if (iscut())
                 MCPasteboardExecCutTextToClipboard(ctxt, t_obj_chunk);
             else

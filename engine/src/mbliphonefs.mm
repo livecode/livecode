@@ -93,7 +93,7 @@ bool MCDataProtectionFromString(MCStringRef p_string, NSString *&r_protection)
         return true;
     }
 #ifdef __IPHONE_5_0
-    if (MCmajorosversion >= 500)
+    if (MCmajorosversion >= MCOSVersionMake(5,0,0))
     {
         if (MCStringIsEqualToCString(p_string, "complete unless open", kMCCompareCaseless))
         {
@@ -125,7 +125,7 @@ bool MCDataProtectionToString(NSString *p_protection, MCStringRef &r_string)
         return true;
     }
 #ifdef __IPHONE_5_0
-    if (MCmajorosversion >= 500)
+    if (MCmajorosversion >= MCOSVersionMake(5,0,0))
     {
         if ([p_protection isEqualToString:@"NSFileProtectionCompleteUnlessOpen"])
         {

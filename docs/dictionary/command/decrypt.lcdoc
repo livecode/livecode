@@ -71,7 +71,7 @@ determined by the keyword before it. If you specify key then the key
 needs to be the same size (in bits, eight per byte) as the specified
 <cipher> key length. The key may optionally be accompanied by the
 <IVvalue> used by some ciphers. If you specify password or don't specify
-a key mode, then a password, tyically text, will be used. The password
+a key mode, then a password, typically text, will be used. The password
 may optionally be accompanied by a <saltvalue>. The bits specifies the
 key length in bits (for example, 64, 128, 192 or 256) and may be zero or
 empty for the default length (that is listed with the cipherNames
@@ -108,4 +108,3 @@ References: encrypt (command), cipherNames (function),
 Standalone Application Settings (glossary), command (glossary),
 LiveCode custom library (glossary), SSL & Encryption library (library),
 sslcertificates (property)
-

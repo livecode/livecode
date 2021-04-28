@@ -310,6 +310,10 @@ public:
 				else
 					t_item_highlight = kMCPlatformMenuItemHighlightTick;
 			}
+			else
+			{
+				t_item_highlight = kMCPlatformMenuItemHighlightNone;
+			}
 			
 			MCPlatformMenuItemAction t_action;
 			t_action = ComputeAction(p_menuitem -> label, p_menuitem -> tag);

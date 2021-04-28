@@ -40,6 +40,14 @@ higher the value, the more pixels must be rendered. For example, setting
 the <scaleFactor> property to 10 will cause 100 times the number of
 pixels to be rendered causing the IDE to run slowly.
 
+> *Note:* The scaleFactor is not a persistent property of the stack when 
+> building a standalone. To have scaleFactor applied to a standalone upon
+> opening, it must be coded in a preOpenStack handler. For example:
+
+    on preOpenStack
+        set the scaleFactor of me to 0.75
+    end preOpenStack
+
 References: iphoneUseDeviceResolution (command),
 usePixelScaling (property), systemPixelScale (property)
 
