@@ -55,6 +55,14 @@ the screen. (Android and iOS only)
 > values will depend on the user's local configuration. In particular,
 > they can take both positive and negative values.
 
+>*Note:* On iOS, if the setting "Display Zoom" is checked 
+>(Settings -> Display and Brightness and then scroll down and in the "Display Zoom" section --> "Zoomed")
+>then "the screenrect" reports incorrect results. It usually reports the screenrect of the "previous" (smaller) device, so if "Zoomed" >is checked:
+>
+>- the screenrect in an iPhone6+/7+/8+ reports the screenrect of iPhone6/7/8
+>- the screenrect of an iPhone6 reports the screenrect of iPhone5 etc
+
+
 References: export snapshot (command), function (control structure),
 screenType (function), screenLoc (function), return (glossary),
 integer (glossary), fullscreen (property)
