@@ -4672,7 +4672,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 			"delete the last char of tValue;" \
 		"end if;" \
 	"else;" \
-		"put \"execution error\" into tValue;" \
+		"put url (\"binfile:\" & tStderr) into tValue;" \
+		"if tValue contains \"script error\" then;" \
+			"put \"compiler error\" into tValue;" \
+		"else;" \
+			"put \"execution error\" into tValue;" \
+		"end if;" \
 	"end if;" \
 	"delete file tStdout;" \
 	"delete file tStderr;" \
