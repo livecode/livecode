@@ -59,6 +59,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <sys/xattr.h>
 
+#ifdef __IPHONE_14_0
+#import <AppTrackingTransparency/AppTrackingTransparency.h>
+#endif
+
 #include "mblstore.h"
 #include "mblsyntax.h"
 
@@ -517,6 +521,41 @@ bool MCSystemGetLaunchData(MCArrayRef &r_data)
 {
 	// Not implemented on iOS
 	return false;
+}
+
+bool MCSystemGetTrackingAuthorizationStatus (MCStringRef& r_status)
+{
+#ifdef __IPHONE_14_0
+    if (@available(iOS 14, *))
+    {
+        ATTrackingManagerAuthorizationStatus t_status = [ATTrackingManager trackingAuthorizationStatus];
+        switch (t_status)
+        {
+            case ATTrackingManagerAuthorizationStatusAuthorized:
+                //NSLog(@"ATTrackingManagerAuthorizationStatusAuthorized");
+                r_status = MCSTR("authorized");
+                break;
+            case ATTrackingManagerAuthorizationStatusDenied:
+                //NSLog(@"ATTrackingManagerAuthorizationStatusDenied");
+                r_status = MCSTR("denied");
+                break;
+            case ATTrackingManagerAuthorizationStatusRestricted:
+                //NSLog(@"ATTrackingManagerAuthorizationStatusRestricted");
+                r_status = MCSTR("restricted");
+                break;
+            case ATTrackingManagerAuthorizationStatusNotDetermined:
+                //NSLog(@"ATTrackingManagerAuthorizationStatusNotDetermined");
+                r_status = MCSTR("not determined");
+                break;
+        }
+        return true;
+    }
+    else
+#endif
+    {
+        r_status = MCSTR("not supported");
+        return false;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

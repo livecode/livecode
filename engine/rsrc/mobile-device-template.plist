@@ -130,6 +130,7 @@
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This application requires access to Bluetooth always</string>
 	${HEALTHKIT}
+	${APP_TRACKING_TRANSPARENCY}
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		${APP_URL_WHITELIST}

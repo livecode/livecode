@@ -94,6 +94,7 @@
 	<string>This application requires access to Photo Library</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This application requires access to Bluetooth always</string>
+	${APP_TRACKING_TRANSPARENCY}
 	${HEALTHKIT}
 	${UI_STYLE}
 </dict>

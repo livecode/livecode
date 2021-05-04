@@ -4006,6 +4006,8 @@ void MCSoundSetAudioCategory(MCExecContext &ctxt, intenum_t p_category);
 
 extern MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo;
 
+void MCMiscGetTrackingAuthorizationStatus(MCExecContext& ctxt, MCStringRef &r_status);
+
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token);
 void MCMiscGetLaunchUrl(MCExecContext& ctxt, MCStringRef& r_url);
 

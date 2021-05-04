@@ -2906,6 +2906,23 @@ static Exec_stat MCHandleLocationAuthorizationStatus(void *context, MCParameter 
     return ES_ERROR;
 }
 
+static Exec_stat MCHandleTrackingAuthorizationStatus(void *context, MCParameter *p_parameters)
+{
+    MCAutoStringRef t_status;
+    MCExecContext ctxt(nil, nil,nil);
+    
+    MCMiscGetTrackingAuthorizationStatus(ctxt, &t_status);
+    
+    if (!ctxt . HasError())
+    {
+        ctxt . SetTheResultToValue(*t_status);
+        return ES_NORMAL;
+    }
+    
+    ctxt . SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
 
 static MCMiscStatusBarStyle MCMiscStatusBarStyleFromString(MCStringRef p_string)
 {
@@ -4672,6 +4689,8 @@ static const MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileUseDeviceResolution", MCHandleUseDeviceResolution, nil},
     {false, "mobileDeviceScale", MCHandleDeviceScale, nil},
     {false, "mobilePixelDensity", MCHandlePixelDensity, nil},
+    
+    {false, "iphoneTrackingAuthorizationStatus", MCHandleTrackingAuthorizationStatus, nil},
 
     // SN-2014-10-15: [[ Merge-6.7.0-rc-3 ]]
     {false, "iphoneLocationAuthorizationStatus", MCHandleLocationAuthorizationStatus, nil},

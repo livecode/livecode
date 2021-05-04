@@ -679,6 +679,12 @@ bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
     return false;
 }
 
+bool MCSystemGetTrackingAuthorizationStatus (MCStringRef& r_status)
+{
+    // not supported on Android
+    return false;
+}
+
 bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier)
 {
     // not implemented on Android

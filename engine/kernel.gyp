@@ -186,6 +186,15 @@
                             ],
                         },
                     ],
+                    [
+                        'OS == "ios" and target_sdk >= "14.0"',
+                        {
+                            'libraries':
+                            [
+                                '$(SDKROOT)/System/Library/Frameworks/AppTrackingTransparency.framework',
+                            ],
+                        },
+                    ],
 					[
 						'OS == "ios"',
 						{
