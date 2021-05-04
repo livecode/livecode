@@ -2249,7 +2249,7 @@ void MCMacPlatformWindow::DoUpdate(void)
 		// we enter the runloop to trigger a redraw. This will cause drawRect to be invoked on our view
 		// which in turn will result in a redraw window callback being sent.
 		// The timeout value of 0.02ms is specified to avoid hitting the 60hz redraw limit.
-		if (!s_inside_focus_event && !s_showing_sheet && ![m_delegate inUserReshape])
+		if (MCMacPlatformIsEventCheckingEnabled() && !s_inside_focus_event)
 		{
 			// Since we remove all ApplicationDefined events from the queue we need to
 			// re-queue the events we're not interested in once the redraw has occured.

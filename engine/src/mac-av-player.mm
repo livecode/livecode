@@ -818,6 +818,13 @@ void MCAVFoundationPlayer::Load(MCStringRef p_filename_or_url, bool p_is_url)
         Unload();
         return;
     }
+	
+	/* If there are no playable tracks then reset the player and exit */
+	if (m_player.currentItem.asset.tracks.count == 0)
+	{
+		Unload();
+		return;
+	}
 
 	/* UNCHECKED */ MCAVPlayerSetupPanningFilter(m_player, &m_panning_filter);
 

@@ -357,6 +357,15 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 	MCUnreachableReturn(false);
 }
 
+MCRectangle MCCustomPrinterInsetRectangle(const MCRectangle &p_rect, uint32_t p_inset)
+{
+	/* TODO - fix half pixels lost when insetting by odd integers */
+	return MCRectangleMake(p_rect.x + p_inset / 2,
+							 p_rect.y + p_inset / 2,
+							 MCMax(0, (int32_t)p_rect.width - p_inset),
+							 MCMax(0, (int32_t)p_rect.height - p_inset));
+}
+
 void MCCustomMetaContext::domark(MCMark *p_mark)
 {
 	// If an error has occurred, we do nothing.
@@ -399,16 +408,7 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_RECTANGLE:
 		{
-            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
-            // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-            // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
-            if (p_mark -> rectangle . inset && (p_mark -> rectangle . inset % 2))
-				p_mark -> rectangle . inset ++;
-            // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
-			p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2,
-														   p_mark -> rectangle . bounds . y + p_mark -> rectangle . inset / 2, 
-                                                           MCMin(p_mark -> rectangle . bounds . width, p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset),
-                                                           MCMin(p_mark -> rectangle . bounds . height, p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset));
+			p_mark -> rectangle . bounds = MCCustomPrinterInsetRectangle(p_mark -> rectangle . bounds, p_mark -> rectangle . inset);
 			
 			MCPath *t_path;
 			if (p_mark -> stroke != nil && p_mark -> rectangle . bounds . height == 1)
@@ -428,16 +428,7 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_ROUND_RECTANGLE:
 		{
-            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
-            // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-            // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
-			if (p_mark -> round_rectangle . inset % 2)
-				p_mark -> round_rectangle . inset ++;
-            // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
-			p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2,
-														   p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . inset / 2, 
-                                                           MCMin(p_mark -> round_rectangle . bounds . width, p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset),
-                                                           MCMin(p_mark -> round_rectangle . bounds . height, p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset));
+			p_mark -> round_rectangle . bounds = MCCustomPrinterInsetRectangle(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . inset);
 			
 			MCPath *t_path;
 			t_path = MCPath::create_rounded_rectangle(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius / 2, p_mark -> stroke != nil);
@@ -452,16 +443,7 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_ARC:
 		{
-            // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since MCPath only accepts ints, if the inset value is uneven,
-            // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-            // SN-2014-10-17: [[ Bug 13351 ]] Only round up existing inset
-			if (p_mark -> arc . inset % 2)
-				p_mark -> arc . inset ++;
-            // SN-2014-10-17: [[ Bug 13351 ]] Be careful not to underflow the bounds
-			p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2,
-														   p_mark -> arc . bounds . y + p_mark -> arc . inset / 2, 
-                                                           MCMin(p_mark -> arc . bounds . width, p_mark -> arc . bounds . width - p_mark -> arc . inset),
-                                                           MCMin(p_mark -> arc . bounds . height, p_mark -> arc . bounds . height - p_mark -> arc . inset));
+			p_mark -> arc . bounds = MCCustomPrinterInsetRectangle(p_mark -> arc . bounds, p_mark -> arc . inset);
 			
 			MCPath *t_path;
 			if (p_mark -> arc . complete)
