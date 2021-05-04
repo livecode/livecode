@@ -76,7 +76,7 @@
 				{
 					'xcode_settings':
 					{
-						'OTHER_LD_FLAGS':
+						'OTHER_LDFLAGS':
 						[
 							'-Wl,-platform_version',
 							'-Wl,macos',
