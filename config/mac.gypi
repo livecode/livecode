@@ -30,7 +30,7 @@
 		'STRIP_INSTALLED_PRODUCT': 'NO',
 		'CLANG_LINK_OBJC_RUNTIME': 'NO',
 		'CLANG_CXX_LANGUAGE_STANDARD': 'c++11',
-        'CLANG_CXX_LIBRARY': 'libc++'
+		'CLANG_CXX_LIBRARY': 'libc++'
 	},
 	
 	'target_defaults':
@@ -47,6 +47,7 @@
 			'debug_info_suffix': '.dSYM',
 			
 			'silence_warnings': 0,
+			'travis': '<!(echo ${TRAVIS})',
 		},
 		
 		'target_conditions':
@@ -68,6 +69,21 @@
 						'_SERVER',
 						'_MAC_SERVER',
 					],
+				},
+			],
+			[
+				'travis == ""',
+				{
+					'xcode_settings':
+					{
+						'OTHER_LDFLAGS':
+						[
+							'-Wl,-platform_version',
+							'-Wl,macos',
+							'-Wl,10.9',
+							'-Wl,10.9',
+						],
+					},
 				},
 			],
 			[
