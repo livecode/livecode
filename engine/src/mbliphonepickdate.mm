@@ -132,6 +132,12 @@ UIViewController *MCIPhoneGetViewController(void);
 		[datePicker setLocale:t_locale];
 		[datePicker setCalendar:[t_locale objectForKey:NSLocaleCalendar]];
 		[datePicker setTimeZone:[NSTimeZone localTimeZone]];
+#ifdef __IPHONE_14_0
+		if (@available(iOS 14, *))
+		{
+			[datePicker setPreferredDatePickerStyle: UIDatePickerStyleWheels];
+		}
+#endif
 		// set up the style and parameters for the date picker
 		if (p_style == nil || MCCStringEqual([p_style cStringUsingEncoding:NSMacOSRomanStringEncoding], "dateTime"))
 			[datePicker setDatePickerMode:UIDatePickerModeDateAndTime];
