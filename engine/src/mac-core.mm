@@ -355,6 +355,9 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 									 selector:@selector(interfaceThemeChangedNotification:)
 								     name:@"AppleInterfaceThemeChangedNotification" object:nil];
     
+	if ([NSWindow respondsToSelector:@selector(allowsAutomaticWindowTabbing)])
+		[NSWindow setAllowsAutomaticWindowTabbing: NO];
+	
 	// We started up successfully, so queue the root runloop invocation
 	// message.
 	[self performSelector: @selector(runMainLoop) withObject: nil afterDelay: 0];
