@@ -4842,7 +4842,7 @@ static const MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileSetKeyboardDisplay", MCHandleSetKeyboardDisplay, nil},
     {false, "mobileGetKeyboardDisplay", MCHandleGetKeyboardDisplay, nil},
     
-	{nil, nil, nil}    
+	{false, nil, nil}    
 };
 
 bool MCIsPlatformMessage(MCNameRef handler_name)
