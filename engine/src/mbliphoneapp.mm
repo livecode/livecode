@@ -30,6 +30,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblnotification.h"
 #import <sys/utsname.h>
 
+#ifdef __IPHONE_14_0
+#import <AppTrackingTransparency/AppTrackingTransparency.h>
+#endif
+
+
 #include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -416,6 +421,16 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	// Get the info dictionary.
 	NSDictionary *t_info_dict;
 	t_info_dict = [[NSBundle mainBundle] infoDictionary];
+    
+    // Show dialog about app tracking transparency
+#ifdef __IPHONE_14_0
+    if (@available(iOS 14, *))
+    {
+        NSString *t_app_tracking_transparency_key = [t_info_dict objectForKey: @"NSUserTrackingUsageDescription"];
+        if (t_app_tracking_transparency_key != nil)
+            [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {}];
+    }
+#endif
     
     // Read the allowed notification types from the plist.
     NSArray *t_allowed_push_notifications_array;
