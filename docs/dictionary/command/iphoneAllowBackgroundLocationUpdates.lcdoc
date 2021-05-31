@@ -1,0 +1,40 @@
+Name: iphoneAllowBackgroundLocationUpdates
+
+Type: command
+
+Syntax: iphoneAllowBackgroundLocationUpdates <pAllow>
+
+Summary:
+Allows the app to receive location updates when it is suspended 
+
+Introduced: 9.6.3
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+mobileStartTrackingSensor "location"
+iphoneAllowBackgroundLocationUpdates "true"
+
+Example:
+iphoneAllowBackgroundLocationUpdates "false"
+
+Parameters:
+pAllow (boolean):
+A boolean value specifying if the app should continue to receive
+location updates when put in the background.
+
+
+Description:
+Use the <iphoneAllowBackgroundLocationUpdates> command to allow (or disallow) the app
+receiving location updates when it is suspended. 
+
+This command has an effect only if "Location Update" is checked in the 
+"Background Execution" section in the iOS standalone settings. 
+
+
+
+References: mobileStartTrackingSensor (command), mobileStopTrackingSensor (command),
+
+
