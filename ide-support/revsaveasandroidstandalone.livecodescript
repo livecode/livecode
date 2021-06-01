@@ -599,6 +599,18 @@ private command revSaveAsMobileStandaloneMain pStack, pApkFile, pTarget, pSettin
       end if
       replace "${HARDWARE_ACCELERATED}" with tHardwareAccelerated in tManifest
       
+      // Allow http connections
+      local tAllowHttpConnections, tHasInternetPermission
+      if the keys of pSettings["android,application permissions"] contains "Internet" then
+         put "true" into tHasInternetPermission
+      end if
+      if pSettings["android,allow http"] and tHasInternetPermission then
+         put "android:usesCleartextTraffic=" & quote & "true" & quote into tAllowHttpConnections
+      else
+         put empty into tAllowHttpConnections
+      end if
+      replace "${ALLOW_HTTP_CONNECTIONS}" with tAllowHttpConnections in tManifest
+      
       put tManifest into url ("binfile:" & tManifestFile)
       
       local tAdditional
