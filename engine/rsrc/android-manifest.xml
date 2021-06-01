@@ -20,6 +20,7 @@ ${USES_PERMISSION}${USES_FEATURE}
       android:windowSoftInputMode="stateHidden"
       android:launchMode="singleTask"
       android:hardwareAccelerated="${HARDWARE_ACCELERATED}">
+      ${ALLOW_HTTP_CONNECTIONS}
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
