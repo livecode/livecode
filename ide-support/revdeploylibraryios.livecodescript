@@ -702,6 +702,9 @@ function deploySanitizeSystemVersion
    // TODO: Remove this workaround once bug 22887 is fixed
    if it is "10.16.0" then
       get shell("sw_vers -productVersion")
+      if char -1 of it is CR then
+         delete char -1 of it
+      end if
    end if
    if the length of item 2 of it is 0 then
       put 00 before item 2 of it
