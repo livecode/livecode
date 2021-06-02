@@ -1336,6 +1336,30 @@ Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
 	return ES_ERROR;
 }
 
+Exec_stat MCHandleAllowBackgroundLocationUpdates(void *p_context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    ctxt . SetTheResultToEmpty();
+    
+    bool t_allow_background_location_updates = false;
+    
+    if (p_parameters)
+    {
+        MCAutoValueRef t_value;
+        MCAutoBooleanRef t_bool;
+        p_parameters->eval_argument(ctxt, &t_value);
+        if(ctxt . ConvertToBoolean(*t_value, &t_bool))
+            t_allow_background_location_updates = MCValueIsEqualTo(*t_bool, kMCTrue);
+    }
+    
+    MCSensorAllowBackgroundLocationUpdates(ctxt, t_allow_background_location_updates);
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
 Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
 {
     MCExecContext ctxt(nil, nil, nil);
@@ -4572,6 +4596,7 @@ static const MCPlatformMessageSpec s_platform_messages[] =
     
     // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
 	/* DEPRECATED */ {false, "iphoneCanTrackLocation", MCHandleCanTrackLocation, nil},
+    {false, "iphoneAllowBackgroundLocationUpdates", MCHandleAllowBackgroundLocationUpdates, nil},
 
     // PM-2014-10-07: [[ Bug 13590 ]] StartTrackingLocation and StopTrackingLocation must run on the script thread
     /* DEPRECATED */ {true, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},

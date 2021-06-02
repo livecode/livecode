@@ -3914,6 +3914,7 @@ extern MCExecEnumTypeInfo *kMCSensorTypeTypeInfo;
 void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely);
 void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor);
 void MCSensorGetSensorAvailable(MCExecContext& ctxt, intenum_t p_sensor, bool& r_available);
+void MCSensorAllowBackgroundLocationUpdates(MCExecContext& ctxt, bool p_allow);
 
 void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_location);
 void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location);
