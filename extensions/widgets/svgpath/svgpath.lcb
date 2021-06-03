@@ -107,6 +107,9 @@ metadata iconPresetName.editor is "com.livecode.pi.svgicon"
 metadata iconPresetName.default is "Star"
 metadata iconPresetName.label is "Preset"
 
+property iconName get mPathName
+metadata iconName.label is "IconName"
+
 /**
 Syntax:
 set the iconPath of <widget> to <pSVGPath>
