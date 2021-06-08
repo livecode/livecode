@@ -149,8 +149,12 @@ void MCInterfaceVisualEffectFree(MCExecContext& ctxt, MCInterfaceVisualEffect& p
 {
 	MCValueRelease(p_effect . name);
 	MCValueRelease(p_effect . sound);
-	for (uindex_t i = 0; i < p_effect . nargs; i++)
-		MCInterfaceVisualEffectArgumentFree(ctxt, p_effect . arguments[i]);
+	if (p_effect . arguments != nil)
+	{
+		for (uindex_t i = 0; i < p_effect . nargs; i++)
+			MCInterfaceVisualEffectArgumentFree(ctxt, p_effect . arguments[i]);
+		MCMemoryDeallocate(p_effect . arguments);
+	}
 }
 
 static MCExecCustomTypeInfo _kMCInterfaceVisualEffectTypeInfo =
@@ -239,6 +243,7 @@ void MCInterfaceMakeWebSafeImagePaletteSettings(MCExecContext& ctxt, MCInterface
 
 void MCInterfaceMakeVisualEffect(MCExecContext& ctxt, MCStringRef name, MCStringRef sound, MCInterfaceVisualEffectArgument *effect_args, uindex_t count, Visual_effects type, Visual_effects direction, Visual_effects speed, Visual_effects image, MCInterfaceVisualEffect& r_effect)
 {
+	MCMemoryClear(r_effect);
 	if (MCMemoryAllocate(count * sizeof(MCInterfaceVisualEffectArgument), r_effect . arguments))
 	{
 		for (uindex_t i = 0; i < count; i++)

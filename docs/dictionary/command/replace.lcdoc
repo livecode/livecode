@@ -56,7 +56,7 @@ replace only an exact <string> of text.
 > For example:
 
     put "x:y:y:y:y:x:" into tChangeMe
-    replace ":y:" with empty in tChangeMe
+    replace ":y:" with "::" in tChangeMe
     put tChangeMe -- returns x::y::y:x
     
 > If the goal were to remove every lone y within two colons that appears 

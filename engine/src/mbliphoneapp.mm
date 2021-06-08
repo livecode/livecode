@@ -30,6 +30,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblnotification.h"
 #import <sys/utsname.h>
 
+#ifdef __IPHONE_14_0
+#import <AppTrackingTransparency/AppTrackingTransparency.h>
+#endif
+
+
 #include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -417,6 +422,16 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	NSDictionary *t_info_dict;
 	t_info_dict = [[NSBundle mainBundle] infoDictionary];
     
+    // Show dialog about app tracking transparency
+#ifdef __IPHONE_14_0
+    if (@available(iOS 14, *))
+    {
+        NSString *t_app_tracking_transparency_key = [t_info_dict objectForKey: @"NSUserTrackingUsageDescription"];
+        if (t_app_tracking_transparency_key != nil)
+            [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {}];
+    }
+#endif
+    
     // Read the allowed notification types from the plist.
     NSArray *t_allowed_push_notifications_array;
     t_allowed_push_notifications_array = [t_info_dict objectForKey: @"CFSupportedRemoteNotificationTypes"];
@@ -558,14 +573,14 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 
 // Check if we have received a custom URL
 // This handler is called at runtime, for example if the application tries to launch itself
-- (BOOL)application:(UIApplication *)p_application openURL:(NSURL*)p_url sourceApplication:(NSString *)p_source_application annotation:(id)p_annotation
+- (BOOL)application:(UIApplication *)p_application openURL:(NSURL *)p_url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)p_options
 {
     BOOL t_result = NO;
     if (p_url != nil)
     {
         MCAutoStringRef t_url_text;
-		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[p_url absoluteString], &t_url_text);
-		MCValueAssign(m_launch_url, *t_url_text);
+        /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[p_url absoluteString], &t_url_text);
+        MCValueAssign(m_launch_url, *t_url_text);
         if (m_did_become_active)
             MCNotificationPostUrlWakeUp(m_launch_url);
         t_result = YES;

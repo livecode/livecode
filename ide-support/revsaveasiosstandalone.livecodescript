@@ -1614,7 +1614,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
          put "Portrait" into tIPadOrientations
       end if
    end if
-
+   
    local tUIStyle
    if not pSettings["ios,supports dark mode"] then
       put "<key>UIUserInterfaceStyle</key><string>Light</string>" into tUIStyle
@@ -1634,6 +1634,18 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    if tStatusBarStyle is "solid" then
       put "BlackOpaque" into tStatusBarStyle
       put true into tStatusBarSolid
+   end if
+   
+   ----------
+   
+   local tAppTrackingTransparency
+   if pSettings["ios,AppTrackingTransparency"] then
+      local tAppTrackingTransparencyMessage
+      put pSettings["ios,AppTrackingTransparencyMessage"] into tAppTrackingTransparencyMessage
+      put "<string>" before tAppTrackingTransparencyMessage
+      put "</string>" after tAppTrackingTransparencyMessage
+      put "<key>NSUserTrackingUsageDescription</key>" before tAppTrackingTransparencyMessage
+      put tAppTrackingTransparencyMessage into tAppTrackingTransparency
    end if
    
    ----------
@@ -1677,6 +1689,7 @@ private command revCreateMobilePlist pSettings, pAppBundle, pTarget, pFonts, pPl
    replace "${CUSTOM_FONTS}" with tCustomFonts in pPlist
    replace "${DISABLE_ATS}" with tDisableATS in pPlist
    replace "${HEALTHKIT}" with tHealthKit in pPlist
+   replace "${APP_TRACKING_TRANSPARENCY}" with tAppTrackingTransparency in pPlist
    replace "${UI_STYLE}" with tUIStyle in pPlist
    
    -- PM-2018-01-15: [[Bug 20852]] Get info about Xcode/SDK versions

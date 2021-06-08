@@ -109,6 +109,23 @@ metadata iconPresetName.label is "Preset"
 
 /**
 Syntax:
+get the iconName of <widget>
+
+Example: put the iconName of widget "SVG Icon"
+
+Summary: The name of the currently chosen icon.
+
+Description:
+use the <IconName> to get the name of the currently chosen icon.
+
+You can get a list of available predefined path names by running
+`put iconNames()` in the Message Box.
+*/
+property iconName get mPathName
+metadata iconName.label is "Icon Name"
+
+/**
+Syntax:
 set the iconPath of <widget> to <pSVGPath>
 get the iconPath of <widget>
 

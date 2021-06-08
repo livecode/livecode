@@ -1,0 +1,1 @@
+# Fix blank image created when pasting image data from some applications on Windows

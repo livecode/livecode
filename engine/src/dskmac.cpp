@@ -80,6 +80,30 @@
 uint1 *MClowercasingtable = NULL;
 uint1 *MCuppercasingtable = NULL;
 
+static bool GetProcessIsTranslated()
+{
+	static int s_state = -1;
+	if (s_state == -1)
+	{
+		int ret = 0;
+		size_t size = sizeof(ret);
+		if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1)
+		{
+			if (errno == ENOENT)
+			{
+				s_state = 0;
+			}
+		}
+		else
+		{
+			s_state = ret;
+		}
+	}
+
+	return s_state == 1;
+}
+
+
 inline FourCharCode FourCharCodeFromString(const char *p_string)
 {
 	return MCSwapInt32HostToNetwork(*(FourCharCode *)p_string);
@@ -4627,9 +4651,58 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (t_cf_document != NULL)
             CFRelease(t_cf_document);
     }
-    
+
+#define APPLESCRIPT_SCRIPT \
+	"local tTempFolder;" \
+	"put the tempname into tTempFolder;" \
+	"create folder tTempFolder;" \
+	"local tStdout, tStderr, tScript;" \
+	"put tTempFolder & \"/stdout.txt\" into tStdout;" \
+	"put tTempFolder & \"/stderr.txt\" into tStderr;" \
+	"put tTempFolder & \"/script.scpt\" into tScript;" \
+	"put textEncode(param(1), \"utf8\") into url (\"binfile:\" & tScript);" \
+	"get shell(format(\"arch -arm64 osascript %s 2>%s 1>%s\", tScript, tStderr, tStdout));" \
+	"local tResult;" \
+	"put the result into tResult;" \
+	"delete file tScript;" \
+	"local tValue;" \
+	"if tResult is 0 then;" \
+		"put url (\"binfile:\" & tStdout) into tValue;" \
+		"if the last char of tValue is return then;" \
+			"delete the last char of tValue;" \
+		"end if;" \
+	"else;" \
+		"put url (\"binfile:\" & tStderr) into tValue;" \
+		"if tValue contains \"script error\" then;" \
+			"put \"compiler error\" into tValue;" \
+		"else;" \
+			"put \"execution error\" into tValue;" \
+		"end if;" \
+	"end if;" \
+	"delete file tStdout;" \
+	"delete file tStderr;" \
+	"switch tValue;" \
+	"case \"execution error\";" \
+	"case empty;" \
+		"return tValue;" \
+	"default;" \
+		"return \"{\" & tValue & \"}\";" \
+	"end switch"
+
     virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)
     {
+		if (MCmajorosversion >= MCOSVersionMake(10,16,0) &&
+			MCStringIsEqualToCString(p_language, "AppleScript", kMCStringOptionCompareCaseless) &&
+			GetProcessIsTranslated())
+		{
+			MCParameter *t_param = new (nothrow) MCParameter;
+			t_param->setvalueref_argument(p_script);
+			MCresult->clear();
+			MCdefaultstackptr->domess(MCSTR(APPLESCRIPT_SCRIPT), t_param, true);
+			delete t_param;
+			return;
+		}
+
         getosacomponents();
         OSAcomponent *posacomp = NULL;
         uint2 i;
