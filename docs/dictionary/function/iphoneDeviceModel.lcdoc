@@ -1,0 +1,29 @@
+Name: iphoneDeviceModel
+
+Type: function
+
+Syntax: iphoneDeviceModel()
+
+Summary:
+Returns the machine name of the device the app is running on
+
+
+Introduced: 9.6.3
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+local tModel
+put iphoneDeviceModel() into tModel
+
+
+Description:
+Use the <iphoneDeviceModel> function to get the machine name of the device the app is running on
+
+Note: The machine name is different from the full readable name of the device.
+You can find a mapping between these two names here: http://theiphonewiki.com/wiki/Models
+
+
+
