@@ -289,12 +289,26 @@
 						
 						# Forces all dependencies to be linked properly
 						'type': 'shared_library',
+                        
+						'conditions':
+						[
+							[
+								'("11" not in target_sdk) and ("12" not in target_sdk) and ("13" not in target_sdk)',
+								{
+									'variables':
+									{
+										'deps_file': '${SRCROOT}/standalone14.ios',
+									},
+								},
+								{
+									'variables':
+									{
+										'deps_file': '${SRCROOT}/standalone.ios',
+									},
+								}
+							],
+						],
 						
-						'variables':
-						{
-							'deps_file': '${SRCROOT}/standalone.ios',
-						},
-
 						'xcode_settings':
 						{
 							'DEAD_CODE_STRIPPING': 'NO',
