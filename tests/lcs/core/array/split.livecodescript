@@ -239,3 +239,25 @@ on TestSplitAsSet
    split tResult with empty as set
    TestAssert "split set (native, empty)", tResult is tExpected
 end TestSplitAsSet
+
+on TestBug22586
+	local tVar
+	put "foo" into tVar
+	split tVar by return and ":   "
+	TestAssert "native split by unfound multi-char delimiter does not crash", true
+
+	put "foo" & numToCodePoint(0x2192) into tVar
+	split tVar by return and ":   "
+	TestAssert "unicode split by unfound multi-char delimiter does not crash", true
+end TestBug22586
+
+on TestBug22962
+	local tVar
+	put "foo" into tVar
+	split tVar by return and ": "
+	TestAssert "native split by unfound multi-char delimiter", the keys of tVar is "foo"
+
+	put "foo" & numToCodePoint(0x2192) into tVar
+	split tVar by return and ": "
+	TestAssert "unicode split by unfound multi-char delimiter", the keys of tVar is "foo" & numToCodePoint(0x2192)
+end TestBug22962

@@ -80,6 +80,30 @@
 uint1 *MClowercasingtable = NULL;
 uint1 *MCuppercasingtable = NULL;
 
+static bool GetProcessIsTranslated()
+{
+	static int s_state = -1;
+	if (s_state == -1)
+	{
+		int ret = 0;
+		size_t size = sizeof(ret);
+		if (sysctlbyname("sysctl.proc_translated", &ret, &size, NULL, 0) == -1)
+		{
+			if (errno == ENOENT)
+			{
+				s_state = 0;
+			}
+		}
+		else
+		{
+			s_state = ret;
+		}
+	}
+
+	return s_state == 1;
+}
+
+
 inline FourCharCode FourCharCodeFromString(const char *p_string)
 {
 	return MCSwapInt32HostToNetwork(*(FourCharCode *)p_string);
@@ -1017,7 +1041,7 @@ static bool same_var(const char *p_left, const char *p_right)
 static char **fix_environ(void)
 {
     char **t_new_environ;
-    if (MCmajorosversion > 0x1090)
+    if (MCmajorosversion > MCOSVersionMake(10,9,0))
     {
         // Build a new environ, making sure that each var only takes the
         // first definition in the list. We don't have to care about memory
@@ -1601,6 +1625,11 @@ public:
 	virtual bool Seek(int64_t offset, int p_dir)
 	{
         // TODO Add MCSystemFileHandle::SetStream(char *newptr) ?
+		if (m_is_eof)
+		{
+			clearerr(m_stream);
+			m_is_eof = false;
+		}
 		return fseeko(m_stream, offset, p_dir < 0 ? SEEK_END : (p_dir > 0 ? SEEK_SET : SEEK_CUR)) == 0;
 	}
 	
@@ -2425,7 +2454,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                     
                     // On Snow Leopard check for a coercion to a file list first as otherwise
                     // we get a bad URL!
-                    if (MCmajorosversion >= 0x1060)
+                    if (MCmajorosversion >= MCOSVersionMake(10,6,0))
                     {
                         // SN-2014-10-07: [[ Bug 13587 ]] fetch_as_as_fsref_list updated to return an MCList
                         MCAutoListRef t_list;
@@ -2784,22 +2813,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         MCinfinity = HUGE_VAL;
         
-        // SN-2014-10-08: [[ YosemiteUpdate ]] gestaltSystemVersion stops to 9 after any Minor/Bugfix >= 10
-        //  We want to keep the same way the os version is built, which is 0xMMmb
-        //     - MM reads the decimal major version number
-        //     - m  reads the hexadecimal minor version number
-        //     - b  reads the hexadecimal bugfix number.
         SInt32 t_major, t_minor, t_bugfix;
         if (Gestalt(gestaltSystemVersionMajor, &t_major) == noErr &&
             Gestalt(gestaltSystemVersionMinor, &t_minor) == noErr &&
             Gestalt(gestaltSystemVersionBugFix, &t_bugfix) == noErr)
         {
-            if (t_major < 10)
-                MCmajorosversion = t_major * 0x100;
-            else
-                MCmajorosversion = (t_major / 10) * 0x1000 + (t_major - 10) * 0x100;
-            MCmajorosversion += t_minor * 0x10;
-            MCmajorosversion += t_bugfix * 0x1;
+			MCmajorosversion = MCOSVersionMake(t_major, t_minor, t_bugfix);
         }
 		
         MCaqua = True; // Move to MCScreenDC
@@ -4632,9 +4651,58 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (t_cf_document != NULL)
             CFRelease(t_cf_document);
     }
-    
+
+#define APPLESCRIPT_SCRIPT \
+	"local tTempFolder;" \
+	"put the tempname into tTempFolder;" \
+	"create folder tTempFolder;" \
+	"local tStdout, tStderr, tScript;" \
+	"put tTempFolder & \"/stdout.txt\" into tStdout;" \
+	"put tTempFolder & \"/stderr.txt\" into tStderr;" \
+	"put tTempFolder & \"/script.scpt\" into tScript;" \
+	"put textEncode(param(1), \"utf8\") into url (\"binfile:\" & tScript);" \
+	"get shell(format(\"arch -arm64 osascript %s 2>%s 1>%s\", tScript, tStderr, tStdout));" \
+	"local tResult;" \
+	"put the result into tResult;" \
+	"delete file tScript;" \
+	"local tValue;" \
+	"if tResult is 0 then;" \
+		"put url (\"binfile:\" & tStdout) into tValue;" \
+		"if the last char of tValue is return then;" \
+			"delete the last char of tValue;" \
+		"end if;" \
+	"else;" \
+		"put url (\"binfile:\" & tStderr) into tValue;" \
+		"if tValue contains \"script error\" then;" \
+			"put \"compiler error\" into tValue;" \
+		"else;" \
+			"put \"execution error\" into tValue;" \
+		"end if;" \
+	"end if;" \
+	"delete file tStdout;" \
+	"delete file tStderr;" \
+	"switch tValue;" \
+	"case \"execution error\";" \
+	"case empty;" \
+		"return tValue;" \
+	"default;" \
+		"return \"{\" & tValue & \"}\";" \
+	"end switch"
+
     virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)
     {
+		if (MCmajorosversion >= MCOSVersionMake(10,16,0) &&
+			MCStringIsEqualToCString(p_language, "AppleScript", kMCStringOptionCompareCaseless) &&
+			GetProcessIsTranslated())
+		{
+			MCParameter *t_param = new (nothrow) MCParameter;
+			t_param->setvalueref_argument(p_script);
+			MCresult->clear();
+			MCdefaultstackptr->domess(MCSTR(APPLESCRIPT_SCRIPT), t_param, true);
+			delete t_param;
+			return;
+		}
+
         getosacomponents();
         OSAcomponent *posacomp = NULL;
         uint2 i;

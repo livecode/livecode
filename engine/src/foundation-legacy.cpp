@@ -1646,16 +1646,18 @@ static bool save_array_to_stream(void *p_context, MCArrayRef p_array, MCNameRef 
 			break;
         case VF_STRING:
         {
-            // SN-2014-08-05: [[ Bug 13050 ]] VF_STRING is used for binary as well, so that
-            //  we can't use strlen() to get the size of the string.
-            uindex_t t_length;
-            char_t *t_cstring;
-            /* UNCHECKED */ MCStringConvertToNative(t_str_value, t_cstring, t_length);
-			t_stat = ctxt -> stream -> WriteU32(t_length);
+			// SN-2014-08-05: [[ Bug 13050 ]] VF_STRING is used for binary as well, so that
+			//  we can't use strlen() to get the size of the string.
+			MCAutoStringRefAsNativeChars t_native_string;
+			const char_t *t_native_chars;
+			uindex_t t_native_length;
+			if (!t_native_string.Lock(t_str_value, t_native_chars, t_native_length))
+				t_stat = IO_ERROR;
+
 			if (t_stat == IO_NORMAL)
-            {
-				t_stat = ctxt -> stream -> Write(t_cstring, t_length);
-            }
+				t_stat = ctxt -> stream -> WriteU32(t_native_length);
+			if (t_stat == IO_NORMAL)
+				t_stat = ctxt -> stream -> Write(t_native_chars, t_native_length);
         }
 			break;
 		case VF_NUMBER:

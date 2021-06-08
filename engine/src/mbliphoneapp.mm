@@ -30,6 +30,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblnotification.h"
 #import <sys/utsname.h>
 
+#ifdef __IPHONE_14_0
+#import <AppTrackingTransparency/AppTrackingTransparency.h>
+#endif
+
+
 #include "libscript/script.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,13 +271,19 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	// PM-2016-09-08: [[ Bug 18327 ]] Take into account if x.y.z version of iOS has more than one digits in x,y,z
     NSArray *t_sys_version_array = [[UIDevice currentDevice].systemVersion componentsSeparatedByString:@"."];
     
-    MCmajorosversion = [[t_sys_version_array objectAtIndex:0] intValue] * 100;
-    MCmajorosversion += [[t_sys_version_array objectAtIndex:1] intValue] * 10;
-    
+    uint8_t t_major;
+    t_major = [[t_sys_version_array objectAtIndex:0] intValue];
+
+	uint8_t t_minor;
+    t_minor = [[t_sys_version_array objectAtIndex:1] intValue];
+
+    uint8_t t_bugfix;
     if ([t_sys_version_array count] == 3)
-    {
-        MCmajorosversion += [[t_sys_version_array objectAtIndex:2] intValue];
-    }
+		t_bugfix = [[t_sys_version_array objectAtIndex:2] intValue];
+	else
+		t_bugfix = 0;
+	
+	MCmajorosversion = MCOSVersionMake(t_major, t_minor, t_bugfix);
     
     m_keyboard_display = kMCIPhoneKeyboardDisplayModeOver;
     m_keyboard_type = UIKeyboardTypeDefault;
@@ -411,60 +422,41 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 	NSDictionary *t_info_dict;
 	t_info_dict = [[NSBundle mainBundle] infoDictionary];
     
+    // Show dialog about app tracking transparency
+#ifdef __IPHONE_14_0
+    if (@available(iOS 14, *))
+    {
+        NSString *t_app_tracking_transparency_key = [t_info_dict objectForKey: @"NSUserTrackingUsageDescription"];
+        if (t_app_tracking_transparency_key != nil)
+            [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {}];
+    }
+#endif
+    
     // Read the allowed notification types from the plist.
     NSArray *t_allowed_push_notifications_array;
     t_allowed_push_notifications_array = [t_info_dict objectForKey: @"CFSupportedRemoteNotificationTypes"];
    
-    if (t_allowed_push_notifications_array != nil)
-    {
-        // MM-2014-09-30: [[ iOS 8 Support ]] Use new iOS 8 registration methods for push notifications.
-        if (![[UIApplication sharedApplication] respondsToSelector :@selector(registerUserNotificationSettings:)])
-        {
-            UIRemoteNotificationType t_allowed_notifications = UIRemoteNotificationTypeNone;
-            for (NSString *t_push_notification_string in t_allowed_push_notifications_array)
-            {
-                if ([t_push_notification_string isEqualToString: @"CFBadge"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIRemoteNotificationTypeBadge);
-                else if ([t_push_notification_string isEqualToString: @"CFSound"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIRemoteNotificationTypeSound);
-                else if ([t_push_notification_string isEqualToString: @"CFAlert"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIRemoteNotificationTypeAlert);
-            }
-            
-            // IM-2012-02-13 don't try to register if there are no allowed push notification types
-            if (t_allowed_notifications != UIRemoteNotificationTypeNone)
-            {
-                // Inform the device what kind of push notifications we can handle.
-                
-                // MW-2013-07-29: [[ Bug 10979 ]] Dynamically call the 'registerForRemoteNotificationTypes' to
-                //   avoid app-store warnings.
-                objc_msgSend([UIApplication sharedApplication], sel_getUid("registerForRemoteNotificationTypes:"), t_allowed_notifications);
-            }
-        }
-#ifdef __IPHONE_8_0
-        else
-        {
-            UIUserNotificationType t_allowed_notifications;
-            t_allowed_notifications = UIUserNotificationTypeNone;
-            for (NSString *t_push_notification_string in t_allowed_push_notifications_array)
-            {
-                if ([t_push_notification_string isEqualToString: @"CFBadge"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeBadge);
-                else if ([t_push_notification_string isEqualToString: @"CFSound"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeSound);
-                else if ([t_push_notification_string isEqualToString: @"CFAlert"])
-                    t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeAlert);
-            }
-            if (t_allowed_notifications != UIUserNotificationTypeNone)
-            {
-                m_is_remote_notification = true;
-                UIUserNotificationSettings *t_push_settings;
-                t_push_settings = [UIUserNotificationSettings settingsForTypes: t_allowed_notifications categories:nil];
-                [[UIApplication sharedApplication] registerUserNotificationSettings: t_push_settings];
-            }
-        }
-#endif
-    }
+	if (t_allowed_push_notifications_array != nil)
+	{
+		UIUserNotificationType t_allowed_notifications;
+		t_allowed_notifications = UIUserNotificationTypeNone;
+		for (NSString *t_push_notification_string in t_allowed_push_notifications_array)
+		{
+			if ([t_push_notification_string isEqualToString: @"CFBadge"])
+				t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeBadge);
+			else if ([t_push_notification_string isEqualToString: @"CFSound"])
+				t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeSound);
+			else if ([t_push_notification_string isEqualToString: @"CFAlert"])
+				t_allowed_notifications = (UIRemoteNotificationType) (t_allowed_notifications | UIUserNotificationTypeAlert);
+		}
+		if (t_allowed_notifications != UIUserNotificationTypeNone)
+		{
+			m_is_remote_notification = true;
+			UIUserNotificationSettings *t_push_settings;
+			t_push_settings = [UIUserNotificationSettings settingsForTypes: t_allowed_notifications categories:nil];
+			[[UIApplication sharedApplication] registerUserNotificationSettings: t_push_settings];
+		}
+	}
 
     // MM-2014-09-26: [[ iOS 8 Support ]] Move the registration for orientation updates to here from init. Was causing issues with iOS 8.
     // Tell the device we want orientation notifications.
@@ -581,14 +573,14 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 
 // Check if we have received a custom URL
 // This handler is called at runtime, for example if the application tries to launch itself
-- (BOOL)application:(UIApplication *)p_application openURL:(NSURL*)p_url sourceApplication:(NSString *)p_source_application annotation:(id)p_annotation
+- (BOOL)application:(UIApplication *)p_application openURL:(NSURL *)p_url options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)p_options
 {
     BOOL t_result = NO;
     if (p_url != nil)
     {
         MCAutoStringRef t_url_text;
-		/* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[p_url absoluteString], &t_url_text);
-		MCValueAssign(m_launch_url, *t_url_text);
+        /* UNCHECKED */ MCStringCreateWithCFStringRef((CFStringRef)[p_url absoluteString], &t_url_text);
+        MCValueAssign(m_launch_url, *t_url_text);
         if (m_did_become_active)
             MCNotificationPostUrlWakeUp(m_launch_url);
         t_result = YES;
@@ -958,7 +950,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	t_viewport = [[UIScreen mainScreen] bounds];
 	
     // MW-2014-10-02: [[ iOS 8 Support ]] iOS 8 already takes into account orientation when returning the bounds.
-	if (MCmajorosversion < 800 && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
+	if (MCmajorosversion < MCOSVersionMake(8,0,0) && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
 		return CGRectMake(0.0f, 0.0f, t_viewport . size . height, t_viewport . size . width);
 	
 	return t_viewport;
@@ -974,13 +966,13 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
     // MM-2013-09-25: [[ iOS7Support ]] The status bar is always overlaid ontop of the view, irrespective of its style.
     // PM-2015-02-17: [[ Bug 14482 ]] If the style is "solid", do not put status bar on top of the view
 	CGFloat t_status_bar_size;
-	if (m_status_bar_hidden || (MCmajorosversion >= 700 && !m_status_bar_solid)|| ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
+	if (m_status_bar_hidden || (MCmajorosversion >= MCOSVersionMake(7,0,0) && !m_status_bar_solid)|| ([[UIDevice currentDevice] userInterfaceIdiom] == UIUserInterfaceIdiomPhone && m_status_bar_style == UIStatusBarStyleBlackTranslucent))
 		t_status_bar_size = 0.0f;
 	else
 		t_status_bar_size = 20.0f;
 	
     // MM-2014-09-26: [[ iOS 8 Support ]] iOS 8 already takes into account orientation when returning the bounds.
-	if (MCmajorosversion < 800 && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
+	if (MCmajorosversion < MCOSVersionMake(8,0,0) && UIInterfaceOrientationIsLandscape([self fetchOrientation]))
 		return CGRectMake(0.0f, t_status_bar_size, t_viewport . size . height, t_viewport . size . width - t_status_bar_size);
 	
 	return CGRectMake(0.0f, t_status_bar_size, t_viewport . size . width, t_viewport . size . height - t_status_bar_size);
@@ -1601,7 +1593,7 @@ extern UIReturnKeyType MCInterfaceGetUIReturnKeyTypeFromExecEnum(MCInterfaceRetu
 	
     // MM-2012-09-25: [[ iOS 6.0 ]] When the startup view controller is visible, it appears that didRotateFromInterfaceOrientation is not called.
     //   Set current orientation here instead.
-    if (MCmajorosversion >= 600)
+    if (MCmajorosversion >= MCOSVersionMake(6,0,0))
         m_current_orientation = m_pending_orientation;
 }
 

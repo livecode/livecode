@@ -132,6 +132,12 @@ UIViewController *MCIPhoneGetViewController(void);
 		[datePicker setLocale:t_locale];
 		[datePicker setCalendar:[t_locale objectForKey:NSLocaleCalendar]];
 		[datePicker setTimeZone:[NSTimeZone localTimeZone]];
+#ifdef __IPHONE_14_0
+		if (@available(iOS 14, *))
+		{
+			[datePicker setPreferredDatePickerStyle: UIDatePickerStyleWheels];
+		}
+#endif
 		// set up the style and parameters for the date picker
 		if (p_style == nil || MCCStringEqual([p_style cStringUsingEncoding:NSMacOSRomanStringEncoding], "dateTime"))
 			[datePicker setDatePickerMode:UIDatePickerModeDateAndTime];
@@ -245,7 +251,14 @@ UIViewController *MCIPhoneGetViewController(void);
 		[datePicker setLocale:t_locale];
 		[datePicker setCalendar:[t_locale objectForKey:NSLocaleCalendar]];
 		[datePicker setTimeZone:[NSTimeZone localTimeZone]];
-        
+
+#ifdef __IPHONE_14_0
+		if (@available(iOS 14, *))
+		{
+			[datePicker setPreferredDatePickerStyle: UIDatePickerStyleWheels];
+		}
+#endif
+		
 		// set up the style and parameters for the date picker
 		if (p_style == nil || MCCStringEqual([p_style cStringUsingEncoding:NSMacOSRomanStringEncoding], "dateTime"))
 			[datePicker setDatePickerMode:UIDatePickerModeDateAndTime];
@@ -296,7 +309,7 @@ UIViewController *MCIPhoneGetViewController(void);
 		
 		[t_toolbar setItems: t_toolbar_items animated: NO];
 		
-        if (MCmajorosversion < 800)
+        if (MCmajorosversion < MCOSVersionMake(8,0,0))
         {
             // create the action sheet that contains the "Done" button and date pick wheel
             actionSheet = [[UIActionSheet alloc] initWithTitle:nil
@@ -455,7 +468,7 @@ UIViewController *MCIPhoneGetViewController(void);
     else
     {
         // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
-        if (MCmajorosversion >= 800)
+        if (MCmajorosversion >= MCOSVersionMake(8,0,0))
         {
             [datePicker removeFromSuperview];
             
@@ -502,7 +515,7 @@ UIViewController *MCIPhoneGetViewController(void);
     else
     {
         // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
-        if (MCmajorosversion >= 800)
+        if (MCmajorosversion >= MCOSVersionMake(8,0,0))
         {
             [datePicker removeFromSuperview];
             

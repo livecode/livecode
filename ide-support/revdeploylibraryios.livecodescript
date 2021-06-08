@@ -18,7 +18,7 @@ local sDeviceSDKs
 -- SN-2015-03-24: [[ Bug 15037 ]] Add a consistent, strict list of the
 --  SDKs and device relying on the engines we provide in the shipped version
 function deployUsableIosSdk
-   return "10.2,11.2,12.1,13.2,13.5"
+   return "11.2,12.1,13.2,14.4,14.5"
 end deployUsableIosSdk
 
 // SN-2015-05-01: Return the pair iOS SDK / Xcode for the current MacOS version
@@ -28,10 +28,8 @@ function deployGetIphoneOSes
    local tList, tMacVersion
    put deploySanitizeSystemVersion() into tMacVersion
    // Xcode 8.2 can be installed from Mac OSX 10.11.0 onwards
-   if tMacVersion < 101100 then
-      answer error "To deploy to an iOS device or simulator, you need to upgrade your Mac to at least Mac OSX 10.11.0"
-   else if tMacVersion < 101200 then
-      put "10.2,8.2,10.2" into tList[1]
+   if tMacVersion < 101200 then
+      answer error "To deploy to an iOS device or simulator, you need to upgrade your Mac to at least Mac OSX 10.12.0"
    else if tMacVersion < 101206 then
       put empty into tList[1]
       answer error "To use Xcode 9.2, you need to upgrade your Mac to MacOS Sierra 10.12.6"
@@ -47,19 +45,21 @@ function deployGetIphoneOSes
       answer error "To use Xcode 11.3, you need to upgrade your Mac to MacOS Mojave 10.14.4"
    else if tMacVersion < 101500 then
       put "13.2,11.3,13.3" into tList[1]
-   else if tMacVersion < 101502 then
+   else if tMacVersion < 101504 then
       put empty into tList[1]
-      answer error "To use Xcode 11.5, you need to upgrade your Mac to MacOS Catalina 10.15.2"
+      answer error "To use Xcode 12.4, you need to upgrade your Mac to MacOS Catalina 10.15.4"
+   else if tMacVersion < 110000 then 
+      put "14.4,12.4,14.4" into tList[1]
    else
-      // Xcode 11.5 requires a Mac running Mac OS 10.15.2 or later
-      put "13.5,11.5,13.5" into tList[1]
+      // Xcode 12.5 requires a Mac running Mac OS 11.0 or later
+      put "14.5,12.5,14.5" into tList[1]
    end if
    
    return tList
 end deployGetIphoneOSes
 
 function deployGetIosMinimumVersions
-   return "8.0,9.0,10.0,11.0,12.0,13.0"
+   return "8.0,9.0,10.0,11.0,12.0,13.0,14.0"
 end deployGetIosMinimumVersions
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -272,15 +272,111 @@ command deployDo pTargetStack, pSimulator, pAppBundle
       revStandaloneProgress "Launching app..."
       
       put empty into sDeploySimulationStatus
-      try
-         revIPhoneLaunchAppInSimulator tTempAppBundle, tFamily, "revIDEDeployIOSLaunchCallback"
-      catch tException
-      end try
       
-      --MM-2011-09-28: The simulator appears to time out in Lion if not at front.
-      --
-      --get "tell application" && quote & "iPhone Simulator" & quote & "to activate"
-      --do it as "applescript"
+      local tListDeviceCommand, tCheckIfSimulatorIsOpenCommand, \
+            tBootedDevice, tSimShouldOpen, tNeedToBootDevice
+      
+      // Check if Simulator is already up and running
+      put "ps aux | grep" && quote & "Simulator.app" & quote into tCheckIfSimulatorIsOpenCommand
+      get shell(tCheckIfSimulatorIsOpenCommand)
+      if it contains "Simulator.app/Contents/MacOS/Simulator" then
+         put false into tSimShouldOpen
+      else
+         put true into tSimShouldOpen
+      end if
+      
+      // Check if there is a booted device
+      put "xcrun simctl list devices 2>/dev/null | grep" && quote & "Booted" & quote into tListDeviceCommand
+      get shell(tListDeviceCommand)
+      put line 1 of it into tBootedDevice
+      
+      // If Simulator is open and there is a booted device, we are ready
+      if not tSimShouldOpen and tBootedDevice is not empty then
+         put "false" into tNeedToBootDevice
+         put "started" into sDeploySimulationStatus
+      else if tBootedDevice is empty then
+         put "true" into tNeedToBootDevice
+         // find the first available device to boot
+         put "xcrun simctl list devices 2>/dev/null | grep" && quote & "iOS" && tSimVersion & quote && "-A1 | tail -n 1" into tListDeviceCommand
+         get shell(tListDeviceCommand)
+         if the result is not 0 then
+            throw "Searching for available devices failed with error:" && it
+         end if
+         put it into tBootedDevice
+      end if
+      
+      /*
+      The entries are of the form:
+      
+      -- iOS 12.1 --
+      iPhone 6 Plus (5FBD7B17-8596-448F-835F-E414BB3D782F) (Shutdown) 
+      -- iOS 13.3 --
+      iPhone 6s (8DBBE34E-B77F-4B12-9689-6112E2A6F89E) (Shutdown) 
+      iPhone 8 (185BBCC3-3F48-4A49-8AC5-E5E816F70001) (Shutdown) 
+      iPhone 8 Plus (F5E18B6F-A056-4128-97DD-F41C52B875DD) (Booted) 
+      */
+      
+      local tUUID, tFound
+      // extract the UUID
+      put matchtext(tBootedDevice, "([0-9A-F]{8}-([0-9A-F]{4}-){3}[0-9A-F]{12})", tUUID) into tFound
+      
+      if tNeedToBootDevice then
+         // Boot the device
+         local tBootDeviceCommand
+         put "xcrun simctl boot" && tUUID into tBootDeviceCommand
+         get shell(tBootDeviceCommand)
+         if the result is not 0 then
+            throw "Booting available device failed with error:" && it
+         end if
+      end if
+      
+      if tSimShouldOpen then
+         local tSimulatorAppPath, tCommand
+         put line 1 of the cMobileSupport["ios.sdks"] of stack "revPreferences" into tSimulatorAppPath
+         put "/Applications/Simulator.app/" after tSimulatorAppPath
+         get shell("open" && tSimulatorAppPath && "--args -CurrentDeviceUDID" && tUUID)
+         if the result is not 0 then
+            throw "Launching Simulator failed with error:" && it
+         end if
+      end if
+      
+      -- allow some time for the simulator to open
+      repeat forever
+         local tBootStatusCommand
+         put "xcrun simctl bootstatus" && tUUID into tBootStatusCommand
+         get shell(tBootStatusCommand)
+         if the result is not 0 then
+            throw "Checking simulator bootstatus failed with error:" && it
+         end if
+         if it contains "Device already booted" then
+            put "started" into sDeploySimulationStatus
+            exit repeat
+         end if
+      end repeat
+      
+      // install the app
+      local tInstallCommand
+      put "xcrun simctl install booted" && quote & tTempAppBundle & quote into tInstallCommand
+      get shell(tInstallCommand)
+      if the result is not 0 then
+         throw "Installing app failed with error:" && it
+      end if
+      
+      // launch the app
+      local tLaunchCommand, tAppID
+      put tSettings["ios,bundle id"] into tAppID
+      if tAppID is empty then
+         put "com.yourcompany.yourapp" into tAppID
+      end if
+      put "xcrun simctl launch booted" && tAppID into tLaunchCommand
+      get shell(tLaunchCommand)
+      if the result is not 0 then
+         throw "Launching app failed with error:" && it
+      end if
+      
+      // Bring Simulator app to the front
+      get "tell application" && quote & "Simulator" & quote & "to activate"
+      do it as "applescript"
       
       local tRunawayTimer
       put the millisecs + 10000 into tRunawayTimer
@@ -335,12 +431,6 @@ end deployDo
 
 command deployBuild pTargetStack, pOutputFolder
 end deployBuild
-
--- This callback is invoked by the iOS simulator interconnect external when
--- the status of a launch request changes.
-command revIDEDeployIOSLaunchCallback pStatus
-   put pStatus into sDeploySimulationStatus
-end revIDEDeployIOSLaunchCallback
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -609,6 +699,13 @@ end deployIsValidSDK
 function deploySanitizeSystemVersion
    set the itemDel to "."
    get the systemVersion   
+   // TODO: Remove this workaround once bug 22887 is fixed
+   if it is "10.16.0" then
+      get shell("sw_vers -productVersion")
+      if char -1 of it is CR then
+         delete char -1 of it
+      end if
+   end if
    if the length of item 2 of it is 0 then
       put 00 before item 2 of it
    else if the length of item 2 of it is 1 then

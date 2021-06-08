@@ -62,6 +62,9 @@ private:
 	// Last Error Message
 	char m_strLastError[256];
 
+	// Process events to track speech output status
+	bool ProcessEvents(void);
+
 	// Internal Error Message
 	void Error( WCHAR* pText ){wcscpy((WCHAR *)m_strLastError, pText); };
 	void Error( WCHAR* pText, HRESULT hr){ sprintf(m_strLastError,"%s Error Code:0x%x", pText, hr); };

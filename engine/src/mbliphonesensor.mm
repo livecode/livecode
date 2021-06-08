@@ -255,7 +255,7 @@ static void requestAlwaysAuthorization(void)
         
         NSString *t_location_authorization_when_in_use;
         t_location_authorization_when_in_use = [t_info_dict objectForKey: @"NSLocationWhenInUseUsageDescription"];
-        
+
         if (t_location_authorization_always)
         {
             [s_location_manager requestAlwaysAuthorization];
@@ -293,6 +293,27 @@ static void initialize_core_location(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCSystemAllowBackgroundLocationUpdates(bool p_allow)
+{
+    NSDictionary *t_info_dict;
+    t_info_dict = [[NSBundle mainBundle] infoDictionary];
+    
+    NSArray *t_background_modes_array;
+    t_background_modes_array = [t_info_dict objectForKey: @"UIBackgroundModes"];
+    
+    BOOL t_plist_can_allow_background_location_updates = [t_background_modes_array containsObject: @"location"];
+    
+    if (t_plist_can_allow_background_location_updates)
+    {
+        initialize_core_location();
+        
+        if (p_allow)
+            s_location_manager.allowsBackgroundLocationUpdates = YES;
+        else
+            s_location_manager.allowsBackgroundLocationUpdates = NO;
+    }    
+}
 
 bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available)
 {    
@@ -347,7 +368,7 @@ bool MCSystemGetLocationAuthorizationStatus(MCStringRef& r_status)
     MCAutoStringRef t_status_string;
 	
 #ifdef __IPHONE_8_0
-	if (MCmajorosversion >= 800)
+	if (MCmajorosversion >= MCOSVersionMake(8,0,0))
 	{
 		CLAuthorizationStatus t_status = [CLLocationManager authorizationStatus];
 		switch (t_status)
@@ -408,7 +429,7 @@ bool MCSystemStartTrackingLocation(bool p_loosely)
             initialize_core_location();
             
             // PM-2014-10-06: [[ Bug 13590 ]] Make sure on iOS 8 we explicitly request permission to use location services
-            if (MCmajorosversion >= 800)
+            if (MCmajorosversion >= MCOSVersionMake(8,0,0))
                 requestAlwaysAuthorization();
             
             [s_location_manager startUpdatingLocation];

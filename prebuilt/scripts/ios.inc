@@ -68,13 +68,13 @@ else
 fi
 
 # Detect iOS variants
-checkiOS iphonesimulator10.2 8_2_0 iPhoneSimulator 10.2 "i386 x86_64"
-checkiOS iphoneos10.2 8_2_0 iPhoneOS 10.2 "armv7 arm64"
 checkiOS iphonesimulator11.2 9_2_0 iPhoneSimulator 11.2 "x86_64"
 checkiOS iphoneos11.2 9_2_0 iPhoneOS 11.2 "armv7 arm64"
 checkiOS iphonesimulator12.1 10_1_0 iPhoneSimulator 12.1 "x86_64"
 checkiOS iphoneos12.1 10_1_0 iPhoneOS 12.1 "armv7 arm64"
 checkiOS iphonesimulator13.2 11_3_0 iPhoneSimulator 13.2 "x86_64"
 checkiOS iphoneos13.2 11_3_0 iPhoneOS 13.2 "armv7 arm64"
-checkiOS iphonesimulator13.5 11_5_0 iPhoneSimulator 13.5 "x86_64"
-checkiOS iphoneos13.5 11_5_0 iPhoneOS 13.5 "armv7 arm64"
+checkiOS iphonesimulator14.4 12_4_0 iPhoneSimulator 14.4 "x86_64"
+checkiOS iphoneos14.4 12_4_0 iPhoneOS 14.4 "armv7 arm64"
+checkiOS iphonesimulator14.5 12_5_0 iPhoneSimulator 14.5 "x86_64"
+checkiOS iphoneos14.5 12_5_0 iPhoneOS 14.5 "armv7 arm64"

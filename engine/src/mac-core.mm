@@ -48,6 +48,7 @@ enum
 {
 	kMCMacPlatformBreakEvent = 0,
 	kMCMacPlatformMouseSyncEvent = 1,
+	kMCMacPlatformDrawSyncEvent = 2,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,6 +71,13 @@ bool MCMacPlatformApplicationSendEvent(NSEvent *p_event)
         [p_event subtype] == kMCMacPlatformMouseSyncEvent)
 	{
         MCMacPlatformHandleMouseSync();
+		return true;
+	}
+
+    if ([p_event type] == NSApplicationDefined &&
+        [p_event subtype] == kMCMacPlatformDrawSyncEvent)
+	{
+		MCMacPlatformHandleDrawSync([p_event window]);
 		return true;
 	}
 
@@ -347,6 +355,9 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 									 selector:@selector(interfaceThemeChangedNotification:)
 								     name:@"AppleInterfaceThemeChangedNotification" object:nil];
     
+	if ([NSWindow respondsToSelector:@selector(allowsAutomaticWindowTabbing)])
+		[NSWindow setAllowsAutomaticWindowTabbing: NO];
+	
 	// We started up successfully, so queue the root runloop invocation
 	// message.
 	[self performSelector: @selector(runMainLoop) withObject: nil afterDelay: 0];
@@ -668,8 +679,7 @@ struct MCModalSession
 };
 
 static MCAutoArray<MCModalSession> s_modal_sessions;
-static MCAutoArray<MCModalSession> s_modal_sessions_pending_cleanup;
-static uindex_t s_modal_session_run_depth = 0;
+static MCAutoArray<NSModalSession> s_running_modal_sessions;
 
 struct MCCallback
 {
@@ -786,16 +796,34 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 	
 	s_in_blocking_wait = true;
 	
-	bool t_modal;
-	t_modal = s_modal_sessions.Size() > 0;
+	// Track whether a modal session was closed or not
+	bool t_modal_closed = false;
 	
+	// Check if there is a runnable modal session, this will be the most recently created
+	//     session if it is not already being run.
+	bool t_run_modal = false;
+	if (s_modal_sessions.Size() > 0)
+	{
+		t_run_modal = true;
+		MCModalSession t_session = s_modal_sessions[s_modal_sessions.Size() - 1];
+		// Test if the session is currently running. If it is then don't run it again
+		for (uindex_t t_index = 0; t_index < s_running_modal_sessions.Size(); t_index++)
+		{
+			if (s_running_modal_sessions[t_index] == t_session.session)
+			{
+				t_run_modal = false;
+				break;
+			}
+		}
+	}
+
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
 	
-    // MW-2014-07-24: [[ Bug 12939 ]] If we are running a modal session, then don't then wait
-    //   for events - event handling happens inside the modal session.
-    NSEvent *t_event = nil;
-	if (t_modal)
+	// MW-2014-07-24: [[ Bug 12939 ]] If we are running a modal session, then don't then wait
+	//   for events - event handling happens inside the modal session.
+	NSEvent *t_event = nil;
+	if (t_run_modal)
 	{
 		// Wait for an event, but leave on the queue
 		t_event = [NSApp nextEventMatchingMask: p_blocking ? NSApplicationDefinedMask : NSAnyEventMask
@@ -803,19 +831,32 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
 										inMode: p_blocking ? NSEventTrackingRunLoopMode : NSDefaultRunLoopMode
 									   dequeue: NO];
 		
+		// Fetch the most deeply-nested modal session to run
+		MCModalSession t_session = s_modal_sessions[s_modal_sessions.Size() - 1];
+
 		// Run the modal session, if it has been created yet (it might not if this
 		// wait was triggered by reacting to an event caused as part of creating
 		// the modal session, e.g. when losing window focus).
-		// Check the modal run depth to prevent re-entering a modal session that
-		// is already being run.
-		if (s_modal_session_run_depth < s_modal_sessions.Size() && s_modal_sessions[s_modal_session_run_depth].session != nil)
+		NSModalSession t_ns_session;
+		t_ns_session = t_session.session;
+		
+		if (t_ns_session != nil)
 		{
-			s_modal_session_run_depth++;
-			[NSApp runModalSession: s_modal_sessions[s_modal_session_run_depth - 1].session];
-			s_modal_session_run_depth--;
+			s_running_modal_sessions.Push(t_ns_session);
+			[NSApp runModalSession: t_ns_session];
+			/* UNCHECKED */ s_running_modal_sessions.Pop(t_ns_session);
 			
-			// clean up modal sessions
-			MCMacPlatformCleanupModalSessions();
+			// Check if the session is still in the list of active sessions
+			bool t_modal_session_open = false;
+			for (uindex_t i = 0; i < s_modal_sessions.Size(); i++)
+			{
+				if (s_modal_sessions[i].session == t_ns_session)
+				{
+					t_modal_session_open = true;
+					break;
+				}
+			}
+			t_modal_closed = !t_modal_session_open;
 		}
 
 		t_event = nil;
@@ -842,7 +883,7 @@ bool MCPlatformWaitForEvent(double p_duration, bool p_blocking)
         return s_post_waitforevent_callback(t_event != nullptr);
     }
     
-	return t_event != nil;
+	return t_modal_closed || t_event != nil;
 }
 
 void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
@@ -853,10 +894,10 @@ void MCMacPlatformBeginModalSession(MCMacPlatformWindow *p_window)
 	MCMacPlatformSyncMouseBeforeDragging();
     
 	MCModalSession t_session;
+	MCMemoryClear(t_session);
 	
 	t_session.is_done = false;
 	t_session.window = p_window;
-	p_window -> Retain();
 	// IM-2015-01-30: [[ Bug 14140 ]] lock the window frame to prevent it from being centered on the screen.
 	p_window->SetFrameLocked(true);
 
@@ -870,41 +911,25 @@ void MCMacPlatformEndModalSession(MCMacPlatformWindow *p_window)
 {
 	uindex_t t_index;
 	for(t_index = 0; t_index < s_modal_sessions.Size(); t_index++)
-		if (s_modal_sessions[t_index] . window == p_window)
+		if (s_modal_sessions[t_index].window == p_window)
 			break;
 	
 	if (t_index == s_modal_sessions.Size())
 		return;
 	
-	s_modal_sessions[t_index] . is_done = true;
+	s_modal_sessions[t_index].is_done = true;
 	
 	/* Pop all modal sessions which are now complete. All those which are
 	 * get pushed onto a list to be destroyed later. */
 	while (s_modal_sessions.Size() > 0)
 	{
-		if (!s_modal_sessions[s_modal_sessions.Size() - 1] . is_done)
+		if (!s_modal_sessions[s_modal_sessions.Size() - 1].is_done)
 			return;
 		
 		MCModalSession t_session;
 		/* UNCHECKED */ s_modal_sessions.Pop(t_session);
-		/* UNCHECKED */ s_modal_sessions_pending_cleanup.Push(t_session);
 		
 		[NSApp endModalSession: t_session.session];
-	}
-}
-
-/* Process all modal sessions which are pending destruction. This
- * ensures that windows don't get hidden and destroyed at the wrong
- * time (e.g. within a nested modal session!). */
-void MCMacPlatformCleanupModalSessions(void)
-{
-	while (s_modal_sessions_pending_cleanup.Size() > 0)
-	{
-		MCModalSession t_session;
-		/* UNCHECKED */ s_modal_sessions_pending_cleanup.Pop(t_session);
-		
-		[t_session.window->GetHandle() orderOut: nil];
-		t_session.window->Release();
 	}
 }
 
@@ -1754,7 +1779,7 @@ void MCMacPlatformHandleMouseCursorChange(MCPlatformWindowRef p_window)
     // If we are on Lion+ then check to see if the mouse location is outside
     // of any of the system tracking rects (used for resizing etc.)
     extern uint4 MCmajorosversion;
-    if (MCmajorosversion >= 0x1070)
+    if (MCmajorosversion >= MCOSVersionMake(10,7,0))
     {
         // MW-2014-06-11: [[ Bug 12437 ]] Make sure we only check tracking rectangles if we have
         //   a resizable frame.
@@ -1966,6 +1991,26 @@ void MCMacPlatformSyncMouseBeforeDragging(void)
             s_mouse_window = nil;
         }
 	}
+}
+
+void MCMacPlatformSyncUpdateAfterDraw(NSInteger windowNumber)
+{
+	NSEvent *t_event;
+	t_event = [NSEvent otherEventWithType:NSApplicationDefined
+								 location:NSMakePoint(0,0)
+							modifierFlags:0
+								timestamp:0
+							 windowNumber:windowNumber
+								  context:NULL
+								  subtype:kMCMacPlatformDrawSyncEvent
+									data1:0
+									data2:0];
+	[NSApp postEvent:t_event atStart:YES];
+}
+
+bool MCMacPlatformIsDrawSyncEvent(NSEvent *event)
+{
+	return [event type] == NSApplicationDefined && [event subtype] == kMCMacPlatformDrawSyncEvent;
 }
 
 void MCMacPlatformSyncMouseAfterTracking(void)

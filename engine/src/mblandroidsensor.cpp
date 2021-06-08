@@ -74,6 +74,11 @@ bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available)
     return true;
 }
 
+void MCSystemAllowBackgroundLocationUpdates(bool p_allow)
+{
+    // not implemented
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /*
 bool MCSystemStartTrackingSensor(MCSensorType p_sensor, bool p_loosely)

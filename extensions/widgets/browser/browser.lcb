@@ -259,6 +259,11 @@ The <URL> is the URL of the content be displayed in the browser.
 > browser, and will change when navigating to another page. Setting the 
 > htmlText will result in the <URL> being empty.
 
+>*Note:* Setting the <URL> won't necessarily cause resources to be
+> reloaded unless URLs of the resources explicitly change. However, 
+> you can force the browser widget to reload a page using 
+> `do "location.reload()" in widget "browser"` after setting the url.
+
 >*Note:* Setting the <URL> to empty will clear the currently loaded 
 > page, resulting in a blank page being displayed and the <URL> and 
 > <htmlText> of the widget being empty.

@@ -1,0 +1,46 @@
+Name: iphoneTrackingAuthorizationStatus
+
+Type: function
+
+Syntax: iphoneTrackingAuthorizationStatus()
+
+Summary:
+Returns the current tracking authorization status of the calling
+application. 
+
+Introduced: 9.6.3
+
+OS: ios
+
+Platforms: mobile
+
+Example:
+local tStatus
+put iphoneTrackingAuthorizationStatus() into tStatus
+if tStatus is "denied" then
+   answer "The app cannot track you"
+end if
+
+Returns (enum):
+The <iphoneTrackingAuthorizationStatus> function returns one of the
+following strings:
+
+ -  "not determined" - The user has not yet received a request to authorize access to
+    app-related data that can be used for tracking the user or the device.
+ -  "restricted" - Authorization to access app-related data that can be used for tracking 
+    the user or the device is restricted.
+ -  "denied" - User has explicitly denied authorization to access app-related data that
+    can be used for tracking the user or the device.
+ -  "authorized" - User has granted access to app-related data that can be used for 
+    tracking the user or the device.
+-  "not supported" - Device runs a version of iOS lower than 14, where this
+    feature is not supported
+
+
+Description:
+Use the <iphoneTrackingAuthorizationStatus> function to find the current
+tracking authorization status of the calling application.
+
+This function is available in iOS 14 and above.
+
+

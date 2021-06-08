@@ -532,7 +532,7 @@ return 1;
 		
 		[t_toolbar setItems: t_toolbar_items animated: NO];
         
-        if (MCmajorosversion < 800)
+        if (MCmajorosversion < MCOSVersionMake(8,0,0))
         {
             // create the action sheet that contains the "Done" button and pick wheel
             actionSheet = [[UIActionSheet alloc] initWithTitle:nil
@@ -706,7 +706,7 @@ return 1;
     else
     {
         // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
-        if (MCmajorosversion >= 800)
+        if (MCmajorosversion >= MCOSVersionMake(8,0,0))
         {
             [pickerView removeFromSuperview];
         
@@ -755,7 +755,7 @@ return 1;
     else
     {
         // PM-2014-09-25: [[ Bug 13484 ]] In iOS 8 and above, UIActionSheet is not working properly
-        if (MCmajorosversion >= 800)
+        if (MCmajorosversion >= MCOSVersionMake(8,0,0))
         {
             [pickerView removeFromSuperview];
             

@@ -48,7 +48,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <AudioToolbox/AudioToolbox.h>
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES1/glext.h>
-#import <MediaPlayer/MPMoviePlayerViewController.h>
 
 #include "mbliphoneapp.h"
 #include "mbliphoneview.h"
@@ -545,7 +544,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			bool t_is_rotated;
 			t_is_rotated = UIInterfaceOrientationIsLandscape(MCIPhoneGetOrientation());
 			
-			if (MCmajorosversion >= 800)
+			if (MCmajorosversion >= MCOSVersionMake(8,0,0))
 			{
 				// PM-2014-10-09: [[ Bug 13634 ]] No need to rotate the coords on iOS 8
 				// IM-2014-11-05: [[ Bug 13949 ]] Avoid rotating entirely as faulty offset was being applied to snapshots in landscape orientation.

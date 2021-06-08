@@ -157,7 +157,7 @@ NSRect MCNativeLayerMac::calculateFrameRect(const MCRectangle &p_rect)
 
 void MCNativeLayerMac::doSetViewportGeometry(const MCRectangle &p_rect)
 {
-    doSetGeometry(m_object->getrect());
+    doSetGeometry(m_rect);
 }
 
 void MCNativeLayerMac::doSetGeometry(const MCRectangle &p_rect)

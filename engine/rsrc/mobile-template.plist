@@ -52,6 +52,14 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		${PLAY_AUDIO_WHEN_IN_BACKGROUND}
+		${BACKGROUND_LOCATION_UPDATE}
+		${BACKGROUND_VOIP}
+		${BACKGROUND_NEWSSTAND_DOWNLOADS}
+		${EXTERNAL_ACC_COMM}
+		${USE_BT_LE}
+		${ACTS_AS_BT_LE}
+		${BACKGROUND_FETCH}
+		${REMOTE_NOTIFICATIONS}
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
@@ -94,6 +102,7 @@
 	<string>This application requires access to Photo Library</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This application requires access to Bluetooth always</string>
+	${APP_TRACKING_TRANSPARENCY}
 	${HEALTHKIT}
 	${UI_STYLE}
 </dict>

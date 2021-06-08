@@ -149,7 +149,7 @@ static HANDLE Win32OpenPrinter(MCStringRef p_name)
 
 static void WindowsGetDefaultPrinter(MCStringRef &r_printer)
 {
-	if (MCmajorosversion >= 0x0500)
+	if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 		Win32GetDefaultPrinter(r_printer);
 	else
 	{
@@ -534,6 +534,15 @@ bool MCGDIMetaContext::candomark(MCMark *mark)
 	return mark -> type != MARK_TYPE_GROUP;
 }
 
+inline MCRectangle MCGDIInsetRectangle(const MCRectangle &p_rect, uint32_t p_inset)
+{
+	/* TODO - fix half pixels lost when insetting by odd integers */
+	return MCRectangleMake(p_rect.x + p_inset / 2,
+		p_rect.y + p_inset / 2,
+		MCMax(0, (int32_t)p_rect.width - p_inset),
+		MCMax(0, (int32_t)p_rect.height - p_inset));
+}
+
 void MCGDIMetaContext::domark(MCMark *p_mark)
 {
 	HDC t_dc;
@@ -826,16 +835,7 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		case MARK_TYPE_RECTANGLE:
 		{
 			if (t_should_inset)
-			{
-                // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
-                // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-				if (p_mark -> rectangle . inset % 2)
-					p_mark -> rectangle . inset ++;
-				p_mark -> rectangle . bounds = MCRectangleMake(p_mark -> rectangle . bounds . x + p_mark -> rectangle . inset / 2,
-															   p_mark -> rectangle . bounds . y + p_mark -> rectangle . inset / 2, 
-															   p_mark -> rectangle . bounds . width - p_mark -> rectangle . inset, 
-															   p_mark -> rectangle . bounds . height - p_mark -> rectangle . inset);
-			}
+				p_mark->rectangle.bounds = MCGDIInsetRectangle(p_mark->rectangle.bounds, p_mark->rectangle.inset);
 			
 			Rectangle(t_dc, p_mark -> rectangle . bounds . x, p_mark -> rectangle . bounds . y,
 											p_mark -> rectangle . bounds . x + p_mark -> rectangle . bounds . width,
@@ -846,16 +846,7 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		case MARK_TYPE_ROUND_RECTANGLE:
 		{
 			if (t_should_inset)
-			{
-                // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
-                // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-				if (p_mark -> round_rectangle . inset % 2)
-					p_mark -> round_rectangle . inset ++;
-				p_mark -> round_rectangle . bounds = MCRectangleMake(p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . inset / 2,
-																	 p_mark -> round_rectangle . bounds . y + p_mark -> round_rectangle . inset / 2, 
-																	 p_mark -> round_rectangle . bounds . width - p_mark -> round_rectangle . inset, 
-																	 p_mark -> round_rectangle . bounds . height - p_mark -> round_rectangle . inset);
-			}
+				p_mark->round_rectangle.bounds = MCGDIInsetRectangle(p_mark->round_rectangle.bounds, p_mark->round_rectangle.inset);
 			
 			RoundRect(t_dc, p_mark -> round_rectangle . bounds . x, p_mark -> round_rectangle . bounds . y,
 											p_mark -> round_rectangle . bounds . x + p_mark -> round_rectangle . bounds . width,
@@ -866,16 +857,7 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 		case MARK_TYPE_ARC:
 			if (t_should_inset)
-			{
-                // MM-2014-04-23: [[ Bug 11884 ]] Inset the bounds. Since GDI only accepts ints, if the inset value is uneven,
-                // round up to the nearest even value, keeping behaviour as close to that of the graphics context as possible.
-				if (p_mark -> arc . inset % 2)
-					p_mark -> arc . inset ++;
-				p_mark -> arc . bounds = MCRectangleMake(p_mark -> arc . bounds . x + p_mark -> arc . inset / 2,
-														 p_mark -> arc . bounds . y + p_mark -> arc . inset / 2, 
-														 p_mark -> arc . bounds . width - p_mark -> arc . inset, 
-														 p_mark -> arc . bounds . height - p_mark -> arc . inset);				
-			}
+				p_mark->arc.bounds = MCGDIInsetRectangle(p_mark->arc.bounds, p_mark->arc.inset);
 			
 			gdi_do_arc(t_dc, NULL, p_mark -> stroke == NULL, p_mark -> arc . bounds . x, p_mark -> arc . bounds . y, p_mark -> arc . bounds . x + p_mark -> arc . bounds . width, p_mark -> arc . bounds . y + p_mark -> arc . bounds . height, p_mark -> arc . start, p_mark -> arc . start + p_mark -> arc . angle);
 			if (p_mark -> stroke != NULL)
@@ -1468,7 +1450,7 @@ MCPrinterDialogResult MCWindowsPrinter::DoPrinterSetup(bool p_window_modal, Wind
 	MCPrinterDialogResult t_result;
 	bool t_apply;
 	t_apply = false;
-	if (MCmajorosversion >= 0x0500)
+	if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 	{
 		// SN-2014-08-07: [[ Bug 13084 ]] Update the Windows structures to the Unicode ones
 		PRINTDLGEXW t_dlg;
@@ -1968,21 +1950,25 @@ bool MCWindowsPrinter::FetchDialogData(HGLOBAL& r_devmode_handle, HGLOBAL& r_dev
 	if (t_success)
 	{
 		MCAutoStringRef t_string;
-		/* UNCHECKED */ MCStringFormat(&t_string, "%@\0FILE:\0", m_name);
+		MCStringCreateMutable(0, &t_string);
+		MCStringAppend(*t_string, m_name);
+		MCStringAppendChar(*t_string, '\0');
+		MCStringAppend(*t_string, MCSTR("FILE:"));
+		MCStringAppendChar(*t_string, '\0');
 
 		int t_devnames_size;
 		// SN-2014-07-24: [[ Bug 12916 ]] Closing the Page Setup dialog causes a crash
 		//  The size is indeed in unichars, not chars
 		//t_devnames_size = sizeof(DEVNAMES) + strlen(t_string) + 7;
-		t_devnames_size = sizeof(DEVNAMES) + sizeof(unichar_t) * MCStringGetLength(*t_string);
-		t_devnames_handle = GlobalAlloc(GMEM_MOVEABLE, t_devnames_size);
+		t_devnames_size = sizeof(DEVNAMES) / sizeof(unichar_t) + MCStringGetLength(*t_string);
+		t_devnames_handle = GlobalAlloc(GMEM_MOVEABLE, t_devnames_size * sizeof(unichar_t));
 		if (t_devnames_handle != NULL)
 		{
 			DEVNAMES *t_devnames;
 			t_devnames = (DEVNAMES *)GlobalLock(t_devnames_handle);
 			t_devnames -> wDriverOffset = t_devnames_size -	1;
 			t_devnames -> wOutputOffset = GetDeviceOutputType() == PRINTER_OUTPUT_FILE ? t_devnames_size - 6 : t_devnames_size - 1;
-			t_devnames -> wDeviceOffset = sizeof(DEVNAMES);
+			t_devnames -> wDeviceOffset = sizeof(DEVNAMES) / sizeof(unichar_t);
 			t_devnames -> wDefault = 0;
 
 			// SN-2014-08-07: [[ Bug 13084 ]] The pointer arithmetic wasn't right

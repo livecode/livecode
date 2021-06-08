@@ -148,7 +148,7 @@ constant kMinCols is 3
 constant kMinRows is 3
 
 public handler OnCreate()
-   put "" into mFilterString
+	put "" into mFilterString
 	SetDataList()
 	put the empty array into mPaths
 	put 1 into mFirstDataItem
@@ -159,6 +159,7 @@ public handler OnCreate()
 	put 0 into mViewTopPosition
 	put true into mFrameBorder
 
+	put true into mShowSelectedElement
 	put false into mShowNames
 	put kDefaultIconSize into mIconSize
 

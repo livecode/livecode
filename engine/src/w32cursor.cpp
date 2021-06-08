@@ -165,7 +165,7 @@ void MCScreenDC::resetcursors(void)
 	MCdispatcher -> clearcursors();
 
 	// XP and above allow alpha-blended cursors
-	if (MCmajorosversion >= 0x0501)
+	if (MCmajorosversion >= MCOSVersionMake(5,1,0))
 	{
 		MCcursormaxsize = 128;
 		MCcursorcanbealpha = True;
@@ -185,7 +185,7 @@ void MCScreenDC::resetcursors(void)
 	}
 
 	// Need to check: Windows 2000 for color cursors?
-	if (MCmajorosversion >= 0x0500)
+	if (MCmajorosversion >= MCOSVersionMake(5,0,0))
 		MCcursorcanbecolor = True;
 	else
 		MCcursorbwonly = True;

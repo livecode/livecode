@@ -59,6 +59,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <sys/xattr.h>
 
+#ifdef __IPHONE_14_0
+#import <AppTrackingTransparency/AppTrackingTransparency.h>
+#endif
+
 #include "mblstore.h"
 #include "mblsyntax.h"
 
@@ -519,6 +523,41 @@ bool MCSystemGetLaunchData(MCArrayRef &r_data)
 	return false;
 }
 
+bool MCSystemGetTrackingAuthorizationStatus (MCStringRef& r_status)
+{
+#ifdef __IPHONE_14_0
+    if (@available(iOS 14, *))
+    {
+        ATTrackingManagerAuthorizationStatus t_status = [ATTrackingManager trackingAuthorizationStatus];
+        switch (t_status)
+        {
+            case ATTrackingManagerAuthorizationStatusAuthorized:
+                //NSLog(@"ATTrackingManagerAuthorizationStatusAuthorized");
+                r_status = MCSTR("authorized");
+                break;
+            case ATTrackingManagerAuthorizationStatusDenied:
+                //NSLog(@"ATTrackingManagerAuthorizationStatusDenied");
+                r_status = MCSTR("denied");
+                break;
+            case ATTrackingManagerAuthorizationStatusRestricted:
+                //NSLog(@"ATTrackingManagerAuthorizationStatusRestricted");
+                r_status = MCSTR("restricted");
+                break;
+            case ATTrackingManagerAuthorizationStatusNotDetermined:
+                //NSLog(@"ATTrackingManagerAuthorizationStatusNotDetermined");
+                r_status = MCSTR("not determined");
+                break;
+        }
+        return true;
+    }
+    else
+#endif
+    {
+        r_status = MCSTR("not supported");
+        return false;
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // We do not need this in iOS, as beep is already implemented and handled.
@@ -718,13 +757,9 @@ bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
 
 bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
 {
-    // MM-2013-05-21: [[ Bug 10895 ]] The method uniqueIdentifier of UIDevice is now deprecated (as of May 2013).
-    //  Calling the method dynamically prevents apps from being rejected by the app store
-    //  but preserves functionality for testing and backwards compatibility.
-    NSString *t_identifier;
-    t_identifier = objc_msgSend([UIDevice currentDevice], sel_getUid("uniqueIdentifier"));
-	
-    return MCStringCreateWithCFStringRef((CFStringRef)t_identifier, r_identifier);
+	// Deprecated in LC 6.0
+	r_identifier = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 bool MCSystemGetIdentifierForVendor(MCStringRef& r_identifier)
@@ -971,7 +1006,7 @@ bool MCSystemSetRemoteControlDisplayProperties(MCExecContext& ctxt, MCArrayRef p
 	
 	// MW-2013-10-01: [[ Bug 11136 ]] Make sure we don't do anything if on anything less
 	//   than 5.0.
-	if (MCmajorosversion < 500)
+	if (MCmajorosversion < MCOSVersionMake(5,0,0))
 		return ES_NORMAL;
 	
 	// MW-2013-10-01: [[ Bug 11136 ]] Fetch the symbols we cannot link to for 4.3.

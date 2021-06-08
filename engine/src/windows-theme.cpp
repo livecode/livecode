@@ -115,7 +115,7 @@ bool MCPlatformGetControlThemePropInteger(MCPlatformControlType p_type, MCPlatfo
             else
             {
                 // The default text size depends on the Windows version
-                r_int = MCmajorosversion >= 0x0600 ? 12 : 11;
+                r_int = MCmajorosversion >= MCOSVersionMake(6,0,0) ? 12 : 11;
             }
             break;
         }
@@ -281,7 +281,7 @@ bool MCPlatformGetControlThemePropFont(MCPlatformControlType p_type, MCPlatformC
             {
                 int t_fontsize;
                 MCPlatformGetControlThemePropInteger(p_type, p_part, p_state, kMCPlatformThemePropertyTextSize, t_fontsize);
-                if (MCmajorosversion >= 0x0600)
+                if (MCmajorosversion >= MCOSVersionMake(6,0,0))
                 {
                     // Return the Vista+ UI font
                     return MCFontCreate(MCNAME("Segoe UI"), 0, t_fontsize, r_font);
