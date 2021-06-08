@@ -108,7 +108,7 @@ metadata iconPresetName.default is "Star"
 metadata iconPresetName.label is "Preset"
 
 property iconName get mPathName
-metadata iconName.label is "IconName"
+metadata iconName.label is "Icon Name"
 
 /**
 Syntax:
