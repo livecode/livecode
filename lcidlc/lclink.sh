@@ -1,11 +1,16 @@
 # Dependencies are calculated from the .ios file that lists which libraries and frameworks to link
 # against.
-if [ "$LIVECODE_DEP_FILE" == "" ]; then
-    LIVECODE_DEP_FILE="$SRCROOT/$PRODUCT_NAME.ios"
-fi
 
 read SDK_MAJORVERSION SDK_MINORVERSION <<<${SDK_NAME//[^0-9]/ }
 read SDK_PLATFORM <<<${SDK_NAME//[0-9.]/ }
+
+if [ "$LIVECODE_DEP_FILE" == "" ]; then
+    if [[ $SDK_MAJORVERSION -ge 14 && $PRODUCT_NAME == "standalone" ]] ; then
+	    LIVECODE_DEP_FILE="$SRCROOT/${PRODUCT_NAME}14.ios"
+    else
+	    LIVECODE_DEP_FILE="$SRCROOT/$PRODUCT_NAME.ios"
+    fi  
+fi
 
 if [ -f "$LIVECODE_DEP_FILE" ]; then
 
