@@ -1241,28 +1241,18 @@ bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 
 bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_string, IO_handle &r_file, MCStringRef &r_name_string)
 {
-	const char *t_path = MCStringGetCString(p_path_string);
-	const char *t_prefix = MCStringGetCString(p_prefix_string);
-	char *t_name = (char*)MCStringGetCString(r_name_string);
-
 	bool t_success = true;
-	bool t_have_file = false;
 	
-	char *t_temp_file = NULL;
 	GUID t_guid;
 	WCHAR *t_guid_utf16 = NULL;
 	
-	HANDLE t_temp_handle = NULL;
+	IO_handle t_temp_handle = NULL;
 	
-	while (t_success && !t_have_file)
+	MCAutoStringRef t_temp_file;
+	while (t_success && t_temp_handle == NULL)
 	{
 		CoCreateGuid(&t_guid);
 		
-		if (t_temp_file != NULL)
-		{
-			MCCStringFree(t_temp_file);
-			t_temp_file = NULL;
-		}
 		if (t_guid_utf16 != NULL)
 		{
 			CoTaskMemFree(t_guid_utf16);
@@ -1277,28 +1267,22 @@ bool MCS_create_temporary_file(MCStringRef p_path_string, MCStringRef p_prefix_s
 			for (i = 0; t_guid_utf16[i] != '\0'; i++)
 				t_guid_string[i] = t_guid_utf16[i] & 0xFF;
 			t_guid_string[i] = '\0';
-			t_success = MCCStringFormat(t_temp_file, "%s/%s%s", t_path, t_prefix, t_guid_string);
+			t_success = MCStringFormat(&t_temp_file, "%@/%@%s", p_path_string, p_prefix_string, t_guid_string);
 		}
 		
 		if (t_success)
 		{
-			t_temp_handle = CreateFileA(t_temp_file, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-			if (t_temp_handle != INVALID_HANDLE_VALUE)
-				t_have_file = true;
-			else
+			t_temp_handle = MCsystem->OpenFile(*t_temp_file, (intenum_t)kMCOpenFileModeCreate, false);
+			if (t_temp_handle == NULL)
 				t_success = GetLastError() == ERROR_FILE_EXISTS;
 		}
 	}
 	
 	if (t_success)
 	{
-		r_file = MCsystem -> OpenFd(_open_osfhandle((intptr_t)t_temp_handle, _O_RDWR), kMCOpenFileModeCreate);
-		t_name = t_temp_file;
-		/* UNCHECKED */ MCStringCreateWithCString(t_name, r_name_string);
-
+		r_file = t_temp_handle;
+		r_name_string = t_temp_file.Take();
 	}
-	else
-		MCCStringFree(t_temp_file);
 	
 	CoTaskMemFree(t_guid_utf16);
 	return t_success;
