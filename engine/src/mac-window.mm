@@ -22,6 +22,7 @@
 #include "region.h"
 #include "graphics.h"
 #include "unicode.h"
+#include "globals.h"
 
 #include "platform.h"
 #include "platform-internal.h"
@@ -1588,6 +1589,12 @@ static void map_key_event(NSEvent *event, MCPlatformKeyCode& r_key_code, codepoi
 	//////////
 	
 	MCGRegionDestroy(t_update_region);
+	
+	if (MCmajorosversion >= MCOSVersionMake(10,16,0))
+	{
+		// Notify platform window class of draw
+		t_window->DrawSync();
+	}
 }
 
 //////////
@@ -1674,6 +1681,8 @@ MCMacPlatformWindow::MCMacPlatformWindow(void)
 	m_has_sheet = false;
 	m_frame_locked = false;
 	
+	m_waiting_for_draw = false;
+	
 	m_parent = nil;
 }
 
@@ -1693,6 +1702,7 @@ MCMacPlatformWindow::~MCMacPlatformWindow(void)
 bool MCMacPlatformWindow::s_hiding = false;
 MCMacPlatformWindow *MCMacPlatformWindow::s_hiding_focused = nil;
 MCMacPlatformWindow *MCMacPlatformWindow::s_hiding_unfocused = nil;
+bool MCMacPlatformWindow::s_showing_sheet = false;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2122,6 +2132,7 @@ void MCMacPlatformWindow::DoShowAsSheet(MCPlatformWindowRef p_parent)
 	m_parent -> Retain();
 	((MCMacPlatformWindow *)m_parent) -> m_has_sheet = true;
 	
+	s_showing_sheet = true;
 	[NSApp beginSheet: m_window_handle modalForWindow: t_parent -> m_window_handle modalDelegate: m_delegate didEndSelector: @selector(didEndSheet:returnCode:contextInfo:) contextInfo: nil];
 }
 
@@ -2136,6 +2147,7 @@ void MCMacPlatformWindow::DoHide(void)
 		((MCMacPlatformWindow *)m_parent) -> m_has_sheet = false;
 		m_parent -> Release();
 		m_parent = nil;
+		s_showing_sheet = false;
 	}
 	else if (m_style == kMCPlatformWindowStyleDialog)
 	{
@@ -2198,8 +2210,24 @@ bool MCMacDoUpdateRegionCallback(void *p_context, const MCRectangle &p_rect)
 	
 	return true;
 }
+
+void MCMacPlatformHandleDrawSync(NSWindow *window)
+{
+	/* NOOP */
+}
+
+void MCMacPlatformWindow::DrawSync()
+{
+	if (!m_waiting_for_draw)
+		return;
+	
+	m_waiting_for_draw = false;
+	// Send event to break wait in NSApp::nextEventMatchingMask in MCMacPlatformWindow::DoUpdate
+	MCMacPlatformSyncUpdateAfterDraw(m_window_handle.windowNumber);
+}
+
 void MCMacPlatformWindow::DoUpdate(void)
-{	
+{
 	// If the shadow has changed (due to the mask changing) we must disable
 	// screen updates otherwise we get a flicker.
 	// IM-2015-02-23: [[ WidgetPopup ]] Assume shadow changes when redrawing a non-opaque widget
@@ -2212,12 +2240,48 @@ void MCMacPlatformWindow::DoUpdate(void)
 	// Mark the bounding box of the dirty region for needing display.
 	// COCOA-TODO: Make display update more specific.
 	s_rect_count = 0;
+	m_waiting_for_draw = true;
 	MCRegionForEachRect(m_dirty_region, MCMacDoUpdateRegionCallback, m_view);
 	
-	// Force a re-display, this will cause drawRect to be invoked on our view
-	// which in term will result in a redraw window callback being sent.
-	[m_view displayIfNeededInRect: [m_view mapMCRectangleToNSRect:MCRegionGetBoundingBox(m_dirty_region)]];
-	
+	if (MCmajorosversion >= MCOSVersionMake(10,16,0))
+	{
+		// Frequent redraws with displayIfNeeded causes graphical glitches on Macos Big Sur, so instead
+		// we enter the runloop to trigger a redraw. This will cause drawRect to be invoked on our view
+		// which in turn will result in a redraw window callback being sent.
+		// The timeout value of 0.02ms is specified to avoid hitting the 60hz redraw limit.
+		if (MCMacPlatformIsEventCheckingEnabled() && !s_inside_focus_event)
+		{
+			// Since we remove all ApplicationDefined events from the queue we need to
+			// re-queue the events we're not interested in once the redraw has occured.
+			// This array is used to hold the popped events until they can be pushed back
+			// onto the queue.
+			NSMutableArray *t_popped_events = [[NSMutableArray alloc] init];
+			while (m_waiting_for_draw)
+			{
+				NSEvent *t_event;
+				t_event = [NSApp nextEventMatchingMask: NSApplicationDefinedMask
+											 untilDate: [NSDate dateWithTimeIntervalSinceNow: 0.02]
+												inMode: NSEventTrackingRunLoopMode
+											   dequeue: YES];
+				if (t_event != nil && !MCMacPlatformIsDrawSyncEvent(t_event))
+					[t_popped_events addObject:t_event];
+				t_event = nil;
+			}
+			while (t_popped_events.count > 0)
+			{
+				[NSApp postEvent:t_popped_events.lastObject atStart:YES];
+				[t_popped_events removeLastObject];
+			}
+			[t_popped_events release];
+		}
+	}
+	else
+	{
+		m_waiting_for_draw = false;
+		// Use displayIfNeeded to trigger a redraw
+		[m_view displayIfNeeded];
+	}
+
 	// Re-enable screen updates if needed.
 	if (t_shadow_changed)
     {

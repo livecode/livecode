@@ -48,6 +48,7 @@ enum
 {
 	kMCMacPlatformBreakEvent = 0,
 	kMCMacPlatformMouseSyncEvent = 1,
+	kMCMacPlatformDrawSyncEvent = 2,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,6 +71,13 @@ bool MCMacPlatformApplicationSendEvent(NSEvent *p_event)
         [p_event subtype] == kMCMacPlatformMouseSyncEvent)
 	{
         MCMacPlatformHandleMouseSync();
+		return true;
+	}
+
+    if ([p_event type] == NSApplicationDefined &&
+        [p_event subtype] == kMCMacPlatformDrawSyncEvent)
+	{
+		MCMacPlatformHandleDrawSync([p_event window]);
 		return true;
 	}
 
@@ -347,6 +355,9 @@ static OSErr preDispatchAppleEvent(const AppleEvent *p_event, AppleEvent *p_repl
 									 selector:@selector(interfaceThemeChangedNotification:)
 								     name:@"AppleInterfaceThemeChangedNotification" object:nil];
     
+	if ([NSWindow respondsToSelector:@selector(allowsAutomaticWindowTabbing)])
+		[NSWindow setAllowsAutomaticWindowTabbing: NO];
+	
 	// We started up successfully, so queue the root runloop invocation
 	// message.
 	[self performSelector: @selector(runMainLoop) withObject: nil afterDelay: 0];
@@ -1980,6 +1991,26 @@ void MCMacPlatformSyncMouseBeforeDragging(void)
             s_mouse_window = nil;
         }
 	}
+}
+
+void MCMacPlatformSyncUpdateAfterDraw(NSInteger windowNumber)
+{
+	NSEvent *t_event;
+	t_event = [NSEvent otherEventWithType:NSApplicationDefined
+								 location:NSMakePoint(0,0)
+							modifierFlags:0
+								timestamp:0
+							 windowNumber:windowNumber
+								  context:NULL
+								  subtype:kMCMacPlatformDrawSyncEvent
+									data1:0
+									data2:0];
+	[NSApp postEvent:t_event atStart:YES];
+}
+
+bool MCMacPlatformIsDrawSyncEvent(NSEvent *event)
+{
+	return [event type] == NSApplicationDefined && [event subtype] == kMCMacPlatformDrawSyncEvent;
 }
 
 void MCMacPlatformSyncMouseAfterTracking(void)

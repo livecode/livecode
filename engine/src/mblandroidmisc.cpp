@@ -679,6 +679,12 @@ bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
     return false;
 }
 
+bool MCSystemGetTrackingAuthorizationStatus (MCStringRef& r_status)
+{
+    // not supported on Android
+    return false;
+}
+
 bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier)
 {
     // not implemented on Android
@@ -739,6 +745,10 @@ bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCDataRef p_raw_data
     // SN-2015-01-05: [[ Bug 11417 ]] The file extension has a trailing '\n', which causes issues on Android.
     MCAutoStringRef t_android_filetype;
     MCStringCopySubstring(p_file_extension, MCRangeMake(0, MCStringGetLength(p_file_extension) - 1), &t_android_filetype);
+    
+    if (!MCAndroidCheckRuntimePermission(MCSTR("android.permission.WRITE_EXTERNAL_STORAGE")))
+        return false;
+    
     MCAndroidEngineCall("exportImageToAlbum", "xdxx", &r_save_result, p_raw_data, p_file_name, *t_android_filetype);
     
     return true;

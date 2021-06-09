@@ -101,6 +101,11 @@ void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor)
     }
 }
 
+void MCSensorAllowBackgroundLocationUpdates(MCExecContext& ctxt, bool p_allow)
+{
+    MCSystemAllowBackgroundLocationUpdates(p_allow);
+}
+
 void MCSensorGetSensorAvailable(MCExecContext& ctxt, intenum_t p_sensor, bool& r_available)
 {
     MCSystemGetSensorAvailable((MCSensorType)p_sensor, r_available);

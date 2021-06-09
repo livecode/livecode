@@ -80,6 +80,7 @@ bool MCSystemStartTrackingRotationRate(bool p_loosely);
 bool MCSystemStopTrackingRotationRate();
 
 bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available);
+void MCSystemAllowBackgroundLocationUpdates(bool p_allow);
 
 bool MCSystemStartTrackingSensor(MCSensorType p_sensor, bool p_loosely);
 bool MCSystemStopTrackingSensor(MCSensorType p_sensor);

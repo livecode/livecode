@@ -465,11 +465,11 @@ Boolean MCImage::mup(uint2 which, bool p_release)
 		static_cast<MCMutableImageRep *>(m_rep) -> image_mup(which))
 		return True;
 
+	MCRectangle srect;
+	MCU_set_rect(srect, mx, my, 1, 1);
 	switch(getstack() -> gettool(this))
 	{
 	case T_BROWSE:
-		MCRectangle srect;
-		MCU_set_rect(srect, mx, my, 1, 1);
 		if (!p_release && maskrect(srect))
 			message_with_args(MCM_mouse_up, which);
 		else
