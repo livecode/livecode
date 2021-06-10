@@ -4017,6 +4017,7 @@ void MCMiscGetLaunchData(MCExecContext &ctxt, MCArrayRef &r_data);
 void MCMiscExecBeep(MCExecContext& ctxt, int32_t* p_number_of_times);
 void MCMiscExecVibrate(MCExecContext& ctxt, int32_t* p_number_of_times);
 
+void MCMiscGetDeviceModel(MCExecContext& ctxt, MCStringRef& r_model);
 void MCMiscGetDeviceResolution(MCExecContext& ctxt, MCStringRef& r_resolution);
 void MCMiscSetUseDeviceResolution(MCExecContext& ctxt, bool p_use_device_res, bool p_use_control_device_res);
 void MCMiscGetDeviceScale(MCExecContext& ctxt, real64_t& r_scale);

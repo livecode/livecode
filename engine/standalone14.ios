@@ -22,3 +22,4 @@ framework EventKit
 framework EventKitUI
 framework Security
 framework WebKit
+framework AppTrackingTransparency

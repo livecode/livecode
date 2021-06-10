@@ -2840,6 +2840,23 @@ Exec_stat MCHandleVibrate(void *p_context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
+Exec_stat MCHandleDeviceModel(void *context, MCParameter *p_parameters)
+{
+    MCExecContext ctxt(nil, nil, nil);
+    
+    MCAutoStringRef t_device_model;
+    MCMiscGetDeviceModel(ctxt, &t_device_model);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_device_model);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
 Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters)
 {
     MCExecContext ctxt(nil, nil, nil);
@@ -4707,6 +4724,7 @@ static const MCPlatformMessageSpec s_platform_messages[] =
 	{false, "mobileSetKeyboardType", MCHandleSetKeyboardType, nil},
     {false, "mobileSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil}, // Added from androidmisc.cpp
 	
+    {false, "iphoneDeviceModel", MCHandleDeviceModel, nil},
 	{false, "iphoneDeviceResolution", MCHandleDeviceResolution, nil},
 	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
 	{false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
