@@ -1,13 +1,23 @@
 #!/bin/bash
 
+read SDK_MAJORVERSION SDK_MINORVERSION <<<${SDK_NAME//[^0-9]/ }
+
 set -e
 
 case "$1" in
 	*-community.lcext)
-		DEPS_FILE="${SRCROOT}/standalone.ios"
+		if [[ $SDK_MAJORVERSION -lt 14 ]] ; then
+			DEPS_FILE="${SRCROOT}/standalone.ios"
+		else
+			DEPS_FILE="${SRCROOT}/standalone14.ios"
+		fi
 		;;
 	*-commercial.lcext)
-		DEPS_FILE="${SRCROOT}/../livecode/engine/standalone.ios"
+		if [[ $SDK_MAJORVERSION -lt 14 ]] ; then
+			DEPS_FILE="${SRCROOT}/../livecode/engine/standalone.ios"
+		else
+			DEPS_FILE="${SRCROOT}/../livecode/engine/standalone14.ios"
+		fi
 		;;
 esac
 

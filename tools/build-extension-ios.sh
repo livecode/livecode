@@ -6,7 +6,16 @@ SYMBOLS=$1
 SYMBOLS_FILE=$2
 COPY_PATH=$3
 
-DEPS=`cat "$SRCROOT/$PRODUCT_NAME.ios"`
+read SDK_MAJORVERSION SDK_MINORVERSION <<<${SDK_NAME//[^0-9]/ }
+
+if [[ $SDK_MAJORVERSION -ge 14 && "$PRODUCT_NAME" == "standalone" ]] ; then
+	DEPS_PATH="$SRCROOT/${PRODUCT_NAME}14.ios"
+else
+	DEPS_PATH="$SRCROOT/$PRODUCT_NAME.ios"
+fi
+
+DEPS=`cat $DEPS_PATH`
+
 DEPS=${DEPS//library /-l}
 DEPS=${DEPS//framework /-framework }
 
@@ -68,7 +77,7 @@ if [ -z "$FAT_INFO" -o $BUILD_DYLIB -eq 1 ]; then
 		exit $?
 	fi
 
-	$BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS ${ARCHS} $MIN_OS_VERSION -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS
+	$BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS ${ARCHS} $MIN_OS_VERSION -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,$DEPS_PATH -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS
 
 	if [ $? -ne 0 ]; then
 		exit $?
@@ -102,7 +111,7 @@ else
 			fi
 		fi
 
-	    OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${LCEXT_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$SRCROOT/$PRODUCT_NAME.ios" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS)
+	    OUTPUT=$($BIN_DIR/g++ -stdlib=libc++ -nodefaultlibs $STRIP_OPTIONS -arch ${ARCH} -miphoneos-version-min=${MIN_VERSION} -isysroot $SDKROOT -L"$SOLUTION_DIR/prebuilt/lib/ios/$SDK_NAME" -o "${LCEXT_FILE}" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,$DEPS_PATH -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME $STATIC_DEPS)
 
 		if [ $? -ne 0 ]; then
 			echo "Linking ""${LCEXT_FILE}""failed:"

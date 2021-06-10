@@ -432,6 +432,7 @@ bool MCSystemGetLaunchData(MCArrayRef &r_lauch_data);
 bool MCSystemBeep(int32_t p_number_of_times);
 bool MCSystemVibrate(int32_t p_number_of_times);
 
+bool MCSystemGetDeviceModel(MCStringRef& r_model);
 bool MCSystemGetDeviceResolution(MCStringRef& p_resolution);
 bool MCSystemGetPixelDensity(real64_t& r_density);
 bool MCSystemSetDeviceUseResolution(bool p_use_device_res, bool p_use_control_device_res);

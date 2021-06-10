@@ -187,7 +187,7 @@
                         },
                     ],
                     [
-                        'OS == "ios" and target_sdk >= "14.0"',
+                        'OS == "ios" and ("11" not in target_sdk) and ("12" not in target_sdk) and ("13" not in target_sdk)',
                         {
                             'libraries':
                             [
