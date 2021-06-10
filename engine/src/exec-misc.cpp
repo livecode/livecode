@@ -117,6 +117,14 @@ void MCMiscExecVibrate(MCExecContext& ctxt, int32_t* p_number_of_times)
     ctxt.Throw();
 }
 
+void MCMiscGetDeviceModel(MCExecContext& ctxt, MCStringRef& r_model)
+{
+    if(MCSystemGetDeviceModel(r_model))
+        return;
+    
+    ctxt.Throw();
+}
+
 void MCMiscGetDeviceResolution(MCExecContext& ctxt, MCStringRef& r_resolution)
 {
     if(MCSystemGetDeviceResolution(r_resolution))

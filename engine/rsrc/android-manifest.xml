@@ -13,7 +13,7 @@ ${USES_PERMISSION}${USES_FEATURE}
       android:normalScreens="true"
       android:smallScreens="true"
       android:anyDensity="true" />
-  <application android:label="${LABEL}" ${ICON} android:debuggable="false">
+  <application android:label="${LABEL}" ${ICON} android:debuggable="false" ${ALLOW_HTTP_CONNECTIONS}>
     <activity android:name="${NAME}"
       android:theme="${THEME}"
       android:screenOrientation="${ORIENTATION}"
@@ -21,7 +21,6 @@ ${USES_PERMISSION}${USES_FEATURE}
       android:windowSoftInputMode="stateHidden"
       android:launchMode="singleTask"
       android:hardwareAccelerated="${HARDWARE_ACCELERATED}">
-      ${ALLOW_HTTP_CONNECTIONS}
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
