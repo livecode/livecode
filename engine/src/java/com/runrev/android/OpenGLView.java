@@ -35,6 +35,7 @@ public class OpenGLView extends SurfaceView implements SurfaceHolder.Callback
 	// Instance variables
 	
 	private static final int EGL_CONTEXT_CLIENT_VERSION = 0x00003098;
+	private static final int EGL_OPENGL_ES3_BIT = 0x00000040;
 	
 	private EGL10 m_egl;
 	private EGLDisplay m_egl_display;
@@ -78,6 +79,7 @@ public class OpenGLView extends SurfaceView implements SurfaceHolder.Callback
 	{
 		int[] t_config_spec;
 		t_config_spec = new int[] {
+			EGL10 . EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
 			EGL10 . EGL_RED_SIZE, r,
 			EGL10 . EGL_GREEN_SIZE, g,
 			EGL10 . EGL_BLUE_SIZE, b,
