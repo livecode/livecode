@@ -29,17 +29,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
  * Resolution independence
  * ================================================================ */
 
-/* FIXME use emscripten_get_device_pixel_ratio() */
+static MCGFloat s_emscripten_device_scale = 1.0;
 
 void
 MCResPlatformInitPixelScaling()
 {
+	s_emscripten_device_scale = emscripten_get_device_pixel_ratio();
 }
 
 bool
 MCResPlatformSupportsPixelScaling()
 {
-	return false;
+	return true;
 }
 
 bool
@@ -57,15 +58,13 @@ MCResPlatformCanSetPixelScale()
 MCGFloat
 MCResPlatformGetDefaultPixelScale()
 {
-	MCEmscriptenNotImplemented();
-	return NAN;
+	return s_emscripten_device_scale;
 }
 
 MCGFloat
 MCResPlatformGetUIDeviceScale()
 {
-	MCEmscriptenNotImplemented();
-	return NAN;
+	return s_emscripten_device_scale;
 }
 
 void

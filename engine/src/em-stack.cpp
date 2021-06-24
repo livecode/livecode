@@ -32,6 +32,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphics_util.h"
 #include "globals.h"
 
+#include "region.h"
+
 /* ================================================================
  * Stack initialisation
  * ================================================================ */
@@ -109,34 +111,83 @@ MCStack::release_window_buffer()
  * View management
  * ================================================================ */
 
+static MCStackUpdateCallback s_updatewindow_callback = nullptr;
+static void *s_updatewindow_context = nullptr;
+
 bool MCStack::view_platform_dirtyviewonresize() const
 {
 	return true;
 }
 
-void
-MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
+void MCStack::view_platform_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
-	/* FIXME implement HiDPI support */
+	s_updatewindow_callback = p_callback;
+	s_updatewindow_context = p_context;
 
+	view_platform_updatewindow(p_region);
+
+	s_updatewindow_callback = nil;
+	s_updatewindow_context = nil;
+}
+
+void MCStack::view_platform_updatewindow(MCRegionRef p_dirty_region)
+{
+	MCRegionRef t_scaled_region;
+	t_scaled_region = nil;
+	
+	MCRegionRef t_screen_region;
+	t_screen_region = nil;
+	
+	MCGFloat t_scale;
+	t_scale = MCResGetPixelScale();
+	
+	if (t_scale != 1.0)
+	{
+		/* UNCHECKED */ MCRegionTransform(p_dirty_region, MCGAffineTransformMakeScale(t_scale, t_scale), t_scaled_region);
+		t_screen_region = t_scaled_region;
+	}
+	else
+		t_screen_region = p_dirty_region;
+	
+	view_device_updatewindow(t_screen_region);
+	
+	if (t_scaled_region != nil)
+		MCRegionDestroy(t_scaled_region);
+}
+
+void MCStack::view_device_updatewindow(MCRegionRef p_region)
+{
 	/* dirtyrect() calls that occur prior to configure() being called
 	 * for the first time will result in an update region being too
 	 * big. Restrict to a valid region. */
 
 	uint32_t t_window = reinterpret_cast<uint32_t>(window);
 	
-	MCGRegionRef t_region = MCGRegionRef(p_dirty_region);
-	MCRectangle t_valid = MCEmscriptenGetWindowRect(t_window);
-	t_valid.x = t_valid.y = 0;
+	MCRectangle t_window_rect = MCEmscriptenGetWindowRect(t_window);
+	MCRectangle t_canvas_rect = MCRectangleGetScaledCeilingRect(t_window_rect, MCResGetPixelScale());
+	t_canvas_rect.x = t_canvas_rect.y = 0;
 
-	MCGRegionIntersectRect(t_region, MCRectangleToMCGIntegerRectangle(t_valid));
+	MCGRegionRef t_region = MCGRegionRef(p_region);
 
-    MCGIntegerRectangle t_rect = MCGRegionGetBounds(t_region);
+	MCGRegionIntersectRect(t_region, MCRectangleToMCGIntegerRectangle(t_canvas_rect));
 
-	MCEmscriptenSyncCanvasSize(t_window, t_valid.width, t_valid.height);
-	
-    MCHtmlCanvasStackSurface t_surface(t_window, t_rect);
-	view_surface_redrawwindow(&t_surface, t_region);
+	MCGIntegerRectangle t_rect = MCGRegionGetBounds(t_region);
+	MCEmscriptenSyncCanvasSize(t_window, t_canvas_rect.width, t_canvas_rect.height);
+
+	// IM-2014-01-30: [[ HiDPI ]] Ensure stack backing scale is set
+	view_setbackingscale(MCResGetPixelScale());
+
+	MCHtmlCanvasStackSurface t_surface(t_window, MCGRegionGetBounds(t_region));
+	if (t_surface.Lock())
+	{
+		// IM-2014-01-31: [[ HiDPI ]] If a callback is given then use it to render to the surface
+		if (s_updatewindow_callback != nil)
+			s_updatewindow_callback(&t_surface, (MCRegionRef)t_region, s_updatewindow_context);
+		else
+			view_surface_redrawwindow(&t_surface, t_region);
+
+		t_surface.Unlock();
+	}
 }
 
 MCRectangle
