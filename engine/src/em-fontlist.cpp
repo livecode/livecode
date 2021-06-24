@@ -16,14 +16,25 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
+
+#include "globdefs.h"
+#include "filedefs.h"
+#include "objdefs.h"
+#include "parsedef.h"
+#include "mcio.h"
+
+#include "dllst.h"
+
 #include <SkPaint.h>
 #include <SkTypeface.h>
 
-#include "em-fontlist.h"
-#include "em-util.h"
 
-#include "objdefs.h"
-#include "dllst.h"
+#include "skiatypeface.h"
+
+#include "em-util.h"
+#include "em-font.h"
+#include "em-fontlist.h"
 
 class MCFontnode : public MCDLlist
 {
@@ -53,11 +64,6 @@ protected:
 };
 
 
-// Forward declarations
-static sk_sp<SkTypeface> emscripten_get_font_by_name(MCNameRef p_name, uint16_t p_style);
-static sk_sp<SkTypeface> emscripten_get_font_from_file(MCStringRef p_file);
-
-
 /* ================================================================
  * MCFontnode implementation for Emscripten
  * ================================================================ */
@@ -69,31 +75,28 @@ MCFontnode::MCFontnode(MCNameRef p_name,
 	  m_requested_size(p_size),
 	  m_requested_style(p_style)
 {
-    // Load the font as requested
-    auto t_typeface = emscripten_get_font_by_name(p_name, p_style);
+	MCAutoStringRef t_name;
+	t_name = MCNameGetString(p_name);
 
-    // Calculate the metrics for this typeface and size
-    SkPaint t_paint;
-    t_paint.setTypeface(t_typeface);
-    t_paint.setTextSize(p_size);
-        
-    SkPaint::FontMetrics t_metrics;
-        
-    t_paint.getFontMetrics(&t_metrics);
-        
-    // SkPaint::FontMetrics gives the ascent value as a negative offset from the baseline, where we expect the (positive) distance.
-    m_font_info.m_ascent = -t_metrics.fAscent;
-    m_font_info.m_descent = t_metrics.fDescent;
-    m_font_info.m_leading = t_metrics.fLeading;
-    m_font_info.m_xheight = t_metrics.fXHeight;
-    m_font_info.fid = reinterpret_cast<MCSysFontHandle>(t_typeface.release());
-    m_font_info.size = p_size;
+	uindex_t t_comma;
+    MCAutoStringRef t_before_comma;
+    if (MCStringFirstIndexOfChar(*t_name, ',', 0, kMCCompareExact, t_comma))
+    {
+        /* UNCHECKED */ MCStringCopySubstring(*t_name, MCRangeMake(0, t_comma - 1), &t_before_comma);
+    }
+    else
+    {
+        t_before_comma = *t_name;
+    }
+    
+    m_font_info.fid = (MCSysFontHandle)MCEmscriptenFontCreate(*t_before_comma, p_size, (p_style & FA_WEIGHT) > 0x05, (p_style & FA_ITALIC) != 0);
+
+ 	MCEmscriptenFontGetMetrics(m_font_info.fid,  m_font_info.m_ascent, m_font_info.m_descent, m_font_info.m_leading, m_font_info.m_xheight);
 }
 
 MCFontnode::~MCFontnode()
 {
-	SkTypeface *t_typeface = reinterpret_cast<SkTypeface *>(m_font_info.fid);
-	t_typeface->unref();
+	MCEmscriptenFontDestroy(m_font_info.fid);
 }
 
 MCFontStruct *
@@ -189,8 +192,7 @@ bool
 MCFontlist::getfontnames(MCStringRef p_type,
                          MCListRef & r_names)
 {
-	MCEmscriptenNotImplemented();
-	return false;
+	return MCEmscriptenListFontFamilies(r_names);
 }
 
 /* All fonts are scalable on Emscripten, so return 0 */
@@ -213,8 +215,7 @@ MCFontlist::getfontstyles(MCStringRef p_name,
                           uint16_t p_size,
                           MCListRef & r_styles)
 {
-	MCEmscriptenNotImplemented();
-	return false;
+	return MCEmscriptenListFontsForFamily(p_name, p_size, r_styles);
 }
 
 bool
@@ -251,48 +252,3 @@ MCFontlist::getfontstructinfo(MCNameRef & r_name,
 	}
 	return false;
 }
-
-
-sk_sp<SkTypeface> emscripten_get_font_by_name(MCNameRef p_name,
-                                              uint16_t p_style)
-{
-	/* Decode style */
-	bool t_italic = (0 != (p_style & FA_ITALIC));
-	bool t_bold = (0x05 < (p_style & FA_WEIGHT));
-
-    SkFontStyle::Weight t_weight;
-    SkFontStyle::Width t_width;
-    SkFontStyle::Slant t_slant;
-    
-	if (t_bold)
-        t_weight = SkFontStyle::kBold_Weight;
-    else
-        t_weight = SkFontStyle::kNormal_Weight;
-    
-    t_width = SkFontStyle::kNormal_Width;
-    
-    if (t_italic)
-        t_slant = SkFontStyle::kItalic_Slant;
-    else
-        t_slant = SkFontStyle::kUpright_Slant;
-	
-    SkFontStyle t_style(t_weight, t_width, t_slant);
-    
-    MCAutoStringRefAsSysString t_sys_name;
-	/* UNCHECKED */ t_sys_name.Lock(MCNameGetString(p_name));
-
-	sk_sp<SkTypeface> t_typeface = SkTypeface::MakeFromName(*t_sys_name, t_style);
-	
-	return t_typeface;       
-}
-
-sk_sp<SkTypeface> emscripten_get_font_from_file(MCStringRef p_file)
-{
-    MCAutoStringRefAsSysString t_sys_path;
-    /* UNCHECKED */ t_sys_path.Lock(p_file);
-
-    sk_sp<SkTypeface> t_typeface = SkTypeface::MakeFromFile(*t_sys_path);
-    MCAssert(t_typeface != nil);
-    return t_typeface;
-}
-

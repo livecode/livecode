@@ -776,6 +776,8 @@
 			'src/em-event.js',
 			'src/em-filehandle.h',
 			'src/em-filehandle.cpp',
+			'src/em-font.h',
+			'src/em-font.cpp',
 			'src/em-fontlist.h',
 			'src/em-fontlist.cpp',
 			'src/em-javascript.h',
@@ -1201,9 +1203,9 @@
 					],
 				},
 			],
-			# Exclude freetype / skia font handling code used by Android
+			# Exclude freetype / skia font handling code used by Android & Emscripten
 			[
-				'OS != "android"',
+				'OS != "android" and OS != "emscripten"',
 				{
 					'sources!':
 					[

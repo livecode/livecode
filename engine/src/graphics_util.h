@@ -342,7 +342,7 @@ inline MCGRectangle MCGRectangleCenterOnRect(const MCGRectangle &p_rect_a, const
 // MM-2014-06-02: [[ CoreText ]] We now no longer need the style attribute of the MCGFont Struct.
 //   Was only used by the ATSUI routines.
 
-#if defined(TARGET_SUBPLATFORM_ANDROID)
+#if defined(TARGET_SUBPLATFORM_ANDROID) || defined(__EMSCRIPTEN__)
 
 #include "skiatypeface.h"
 
@@ -414,24 +414,6 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
     t_font . m_leading = p_font -> m_leading;
 	t_font . fid = p_font -> fid;
 	t_font . ideal = false;
-	return t_font;
-}
-
-#elif defined(__EMSCRIPTEN__)
-
-static inline MCGFont
-MCFontStructToMCGFont(MCFontStruct *p_font)
-{
-	MCGFont t_font;
-	MCMemoryClear(&t_font, sizeof(t_font));
-
-	t_font . size = p_font -> size;
-	t_font . m_ascent = p_font -> m_ascent;
-	t_font . m_descent = p_font -> m_descent;
-    t_font . m_leading = p_font -> m_leading;
-    t_font . fid = p_font -> fid;
-	t_font . ideal = false;
-
 	return t_font;
 }
 
