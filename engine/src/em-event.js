@@ -131,7 +131,7 @@ mergeInto(LibraryManager.library, {
 			});
 
 			// Add listener for changes to device pixel ratio
-			var matchQuery = `(resolution: ${window.devicePixelRatio}dppx)`;
+			var matchQuery = "(resolution: " + window.devicePixelRatio + "dppx)";
 			window.matchMedia(matchQuery).addListener(LiveCodeEvents._handleDevicePixelRatioChanged);
 
 			LiveCodeEvents._initialised = true;
