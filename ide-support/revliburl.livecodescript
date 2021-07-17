@@ -3979,7 +3979,8 @@ end ulStartTickle
 --------------------------
 on ulTickleMe
   ## safeguard against possible hangs in "wait for messages" loops
-  if the openSockets <> empty then
+    // MDW 2021.07.17 feature_ulEndTickle
+  if the keys of lvSocketToken is not empty then
     send "ulTickleMe" to me in 1 seconds
   else
     put empty into lvTickle
