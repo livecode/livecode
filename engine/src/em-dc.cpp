@@ -33,6 +33,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "graphics_util.h"
 
+#include <emscripten.h>
+
 /* ================================================================
  * Helper Functions
  * ================================================================ */
@@ -258,6 +260,7 @@ bool MCScreenDC::platform_getdisplays(bool p_effective, MCDisplay *&r_displays, 
 		return false;
 	
 	t_display->viewport = t_display->workarea = MCEmscriptenGetDisplayRect();
+	t_display->pixel_scale = emscripten_get_device_pixel_ratio();
 	
 	r_displays = t_display;
 	r_count = 1;

@@ -1877,7 +1877,7 @@ void MCPlayer::setenabledtracks(uindex_t p_count, uint32_t *p_tracks_id)
 				MCPlatformSetPlayerTrackProperty(m_platform_player, i, kMCPlatformPlayerTrackPropertyEnabled, kMCPlatformPropertyTypeBool, &t_enabled);
 			}
 			
-            for (uindex_t i = 0; i < t_track_count; i++)
+            for (uindex_t i = 0; i < p_count; i++)
             {
 				// If the list of enabledtracks we set contains 0 (empty), just skip it
 				if (p_tracks_id[i] == 0)
