@@ -72,7 +72,7 @@ void MCPlatformCreateColorTransform(const MCColorSpaceInfo& p_info, MCPlatformCo
 		CFDataRef t_data;
 		t_data = nil;
 		
-		t_success = nil != (t_data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, (UInt8*)p_info.embedded.data, p_info.embedded.data_size, kCFAllocatorNull));
+		t_success = nil != (t_data = CFDataCreate(kCFAllocatorDefault, (UInt8*)p_info.embedded.data, p_info.embedded.data_size));
 		
 		if (t_success)
 			t_success = nil != (t_colorspace = CGColorSpaceCreateWithICCProfile(t_data));
