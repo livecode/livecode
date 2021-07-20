@@ -672,7 +672,7 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
    put sStandaloneSettingsA into tStandaloneSettingsA
    repeat for each key tTarget in sPlatformDirectoriesA["MacOSX"]
       put sPlatformDirectoriesA["MacOSX"][tTarget] into tTargetDir
-      put tTargetDir & sStandaloneSettingsA["name"] & ".app/Contents/MacOS/" into tDirectory
+      put tTargetDir & normalizeForDisk(sStandaloneSettingsA["name"]) & ".app/Contents/MacOS/" into tDirectory
       
       -- Ensure standalone settings script local is reset when building for subsequent targets
       put tStandaloneSettingsA into sStandaloneSettingsA
@@ -697,7 +697,7 @@ command revSaveAsMacStandalone pStack, pRestoreFileName, pFolder, @xStandalonePa
                & return & tEngineSourceFile
       end if
       
-      put tDirectory & sStandaloneSettingsA["name"] into tStandalonePath
+      put tDirectory & normalizeForDisk(sStandaloneSettingsA["name"]) into tStandalonePath
       
       put tStandalonePath into xStandalonePaths[tTarget]
       
@@ -1783,8 +1783,17 @@ end revSetMacOS
 --    plists as Mavericks doesn't like it!
 private function escapeForXml pString
    replace "&" with "&amp;" in pString
-   return pString
+   return normalizeText(pString, "NFD")
 end escapeForXml
+
+private function normalizeForDisk pString
+   if the platform is "MacOS" then
+      // Composed unicode chars can cause problems with codesign so we normalize them to NFD form
+      return normalizeText(pString, "NFD")
+   else
+      return pString
+   end if
+end normalizeForDisk
 
 #####################################################################
 # revSetStackProps is a combination of revRemoveProps and revSetProfiles
