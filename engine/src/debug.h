@@ -102,8 +102,8 @@ extern MCNameRef MClogmessage;
 struct MCExecValue;
 
 extern void MCB_setmsg(MCExecContext &ctxt, MCStringRef p_string);
-extern Exec_stat MCB_message(MCExecContext &ctxt, MCNameRef message, MCParameter *p);
-extern Exec_stat MCB_prepmessage(MCExecContext &ctxt, MCNameRef message, uint2 line, uint2 pos, uint2 id, MCStringRef p_info = kMCEmptyString);
+extern void MCB_message(MCExecContext &ctxt, MCNameRef message, MCParameter *p);
+extern void MCB_prepmessage(MCExecContext &ctxt, MCNameRef message, uint2 line, uint2 pos, uint2 id, MCStringRef p_info = kMCEmptyString);
 extern void MCB_break(MCExecContext &ctxt, uint2 line, uint2 pos);
 extern void MCB_trace(MCExecContext &ctxt, uint2 line, uint2 pos);
 extern bool MCB_error(MCExecContext &ctxt, uint2 line, uint2 pos, uint2 id);
