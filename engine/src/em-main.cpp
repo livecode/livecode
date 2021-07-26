@@ -28,8 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "dispatch.h"
 
-#include "em-font.h"
-
 #include <unistd.h>
 
 /* ================================================================
@@ -141,9 +139,6 @@ platform_main(int argc, char *argv[], char *envp[])
 			MCEmscriptenBootError("unknown boot failure");
 		}
 	}
-
-	/* ---------- Scan list of custom fonts */
-	MCEmscriptenCustomFontsLoad();
 
 	/* ---------- Clean up arguments & environment */
 	for (int i = 0; i < argc; ++i)
