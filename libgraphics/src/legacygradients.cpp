@@ -315,12 +315,13 @@ public:
             m_buffer = nullptr;
             m_buffer_width = 0;
         }
-        
-        ~Context()
-        {
-            MCMemoryDeleteArray(m_ramp);
-        }
-        
+
+		~Context()
+		{
+			MCMemoryDeleteArray(m_buffer);
+			MCMemoryDeleteArray(m_ramp);
+		}
+
         virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count) override
         {
             if (m_combine == nullptr)
@@ -339,7 +340,7 @@ public:
             {
                 if ((int)m_buffer_width < count * GRADIENT_AA_SCALE)
                 {
-                    uindex_t t_size = m_buffer_width * GRADIENT_AA_SCALE * GRADIENT_AA_SCALE;
+                    uindex_t t_size = m_buffer_width * GRADIENT_AA_SCALE;
                     if (!MCMemoryResizeArray(count * GRADIENT_AA_SCALE * GRADIENT_AA_SCALE, m_buffer, t_size))
                     {
                         return;

@@ -1075,6 +1075,7 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
             bool t_zero_pad;
             t_zero_pad = false;
             
+            bool t_is_negative = false;
             *dptr++ = *t_native_format++;
             while (*t_native_format == '-' || *t_native_format == '#' || *t_native_format == '0'
                 || *t_native_format == ' ' || *t_native_format == '+')
@@ -1082,6 +1083,10 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                 // AL-2014-11-19: [[ Bug 14059 ]] Record position of last zero.
                 if (*t_native_format == '0')
                     prefix_zero = t_native_format;
+                
+                if (*t_native_format == '-')
+                    t_is_negative = true;
+                
                 *dptr++ = *t_native_format++;
             }
             if (isdigit((uint1)*t_native_format))
@@ -1227,9 +1232,19 @@ void MCStringsEvalFormat(MCExecContext& ctxt, MCStringRef p_format, MCValueRef* 
                         {
                             // AL-2014-11-19: [[ Bug 14059 ]] Pad with zeroes if the appropriate specifier flag was used
                             if (t_zero_pad)
-                                t_success = MCStringAppendFormat(*t_result, "%0*s%@", width - t_range . length, "", *t_string);
+                            {
+                                if (!t_is_negative)
+                                    t_success = MCStringAppendFormat(*t_result, "%0*s%@", width - t_range . length, "", *t_string);
+                                else
+                                    t_success = MCStringAppendFormat(*t_result, "%@", *t_string);
+                            }
                             else
-                                t_success = MCStringAppendFormat(*t_result, "%*s%@", width - t_range . length, "", *t_string);
+                            {
+                                if (!t_is_negative)
+                                    t_success = MCStringAppendFormat(*t_result, "%*s%@", width - t_range . length, "", *t_string);
+                                else
+                                    t_success = MCStringAppendFormat(*t_result, "%@%*s", *t_string, width - t_range . length, "");
+                            }
                         }
                         else
                             t_success = MCStringAppendFormat(*t_result, "%@", *t_string);

@@ -1490,8 +1490,8 @@ void MCStack::removecard(MCCard *cptr)
 	if (state & CS_IGNORE_CLOSE)
 	{
 		curcard = cptr->next();
-		cptr->remove
-		(cards);
+		cptr->close();
+		cptr->remove(cards);
 		if (cards == NULL)
 		{
 			cards = curcard = MCtemplatecard->clone(False, False);
