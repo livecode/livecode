@@ -875,9 +875,15 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
             return;
         }
         
+        NSTimeInterval t_duration;
+        [[t_info objectForKey:UIKeyboardAnimationDurationUserInfoKey] getValue:&t_duration];
+        UIViewAnimationCurve t_curve;
+        [[t_info objectForKey:UIKeyboardAnimationCurveUserInfoKey] getValue:&t_curve];
+        
         [UIView beginAnimations: @"panrootviewup" context: nil];
         [UIView setAnimationBeginsFromCurrentState: YES];
-        [UIView setAnimationDuration: 0.2f];
+        [UIView setAnimationDuration:t_duration];
+        [UIView setAnimationCurve:t_curve];
         t_frame.origin.y = t_pan;
         t_view.frame = t_frame;
         [UIView commitAnimations];
@@ -891,9 +897,17 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
     UIView* t_view = [m_main_controller rootView];
     if (t_view.frame.origin.y != 0)
     {
+        NSDictionary *t_info;
+        t_info = [notification userInfo];
+        NSTimeInterval t_duration;
+        [[t_info objectForKey:UIKeyboardAnimationDurationUserInfoKey] getValue:&t_duration];
+        UIViewAnimationCurve t_curve;
+        [[t_info objectForKey:UIKeyboardAnimationCurveUserInfoKey] getValue:&t_curve];
+        
         [UIView beginAnimations: @"panrootviewdown" context: nil];
         [UIView setAnimationBeginsFromCurrentState: YES];
-        [UIView setAnimationDuration: 0.2f];
+        [UIView setAnimationDuration:t_duration];
+        [UIView setAnimationCurve:t_curve];
         t_view.frame = CGRectOffset(t_view.frame, 0, -t_view.frame.origin.y);
         [UIView commitAnimations];
     }
