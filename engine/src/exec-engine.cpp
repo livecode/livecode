@@ -119,12 +119,8 @@ MCExecSetTypeInfo *kMCEngineSecurityCategoriesTypeInfo = &_kMCEngineSecurityCate
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern const LT command_table[];
-extern const uint4 command_table_size;
 extern const Cvalue *constant_table;
 extern const uint4 constant_table_size;
-extern const LT factor_table[];
-extern const uint4 factor_table_size;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -180,12 +176,17 @@ void MCEngineEvalCommandNames(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	bool t_success = true;
 
+	const uint4 t_command_table_size
+		= MCkeywordtablesizes[SP_COMMAND];
+	const LT *t_command_table
+		= MCkeywordtablepointers[SP_COMMAND];
+
 	MCAutoListRef t_list;
 	t_success = MCListCreateMutable('\n', &t_list);
 
-	for (uint32_t i = 0 ; t_success && i < command_table_size ; i++)
-		if (command_table[i].type == TT_STATEMENT)
-			t_success = MCListAppendCString(*t_list, command_table[i].token);
+	for (uint32_t i = 0 ; t_success && i < t_command_table_size ; i++)
+		if (t_command_table[i].type == TT_STATEMENT)
+			t_success = MCListAppendCString(*t_list, t_command_table[i].token);
 
 	if (t_success)
 		t_success = MCListCopyAsString(*t_list, r_string);
@@ -223,12 +224,17 @@ void MCEngineEvalFunctionNames(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	bool t_success = true;
 
+	const uint4 t_factor_table_size
+		= MCkeywordtablesizes[SP_FACTOR];
+	const LT *t_factor_table
+		= MCkeywordtablepointers[SP_FACTOR];
+
 	MCAutoListRef t_list;
 	t_success = MCListCreateMutable('\n', &t_list);
 
-	for (uint32_t i = 0 ; t_success && i < factor_table_size ; i++)
-		if (factor_table[i].type == TT_FUNCTION)
-			t_success = MCListAppendCString(*t_list, factor_table[i].token);
+	for (uint32_t i = 0 ; t_success && i < t_factor_table_size ; i++)
+		if (t_factor_table[i].type == TT_FUNCTION)
+			t_success = MCListAppendCString(*t_list, t_factor_table[i].token);
 
 	if (t_success)
 		t_success = MCListCopyAsString(*t_list, r_string);
@@ -245,12 +251,17 @@ void MCEngineEvalPropertyNames(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	bool t_success = true;
 
+	const uint4 t_factor_table_size
+		= MCkeywordtablesizes[SP_FACTOR];
+	const LT *t_factor_table
+		= MCkeywordtablepointers[SP_FACTOR];
+
 	MCAutoListRef t_list;
 	t_success = MCListCreateMutable('\n', &t_list);
 
-	for (uint32_t i = 0 ; t_success && i < factor_table_size ; i++)
-		if (factor_table[i].type == TT_PROPERTY)
-			t_success = MCListAppendCString(*t_list, factor_table[i].token);
+	for (uint32_t i = 0 ; t_success && i < t_factor_table_size ; i++)
+		if (t_factor_table[i].type == TT_PROPERTY)
+			t_success = MCListAppendCString(*t_list, t_factor_table[i].token);
 
 	if (t_success)
 		t_success = MCListCopyAsString(*t_list, r_string);

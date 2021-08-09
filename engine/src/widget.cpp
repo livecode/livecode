@@ -358,12 +358,16 @@ void MCWidget::recompute(void)
 
 static void lookup_name_for_prop(Properties p_which, MCNameRef& r_name)
 {
-    extern const LT factor_table[];
-    extern const uint4 factor_table_size;
-    for(uindex_t i = 0; i < factor_table_size; i++)
-        if (factor_table[i] . type == TT_PROPERTY && factor_table[i] . which == p_which)
+	const uint4 t_factor_table_size
+		= MCkeywordtablesizes[SP_FACTOR];
+	const LT *t_factor_table
+		= MCkeywordtablepointers[SP_FACTOR];
+
+    for(uindex_t i = 0; i < t_factor_table_size; i++)
+        if (t_factor_table[i] . type == TT_PROPERTY &&
+        		t_factor_table[i] . which == p_which)
         {
-            r_name = MCNAME(factor_table[i] . token);
+            r_name = MCNAME(t_factor_table[i] . token);
             return;
         }
 	

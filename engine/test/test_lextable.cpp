@@ -44,18 +44,12 @@ TEST(lextable, table_pointer)
 // Checks that the entries of factor_table are in alphabetical order.
 //
 {
-	extern const LT * const table_pointers[];
-	extern const uint4 table_pointers_size;
+	ASSERT_EQ(MCkeywordtablepointerssize, MCkeywordtablesizessize);
 
-	extern const uint2 table_sizes[];
-	extern const uint4 table_sizes_size;
+	for (uint4 i = 0; i < MCkeywordtablepointerssize; i++) {
 
-	ASSERT_EQ(table_pointers_size, table_sizes_size);
-
-	for (uint4 i = 0; i < table_pointers_size; i++) {
-
-		const LT* table = table_pointers[i];
-		const uint4 table_size = table_sizes[i];
+		const LT* table = MCkeywordtablepointers[i];
+		const uint4 table_size = MCkeywordtablesizes[i];
 
 		ASSERT_GE(table_size, (unsigned)1);
 

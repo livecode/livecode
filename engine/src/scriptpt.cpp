@@ -45,12 +45,6 @@ extern const uint8_t type_table[];
 extern const uint8_t unicode_type_table[];
 extern const Cvalue *constant_table;
 extern const uint4 constant_table_size;
-extern const LT * const table_pointers[];
-extern const uint2 table_sizes[];
-extern const LT command_table[];
-extern const uint4 command_table_size;
-extern const LT factor_table[];
-extern const uint4 factor_table_size;
 
 static struct { codepoint_t codepoint; Symbol_type type; } remainder_table[] =
 {
@@ -1302,8 +1296,8 @@ Parse_stat MCScriptPoint::lookup(Script_point t, const LT *&dlt)
 	
 	if (token.getlength())
 	{
-		const LT *table = table_pointers[t];
-		uint2 high = table_sizes[t];
+		const LT *table = MCkeywordtablepointers[t];
+		uint2 high = MCkeywordtablesizes[t];
 		uint2 low = 0;
 		int4 cond;
         MCAutoStringRefAsCString t_token;
