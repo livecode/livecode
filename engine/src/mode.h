@@ -152,13 +152,6 @@ bool MCModeCanLoadHome(void);
 //
 void MCModeSetupCrashReporting(void);
 
-// These hooks are used to create mode-specific syntax objects.
-//
-// They are called by the MCN_new_* methods.
-//
-MCStatement *MCModeNewCommand(int2 which);
-MCExpression *MCModeNewFunction(int2 which);
-
 // This hook is used to determine whether to queue stacks that are wanting to
 // be opened (e.g. via an AppleEvent OpenDoc event).
 //

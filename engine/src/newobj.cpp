@@ -32,6 +32,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mode.h"
 
+/* Define the roots of the new object factory lists - one for each kind. These
+ * are used internally by the MCNewObjFactory derived classes. */
+MCNewStatementFactory::Base *MCNewStatementFactory::s_functions = nullptr;
+MCNewFunctionFactory::Base *MCNewFunctionFactory::s_functions = nullptr;
+MCNewOperatorFactory::Base *MCNewOperatorFactory::s_functions = nullptr;
+
 MCStatement *MCN_new_statement(int2 which)
 {
 	switch (which)
@@ -309,8 +315,8 @@ MCStatement *MCN_new_statement(int2 which)
 		break;
 	}
 
-	MCStatement *t_new_statement;
-	t_new_statement = MCModeNewCommand(which);
+	MCStatement *t_new_statement
+		= MCNewStatementFactory::New(which);
 	if (t_new_statement != NULL)
 		return t_new_statement;
 
@@ -871,12 +877,11 @@ MCExpression *MCN_new_function(int2 which)
 		break;
 	}
 
-	MCExpression *t_new_function;
-	t_new_function = MCModeNewFunction(which);
-
-    // SN-2014-11-25: [[ Bug 14088 ]] A NULL pointer is returned if no function exists.
-    //  (that avoids to get a MCFunction which does not implement eval_ctxt).
-	return t_new_function;
+	/* Unlike statements and operators, functions return nullptr if a function
+	 * cannot be instantiated. This handles special-cases like 'templateField()'
+	 * which only makes sense in container context (where it is instantiated
+	 * explicitly). */
+	return MCNewFunctionFactory::New(which);
 }
 
 MCExpression *MCN_new_operator(int2 which)
@@ -942,6 +947,15 @@ MCExpression *MCN_new_operator(int2 which)
 	case O_ENDS_WITH:
 		return new MCEndsWith;
 	default:
-		return new MCExpression;
+		break;
 	}
+
+	MCExpression *t_new_operator
+		= MCNewOperatorFactory::New(which);
+	if (t_new_operator != nullptr)
+	{
+		return t_new_operator;
+	}
+
+	return new MCExpression;
 }

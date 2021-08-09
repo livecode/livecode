@@ -51,6 +51,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "objptr.h"
 #include "osspec.h"
+#include "newobj.h"
 
 #include "globals.h"
 #include "license.h"
@@ -244,6 +245,24 @@ void MCRevRelicense::exec_ctxt(MCExecContext& ctxt)
 
 	atexit(restart_livecode);
 }
+
+/* Define the factory function handling development mode syntax. */
+static MCStatement *MCN_new_statement_development(int2 which)
+{
+	switch(which)
+	{
+	case S_REV_RELICENSE:
+		return new MCRevRelicense;
+	default:
+		break;
+	}
+
+	return NULL;
+}
+
+/* Define a new statement factory wrapping the factory function. */
+static MCNewStatementFactory
+MCdevelopmentmodestatementfactory(MCN_new_statement_development);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -600,24 +619,6 @@ const char *MCModeGetStartupStack(void)
 bool MCModeCanLoadHome(void)
 {
 	return true;
-}
-
-MCStatement *MCModeNewCommand(int2 which)
-{
-	switch(which)
-	{
-	case S_REV_RELICENSE:
-		return new MCRevRelicense;
-	default:
-		break;
-	}
-
-	return NULL;
-}
-
-MCExpression *MCModeNewFunction(int2 which)
-{
-	return NULL;
 }
 
 bool MCModeShouldQueueOpeningStacks(void)

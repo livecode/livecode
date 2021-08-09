@@ -1222,16 +1222,6 @@ bool MCModeCanLoadHome(void)
 	return false;
 }
 
-MCStatement *MCModeNewCommand(int2 which)
-{
-	return NULL;
-}
-
-MCExpression *MCModeNewFunction(int2 which)
-{
-	return NULL;
-}
-
 MCObject *MCModeGetU3MessageTarget(void)
 {
 	return MCdefaultstackptr -> getcard();

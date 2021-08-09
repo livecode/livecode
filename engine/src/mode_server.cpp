@@ -301,16 +301,6 @@ bool MCModeCanLoadHome(void)
 	return false;
 }
 
-MCStatement *MCModeNewCommand(int2 which)
-{
-	return NULL;
-}
-
-MCExpression *MCModeNewFunction(int2 which)
-{
-	return NULL;
-}
-
 bool MCModeShouldQueueOpeningStacks(void)
 {
 	return false;
