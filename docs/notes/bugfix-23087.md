@@ -1,0 +1,1 @@
+# Support file input in Android browser forms
