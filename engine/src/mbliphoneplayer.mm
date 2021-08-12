@@ -506,7 +506,7 @@ void MCiOSPlayerControl::SetStartTime(MCExecContext& ctxt, integer_t p_time)
 		m_start_time = CMTimeMake(p_time, 1000);
 
     if (m_player != nil)
-		m_player.currentItem.reversePlaybackEndTime = m_start_time;
+		SetCurrentTime(ctxt, p_time);
 }
 
 void MCiOSPlayerControl::GetStartTime(MCExecContext& ctxt, integer_t& r_time)
