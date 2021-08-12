@@ -10,14 +10,15 @@ dist: trusty
 os:
   - linux
   - osx
+  - windows
 
 # Use a Travis image containing an Xcode we support
 # This prevents surprise upgrades!
 osx_image: xcode7.3
 
-language: c++
+language: cpp
 
-compiler: 
+compiler:
   - clang
   - gcc
 
@@ -46,11 +47,13 @@ matrix:
     compiler: gcc
   - os: linux
     compiler: clang
+  - os: windows
+    compiler: clang
 
 # Install any required tools
 before_install:
   - |
-    if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then 
+    if [[ "$TRAVIS_OS_NAME" == "osx" ]] ; then
       rvm --default use 2.2.1
       gem install xcpretty
     fi
@@ -59,13 +62,22 @@ before_install:
     if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then
       sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
       sudo apt-get -qq update
-      sudo apt-get -qq install g++-4.9    
+      sudo apt-get -qq install g++-4.9
+    fi
+
+  - |
+    if [[ "$TRAVIS_OS_NAME" == "windows" ]] ; then
+      choco install --yes cygwin -params '/InstallDir:C:\Cygwin'
+      choco install --yes --source cygwin bash curl zip unzip
+      choco install make
+      choco install winflexbison
     fi
 
 # Set up the source tree by fetching Linux-specific prebuilt objects
 install: 
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]] ; then (cd prebuilt && ./fetch-libraries.sh linux x86_64) ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx"   ]] ; then (cd prebuilt && ./fetch-libraries.sh mac)   ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "windows"   ]] ; then (cd prebuilt && ./fetch-libraries.sh win32 x86_64)   ; fi
 
 # Bootstrap the LCB compiler, build the default target set and run a
 # the default test suite.
@@ -89,8 +101,9 @@ script: |
       export JAVA_HOME=$(/usr/libexec/java_home)
       ;;
   esac
-
-  if [[ "${COVERITY_SCAN_BRANCH}" != "1" ]]; then
+  if [[ "${TRAVIS_OS_NAME}" == "windows" ]]; then
+    cmd.exe /C configure.bat
+  elif [[ "${COVERITY_SCAN_BRANCH}" != "1" ]]; then
     mkdir -p "${LICENSE_DIR}" &&
     touch "${LICENSE_DIR}/livecode-firstrun.lcf" &&
     make all-${BUILD_PLATFORM} &&

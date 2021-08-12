@@ -1,4 +1,3 @@
-@echo off
 REM Configures the Windows build
 
 SETLOCAL EnableExtensions
@@ -59,11 +58,15 @@ IF EXIST "%programfiles(x86)%\Microsoft Speech SDK 5.1\*" (
 )
 
 REM Pause so any warnings can be seen
-IF %warnings% NEQ 0 PAUSE
+IF %TRAVIS_OS_NAME%=="" (
+  IF %warnings% NEQ 0 PAUSE
+)
 
 REM Run the configure step
 %python% config.py --platform win-%TARGET_ARCH% %extra_options% %gypfile%
-PAUSE
+IF %TRAVIS_OS_NAME%=="" (
+  PAUSE
+)
 
 REM Pause if there was an error so that the user gets a chance to see it
 IF %ERRORLEVEL% NEQ 0 PAUSE

@@ -206,12 +206,29 @@ on TestOpenSocketFromSameHostDifferentAddress
    end if
 end TestOpenSocketFromSameHostDifferentAddress
 
+constant kSocketTimeout = 2000
 on TestOpenSocketFromWithAddressUsingLocalServer
-   accept connections on port "8008" with message "connectedPlaceHolder"
-   wait until "8008" is among the lines of the openSockets with messages
+   local tPort
+   put 8008 into tPort
+   accept connections on port tPort with message "connectedPlaceHolder"
 
-   open socket from "127.0.0.1" to "127.0.0.1:8008"
-   TestAssert "open socket from with local address to local server", "127.0.0.1:8008" is among the lines of the openSockets
+   local tMillisecs
+   put the millisecs into tMillisecs
+   repeat forever
+      wait for 0 with messages
+      if tPort is among the lines of the openSockets then
+         exit repeat
+      end if
+      if the millisecs - tMillisecs > kSocketTimeout then
+         exit repeat
+      end if
+   end repeat
+
+   local tTarget
+   put "127.0.0.1:" & tPort into tTarget
+   open socket from "127.0.0.1" to tTarget
+   TestAssert "open socket from with local address to local server", \
+      tTarget is among the lines of the openSockets
 
    repeat for each line tSocket in the openSockets
       close socket tSocket
@@ -219,18 +236,43 @@ on TestOpenSocketFromWithAddressUsingLocalServer
 end TestOpenSocketFromWithAddressUsingLocalServer
 
 on TestOpenSocketFromWithAddressAndPortUsingLocalServer
-   accept connections on port "8009" with message "connectedPlaceHolder"
-   wait until "8009" is among the lines of the openSockets with messages
+   local tPort
+   put 8009 into tPort
+   accept connections on port tPort with message "connectedPlaceHolder"
 
-   open socket from "127.0.0.1:8010" to "127.0.0.1:8009"
-   TestAssert "open socket from with local address and port to local server", "127.0.0.1:8009" is among the lines of the openSockets
+   local tMillisecs
+   put the millisecs into tMillisecs
+   repeat forever
+      wait for 0 with messages
+      if tPort is among the lines of the openSockets then
+         exit repeat
+      end if
+      if the millisecs - tMillisecs > kSocketTimeout then
+         exit repeat
+      end if
+   end repeat
 
-   close socket "127.0.0.1:8010"
-   close socket "127.0.0.1:8009"
-   close socket "8009"
+   local tSource, tTarget
+   put "127.0.0.1:" & (tPort + 1) into tSource
+   put "127.0.0.1:" & tPort into tTarget
+
+   open socket from tSource to tTarget
+   TestAssert "open socket from with local address and port to local server", \
+      tTarget is among the lines of the openSockets
+
+   close socket tSource
+   close socket tTarget
+   close socket tPort
 end TestOpenSocketFromWithAddressAndPortUsingLocalServer
 
 on TestAcceptConnectionsInEphemeralPortRange
+   if the platform is "win32" and \
+      the environment is "server" then
+      TestAssertBroken "Accept connections on emphemeral port", false, \
+         "Bug 22153"
+      exit TestAcceptConnectionsInEphemeralPortRange
+   end if
+
    -- in lieu of coming up with a per-OS/config list of ephemeral ranges
    -- we will just test if the port opened is greater than 1024 which
    -- is the bare minimum for BSD sockets then try and connect to it

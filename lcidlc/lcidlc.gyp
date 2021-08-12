@@ -62,6 +62,26 @@
 						'type': 'none',
 					},
 				],
+                [
+                    'OS == "win"',
+                    {
+                        'variables':
+                        {
+                            # Skip LCIDLC on Windows if the appropriate environment variable is set
+                            'skip_lcidlc': '<!(echo ${SKIP_LCIDLC:-0})',
+                        },
+
+                        'conditions':
+                        [
+                            [
+                                'skip_lcidlc != "0"',
+                                {
+                                    'type': 'none',
+                                },
+                            ],
+                        ],
+                    },
+                ],
 			],
 
 			'msvs_settings':

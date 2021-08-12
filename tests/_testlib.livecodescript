@@ -356,7 +356,20 @@ on ErrorDialog pError
 end ErrorDialog
 
 on TestAssertErrorDialog pDescription, pErrorCode
-	wait for messages
+   constant kTestErrorDialogTimeout = 1000
+   local tMillisecs
+   put the millisecs into tMillisecs
+	repeat forever
+      wait for 0 with messages
+      if sError is not empty then
+         exit repeat
+      end if
+      if the millisecs - tMillisecs > kTestErrorDialogTimeout then
+         TestDiagnostic "Timed out waiting for error dialog for" && pErrorCode
+         exit repeat
+      end if
+   end repeat
+
 	TestAssert pDescription, TestErrorMatches(sError, pErrorCode)
 	put empty into sError
 end TestAssertErrorDialog
@@ -442,11 +455,17 @@ on TestLoadExternal pExternal
 
    local tBinariesPath, tExtension
    set the itemdelimiter to slash
-   if the platform is "MacOS" then
-      put "bundle" into tExtension
-   else if the platform is "linux" then
-      put "so" into tExtension
-   end if
+   switch the platform
+      case "MacOS"
+         put "bundle" into tExtension
+         break
+      case "Linux"
+         put "so" into tExtension
+         break
+      case "Win32"
+         put "dll" into tExtension
+         break
+   end switch
 
    put TestGetBinariesPath() into tBinariesPath
 
@@ -619,7 +638,7 @@ end TestRepeat
 command TestRunStack pOptions, pStackFilePath, pArgs
 	local tEnginePath
 	set the itemDelimiter to ":"
-	put item 2 of the address into tEnginePath
+	put item 2 to -1 of the address into tEnginePath
 
 	local tCommand
 	put format("\"%s\" %s \"%s\" %s", tEnginePath, pOptions, pStackFilePath, pArgs) into tCommand
@@ -729,26 +748,32 @@ command TestEnsureJVM
    TestSkipIfNot "jvm"
 
    if $JAVA_HOME is empty then
-      local tPath
-      switch the platform
-         case "MacOS"
-            put word 1 to -1 of shell("/usr/libexec/java_home") into tPath
-            break
-         case "Linux"
-            local tJAVAC
-            put "/bin/javac" into tJAVAC
-            put word 1 to -1 of shell("/usr/bin/env readlink -f /usr" & tJAVAC) into tPath
-            if there is a file tPath and tPath ends with tJAVAC then
-               set the itemDelimiter to slash
-               delete item -2 to -1 of tPath
-            end if
-            break
-      end switch
+	  local tPath
+	  put TestGetJavaHome() into tPath
       if there is a folder tPath then
          put tPath into $JAVA_HOME
       end if
    end if
 end TestEnsureJVM
+
+function TestGetJavaHome
+   local tPath
+   switch the platform
+      case "MacOS"
+         put word 1 to -1 of shell("/usr/libexec/java_home") into tPath
+         break
+      case "Linux"
+         local tJAVAC
+         put "/bin/javac" into tJAVAC
+         put word 1 to -1 of shell("/usr/bin/env readlink -f /usr" & tJAVAC) into tPath
+         if there is a file tPath and tPath ends with tJAVAC then
+            set the itemDelimiter to slash
+            delete item -2 to -1 of tPath
+         end if
+         break
+   end switch
+   return tPath
+end TestGetJavaHome
 
 command TestPropRoundTrip pObjectType, pProperty, pValues
    local tStack

@@ -1,7 +1,7 @@
 ﻿script "TestlibUrlForms"
 
 on TestSetup
-   TestSkipIfNot "platform", "MacOS,Windows,Linux"
+   TestSkipIfNot "desktop"
    TestSkipIf "environment", "server"
    
    if not TestIsInStandalone() then
