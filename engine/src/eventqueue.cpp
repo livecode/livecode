@@ -417,7 +417,13 @@ static void MCEventQueueDispatchEvent(MCEvent *p_event)
                 t_target -> mup(t_event -> mouse . press . button + 1, false);
                 MClockmessages = old_lock;
 				
-				t_target -> message_with_args(MCM_mouse_release, t_event -> mouse . press . button + 1);
+				MCObject *mfocused;
+				mfocused = MCmousestackptr->getcard()->getmfocused();
+				if (mfocused == NULL)
+					mfocused = MCmousestackptr -> getcard();
+				if (mfocused == NULL)
+					mfocused = MCmousestackptr;
+				mfocused -> message_with_args(MCM_mouse_release, t_event -> mouse . press . button + 1);
 			}
 		}
 		break;
