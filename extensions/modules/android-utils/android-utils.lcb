@@ -26,7 +26,7 @@ use com.livecode.java
 use com.livecode.canvas
 use com.livecode.library.widgetutils
 
-metadata version is "1.0.0"
+metadata version is "1.1.0"
 metadata author is "LiveCode"
 metadata title is "Android Utilities"
 metadata os is "android"
@@ -89,6 +89,152 @@ Context object.
 public handler ApplicationContext() returns JObject
 	return _JNI_GetEngineContext(_JNI_GetAndroidEngine())
 end handler
+
+private variable sResultListeners as Array
+
+public handler type OnActivityResultHandler(\
+    in pRequestCode as JInt, \
+    in pResultCode as JInt, \
+    in pIntent as optional JObject) returns nothing
+
+handler _OnActivityResultListener(\
+        in pRequestCode as JObject, \
+        in pResultCode as JObject, \
+        in pIntent as optional JObject) returns nothing
+    
+    variable tContext as JObject
+    put ApplicationContext() into tContext
+
+    variable tRequestCode as JInt
+    put _JNI_NumberIntValue(pRequestCode) into tRequestCode
+    variable tResultCode as JInt
+    put _JNI_NumberIntValue(pResultCode) into tResultCode
+
+    _JNI_LiveCodeActivityRemoveOnActivityResultListener(tContext, tResultCode)
+
+    variable tRequestCodeString as String
+    put tRequestCode formatted as string into tRequestCodeString
+
+    if tRequestCodeString is among the keys of sResultListeners then
+        variable tHandler as OnActivityResultHandler
+        put sResultListeners[tRequestCodeString] into tHandler
+        delete sResultListeners[tRequestCodeString]
+        tHandler(tRequestCode, tResultCode, pIntent)
+    end if
+end handler
+
+__safe foreign handler _JNI_LiveCodeActivityOnActivityResultListener( \
+    in pCallbacks as Array) returns JObject \
+    binds to "java:com.runrev.android.LiveCodeActivity$OnActivityResultListener>interface()"
+
+__safe foreign handler _JNI_LiveCodeActivitySetOnActivityResultListener( \
+    in pEngine as JObject, \
+    in pListener as JObject, \
+    in pRequestCode as JInt) returns nothing \
+    binds to "java:com.runrev.android.LiveCodeActivity>setOnActivityResultListener(Lcom/runrev/android/LiveCodeActivity$OnActivityResultListener;I)V"
+
+__safe foreign handler _JNI_LiveCodeActivityRemoveOnActivityResultListener( \
+    in pEngine as JObject, \
+    in pRequestCode as JInt) returns nothing \
+    binds to "java:com.runrev.android.LiveCodeActivity>removeOnActivityResultListener(I)V"
+
+__safe foreign handler _JNI_ActivityStartActivityForResult( \
+    in pActivity as JObject, \
+    in pIntent as JObject, \
+    in pRequestCode as JInt) \
+    returns nothing \
+    binds to "java:android.app.Activity>startActivityForResult(Landroid/content/Intent;I)V"
+
+__safe foreign handler _JNI_NumberIntValue(in pNumber as JObject) returns JInt \
+    binds to "java:java.lang.Number>intValue()I"
+
+/**
+Summary: Start an activity by Intent
+
+Example:
+
+    constant kIntentACTION_SEND is "android.intent.action.SEND"
+    constant kIntentEXTRA_TEXT is "android.intent.extra.TEXT"
+    constant kActivityRESULT_CANCELED is 0
+    constant kShareStringRequestCode is 123
+
+    __safe foreign handler _JNI_IntentNew(in pAction as JString) \
+        returns JObject \
+        binds to "java:android.content.Intent>new(Ljava/lang/String;)"
+
+    __safe foreign handler _JNI_IntentSetType(in pIntent as JObject, \
+        in pType as JString) \
+        returns JObject \
+        binds to "java:android.content.Intent>setType(Ljava/lang/String;)Landroid/content/Intent;"
+
+    __safe foreign handler _JNI_IntentPutExtraString(in pIntent as JObject, \
+        in pType as JString, \
+        in pValue as JString) \
+        returns JObject \
+        binds to "java:android.content.Intent>putExtra(Ljava/lang/String;Ljava/lang/String;)Landroid/content/Intent;"
+
+    handler _ShareStringResultListener( \
+            in pRequestCode as JInt, \
+            in pResultCode as JInt, \
+            in pIntent as optional JObject) returns nothing
+
+        if pResultCode is kActivityRESULT_CANCELED then
+            post "shareStringCancelled"
+        else
+            post "shareStringComplete"
+        end if
+    end handler
+
+    public handler ShareString(in pString as String) returns nothing
+        variable tIntent as JObject
+        put _JNI_IntentNew(StringToJString(kIntentACTION_SEND)) into tIntent
+
+        _JNI_IntentSetType(tIntent, StringToJString("text/plain"))
+
+        _JNI_IntentPutExtraString(tIntent, StringToJString(kIntentEXTRA_TEXT), \
+            StringToJString(pString))
+
+        StartActivityForResult(tIntent, kShareStringRequestCode, _ShareStringResultListener)
+    end handler
+
+Parameters:
+pIntent: An Intent JObject to use to start an activity
+pRequestCode: A positive integer used to identify the request when handling
+`onActivityResult`.
+pHandler: A handler that conforms to the `OnActivityResultHandler` type
+
+Description:
+Start an activity by Intent and receive a callback to the specified handler when
+the LiveCode activity receives the result via the `onActivityResult` method.
+
+The callback must conform to the `OnActivityResultHandler` type which returns
+nothing and has parameters:
+
+- in pRequestCode as JInt
+- in pResultCode as JInt
+- in pIntent as optional JObject
+
+*/
+
+public handler StartActivityForResult( \
+        in pIntent as JObject, \
+        in pRequestCode as JInt, \
+        in pHandler as OnActivityResultHandler) returns nothing
+
+    variable tContext as JObject
+    put ApplicationContext() into tContext
+
+    variable tListener as JObject
+    put _JNI_LiveCodeActivityOnActivityResultListener(\
+            {"onActivityResult" : _OnActivityResultListener }) into tListener
+
+    _JNI_LiveCodeActivitySetOnActivityResultListener(tContext, tListener, pRequestCode)
+
+    put pHandler into sResultListeners[pRequestCode formatted as string]
+
+    _JNI_ActivityStartActivityForResult(tContext, pIntent, pRequestCode)
+end handler
+
 
 private foreign handler MCAndroidCheckRuntimePermission(in pPermission as String) \
 	returns CBool binds to "<builtin>"
