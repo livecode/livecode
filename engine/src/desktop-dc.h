@@ -109,9 +109,7 @@ public:
 	virtual void flushevents(uint2 e);
 	
 	virtual void clearIME(Window w);
-	virtual void openIME();
 	virtual void activateIME(Boolean activate);
-	virtual void closeIME();
 	
 	virtual void seticon(uint4 p_icon);
 	virtual void seticonmenu(MCStringRef p_menu);

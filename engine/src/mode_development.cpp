@@ -672,7 +672,7 @@ bool MCModeMakeLocalWindows(void)
 
 void MCModeActivateIme(MCStack *p_stack, bool p_activate)
 {
-	MCscreen -> activateIME(p_activate);
+	MCscreen -> pendingIME(p_activate);
 }
 
 void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)

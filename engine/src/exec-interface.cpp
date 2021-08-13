@@ -1299,7 +1299,7 @@ void MCInterfaceExecFocusOnNothing(MCExecContext &ctxt)
 		MCfocusedstackptr -> getcard() -> kunfocus();
 #ifdef _MOBILE
 	// Make sure the IME is forced closed if explicitly asked to be.
-	MCscreen -> closeIME();
+	MCModeActivateIme(ctxt.GetObject() -> getstack(), false);
 #endif
 }
 

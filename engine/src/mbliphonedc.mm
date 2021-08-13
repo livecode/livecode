@@ -783,10 +783,6 @@ void MCScreenDC::pingwait(void)
 	MCIPhoneBreakWait();
 }
 
-void MCScreenDC::openIME()
-{
-}
-
 void MCScreenDC::activateIME(Boolean activate)
 {
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
@@ -795,14 +791,6 @@ void MCScreenDC::activateIME(Boolean activate)
 			MCIPhoneActivateKeyboard();
 	else
 			MCIPhoneDeactivateKeyboard();
-	});
-}
-
-void MCScreenDC::closeIME()
-{
-	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
-	MCIPhoneRunBlockOnMainFiber(^(void) {
-		MCIPhoneDeactivateKeyboard();
 	});
 }
 

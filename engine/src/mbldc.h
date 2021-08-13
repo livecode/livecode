@@ -169,10 +169,8 @@ public:
 //	char *charsettofontname(uint1 charset, const char *oldfontname);
 	
 	void clearIME(Window w);
-	void openIME();
 	void activateIME(Boolean activate);
-	void closeIME();
-
+	
 	void enactraisewindows(void);
 	
 	//
