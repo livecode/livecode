@@ -536,8 +536,11 @@ void X_main_loop(void)
 	MCstackbottom = (char *)&i;
 	
 
-	if (MCserverinitialscript == nil)
-		return;
+    if (MCserverinitialscript == nil)
+    {
+        MCretcode = 1;
+        return;
+    }
 	
 	MCperror -> clear();
 	MCeerror -> clear();
@@ -593,7 +596,7 @@ void X_main_loop(void)
 		/* UNCHECKED */ MCeerror->copyasstringref(&t_eerror);
 		MCserverscript -> ListFiles(&t_efiles);
 		MCeerror -> clear();
-		
+        
 		MCParameter t_exec_stack, t_files;
 		t_exec_stack . setvalueref_argument(*t_eerror);
 		t_exec_stack . setnext(&t_files);
@@ -603,6 +606,8 @@ void X_main_loop(void)
 		t_stat = MCserverscript -> message(MCM_script_execution_error, &t_exec_stack);
 		if (t_stat == ES_NOT_HANDLED && MCS_get_errormode() != kMCSErrorModeQuiet)
 		{
+                    MCretcode = 1;
+            
 			MCHandlerlist *t_handlerlist;
 			t_handlerlist = new (nothrow) MCHandlerlist;
 			
@@ -617,6 +622,7 @@ void X_main_loop(void)
 			{
 				t_stat = ES_ERROR;
 			}
+            
 				else
 			{
 				t_stat = MCserverscript -> exechandler(t_handler, &t_exec_stack);
