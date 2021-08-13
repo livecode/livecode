@@ -1996,9 +1996,9 @@ void MCGroup::computecrect()
 			if (cptr->getflag(F_VISIBLE))
 			{
 				if (minrect.width == 0)
-					minrect = cptr->getrect();
+					minrect = cptr->geteffectiverect();
 				else
-					minrect = MCU_union_rect(cptr->getrect(), minrect);
+					minrect = MCU_union_rect(cptr->geteffectiverect(), minrect);
 			}
 			cptr = cptr->next();
 		}
