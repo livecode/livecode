@@ -2537,6 +2537,13 @@ private command revCopyExternals pPlatform, pStackFilePath, pEnginePath, pStanda
    -- MM-2013-04-05: [[ Bug 10756 ]] Make sure we're allowed to delete the stack before deleteing.
    set the cantDelete of stack pStackFilePath to false
    delete stack pStackFilePath
+   
+   // Delete Externals folder if empty
+   if files(tCurrentLocation & slash & "Externals") is empty and \
+         (folders(tCurrentLocation & slash & "Externals") is empty or \
+         folders(tCurrentLocation & slash & "Externals") is "..") then 
+      delete folder (tCurrentLocation & slash & "Externals")
+   end if
 end revCopyExternals
 
 on tmpLog pMsg
