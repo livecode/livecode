@@ -611,7 +611,51 @@ void MCField::GetFirstIndent(MCExecContext& ctxt, integer_t& r_indent)
 void MCField::SetFirstIndent(MCExecContext& ctxt, integer_t p_indent)
 {
 	indent = p_indent;
-	Redraw();
+	Redraw(true);
+}
+
+void MCField::GetLeftIndent(MCExecContext& ctxt, integer_t& r_indent)
+{
+    r_indent = leftindent;
+}
+
+void MCField::SetLeftIndent(MCExecContext& ctxt, integer_t p_indent)
+{
+    leftindent = p_indent;
+    Redraw(true);
+}
+
+void MCField::GetRightIndent(MCExecContext& ctxt, integer_t& r_indent)
+{
+    r_indent = rightindent;
+}
+
+void MCField::SetRightIndent(MCExecContext& ctxt, integer_t p_indent)
+{
+    rightindent = p_indent;
+    Redraw(true);
+}
+
+void MCField::GetSpaceAbove(MCExecContext& ctxt, integer_t& r_above)
+{
+    r_above = spaceabove;
+}
+
+void MCField::SetSpaceAbove(MCExecContext& ctxt, integer_t p_above)
+{
+    spaceabove = p_above;
+    Redraw();
+}
+
+void MCField::GetSpaceBelow(MCExecContext& ctxt, integer_t& r_below)
+{
+    r_below = spacebelow;
+}
+
+void MCField::SetSpaceBelow(MCExecContext& ctxt, integer_t p_below)
+{
+    spacebelow = p_below;
+    Redraw();
 }
 
 void MCField::GetWideMargins(MCExecContext& ctxt, bool& r_setting)

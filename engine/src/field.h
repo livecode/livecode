@@ -218,7 +218,11 @@ private:
 	uint4 textheight;
 	uint2 textwidth;
 	int2 indent;
-	uint2 fixeda;
+    uint16_t leftindent;
+    uint16_t rightindent;
+    uint16_t spaceabove;
+    uint16_t spacebelow;
+    uint2 fixeda;
 	uint2 fixedd;
 	uint2 fixedheight;
 	findex_t foundlength;
@@ -372,7 +376,11 @@ public:
 	int32_t getcontenty(void) const;
 	int32_t gettexty(void) const;
 	int32_t getfirstindent(void) const;
-	int32_t getfixedheight(void) const { return fixedheight; }
+    int32_t getleftindent(void) const;
+    int32_t getrightindent(void) const;
+    int32_t getspaceabove(void) const;
+    int32_t getspacebelow(void) const;
+    int32_t getfixedheight(void) const { return fixedheight; }
     
     MCTextDirection gettextdirection() const { return text_direction; }
 
@@ -658,7 +666,15 @@ public:
 	void SetAutoArm(MCExecContext& ctxt, bool setting);
 	void GetFirstIndent(MCExecContext& ctxt, integer_t& r_indent);
 	void SetFirstIndent(MCExecContext& ctxt, integer_t indent);
-	void GetWideMargins(MCExecContext& ctxt, bool& r_setting);
+    void GetLeftIndent(MCExecContext& ctxt, integer_t& r_indent);
+    void SetLeftIndent(MCExecContext& ctxt, integer_t indent);
+    void GetRightIndent(MCExecContext& ctxt, integer_t& r_indent);
+    void SetRightIndent(MCExecContext& ctxt, integer_t indent);
+    void GetSpaceAbove(MCExecContext& ctxt, integer_t& r_above);
+    void SetSpaceAbove(MCExecContext& ctxt, integer_t above);
+    void GetSpaceBelow(MCExecContext& ctxt, integer_t& r_below);
+    void SetSpaceBelow(MCExecContext& ctxt, integer_t below);
+    void GetWideMargins(MCExecContext& ctxt, bool& r_setting);
 	void SetWideMargins(MCExecContext& ctxt, bool setting);
 	void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
 	void SetHScroll(MCExecContext& ctxt, integer_t scroll);

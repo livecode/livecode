@@ -886,14 +886,14 @@ int32_t MCParagraph::getspaceabove(void) const
 {
 	if (attrs != nil && (attrs -> flags & PA_HAS_SPACE_ABOVE) != 0)
 		return attrs -> space_above;
-	return 0;
+	return parent -> getspaceabove();
 }
 
 int32_t MCParagraph::getspacebelow(void) const
 {
 	if (attrs != nil && (attrs -> flags & PA_HAS_SPACE_BELOW) != 0)
 		return attrs -> space_below;
-	return 0;
+	return parent -> getspacebelow();
 }
 
 int32_t MCParagraph::getborderwidth(void) const
@@ -943,14 +943,14 @@ int32_t MCParagraph::getleftindent(void) const
 {
 	if (attrs != nil && (attrs -> flags & PA_HAS_LEFT_INDENT) != 0)
 		return attrs -> left_indent;
-	return 0;
+	return parent -> getleftindent();
 }
 
 int32_t MCParagraph::getrightindent(void) const
 {
 	if (attrs != nil && (attrs -> flags & PA_HAS_RIGHT_INDENT) != 0)
 		return attrs -> right_indent;
-	return 0;
+	return parent -> getrightindent();
 }
 
 int32_t MCParagraph::getlistindent(void) const

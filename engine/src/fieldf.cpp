@@ -518,6 +518,26 @@ int32_t MCField::getfirstindent(void) const
 	return indent;
 }
 
+int32_t MCField::getleftindent(void) const
+{
+    return leftindent;
+}
+
+int32_t MCField::getrightindent(void) const
+{
+    return rightindent;
+}
+
+int32_t MCField::getspaceabove(void) const
+{
+    return spaceabove;
+}
+
+int32_t MCField::getspacebelow(void) const
+{
+    return spacebelow;
+}
+
 int32_t MCField::gettexty(void) const
 {
 	return texty;
