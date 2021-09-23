@@ -281,12 +281,14 @@ MCScreenDC::wait(real64_t p_duration,
                  Boolean p_allow_dispatch,
                  Boolean p_accept_any_event)
 {
+#if defined(__asmjs__)
 	/* Don't permit inner main loops.  They cause amusing "-12" assertion
 	 * failures from Emterpreter. */
 	if (0 < int(MCwaitdepth))
 	{
 		return true;
 	}
+#endif
 
 	p_duration = MCMax(p_duration, 0.0);
 
@@ -330,6 +332,10 @@ MCScreenDC::wait(real64_t p_duration,
 			if (!t_done &&
 			    MCEmscriptenAsyncYield(t_sleep_time))
 			{
+#if !defined(__asmjs__)
+				/* Run any callbacks while waiting to resume */
+				MCEmscriptenAsyncRunHooks();
+#endif
 				t_done = p_accept_any_event;
 			}
 
@@ -445,6 +451,12 @@ MCScreenDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_m
     return true;
 }
 
+
+/* ================================================================
+ * Mouse state
+ * ================================================================ */
+
+Boolean tripleclick = False;
 
 void
 MCScreenDC::update_mouse_press_state(MCMousePressState p_state, int32_t p_button)

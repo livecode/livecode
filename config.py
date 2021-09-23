@@ -44,6 +44,7 @@ BUILDBOT_PLATFORM_TRIPLES = (
     'x86-win32', # TODO[2017-03-23] More specific ABI
     'x86_64-win32',
     'js-emscripten-sdk1.35',
+    'wasm-emscripten-sdk1.39',
 )
 
 KNOWN_PLATFORMS = (
@@ -51,7 +52,7 @@ KNOWN_PLATFORMS = (
     'android-armv6', 'android-armv7', 'android-arm64', 'android-x86', 'android-x86_64',
     'mac', 'ios', 
     'win-x86', 'win-x86_64', 
-    'emscripten'
+    'emscripten', 'emscripten-js', 'emscripten-wasm',
 )
 
 def usage(exit_status):
@@ -290,8 +291,12 @@ def validate_target_arch(opts):
         validate_platform(opts)
 
         platform = opts['PLATFORM']
-        if platform == 'emscripten':
+        if platform in ['emscripten', 'emscripten-js']:
             opts['TARGET_ARCH'] = 'js'
+            opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
+            return
+        if platform == 'emscripten-wasm':
+            opts['TARGET_ARCH'] = 'wasm'
             opts['UNIFORM_ARCH'] = opts['TARGET_ARCH']
             return
 

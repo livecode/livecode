@@ -238,11 +238,11 @@
 						},
 					],
 					[
-						'OS == "emscripten"',
+						'toolset_os == "emscripten"',
 						{
 							'library_dirs':
 							[
-								'lib/emscripten/js',
+								'lib/emscripten/>(toolset_arch)',
 							],
 
 							'libraries':

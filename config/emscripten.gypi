@@ -2,7 +2,7 @@
 	'variables':
 	{
 		'mobile': 1,
-		'output_dir': '../emscripten-bin',
+		'output_dir': '../emscripten-<(target_arch)-bin',
 	},
 
 	'target_defaults':

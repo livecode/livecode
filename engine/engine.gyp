@@ -521,21 +521,6 @@
 				[
 					'OS == "emscripten"',
 					{
-						'all_dependent_settings':
-						{
-							'variables':
-							{
-								'dist_aux_files':
-								[
-									'rsrc/emscripten-standalone-template/',
-									'rsrc/emscripten-startup-template.livecodescript/',
-									'<(PRODUCT_DIR)/standalone-community-<(version_string).js',
-									'<(PRODUCT_DIR)/standalone-community-<(version_string).html',
-									'<(PRODUCT_DIR)/standalone-community-<(version_string).html.mem',
-								],
-							},
-						},
-
 						'sources!':
 						[
 							'src/dummy.cpp',
@@ -868,7 +853,7 @@
 			}
 		],
 		[
-			'OS == "emscripten"',
+			'OS == "emscripten" and target_arch == "js"',
 			{
 				'targets':
 				[
@@ -884,6 +869,45 @@
 						'variables':
 						{
 							'version_suffix': '<(version_string)',
+
+							'emscripten_js_libs_pre':
+							[
+								'src/em-preamble.js',
+								'src/em-preamble-overlay.js',
+							],
+							'emscripten_js_libs':
+							[
+								'src/em-dc.js',
+								'src/em-util.js',
+								'src/em-dialog.js',
+								'src/em-emterpreter.js',
+								'src/em-event.js',
+								'src/em-liburl.js',
+								'src/em-standalone.js',
+								'src/em-surface.js',
+								'src/em-system.js',
+								'src/em-url.js',
+							],
+
+							'emscripten_javascriptify_output':
+							[
+								'<(PRODUCT_DIR)/standalone-community-<(version_string).js',
+								'<(PRODUCT_DIR)/standalone-community-<(version_string).html',
+								'<(PRODUCT_DIR)/standalone-community-<(version_string).html.mem',
+							],
+						},
+
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files':
+								[
+									'rsrc/emscripten-standalone-template/',
+									'rsrc/emscripten-startup-template.livecodescript/',
+									'<@(emscripten_javascriptify_output)'
+								],
+							},
 						},
 
 						'actions':
@@ -930,25 +954,13 @@
 									'<(PRODUCT_DIR)/standalone-community.bc',
 									'rsrc/emscripten-html-template.html',
 									'<(PRODUCT_DIR)/standalone-community-whitelist.json',
-									'src/em-preamble.js',
-									'src/em-preamble-overlay.js',
-									'src/em-util.js',
-									'src/em-async.js',
-									'src/em-dialog.js',
-									'src/em-event.js',
-									'src/em-surface.js',
-									'src/em-system.js',
-									'src/em-url.js',
-									'src/em-standalone.js',
-									'src/em-liburl.js',
-									'src/em-dc.js',
+									'<@(emscripten_js_libs_pre)',
+									'<@(emscripten_js_libs)',
 								],
 
 								'outputs':
 								[
-									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).js',
-									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
-									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html.mem',
+									'<@(emscripten_javascriptify_output)',
 								],
 
 								'action':
@@ -963,19 +975,107 @@
 									'--whitelist',
 									'<(PRODUCT_DIR)/standalone-community-whitelist.json',
 									'--pre-js',
-									'src/em-preamble.js',
-									'src/em-preamble-overlay.js',
+									'<@(emscripten_js_libs_pre)',
 									'--js-library',
-									'src/em-util.js',
-									'src/em-async.js',
-									'src/em-dialog.js',
-									'src/em-event.js',
-									'src/em-surface.js',
-									'src/em-system.js',
-									'src/em-url.js',
-									'src/em-standalone.js',
-									'src/em-liburl.js',
-									'src/em-dc.js',
+									'<@(emscripten_js_libs)',
+								],
+							},
+						],
+					},
+				],
+			},
+		],
+		[
+			'OS == "emscripten" and target_arch == "wasm"',
+			{
+				'targets':
+				[
+					{
+						'target_name': 'javascriptify',
+						'type': 'none',
+
+						'dependencies':
+						[
+							'standalone',
+						],
+
+						'variables':
+						{
+							'version_suffix': '<(version_string)',
+
+							'emscripten_js_libs_pre':
+							[
+								'src/em-preamble.js',
+								'src/em-preamble-overlay.js',
+							],
+							'emscripten_js_libs':
+							[
+								'src/em-asyncify.js',
+								'src/em-dc.js',
+								'src/em-util.js',
+								'src/em-dialog.js',
+								'src/em-event.js',
+								'src/em-liburl.js',
+								'src/em-standalone.js',
+								'src/em-surface.js',
+								'src/em-system.js',
+								'src/em-url.js',
+							],
+
+							'emscripten_javascriptify_output':
+							[
+								'<(PRODUCT_DIR)/standalone-community-<(version_string).js',
+								'<(PRODUCT_DIR)/standalone-community-<(version_string).html',
+								'<(PRODUCT_DIR)/standalone-community-<(version_string).wasm',
+							],
+						},
+
+						'all_dependent_settings':
+						{
+							'variables':
+							{
+								'dist_aux_files':
+								[
+									'rsrc/emscripten-standalone-template/',
+									'rsrc/emscripten-startup-template.livecodescript/',
+									'<@(emscripten_javascriptify_output)'
+								],
+							},
+						},
+
+						'actions':
+						[
+							{
+								'action_name': 'javascriptify',
+								'message': 'Javascript-ifying the Emscripten engine',
+
+								'inputs':
+								[
+									'../util/emscripten-javascriptify-wasm.py',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'rsrc/emscripten-html-template.html',
+									'<@(emscripten_js_libs_pre)',
+									'<@(emscripten_js_libs)',
+								],
+
+								'outputs':
+								[
+									'<@(emscripten_javascriptify_output)',
+								],
+
+								'action':
+								[
+									'../util/emscripten-javascriptify-wasm.py',
+									'--input',
+									'<(PRODUCT_DIR)/standalone-community.bc',
+									'--output',
+									'<(PRODUCT_DIR)/standalone-community-<(version_suffix).html',
+									'--shell-file',
+									'rsrc/emscripten-html-template.html',
+									'--pre-js',
+									'<@(emscripten_js_libs_pre)',
+									'--js-library',
+									'<@(emscripten_js_libs)',
 								],
 							},
 						],

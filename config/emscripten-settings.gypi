@@ -22,8 +22,6 @@
 		'-s ALLOW_MEMORY_GROWTH=1',
 		'-s ASSERTIONS=1',
 		'-s DEMANGLE_SUPPORT=1',
-		'-s EMTERPRETIFY=1',
-		'-s EMTERPRETIFY_ASYNC=1',
 		'-s LINKABLE=1',
 		'-s RESERVED_FUNCTION_POINTERS=1024',
 		'-s TOTAL_MEMORY=67108864',
@@ -46,6 +44,23 @@
 
 	'target_conditions':
 	[
+		[
+			'toolset_arch == "wasm"',
+			{
+				'cflags':
+				[
+					'-s ASYNCIFY=1',
+					'-s', 'ASYNCIFY_IMPORTS=["MCEmscriptenAsyncYield"]',
+				],
+			},
+			{
+				'cflags':
+				[
+					'-s EMTERPRETIFY=1',
+					'-s EMTERPRETIFY_ASYNC=1',
+				]
+			},
+		],
 		[
 			'silence_warnings == 0',
 			{
@@ -101,7 +116,7 @@
 		{
 			'cflags':
 			[
-				'-Os',
+				'-O2',
 				'-g3',
 			],
 

@@ -33,6 +33,17 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
    -- FIXME
    --dispatch "revIDEDeployEmscriptenInitialize" to stack "revDeployLibrary"
    
+   local tArchs
+   repeat for each item tItem in revSBPlatformArchitectures("Emscripten")
+      if pSettings["Emscripten",tItem] then
+         put true into tArchs[tItem]
+      end if
+   end repeat
+   if the number of elements of tArchs is 0 then
+      put true into tArchs["js"]
+   end if
+   combine tArchs by comma as set
+   
    ---------- Pre-compute standalone build parameters
    
    -- Initial stack file
@@ -77,83 +88,95 @@ command revSaveAsEmscriptenStandalone pStack, pOutputFolder, pSettings
          throw "license does not permit HTML5 deployment"
       end if
       
-      ---------- Create a working directory
-      local tBuildFolder
-      put pOutputFolder into tBuildFolder
-      
-      logDebug "top", "Output folder: " && pOutputFolder
-      
-      ---------- Create new zip archive
-      revStandaloneProgress "Creating standalone archive..."
-      
-      local tBuildZip
-      put tBuildFolder & slash & "standalone.zip" into tBuildZip
-      
-      logDebug "top", "Archive:" && tBuildZip
-      
-      revZipOpenArchive tBuildZip, "write"
-      
-      if the result is not empty then
-         throw "could not create standalone archive"
-      end if
-      
-      -- Store template files
-      local tZipTemplateFile, tZipTemplateFolder, tZipTemplatePath
-      put getStandaloneTemplateFolder() into tZipTemplateFolder
-      
-      repeat for each element tZipTemplateFile in getStandaloneTemplateFiles()
-         put tZipTemplateFolder & slash & tZipTemplateFile into tZipTemplatePath
-         logDebug "template", "Storing" && tZipTemplatePath
-         revZipAddUncompressedItemWithFile tBuildZip, tZipTemplateFile, tZipTemplatePath
-         if the result is not empty then
-            throw "could not store template files in standalone archive"
+      repeat for each item tArch in tArchs
+         ---------- Create a working directory
+         local tBuildFolder
+         if the number of items in tArchs > 1 then
+            put pOutputFolder & slash & tArch into tBuildFolder
+         else
+            put pOutputFolder into tBuildFolder
          end if
-      end repeat
-      
-      -- Define some paths within the zip archive
-      local tBootPath, tStandalonePath
-      local tDeployedStackPath
-      put "boot" into tBootPath
-      put tBootPath & slash & "__startup.data" into tDeployedStackPath
-      put tBootPath & slash & "standalone" into tStandalonePath
-      
-      -- Deploy the standalone application data
-      storeDeployedStack tBuildZip, tDeployedStackPath, tBuildFolder, tStackFile, tDeploy
-      
-      -- Store extra, copied files
-      storeAssets tBuildZip, tResolvedFileData, tStandalonePath, tBaseFolder
-      
-      -- Close zip file
-      revZipCloseArchive tBuildZip
-      if the result is not empty then
-         throw "could not create standalone archive:" && the result
-      end if
-      
-      ---------- Copy the engine into the build folder
-      revStandaloneProgress "Preparing engine files..."
-      local tEngineFile
-      repeat for each element tEngineFile in getEngineFiles()
-         logDebug "engine", "Copying" && tEngineFile
-         revSBCopyFileToFolder tEngineFile, tBuildFolder, \
-               "revStandaloneProgressCallback", the long id of me
+         
+         if there is not a folder tBuildFolder then
+            create folder tBuildFolder
+            if the result is not empty then
+               throw "could not create build folder for" && tArch && "target"
+            end if
+         end if
+         
+         logDebug "top", "Output folder: " && pOutputFolder
+         
+         ---------- Create new zip archive
+         revStandaloneProgress "Creating standalone archive..."
+         
+         local tBuildZip
+         put tBuildFolder & slash & "standalone.zip" into tBuildZip
+         
+         logDebug "top", "Archive:" && tBuildZip
+         
+         revZipOpenArchive tBuildZip, "write"
          
          if the result is not empty then
-            throw "could not copy engine file" && the result
+            throw "could not create standalone archive"
          end if
+         
+         -- Store template files
+         local tZipTemplateFile, tZipTemplateFolder, tZipTemplatePath
+         put getStandaloneTemplateFolder(tArch) into tZipTemplateFolder
+         
+         repeat for each element tZipTemplateFile in getStandaloneTemplateFiles(tArch)
+            put tZipTemplateFolder & slash & tZipTemplateFile into tZipTemplatePath
+            logDebug "template", "Storing" && tZipTemplatePath
+            revZipAddUncompressedItemWithFile tBuildZip, tZipTemplateFile, tZipTemplatePath
+            if the result is not empty then
+               throw "could not store template files in standalone archive"
+            end if
+         end repeat
+         
+         -- Define some paths within the zip archive
+         local tBootPath, tStandalonePath
+         local tDeployedStackPath
+         put "boot" into tBootPath
+         put tBootPath & slash & "__startup.data" into tDeployedStackPath
+         put tBootPath & slash & "standalone" into tStandalonePath
+         
+         -- Deploy the standalone application data
+         storeDeployedStack tArch, tBuildZip, tDeployedStackPath, tBuildFolder, tStackFile, tDeploy
+         
+         -- Store extra, copied files
+         storeAssets tBuildZip, tResolvedFileData, tStandalonePath, tBaseFolder
+         
+         -- Close zip file
+         revZipCloseArchive tBuildZip
+         if the result is not empty then
+            throw "could not create standalone archive:" && the result
+         end if
+         
+         ---------- Copy the engine into the build folder
+         revStandaloneProgress "Preparing engine files..."
+         local tEngineFile
+         repeat for each element tEngineFile in getEngineFiles(tArch)
+            logDebug "engine", "Copying" && tEngineFile
+            revSBCopyFileToFolder tEngineFile, tBuildFolder, \
+                  "revStandaloneProgressCallback", the long id of me
+            
+            if the result is not empty then
+               throw "could not copy engine file" && the result
+            end if
+         end repeat
+         
+         ---------- Create HTML page
+         
+         -- FIXME just copies the Emscripten-generated page into place
+         revStandaloneProgress "Preparing HTML page..."
+         
+         local tHtmlFile
+         put tBuildFolder & slash & tName & ".html" into tHtmlFile
+         logDebug "html", "Creating" && tHtmlFile
+         logDebug "html", "Copying" && getHtmlTemplateFile(tArch)
+         revSBCopyFileToFile mapBinPath(tArch, getHtmlTemplateFile(tArch)), tHtmlFile, \
+               "revStandaloneProgressCallback", the long id of me
       end repeat
-      
-      ---------- Create HTML page
-      
-      -- FIXME just copies the Emscripten-generated page into place
-      revStandaloneProgress "Preparing HTML page..."
-      
-      local tHtmlFile
-      put tBuildFolder & slash & tName & ".html" into tHtmlFile
-      logDebug "html", "Creating" && tHtmlFile
-      logDebug "html", "Copying" && getHtmlTemplateFile()
-      revSBCopyFileToFile mapBinPath(getHtmlTemplateFile()), tHtmlFile, \
-            "revStandaloneProgressCallback", the long id of me
-      
    catch tError
       if tError is empty then
          put "an unknown error occurred" into tError
@@ -184,7 +207,7 @@ end revSaveAsEmscriptenStandalone
 -- Standalone deployment
 ----------------------------------------------------------------
 
-private command storeDeployedStack pZip, pDeployPath, pBuildFolder, pMainStack, pDeployParams
+private command storeDeployedStack pArch, pZip, pDeployPath, pBuildFolder, pMainStack, pDeployParams
    local tTempStackData, tTempStackPath, tStartupScript, tTempDeployPath
    
    ---------- Generate the startup script
@@ -194,7 +217,7 @@ private command storeDeployedStack pZip, pDeployPath, pBuildFolder, pMainStack, 
    put getPreparedStackAsData(pMainStack, pBuildFolder) into tTempStackData
    put tTempStackData into url ("binfile:" & tTempStackPath)
    
-   put getStartupScript(pDeployParams["startup_script"]) into tStartupScript
+   put getStartupScript(pArch, pDeployParams["startup_script"]) into tStartupScript
    
    put pBuildFolder & slash & "emscriptendeploy.data" into tTempDeployPath
    
@@ -241,11 +264,11 @@ end storeDeployedStack
 -- Create the startup script by processing the startup stack template.
 -- Engine-specific and standalone-specific data is substituted into the
 -- template in order 
-private function getStartupScript pGeneratedStartupScript
+private function getStartupScript pArch, pGeneratedStartupScript
    local tTemplateFile, tScript
    
    -- Load template
-   put getStartupTemplateFile() into tTemplateFile
+   put getStartupTemplateFile(pArch) into tTemplateFile
    open file tTemplateFile for "UTF-8" text read
    if the result is not empty then
       throw tTemplateFile & ":" && the result
@@ -397,31 +420,31 @@ end getPreparedStackAsData
 
 -- Map a compiled file's path into an absolute filesystem path.  This
 -- is used to cope with running from a git repository working tree.
-private function mapBinPath pPath
+private function mapBinPath pArch, pPath
    if there is a file pPath then
       return pPath
    end if
    
    if revEnvironmentIsInstalled() then
       -- We're running from an installed version of LiveCode
-      return getRuntimeFolder() & slash & pPath
+      return getRuntimeFolder(pArch) & slash & pPath
    else
       -- We're running from a git checkout
-      return getRepoBinariesFolder() & slash & pPath
+      return getRepoBinariesFolder(pArch) & slash & pPath
    end if
 end mapBinPath
 
 -- Map a resource file's path into an absolute filesystem path.  This
 -- is used to cope with running from a git repository working tree.
-private function mapResPath pPath
+private function mapResPath pArch, pPath
    if there is a file pPath then
       return pPath
    end if
 
    if revEnvironmentIsInstalled() then
-      return getRuntimeFolder() & slash & pPath
+      return getRuntimeFolder(pArch) & slash & pPath
    else
-      return getRepoResourceFolder() & slash & pPath
+      return getRepoResourceFolder(pArch) & slash & pPath
    end if
 end mapResPath
 
@@ -489,20 +512,28 @@ private command scanFolder_recurse @xCount, @xFiles, pRelPath
    set the defaultFolder to tSaveFolder
 end scanFolder_recurse
 
-function revGetEmscriptenFiles
-   return getEngineFiles()
+function revGetEmscriptenFiles pArch
+   return getEngineFiles(pArch)
 end revGetEmscriptenFiles
 
 -- Return a number-indexed array of engine files that need to be
 -- copied into the standalone output folder.
-private function getEngineFiles
+private function getEngineFiles pArch
    local tFiles
    
    -- Engine JavaScript
-   put mapBinPath("standalone-" & getEngineType() & "-" & the version & ".js") into tFiles[1]
+   put mapBinPath(pArch, "standalone-" & getEngineType() & "-" & the version & ".js") into tFiles[1]
    
-   -- Memory initialisation file
-   put mapBinPath("standalone-" & getEngineType() & "-" & the version & ".html.mem") into tFiles[2]
+   switch pArch
+      case "js"
+         -- Memory initialisation file
+         put mapBinPath(pArch, "standalone-" & getEngineType() & "-" & the version & ".html.mem") into tFiles[2]
+         break
+      case "wasm"
+         -- Engine WebAssembly binary
+         put mapBinPath(pArch, "standalone-" & getEngineType() & "-" & the version & ".wasm") into tFiles[2]
+         break
+   end switch
    
    return tFiles
 end getEngineFiles
@@ -511,36 +542,36 @@ end getEngineFiles
 -- This is a folder that contains the default filesystem
 -- initialisation data that's automatically included in all
 -- standalones (especially fonts).
-private function getStandaloneTemplateFolder
-   return mapResPath("emscripten-standalone-template")
+private function getStandaloneTemplateFolder pArch
+   return mapResPath(pArch, "emscripten-standalone-template")
 end getStandaloneTemplateFolder
 
 -- Return a number-indexed array of files in the Emscripten standalone
 -- template folder.  The paths returned are relative to the path returned
 -- by getStandaloneTemplateFolder()
-private function getStandaloneTemplateFiles
-   return scanFolder(getStandaloneTemplateFolder())
+private function getStandaloneTemplateFiles pArch
+   return scanFolder(getStandaloneTemplateFolder(pArch))
 end getStandaloneTemplateFiles
 
 -- Get the filename of the Emscripten standalone template HTML file.
 -- This has some standalone-dependent JavaScript substituted into it
 -- to instantiate the engine.
-private function getHtmlTemplateFile
-   return mapBinPath("standalone-" & getEngineType() & "-" & the version & ".html")
+private function getHtmlTemplateFile pArch
+   return mapBinPath(pArch, "standalone-" & getEngineType() & "-" & the version & ".html")
 end getHtmlTemplateFile
 
 -- Get the filename of the Emscripten standalone startup script-only
 -- stack template.
-private function getStartupTemplateFile
-   return mapResPath("emscripten-startup-template.livecodescript")
+private function getStartupTemplateFile pArch
+   return mapResPath(pArch, "emscripten-startup-template.livecodescript")
 end getStartupTemplateFile
 
 -- Get the directory containing the Emscripten runtime
-private function getRuntimeFolder
+private function getRuntimeFolder pArch
    
    local tRelFolder, tOverridePath, tUserPath
    
-   put slash & "Emscripten" & slash & "js" into tRelFolder
+   put slash & "Emscripten" & slash & pArch into tRelFolder
    
    put revOverrideRuntimePath() into tOverridePath
    if tOverridePath is not empty then
@@ -563,8 +594,8 @@ end getRuntimeFolder
 
 -- Get the directory where Emscripten binaries end up (specifically,
 -- the engine's JavaScript file).
-private function getRepoBinariesFolder
-	return revEnvironmentRepositoryPath() & slash & "emscripten-bin"
+private function getRepoBinariesFolder pArch
+	return revEnvironmentRepositoryPath() & slash & "emscripten-" & pArch & "-bin"
 end getRepoBinariesFolder
 
 -- Get the directory where Emscripten resources are kept

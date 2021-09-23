@@ -276,15 +276,21 @@ all-win-x86_64:
 # Emscripten rules
 ################################################################
 
-config-emscripten:
-	$(EMMAKE) ./config.sh --platform emscripten
+config-emscripten-%:
+	$(EMMAKE) ./config.sh --platform emscripten-$*
 
-compile-emscripten:
-	$(EMMAKE) $(MAKE) -C build-emscripten/livecode default
+compile-emscripten-%:
+	$(EMMAKE) $(MAKE) -C build-emscripten-$*/livecode default
 
-check-emscripten:
-	$(EMMAKE) $(MAKE) -C build-emscripten/livecode check
+check-emscripten-%:
+	$(EMMAKE) $(MAKE) -C build-emscripten-$*/livecode check
 
-all-emscripten:
-	$(MAKE) config-emscripten
-	$(MAKE) compile-emscripten
+all-emscripten-%:
+	$(MAKE) config-emscripten-$*
+	$(MAKE) compile-emscripten-$*
+
+#synonyms for *-emscripten-js
+all-emscripten: all-emscripten-js
+config-emscripten: config-emscripten-js
+compile-emscripten: compile-emscripten-js
+check-emscripten: check-emscripten-js

@@ -12,14 +12,15 @@ import subprocess
 #
 # These should generally match the settings in config/emscripten-settings.gypi
 settings = {
+    'ASYNCIFY': 1,
+    'ASYNCIFY_IMPORTS': '[MCEmscriptenAsyncYield]',
     'ALLOW_MEMORY_GROWTH': 1,
-    'ASSERTIONS': 1,
     'DEMANGLE_SUPPORT': 1,
-    'EMTERPRETIFY': 1,
-    'EMTERPRETIFY_ASYNC': 1,
     'ERROR_ON_UNDEFINED_SYMBOLS': 0,
+    'EXTRA_EXPORTED_RUNTIME_METHODS': '[addRunDependency,removeRunDependency,ccall]',
     'RESERVED_FUNCTION_POINTERS': 1024,
     'TOTAL_MEMORY': 67108864,
+    'USE_SDL': 0,
     'WARN_ON_UNDEFINED_SYMBOLS': 1,
     }
 
@@ -57,10 +58,6 @@ for arg in sys.argv[1:]:
             print('ERROR: unrecognized option \'{}\''.format(arg))
             sys.exit(1)
         options[option].append(arg)
-
-# Special handling for "--whitelist"
-if options.has_key('whitelist'):
-    settings['EMTERPRETIFY_WHITELIST'] = '@{}'.format(options['whitelist'][0])
 
 # Construct emcc command line
 # ---------------------------

@@ -43,10 +43,9 @@ elif [ "$PLATFORM" == "ios" ]; then
 	BUILDPATH="../_build/ios/$SUBPLATFORM/Release"
 	LIBPATH="lib/ios/$SUBPLATFORM"
 elif [ "$PLATFORM" == "emscripten" ]; then
-	MAKE_TARGET=emscripten
 	LIBS="${Thirdparty_LIBS_emscripten}"
-	BUILDPATH="../build-emscripten/livecode/out/Release/obj.target/thirdparty"
-	LIBPATH="lib/emscripten/js"
+	BUILDPATH="../build-emscripten-$ARCH/livecode/out/Release/obj.target/thirdparty"
+	LIBPATH="lib/emscripten/$ARCH"
 elif [ "$PLATFORM" == "android" ]; then
 	LIBS="${Thirdparty_LIBS_android}"
 	BUILDPATH="../build-android-$ARCH/livecode/out/Release/obj.target/thirdparty"
@@ -66,7 +65,7 @@ elif [ "$PLATFORM" == "linux" ] ; then
 	make -C "../build-${PLATFORM}-${ARCH}/livecode" thirdparty-prebuilts
 elif [ "$PLATFORM" == "emscripten" ] ; then
 	export BUILDTYPE=Release
-	${EMMAKE} make -j16 -C "../build-${PLATFORM}/livecode" thirdparty-prebuilts
+	${EMMAKE} make -j16 -C "../build-${PLATFORM}-${ARCH}/livecode" thirdparty-prebuilts
 elif [ "$PLATFORM" == "android" ] ; then
 	export BUILDTYPE=Release
 	make -j16 -C "../build-${PLATFORM}-${ARCH}/livecode" thirdparty-prebuilts
