@@ -61,12 +61,12 @@ may require that its parameters have a particular structure or fall
 within a particular range, or may need the system to be in a specific
 state.
 
-Note that if the <Condition> is false, this statement will throw an
+Note that if the Condition is false, this statement will throw an
 error with the slightly-unhelpful message that "assertion failed".
-Usually, it will be more useful to use <ExpectsPreconditionWithReason>
+Usually, it will be more useful to use <ExpectPreconditionWithReason>
 instead.
 
-Related: ExpectPreconditionWithReason(statement).
+Related: ExpectPreconditionWithReason (statement).
 
 Tags: Assertions
 */
