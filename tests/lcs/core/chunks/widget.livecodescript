@@ -17,13 +17,10 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on TestWidgetSubchunk
-	-- Bug 18948
+	-- Bug 18948 & 22104
 	create widget "me" as ""
-	set the script of it to "function doTest; return the short name of button 1 of me; end doTest"
+	set the script of it to "command doTest; return the short name of button 1 of me; end doTest"
 	
-	local tResult
-	dispatch function doTest to widget 1
-	put the result into tResult
-	
-	TestAssert "'objchunk' of me in non-group non-behavior control is me", tResult is "me"
+	TestAssertThrow "'objchunk' of me in non-group non-behavior control is error", "doTest", \
+			it, "EE_CHUNK_BADOBJECTEXP"
 end TestWidgetSubchunk

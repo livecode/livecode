@@ -62,3 +62,12 @@ and `image from file` to also use the host widget as the implicit object. This
 means, for example, that `image from file` will resolve a relative file path
 relative to the `stackFile` the host widget is on rather than the `stackFile` of
 the `defaultStack`.
+
+## Object Chunk of Me
+
+An execution error is now thrown when using `<object> of me` where `me` is a
+non-group control. In previous versions a button script containing
+`put the text of field "foo" of me into tText` would actually put the button's
+text into `tText`, however, in this version an error will be thrown because `me`
+can not be a parent object.
+
