@@ -104,7 +104,7 @@ void MCStringsEvalToLower(MCExecContext& ctxt, MCStringRef p_string, MCStringRef
 {
 	MCStringRef t_string = nil;
 	if (!MCStringMutableCopy(p_string, t_string) ||
-		!MCStringLowercase(t_string, kMCSystemLocale) ||
+		!MCStringLowercase(t_string, nullptr) ||
 		!MCStringCopyAndRelease(t_string, r_lower))
 	{
 		MCValueRelease(t_string);
@@ -116,7 +116,7 @@ void MCStringsEvalToUpper(MCExecContext& ctxt, MCStringRef p_string, MCStringRef
 {
 	MCStringRef t_string = nil;
 	if (!MCStringMutableCopy(p_string, t_string) ||
-		!MCStringUppercase(t_string, kMCSystemLocale) ||
+		!MCStringUppercase(t_string, nullptr) ||
 		!MCStringCopyAndRelease(t_string, r_upper))
 	{
 		MCValueRelease(t_string);

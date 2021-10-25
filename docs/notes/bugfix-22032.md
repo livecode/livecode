@@ -1,0 +1,1 @@
+# Use simple case mapping of unicode characters in toUpper and toLower functions
