@@ -2443,6 +2443,10 @@ void MCField::GetEffectiveTextFontOfCharChunk(MCExecContext& ctxt, uint32_t p_pa
 
     if (r_mixed)
         return;
+    
+    if(!MCStringIsEmpty(*t_value))
+        r_value = MCValueRetain(*t_value);
+    
 }
 
 void MCField::SetTextFontOfCharChunk(MCExecContext& ctxt, uint32_t p_part_id, int32_t si, int32_t ei, MCStringRef p_value)
