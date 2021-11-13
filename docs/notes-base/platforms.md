@@ -17,8 +17,8 @@ LiveCode supports the following versions of Windows:
 LiveCode supports the following Linux distributions, on 32-bit or
 64-bit Intel/AMD or compatible processors:
 
-* Ubuntu 14.04 and 16.04
-* Fedora 23 & 24
+* Ubuntu 16.04, 18.04 and 19.x
+* Fedora 30 & 31
 * Debian 7 (Wheezy) and 8 (Jessie) [server]
 * CentOS 7 [server]
 
