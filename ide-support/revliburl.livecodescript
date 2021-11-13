@@ -50,6 +50,10 @@ local lvProxyBypassList        -- URLs that bypass any proxy settings
 -- CW-2016-06-11: [[ External driver support ]] Add support for using an external library for network functions.
 local lvExtDriver
 
+-- TD-2016-09-22: [[ Cookie support ]]
+local laCookies ## Holds cookies for a domain
+local lvHandleCookies ## whether or not to use cookies
+
 ---------------------------------------------------------------------
 ##http locals
 local laConn,laCode,laChunk,laRhHeader, laHaveHeader, laNeedChunk
@@ -1051,6 +1055,10 @@ on ulParseHeaders x
    put word 2 of line 1 of laRhHeader[laUrl[x]] into laStatusCode[laUrl[x]]
    #get status message for error results
    put word 2 to -1 of line 1 of laRhHeader[laUrl[x]] into laStatusMessage[laUrl[x]]
+   
+   if lvHandleCookies then      
+      _extractCookies laUrl[x], laRhHeader[laUrl[x]]
+   end if
    
    if laStatusCode[laUrl[x]] is not a number then ##no point hanging around
       return "Unable to resolve server response."
@@ -2189,6 +2197,17 @@ function ulBuildHttpRequest pUrl
                put cr & tHeader after tRequest
             end if
          end repeat
+      end if
+      
+      ## Add cookies to request
+      ## Cookie: <name>=<value> [;<name>=<value>]...
+      if lvHandleCookies then
+         local tCookies
+        
+         put _cookieHeaderForURL( pURL ) into tCookies
+         if tCookies is not empty then
+            put cr & tCookies after tRequest
+         end if
       end if
       
    end if
@@ -5321,6 +5340,345 @@ private function _proxyfromHTTPProxy pURL, pProxy
    end if
    return pProxy
 end _proxyFromHTTPProxy
+
+
+command libURLProcessCookies pBoolean
+   put pBoolean is true into lvHandleCookies
+   if not pBoolean then
+      put empty into laCookies
+   end if
+end libURLProcessCookies
+
+
+private function _cookieHeaderForURL pURL
+   local addTheCookie, tCookie, tDomain, tHeader, tKey, tPath, tSeconds, tURLDomain
+   local i
+   local linesToDelete
+
+   put _extractHost(pURL) into tURLDomain    
+   put _extractPath(pUrl) into tPath
+   
+   repeat for each key tDomain in laCookies
+      put tURLDomain is tDomain into addTheCookie
+      if not addTheCookie then
+         ## check for matches using "."
+         if char 1 of tDomain is "." then
+            put char - (length(tDomain)-1) to -1 of tURLDomain is char 2 to -1 of tDomain into addTheCookie
+         end if
+      end if
+      
+      if addTheCookie and laCookies[ tDomain ] is not empty then
+         put the seconds into tSeconds
+         
+         repeat with i = 1 to the number of lines of laCookies[ tDomain ]
+            put line i of laCookies[ tDomain ] into tCookie
+            
+            split tCookie by ";" and "="
+            
+            ## Look for expired cookies
+            if tCookie["expires"] is not empty and tCookie["expires"] < tSeconds then 
+               put i & comma after linesToDelete
+               next repeat
+            end if
+            
+            ## Check secure flag
+            if tCookie["secure"] and not (char 1 to 5 of pURL is "https") then next repeat
+            
+            ## Check path (tPath needs to start with "path"]
+            if char 1 to length(tCookie["path"]) of tPath is not tCookie["path"] then next repeat
+            
+            ## Add cookie
+            repeat for each key tKey in tCookie
+               if tKey is among the items of "expires,domain,path,secure" then next repeat
+               put tKey & "=" & tCookie[tKey] & ";" after tHeader
+            end repeat
+         end repeat
+      end if
+   end repeat
+   if tHeader is not empty then put "Cookie: " before tHeader
+   
+   return tHeader
+end _cookieHeaderForURL
+
+
+## Parse header returned from a server and extract cookies into a script local variable.
+## Cookies are stored by their domain so we can do lookups later on when
+## matching cookies to URLs being sent
+private command _extractCookies pURL, pHeader
+   local tCharNo
+   local tCheck
+   local tCookieA, tCookieLine, tCookieLineNo
+   local tDefaultPath
+   local tHost
+   local tKey,tMsg
+   local tLineNo
+   local tOffset
+   local tCookieDomain
+
+   -- http://www.faqs.org/rfcs/rfc2965.html
+   -- Set-Cookie: <name>=<value>[; <name>=<value>]...
+   -- [; expires=<date>][; domain=<domain_name>]
+   -- [; path=<some_path>][; secure]
+   ## Cookie names are case insensitive
+   
+   ## Look for a redirect. If present use it as the host.
+   if line 1 of pHeader contains "302" then
+      put lineOffset("Location:", pHeader, tOffset) into tLineNo
+      if tLineNo > 0 then
+         put word 1 to -1 of (char 10 to -1 of line tLineNo of pHeader) into pURL
+      end if
+   end if
+   
+   put _extractHost(pURL) into tHost    
+   put _extractPath(pURL) into tDefaultPath
+   put 0 into tOffset
+   repeat forever
+      put lineOffset("Set-Cookie:", pHeader, tOffset) into tLineNo
+      if tLineNo > 0 then
+         put empty into tCookieA ## Start fresh
+         
+         add tOffset to tLineNo
+         put line tLineNo of pHeader into tCookieLine
+         
+         ## Prepare for next search and skip
+         put tLineNo into tOffset
+         
+         ## Create array of cookie entries
+         delete char 1 to length("Set-Cookie:") of tCookieLine 
+         put word 1 to -1 of tCookieLine into tCookieLine ## strip white space
+         split tCookieLine by ";" and "="
+         repeat for each key tKey in tCookieLine
+            put word 1 to -1 of tCookieLine[tKey] into tCookieA[word 1 to -1 of tKey]
+         end repeat
+         
+         ## Session cookies that specify a domain are rejected
+         if tCookieA["expires"] is empty and tCookieA["domain"] is not empty then
+            ------------
+            put "Cookie doesn't expire and has a domain:" into tMsg
+            repeat for each key tKey in tCookieA
+               put cr & tKey & ":" && tCookieA[tKey] after tMsg
+            end repeat
+            ulLogIt tMsg & cr
+            -------------
+            next repeat
+         end if
+         
+         ## Validate domain
+         if tCookieA["domain"] is empty then
+            ## No domain, using current
+            put tHost into tCookieA["domain"]
+            
+            ## must have at least 2 "."
+            ## tack on "." to beginning if need be (i.e. domain is "google.com" rather than "www.google.com")
+            put offset(".", tCookieA["domain"]) into tCharNo
+            if tCharNo > 0 then put offset(".", tCookieA["domain"], tCharNo) into tCharNo
+            if tCharNo is 0 then
+               put "." before tCookieA["domain"]
+            end if
+         end if
+         
+         ## must have at least 2 "."
+         put offset(".", tCookieA["domain"]) into tCharNo
+         if tCharNo > 0 then
+            put offset(".", tCookieA["domain"], tCharNo) into tCharNo
+         end if
+         
+         if tCharNo is 0 then
+            put "Cookie domain does not contain at least 2 '.' :" into tMsg
+            repeat for each key tKey in tCookieA
+               put cr & tKey & ":" && tCookieA[tKey] after tMsg
+            end repeat
+            ulLogIt tMsg & cr
+            next repeat
+         end if
+         
+         ## Check that tCookieA["domain"] is part of tHost
+         put tCookieA["domain"] into tCookieDomain
+         if char 1 of tCookieDomain is "." then delete char 1 of tCookieDomain
+         if char -length(tCookieDomain) to -1 of tHost is not tCookieDomain then next repeat
+         
+         ## Normalize
+         if tCookieA["path"] is empty then put tDefaultPath into tCookieA["path"]
+         if tCookieA["expires"] is not empty then
+            ## Store expires in seconds
+            put _ConvertGMTInternetTimestampToInternetDate(tCookieA["expires"]) into tCookieA["expires"]
+            convert tCookieA["expires"] from internet date to seconds
+         end if
+         put "secure" is among the keys of tCookieA into tCookieA["secure"]
+         
+         ## Store each unique name=value pair on a separate line.
+         ## This allows us to easily update an existing cookie later on
+         repeat for each key tKey in tCookieA
+            if tKey is among the items of "expires,domain,path,secure" then next repeat
+            
+            ## is there already an entry for this cookie name?
+            put lineOffset(tKey & "=", laCookies[ tCookieA["domain"] ]) into tCookieLineNo
+            if tCookieLineNo is 0 then
+               put the number of lines of laCookies[ tCookieA["domain"] ] + 1 into tCookieLineNo
+            else
+               ## A cookie matches on name/domain/path. Make sure path matches.
+               put line tCookieLineNo of laCookies[ tCookieA["domain"] ] into tCheck
+               split tCheck by ";" and "="
+               if tCheck["path"] is not tCookieA["path"] then
+                  put the number of lines of laCookies[ tCookieA["domain"] ] + 1 into tCookieLineNo
+               end if
+            end if
+            
+            put tKey & "=" & tCookieA[tKey] & ";" & \
+                  "expires=" & tCookieA["expires"] & ";" & \
+                  "domain=" & tCookieA["domain"] & ";" & \
+                  "path=" & tCookieA["path"] & ";" & \
+                  "secure=" & tCookieA["secure"] & ";" into line tCookieLineNo of laCookies[ tCookieA["domain"] ]
+         end repeat
+      else
+         exit repeat
+      end if
+   end repeat
+   
+   -- ulLogIt laCookies[ tCookieA["domain"] ]
+   
+   return empty
+end _extractCookies
+
+
+private function _extractPath pURL
+   local tCharNo
+   local tPath
+
+   put "/" into tPath
+   put offset("://", pURL) into tCharNo
+   if tCharNo > 0 then
+      put char tCharNo + 3 to -1 of pURL into pURL
+      put offset("/", pURL) into tCharNo
+      if tCharNo > 0 then
+         put char tCharNo to -1 of pURL into tPath
+         put offset("?", tPath) into tCharNo
+         if tCharNo > 0 then
+            delete char tCharNo to -1 of tPath
+         end if
+      end if
+  end if
+
+  return tPath
+end _extractPath
+
+
+function libURLInternetTimeStampInGMT
+   return _ConvertInternetTimeStampToGMT(the internet date)
+end libURLInternetTimeStampInGMT
+
+
+function libURLTimeStampInGMT
+   return _ConvertInternetDateToGMTTimestamp(the internet date)
+end libURLTimeStampInGMT
+
+
+function libURLInternetDateToGMTTimeStamp pInternetDate
+   return _ConvertInternetDateToGMTTimestamp(pInternetDate)
+end libURLInternetDateToGMTTimeStamp
+
+
+function libURLGMTTimeStampToInternetDate pTimestamp
+   if char 1 of pTimestamp is an integer then
+      ## gmt timestamp
+      return _ConvertGMTTimestampToInternetDate(pTimestamp)
+   else
+      ## gmt internet timestamp
+      return _ConvertGMTInternetTimestampToInternetDate(pTimestamp)
+   end if
+end libURLGMTTimeStampToInternetDate
+
+
+private function _ConvertGMTInternetTimestampToInternetDate pTimestamp
+   ## get rid of dashes between day,month,year
+   replace "-" with space in pTimestamp
+    
+   ## Add offset
+   if the last word of pTimestamp is "GMT" then delete the last word of pTimestamp
+   put " -0000" after pTimestamp
+   convert pTimestamp from internet date to internet date
+    
+   return pTimestamp
+end _ConvertGMTInternetTimestampToInternetDate
+
+
+private function _ConvertGMTTimestampToInternetDate pGMTTime
+   local tGMTOffset
+   
+   set the wholeMatches to true
+   if the last word of pGMTTime is among the items of "UTC,GMT" then delete the last word of pGMTTime
+
+   ## 1) Determine local system GMT offset
+   put _LocalSystemGMTOffset() into tGMTOffset
+ 
+   ## 2) Convert GMT to date items
+   replace "-" with comma in pGMTTime
+   replace " " with comma in pGMTTime
+   replace ":" with comma in pGMTTime
+   put comma & 0 after pGMTTime ## we don't know day of week
+ 
+   ## 3) subtract the GMT offset from item 4 of the date items
+   add tGMTOffset to item 4 of pGMTTime
+ 
+   ## 4) convert date items to the internet date
+   convert pGMTTime from dateItems to internet date
+   return pGMTTime
+end _ConvertGMTTimestampToInternetDate
+
+
+private function _ConvertInternetDateToGMTTimestamp pInternetTime
+   local tGMTOffset
+
+   put _InternetDateGMTOffset(pInternetTime) into tGMTOffset
+    
+   convert pInternetTime from internet date to dateItems
+   if tGMTOffset is a number then
+      subtract tGMTOffset from item 4 of pInternetTime
+   end if
+   convert pInternetTime to dateItems
+   return format("%04u-%02u-%02u %02u:%02u:%02u GMT", \
+      item 1 of pInternetTime, item 2 of pInternetTime, item 3 of pInternetTime, \
+      item 4 of pInternetTime, item 5 of pInternetTime, item 6 of pInternetTime)
+end _ConvertInternetDateToGMTTimestamp
+
+
+private function _ConvertInternetTimeStampToGMT pInternetTime
+   local tGMTOffset
+   put _LocalSystemGMTOffset() into tGMTOffset
+    
+   convert pInternetTime from internet date to dateItems
+   subtract tGMTOffset from item 4 of pInternetTime
+   convert pInternetTime to dateItems
+   convert pInternetTime from dateItems to internet date
+    
+   ## force 2 digits
+   put format("%02d", word 2 of pInternetTime) into word 2 of pInternetTime
+    
+   ## Add "-"
+   put "-" after word 3 of pInternetTime
+   put "-" after word 2 of pInternetTime
+   replace "- " with "-" in pInternetTime
+    
+   ## So now we have theDate which is actually the GMT date but which has
+   ## the offset from GMT as the last word
+   put "GMT" into the last word of pInternetTime
+   return pInternetTime
+end _ConvertInternetTimeStampToGMT
+
+
+private function _LocalSystemGMTOffset
+    return _InternetDateGMTOffset(the internet date)
+end _LocalSystemGMTOffset
+
+
+private function _InternetDateGMTOffset pInternetTime
+   local tGMTOffset
+   put the last word of pInternetTime into tGMTOffset
+   delete the char -2 to -1 of tGMTOffset
+   if char 2 of tGMTOffset is 0 then delete char 2 of tGMTOffset
+   if char 1 of tGMTOffset is "+" then delete char 1 of tGMTOffset
+   return tGMTOffset
+end _InternetDateGMTOffset
 
 --------------------------------------------------
 -- CW-2016-06-11: [[ External driver support ]] Add support for using an external library for network functions.
