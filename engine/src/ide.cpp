@@ -60,6 +60,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // script colorize (char|line) x to y of <field chunk>
 // script complete at char x of <field chunk>
 // script tokenize <container>
+// script commentnesting at line x of <field chunk>
 
 class MCIdeState
 {
@@ -67,7 +68,7 @@ public:
 	void SetCommentDelta(uint4 p_line, int1 p_delta);
 	int1 GetCommentDelta(uint4 p_line) const;
 
-	uint4 GetCommentNesting(uint4 p_line) const;
+	int32_t GetCommentNesting(uint4 p_line) const;
 	uint4 GetLineCount(void) const;
 
 	static MCIdeState *Find(MCField *p_field);
@@ -165,7 +166,7 @@ int1 MCIdeState::GetCommentDelta(uint4 p_line) const
 	return f_line_properties[p_line - 1];
 }
 
-uint4 MCIdeState::GetCommentNesting(uint4 p_line) const
+int32_t MCIdeState::GetCommentNesting(uint4 p_line) const
 {
 	uint4 t_nesting;
 	t_nesting = 0;
@@ -680,7 +681,7 @@ static uint8_t get_codepoint_type(unichar_t p_char)
 //   true if the start of a comment is found at char x_index of p_text, false otherwise.
 // Description
 //   If the function returns false, then all the return parameters are not changed.
-static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_index, MCColourizeClass &r_class, uint4 &r_nesting_delta, bool &r_update_min_nesting, bool &r_multiple_lines)
+static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_index, MCColourizeClass &r_class, int32_t &r_nesting_delta, bool &r_update_min_nesting, bool &r_multiple_lines)
 {
 	r_nesting_delta = 0;
 	r_update_min_nesting = false;
@@ -731,7 +732,7 @@ static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_
 				if (t_char == '/' && (t_char = next_valid_char(p_text, t_new_index)) == '*')
 				{
 					// As we only need to return the nesting difference, we start the nesting off at 0
-					uint4 t_nesting;
+					int32_t t_nesting;
 					t_nesting = 0;
 
 					x_index = t_new_index;
@@ -772,15 +773,15 @@ static bool match_comment(const unsigned char *p_text, uint4 p_length, uint4 &x_
 
 }
 
-static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nesting, uint4& r_out_nesting, uint4& r_min_nesting, MCColourizeCallback p_callback, void *p_context)
+static void tokenize(const unsigned char *p_text, uint4 p_length, int32_t p_in_nesting, int32_t& r_out_nesting, int32_t& r_min_nesting, MCColourizeCallback p_callback, void *p_context)
 {
 	uint4 t_index;
 	t_index = 0;
 
-	uint4 t_nesting;
+	int32_t t_nesting;
 	t_nesting = p_in_nesting;
 
-	uint4 t_min_nesting;
+	int32_t t_min_nesting;
 	t_min_nesting = t_nesting;
 
 	MCColourizeClass t_class;
@@ -831,7 +832,7 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 		uint4 t_end = t_index;
 
 		MCColourizeClass t_comment_class;
-		uint4 t_nesting_delta;
+		int32_t t_nesting_delta;
 		bool t_update_min_nesting;
 		bool t_multiple_lines;
 
@@ -1031,7 +1032,7 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 //   true if the start of a comment is found at char x_index of p_text, false otherwise.
 // Description
 //   If the function returns false, then all the return parameters are not changed.
-static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColourizeClass &r_class, uint4 &r_nesting_delta, bool &r_update_min_nesting, bool &r_multiple_lines)
+static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColourizeClass &r_class, int4 &r_nesting_delta, bool &r_update_min_nesting, bool &r_multiple_lines)
 {
 	r_nesting_delta = 0;
 	r_update_min_nesting = false;
@@ -1085,7 +1086,7 @@ static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColo
 				if (t_char == '/' && (t_char = next_valid_unichar(p_string, t_new_index)) == '*')
 				{
 					// As we only need to return the nesting difference, we start the nesting off at 0
-					uint4 t_nesting;
+					int4 t_nesting;
 					t_nesting = 0;
                     
 					x_index = t_new_index;
@@ -1127,15 +1128,15 @@ static bool match_comment_stringref(MCStringRef p_string, uint4 &x_index, MCColo
 }
 
 
-static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& r_out_nesting, uint4& r_min_nesting, MCColourizeCallback p_callback, void *p_context)
+static void tokenize_stringref(MCStringRef p_string, int32_t p_in_nesting, int32_t& r_out_nesting, int32_t& r_min_nesting, MCColourizeCallback p_callback, void *p_context)
 {
     uint4 t_index;
     t_index = 0;
     
-    uint4 t_nesting;
+    int32_t t_nesting;
     t_nesting = p_in_nesting;
     
-    uint4 t_min_nesting;
+    int32_t t_min_nesting;
     t_min_nesting = t_nesting;
     
     MCColourizeClass t_class;
@@ -1197,7 +1198,7 @@ static void tokenize_stringref(MCStringRef p_string, uint4 p_in_nesting, uint4& 
 		uint4 t_end = t_index;
         
 		MCColourizeClass t_comment_class;
-		uint4 t_nesting_delta;
+		int4 t_nesting_delta;
 		bool t_update_min_nesting;
 		bool t_multiple_lines;
         
@@ -1454,9 +1455,9 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		t_last_line = t_end;
 	}
 	
-	uint4 t_old_nesting, t_new_nesting;
-	t_old_nesting = t_new_nesting = t_state -> GetCommentNesting(t_first_line);
-
+	int32_t t_old_nesting, t_new_nesting;
+    t_old_nesting = t_new_nesting = t_state -> GetCommentNesting(t_first_line);
+    
 	MCParagraph *t_paragraph;
 	t_paragraph = t_first_paragraph;
 
@@ -1470,25 +1471,34 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 
 	/* It may be necessary to go beyond the last requested line in order to
 	 * deal with comment nesting. */
-	for (t_line = t_first_line, t_paragraph = t_first_paragraph;
-	     t_line <= t_last_line ||
-		     (p_mutate && t_paragraph != t_sentinal_paragraph &&
-		      t_new_nesting != t_old_nesting);
+    
+    bool t_nesting_changed = false;
+	for (t_line = t_first_line, t_paragraph = t_first_paragraph;;
 	     ++t_line, t_paragraph = t_paragraph -> next())
 	{
-		t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
+        t_initial_height += t_paragraph -> getheight(t_target -> getfixedheight());
 
-		uint32_t t_nesting, t_min_nesting;
+		int32_t t_nesting, t_min_nesting;
 
 		t_paragraph -> clearzeros();
 		tokenize_stringref(t_paragraph -> GetInternalStringRef(),
 		                   t_new_nesting, t_nesting, t_min_nesting,
 		                   p_callback, t_paragraph);
 
-		t_old_nesting += t_state -> GetCommentDelta(t_line);
-		t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
+        t_old_nesting += t_state -> GetCommentDelta(t_line);
+        
+        if (t_old_nesting != t_nesting)
+            t_nesting_changed = true;
+        
+        t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
 		t_new_nesting = t_nesting;
-	}
+        
+        if (p_mutate && t_paragraph -> next() == t_sentinal_paragraph)
+            break;
+        else if (t_line >= t_last_line && (!t_nesting_changed || !p_mutate))
+            break;
+        
+    }
 
 	// MW-2013-10-24: [[ FasterField ]] Rather than recomputing and redrawing all
 	//   let's be a little more selective - only relaying out and redrawing the
@@ -1625,6 +1635,65 @@ void MCIdeScriptReplace::exec_ctxt(MCExecContext & ctxt)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+MCIdeScriptCommentNesting::MCIdeScriptCommentNesting(void)
+: f_line(NULL), f_target(NULL)
+{
+}
+
+MCIdeScriptCommentNesting::~MCIdeScriptCommentNesting(void)
+{
+    delete f_target;
+    delete f_line;
+}
+
+Parse_stat MCIdeScriptCommentNesting::parse(MCScriptPoint& p_script)
+{
+    Parse_stat t_status;
+    t_status = PS_NORMAL;
+    
+    if (t_status == PS_NORMAL)
+        t_status = p_script . skip_token(SP_FACTOR, TT_OF, PT_OF);
+    
+    if (t_status == PS_NORMAL)
+        t_status = p_script . skip_token(SP_FACTOR, TT_CHUNK, CT_LINE);
+    
+    if (t_status == PS_NORMAL)
+        t_status = p_script . parseexp(False, False, &f_line);
+    
+    if (t_status == PS_NORMAL)
+        t_status = p_script . skip_token(SP_FACTOR, TT_OF, PT_OF);
+    
+    if (t_status == PS_NORMAL)
+        t_status = parse_target(p_script, f_target);
+    
+    return t_status;
+}
+
+void MCIdeScriptCommentNesting::exec_ctxt(MCExecContext & ctxt)
+{
+    int t_line;
+    if (!ctxt . EvalExprAsStrictInt(f_line, EE_OBJECT_NAN, t_line))
+        return;
+
+    MCField *t_target;
+    
+    if (!eval_target(ctxt, f_target, t_target))
+        return;
+    
+    MCIdeState *t_state;
+    t_state = MCIdeState::Find(t_target);
+    
+    int32_t t_nesting = t_state -> GetCommentNesting(t_line);
+    
+    MCAutoNumberRef t_value;
+    MCNumberCreateWithInteger(t_nesting, &t_value);
+    
+    ctxt . SetItToValue(*t_value);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 
 MCIdeScriptDescribe::MCIdeScriptDescribe(void)
 	: f_type(TYPE_NONE)

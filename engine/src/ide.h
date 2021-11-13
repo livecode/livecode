@@ -87,6 +87,20 @@ private:
 	MCExpression *f_text;
 };
 
+class MCIdeScriptCommentNesting : public MCIdeScriptAction
+{
+public:
+    MCIdeScriptCommentNesting(void);
+    virtual ~MCIdeScriptCommentNesting(void);
+    
+    virtual Parse_stat parse(MCScriptPoint& p_script);
+    virtual void exec_ctxt(MCExecContext &ctxt);
+    
+private:
+    MCExpression *f_line;
+    MCChunk *f_target;
+};
+
 class MCIdeScriptConfigure : public MCIdeScriptAction
 {
 public:
