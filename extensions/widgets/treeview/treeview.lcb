@@ -401,6 +401,20 @@ metadata pathDelimiter.label is "Path delimiter"
 metadata pathDelimiter.default is ","
 
 /**
+Syntax: set the sortCaseSensitive of <widget> to {true|false}
+Syntax: get the sortCaseSensitive of <widget>
+
+Summary: Whether the sort operation in the keys of the arrayData is caseSensitive or not.
+
+Description:
+The <sortCaseSensitive> property controls whether or not the key sort is case sensitive.
+Default value is true.
+**/
+
+property sortCaseSensitive                    get mSortCaseSensitive                   set setSortCaseSensitive
+metadata sortCaseSensitive is "Sort case sensitive"
+
+/**
 Syntax: set the alternateRowBackgrounds of <widget> to {true|false}
 Syntax: get the alternateRowBackgrounds of <widget>
 
@@ -717,6 +731,7 @@ private variable mArrayStyle as Boolean
 
 private variable mSortAscending as Boolean
 private variable mSortNumeric as Boolean
+private variable mSortCaseSensitive as Boolean
 
 private variable mPathDelimiter as String
 
@@ -766,8 +781,9 @@ public handler OnCreate() returns nothing
 	put false into mReadOnly
 	put false into mArrayStyle
 
-	put true into mSortNumeric
-	put true into mSortAscending
+    put true into mSortNumeric
+    put true into mSortAscending
+    put true into mSortCaseSensitive
 
 	put "," into mPathDelimiter
 
@@ -799,6 +815,7 @@ public handler OnSave(out rProperties as Array)
 	put mArrayStyle into rProperties["array style"]
 	put mSortAscending into rProperties["sort ascending"]
 	put mSortNumeric into rProperties["sort numeric"]
+	put mSortCaseSensitive into rProperties["sort case sensitive"]
 	put mAutoFoldStateReset into rProperties["auto fold state reset"]
 	put mHiliteNewElement into rProperties["hilite new element"]
 	put mScrollHilitedElementIntoView into rProperties["scroll hilited element into view"]
@@ -830,6 +847,10 @@ public handler OnLoad(in pProperties as Array)
 	if "sort numeric" is among the keys of pProperties then
 		put pProperties["sort numeric"] into mSortNumeric
 	end if
+
+    if "sort case sensitive" is among the keys of pProperties then
+        put pProperties["sort case sensitive"] into mSortCaseSensitive
+    end if
 
 	if "auto fold state reset" is among the keys of pProperties then
 		put pProperties["auto fold state reset"] into mAutoFoldStateReset
@@ -1958,22 +1979,49 @@ private handler convertArrayToList(in pArray as Array, in pLevel as Integer, in 
 	if pArray is empty then
 		return the empty list
 	end if
-	
+
 	variable tKeys as List
 	put the keys of pArray into tKeys
-	
+
+	variable tKeysTemp as List
+	variable tKeysSorted as List
+
+	variable tKey as String
+	variable tKeyLower as String
+
+	if not mSortCaseSensitive then
+		repeat for each key tKey in pArray
+			push the lower of tKey onto back of tKeysTemp
+		end repeat
+	else
+		put tKeys into tKeysTemp
+	end if
+
 	if mSortNumeric then
-		sort tKeys using handler CompareKeysNumeric
+		sort tKeysTemp using handler CompareKeysNumeric
 	else
 		if mSortAscending then
-			sort tKeys in ascending order
+			sort tKeysTemp in ascending order
 		else
-			sort tKeys in descending order
+			sort tKeysTemp in descending order
 		end if
 	end if
+
+	if not mSortCaseSensitive then
+		repeat for each element tKeyLower in tKeysTemp
+			repeat for each element tKey in tKeys
+				if the lower of tKey is tKeyLower then
+					push tKey onto back of tKeysSorted
+				end if
+			end repeat
+		end repeat
+	else
+		put tKeysTemp into tKeysSorted
+	end if
+
 	variable tViewCount as Integer
 	put the ceiling of (mViewHeight / mRowHeight) into tViewCount
-	return calculateMoreElements(kRowBuffer + tViewCount, pLevel, pPath, tKeys, pArray)
+	return calculateMoreElements(kRowBuffer + tViewCount, pLevel, pPath, tKeysSorted, pArray)
 end handler
 
 // A handler type for passing into 'applyToNode'
@@ -2498,6 +2546,17 @@ private handler setArrayStyle(in pArrayStyle as Boolean)
 		put true into mRecalculateFit
 		redraw all
 	end if
+end handler
+
+private handler getSortCaseSensitive() returns Boolean
+    return mSortCaseSensitive
+end handler
+
+private handler setSortCaseSensitive(in pCaseSensitive as Boolean)
+    if pCaseSensitive is not mSortCaseSensitive then
+        put pCaseSensitive into mSortCaseSensitive
+        setArrayData(mData)
+    end if
 end handler
 
 constant kSortTypeNumeric is "numeric"
