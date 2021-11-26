@@ -483,7 +483,7 @@ bool MCS_name_to_host_and_port(MCStringRef p_name, MCStringRef &r_host, MCNumber
 
 bool MCS_host_and_port_to_sockaddr(MCStringRef p_host, MCNumberRef p_port, struct sockaddr_in *r_addr, MCHostNameResolveCallback p_callback, void *p_context)
 {
-    if (MCValueIsEmpty(p_host) || MCValueIsEmpty(p_port))
+    if (MCStringIsEmpty(p_host) || MCValueIsEmpty(p_port))
         return false;
     
     MCAutoPointer<char> t_host;
