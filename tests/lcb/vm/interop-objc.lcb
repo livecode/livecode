@@ -7,6 +7,7 @@ use com.livecode.__INTERNAL._testlib
 ---------
 
 __safe foreign handler NSObjectAlloc() returns ObjcRetainedId binds to "objc:NSObject.+alloc"
+__safe foreign handler NSObjectInit(in pObj as ObjcRetainedId) returns ObjcRetainedId binds to "objc:NSObject.-init"
 
 __safe foreign handler NSNumberCreateWithInt(in pInt as CInt) returns ObjcAutoreleasedId binds to "objc:NSNumber.+numberWithInt:"
 __safe foreign handler NSNumberGetIntValue(in pObj as ObjcId) returns CInt binds to "objc:NSNumber.intValue"
@@ -16,6 +17,11 @@ __safe foreign handler NSNumberCreateWithFloat(in pInt as CFloat) returns ObjcAu
 __safe foreign handler NSNumberGetFloatValue(in pObj as ObjcId) returns CFloat binds to "objc:NSNumber.floatValue"
 __safe foreign handler NSNumberCreateWithDouble(in pInt as CDouble) returns ObjcAutoreleasedId binds to "objc:NSNumber.+numberWithDouble:"
 __safe foreign handler NSNumberGetDoubleValue(in pObj as ObjcId) returns CDouble binds to "objc:NSNumber.doubleValue"
+
+__safe foreign handler NSImageAlloc() \
+	returns ObjcRetainedId binds to "objc:Appkit.framework>NSImage.+alloc"
+__safe foreign handler NSImageInitWithContentsOfFile(in pObj as ObjcRetainedId, in pFilename as ObjcId) \
+	returns optional ObjcRetainedId binds to "objc:Appkit.framework>NSImage.-initWithContentsOfFile:"
 
 ---------
 
@@ -51,9 +57,9 @@ end handler
 __safe foreign handler NSObjectGetRetainCount(in pObj as ObjcId) returns CULong binds to "objc:NSObject.-retainCount"
 __safe foreign handler NSObjectGetSelf(in pObj as ObjcId) returns ObjcId binds to "objc:NSObject.-self"
 
-public handler TestObjInterop_ObjcObjectLifetime()
+public handler TestObjcInterop_ObjcObjectLifetime()
 	if not the operating system is in ["mac", "ios"] then
-		skip test "objc binding succeeds" because "not implemented on" && the operating system
+		skip test "objc object lifetime succeeds" because "not implemented on" && the operating system
 		return
 	end if
 
@@ -71,6 +77,98 @@ public handler TestObjInterop_ObjcObjectLifetime()
 	variable tObjcObjectFromAutoreleasedId as ObjcObject
 	put NSNumberCreateWithDouble(3.14159) into tObjcObjectFromAutoreleasedId
 	test "autoreleased id into objc object retains" when NSObjectGetRetainCount(tObjcObjectFromAutoreleasedId) is 2
+end handler
+
+public handler TestObjcInterop_ObjcInlineAllocInit()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc inline alloc init succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tObjcObject as ObjcObject
+	put NSObjectInit(NSObjectAlloc()) into tObjcObject
+	test "inline alloc init has correct retain count" when NSObjectGetRetainCount(tObjcObject) is 1
+end handler
+
+public handler TestObjcInterop_ObjcIndirectAllocInit()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc indirect alloc init succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tAllocObjcObject as optional ObjcObject
+	put NSObjectAlloc() into tAllocObjcObject
+
+	variable tInitObjcObject as ObjcObject
+	put NSObjectInit(tAllocObjcObject) into tInitObjcObject
+	
+	put nothing into tAllocObjcObject
+
+	test "indirect alloc init has correct retain count" when NSObjectGetRetainCount(tInitObjcObject) is 1
+end handler
+
+public handler TestObjcInterop_ObjcUnsafeAllocInit()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc unsafe alloc init succeeds" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tAllocObjcId as ObjcRetainedId
+	put NSObjectAlloc() into tAllocObjcId
+
+	variable tInitObjcId as ObjcRetainedId
+	put NSObjectInit(tAllocObjcId) into tInitObjcId
+	
+	variable tObjcObject as ObjcObject
+	put tInitObjcId into tObjcObject
+
+	test "unsafe alloc init has correct retain count" when NSObjectGetRetainCount(tObjcObject) is 1
+end handler
+
+public handler TestObjcInterop_ObjcInlineAllocInitFailure()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc inline alloc init is nothing when init fails" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tObjcObject as optional ObjcObject
+	put NSImageInitWithContentsOfFile(NSImageAlloc(), StringToNSString("non-existant-image.png")) into tObjcObject
+	test "objc inline alloc init is nothing when init fails" when tObjcObject is nothing
+end handler
+
+public handler TestObjcInterop_ObjcIndirectAllocInitFailure()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc indirect alloc init is nothing when init fails" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tAllocObjcObject as optional ObjcObject
+	put NSImageAlloc() into tAllocObjcObject
+
+	variable tInitObjcObject as optional ObjcObject
+	put NSImageInitWithContentsOfFile(tAllocObjcObject, StringToNSString("non-existant-image.png")) into tInitObjcObject
+	
+	put nothing into tAllocObjcObject
+
+	test "objc indirect alloc init is nothing when init fails" when tInitObjcObject is nothing
+end handler
+
+public handler TestObjcInterop_ObjcUnsafeAllocInitFailure()
+	if not the operating system is in ["mac", "ios"] then
+		skip test "objc unsafe alloc init is nothing when init fails" because "not implemented on" && the operating system
+		return
+	end if
+
+	variable tAllocObjcId as ObjcRetainedId
+	put NSImageAlloc() into tAllocObjcId
+
+	variable tInitObjcId as optional ObjcRetainedId
+	put NSImageInitWithContentsOfFile(tAllocObjcId, StringToNSString("non-existant-image.png")) into tInitObjcId
+	
+	variable tObjcObject as optional ObjcObject
+	put tInitObjcId into tObjcObject
+
+	test "objc unsafe alloc init is nothing when init fails" when tObjcObject is nothing
 end handler
 
 ---------
