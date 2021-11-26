@@ -432,6 +432,9 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 	Boolean t_old_trace = MCtrace;
 	MCtrace = False;
 
+    // [[ 2019.09.06 mdw ensure an exception gets thrown if there's no answer dialog in a standalone ]]
+    if (nil == t_stack)
+        t_success = false;
 	if (t_success && t_stack != nil)
 	{
 		MCStack *t_parent_stack = nil;
