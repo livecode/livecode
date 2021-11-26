@@ -1619,7 +1619,16 @@ void MCWKWebViewBrowserNavigationRequest::Cancel()
 	MCBrowserRunBlockOnMainFiber(^{
 		if (request.htmlText == nil)
 		{
-			[webView loadRequest:[NSURLRequest requestWithURL:request.url]];
+			if (![request.url isFileURL])
+				[webView loadRequest:[NSURLRequest requestWithURL:request.url]];
+			else
+			{
+				NSURL *t_docs_dir_url = [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+				if ([request.url.absoluteString hasPrefix:t_docs_dir_url.absoluteString])
+					[webView loadFileURL:request.url allowingReadAccessToURL:t_docs_dir_url];
+				else
+					[webView loadFileURL:request.url allowingReadAccessToURL:request.url.URLByDeletingLastPathComponent];
+			}
 		}
 		else
 		{
