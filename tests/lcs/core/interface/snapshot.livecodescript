@@ -18,9 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 on _TestImportScreenSnapshotFromRectHandler
     import snapshot from rectangle 100,100,500,400
-    
-    TestAssert "long id of new image is long id of it",  the long id of it is the long id of the last image
-    TestAssertBroken "long id of image is it", it is the long id of the last image
+    TestAssert "long id of image is it", it is the long id of the last image
 end _TestImportScreenSnapshotFromRectHandler
 
 on TestImportScreenSnapshotFromRectNoUI
@@ -42,14 +40,11 @@ on _TestImportSnapshotFromStackHandler
     create stack "Untitled 1"
 
     import snapshot from window the windowId of stack "Untitled 1"
-    TestAssert "long id of new image is long id of it",  the long id of it is the long id of the last image
-    TestAssertBroken "long id of image is it", it is the long id of the last image
+    TestAssert "long id of image is it", it is the long id of the last image
 end _TestImportSnapshotFromStackHandler
 
 on TestImportSnapshotFromStack
-    if the environment is not "command line" then
-        return "SKIP TEST"
-    end if
+    TestSkipIf "ui"
     TestAssertThrow "should now throw an error", "_TestImportSnapshotFromStackHandler",\
         the long id of me, "EE_SNAPSHOT_FAILED"
 end TestImportSnapshotFromStack
@@ -58,17 +53,14 @@ on TestImportSnapshotFromObject
     create button "b1"
 
     import snapshot from button "b1"
-
-    TestAssert "long id of new image is long id of it",  the long id of it is the long id of the last image
-    TestAssertBroken "long id of image is it", it is the long id of the last image
+    TestAssert "long id of image is it", it is the long id of the last image
 end TestImportSnapshotFromObject
 
 on TestImportSnapshotFromRectOfObject
    create field "field 1"
    set the rect of field "field 1" to 0,0,100,100
-   
+
    import snapshot from rectangle 0,0,100,100 of field "field 1"
-   TestAssert "long id of new image is long id of it",  the long id of it is the long id of the last image
-   TestAssertBroken "long id of image is it", it is the long id of the last image
+   TestAssert "long id of image is it", it is the long id of the last image
 end TestImportSnapshotFromRectOfObject
 
