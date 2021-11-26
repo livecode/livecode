@@ -1,7 +1,7 @@
 {
 	'variables':
 	{
-		'target_sdk%': 'macosx10.8',
+		'target_sdk%': '10.9',
 		'host_sdk%': 'macosx',
 		
 		'output_dir': '../mac-bin',
@@ -11,7 +11,7 @@
 	
 	'xcode_settings':
 	{
-		'SDKROOT': '<(target_sdk)',
+		'SDKROOT': 'macosx<(target_sdk)',
 
 		'SOLUTION_DIR': '<(DEPTH)',
 		'SYMROOT': '$(SOLUTION_DIR)/_build/mac',
@@ -24,7 +24,7 @@
 		'SHARED_PRECOMPS_DIR': '$(OBJROOT)/Precompiled/$(CURRENT_ARCH)',
 		'GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS': 'NO',
 		'ALWAYS_SEARCH_USER_PATHS': 'NO',
-		'MACOSX_DEPLOYMENT_TARGET': '10.9',
+		'MACOSX_DEPLOYMENT_TARGET': '<(target_sdk)',
 		'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',
 		'COPY_PHASE_STRIP': 'NO',
 		'STRIP_INSTALLED_PRODUCT': 'NO',
