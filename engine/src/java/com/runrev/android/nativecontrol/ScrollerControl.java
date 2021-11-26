@@ -43,6 +43,7 @@ class ScrollerControl extends NativeControl
     private boolean m_touch_canceled;
     private boolean m_dragging;
     private boolean m_tracking;
+	private boolean m_can_cancel_touches;
     
     public ScrollerControl(NativeControlModule p_module)
     {
@@ -54,6 +55,7 @@ class ScrollerControl extends NativeControl
         m_dragging = false;
         m_tracking = false;
         m_touch_canceled = false;
+		m_can_cancel_touches = false;
         
         m_scrolling_enabled = true;
     }
@@ -80,12 +82,6 @@ class ScrollerControl extends NativeControl
                     ScrollerControl.this.updateScroll(m_dispatching ? m_new_left : m_left, t);
                 super.onScrollChanged(l, t, oldl, oldt);
             }
-            
-            @Override
-            public boolean onInterceptTouchEvent (MotionEvent ev)
-            {
-                return true;
-            }
         };
         m_hscroll = new HorizontalScrollView(p_context) {
             @Override
@@ -94,12 +90,6 @@ class ScrollerControl extends NativeControl
                 if (l != oldl)
                     ScrollerControl.this.updateScroll(l, m_dispatching ? m_new_top : m_top);
                 super.onScrollChanged(l, t, oldl, oldt);
-            }
-            
-            @Override
-            public boolean onInterceptTouchEvent (MotionEvent ev)
-            {
-                return true;
             }
         };
         
@@ -166,7 +156,10 @@ class ScrollerControl extends NativeControl
                         m_dragging = true;
                         m_tracking = false;
                         onScrollBeginDrag();
-                        e.setAction(MotionEvent.ACTION_CANCEL);
+						if (m_can_cancel_touches)
+						{
+							e.setAction(MotionEvent.ACTION_CANCEL);
+						}
                     }
                     else
                     {
@@ -183,6 +176,11 @@ class ScrollerControl extends NativeControl
                         m_tracking = false;
                         onScrollEndDrag();
                     }
+					
+					if (!m_can_cancel_touches)
+					{
+						NativeControlModule.getEngine().onTouchEvent(e);
+					}
                 }
                 
                 return  t_hdispatch || t_vdispatch;
@@ -307,6 +305,16 @@ class ScrollerControl extends NativeControl
     {
         m_scrolling_enabled = p_enabled;
     }
+	
+	public boolean getCanCancelTouches()
+	{
+	   return m_can_cancel_touches;
+	}
+
+	public void setCanCancelTouches(boolean p_can_cancel_touches)
+	{
+	   m_can_cancel_touches = p_can_cancel_touches;
+	}
     
     public boolean isDragging()
     {
