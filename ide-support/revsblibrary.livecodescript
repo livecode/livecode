@@ -2521,12 +2521,26 @@ command revSBUpdateForDependencies pPlatform, pArchs, pSDK, @xSettings
       local tPlayVersion
       put tAndroidMetadataA["play"]["version"]into tPlayVersion
       repeat for each item tPlayDep in tAndroidMetadataA["play"]["deps"]
-         appendToStringList tPlayDep & "-" & tPlayVersion, xSettings["android,play dependencies"]
+         if xSettings["android,play dependencies"][tPlayDep] is empty then
+            put tPlayVersion into xSettings["android,play dependencies"][tPlayDep]
+         else
+            local tPlayDepVersionIntersection
+            put semverRangesIntersection(tPlayVersion, xSettings["android,play dependencies"][tPlayDep]) \
+                  into tPlayDepVersionIntersection
+            if tPlayDepVersionIntersection is empty then
+               return "unable to find version intersection between" && \
+                     tPlayVersion && "and" && xSettings["android,play dependencies"][tPlayDep] && \
+                     "for google play dependency" && tPlayDep
+            end if
+            put tPlayDepVersionIntersection into xSettings["android,play dependencies"][tPlayDep]
+         end if
       end repeat
       
       revSBUpdateExtensionCodeInclusions tExtension, pPlatform, pArchs, pSDK, xSettings
       revSBUpdatePerExtensionSettings tExtension, pPlatform, xSettings
    end repeat
+   
+   return empty
 end revSBUpdateForDependencies
 
 -- Merge any settings under cRevStandaloneSettings[<ext id>]

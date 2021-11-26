@@ -503,6 +503,9 @@ private on revStandalonePreBuild pStack, pFolder, pPlatform, pArchs, @rStackName
    
    -- Make sure all dependencies are included
    revSBUpdateForDependencies pPlatform, pArchs, , sStandaloneSettingsA
+   if the result is not empty then
+      return the result
+   end if
    revSBEnsurePerExtensionSettings pPlatform, sStandaloneSettingsA
    if the result is not empty then
       return the result

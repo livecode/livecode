@@ -199,3 +199,26 @@ command StandaloneBuilderTestSettings pDescription, pStackFileName, pInitialSett
          pExpectedSettingsA[tKey] is tLastSettingsA[tKey]
    end repeat
 end StandaloneBuilderTestSettings
+
+-- Attempt to build a standalone with the given settings an return the result.
+-- Useful for testing when the build process is expected to fail.
+command StandaloneBuilderBuildWithSettings pDescription, pStackFileName, pInitialSettingsA
+   local tStackName, tStackID
+   create stack
+   put it into tStackID
+   put the short name of tStackID into tStackName   
+   
+   repeat for each key tKey in pInitialSettingsA
+      set the cRevStandaloneSettings[tKey] of tStackId to \
+            pInitialSettingsA[tKey]
+   end repeat   
+   
+   set the filename of tStackID to pStackFilename
+   save stack tStackName
+   
+   revIDESaveStack tStackID	
+   
+   local tExePath
+   _TestBuildStandalone pStackFilename, tExePath
+   return the result
+end StandaloneBuilderBuildWithSettings
