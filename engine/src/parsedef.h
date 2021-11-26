@@ -784,7 +784,8 @@ enum Operators {
     O_OR,
 	O_WRAP,
 	O_BEGINS_WITH,
-	O_ENDS_WITH
+	O_ENDS_WITH,
+    O_MATCHES
 };
 
 // return codes from parsers
