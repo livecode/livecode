@@ -37,7 +37,8 @@ metadata svgicon is "M61.8,0H4C1.8,0,0,1.8,0,4v27.8c0,2.2,1.8,4,4,4h57.8c2.2,0,4
 metadata _ide is "true"
 
 private variable mPathName as String
-private variable mPath as String
+private variable mPathString as String
+private variable mPath as optional Path
 private variable mHilited as Boolean
 private variable mMaintainAspectRatio as Boolean
 -- some SVG Paths need to be flipped (all font awesome SVG paths do,
@@ -45,8 +46,8 @@ private variable mMaintainAspectRatio as Boolean
 private variable mFlipVertically as Boolean
 private variable mAngle as Real
 private variable mFillRule as String
-private variable mScaledWidth as Real
-private variable mScaledHeight as Real
+private variable mScaledRect as optional Rectangle
+private variable mPathTransform as optional Transform
 private variable mWidth as Real
 private variable mHeight as Real
 
@@ -144,7 +145,7 @@ The SVG path string to be displayed by the SVG path widget.
 See https://www.w3.org/TR/SVG/paths.html#PathData for the SVG path data
 specification.
 */
-property iconPath get mPath set setPath
+property iconPath get mPathString set setPathString
 metadata iconPath.editor is "com.livecode.pi.text"
 metadata iconPath.label is "Path data"
 
@@ -192,7 +193,7 @@ Otherwise, it will return the width of the widget.
 
 Related: scaledHeight(property), maintainAspectRatio(property)
 */
-property "scaledWidth" get mScaledWidth
+property "scaledWidth" get getScaledWidth
 
 /**
 Syntax:
@@ -207,7 +208,7 @@ Otherwise, it will return the height of the widget.
 
 Related: scaledWidth(property), maintainAspectRatio(property)
 */
-property "scaledHeight" get mScaledHeight
+property "scaledHeight" get getScaledHeight
 
 /**
 Syntax:
@@ -290,7 +291,7 @@ end handler
 public handler OnSave(out rProperties as Array)
 	put the empty array into rProperties
 	put mPathName into rProperties["iconPresetName"]
-	put mPath into rProperties["svg path"]
+	put mPathString into rProperties["svg path"]
 	put mHilited into rProperties["hilited"]
 	put mMaintainAspectRatio into rProperties["maintain aspect ratio"]
 	put mFlipVertically into rProperties["flip vertically"]
@@ -302,7 +303,7 @@ end handler
 ----------
 -- this handler is called when the widget is loaded
 public handler OnLoad(in pProperties as Array)
-	put pProperties["svg path"] into mPath
+	put pProperties["svg path"] into mPathString
 	put pProperties["hilited"] into mHilited
 	put pProperties["maintain aspect ratio"] into mMaintainAspectRatio
 	put pProperties["flip vertically"] into mFlipVertically
@@ -315,7 +316,7 @@ public handler OnLoad(in pProperties as Array)
 		put pProperties["fillRule"] into mFillRule
 	end if
 
-	CalculateScaledSizes()
+	clearPath()
 end handler
 ----------
 
@@ -323,7 +324,7 @@ end handler
 -- this handler is called when the widget is resized
 public handler OnGeometryChanged()
     if my width is not mWidth or my height is not mHeight then
-        CalculateScaledSizes()
+    	ClearTransform()
         put my width into mWidth
         put my height into mHeight
     end if
@@ -359,67 +360,78 @@ public handler setIsHilited(in pBoolean as Boolean)
 end handler
 
 public handler setMaintainAspectRatio(in pBoolean as Boolean)
+	if pBoolean is mMaintainAspectRatio then
+		return
+	end if
+	
 	put pBoolean into mMaintainAspectRatio
-	CalculateScaledSizes()
+	ClearTransform()
 	redraw all
 end handler
 
 public handler setFlipVertically(in pBoolean as Boolean)
+	if pBoolean is mFlipVertically then
+		return
+	end if
+	
 	put pBoolean into mFlipVertically
+	ClearTransform()
 	redraw all
 end handler
 
-public handler setPath(in pPath as String) returns nothing
-	put pPath into mPath
+public handler setPathString(in pPath as String) returns nothing
+	if pPath is mPathString then
+		return
+	end if
+	
+	put pPath into mPathString
 	put "" into mPathName
-	CalculateScaledSizes()
+	ClearPath()
 	redraw all
 end handler
 
 public handler setPathPreset(in pPresetName as String) returns nothing
-	put iconSVGPathFromName(pPresetName) into mPath
+	if pPresetName is mPathName then
+		return
+	end if
+	
+	put iconSVGPathFromName(pPresetName) into mPathString
 	put pPresetName into mPathName
-	CalculateScaledSizes()
+	ClearPath()
 	redraw all
 end handler
 
 public handler setAngle(in pAngle as Number) returns nothing
+	if pAngle is mAngle then
+		return
+	end if
+	
 	put pAngle into mAngle
-	CalculateScaledSizes()
+	ClearTransform()
 	redraw all
 end handler
 
 public handler setFillRule(in pRule as String) returns nothing
+	if pRule is mFillRule then
+		return
+	end if
+	
 	put pRule into mFillRule
 	redraw all
 end handler
 
+public handler getScaledWidth() returns Real
+	return the width of GetScaledRect()
+end handler
+
+public handler getScaledHeight() returns Real
+	return the height of GetScaledRect()
+end handler
+----------
+
 ----------
 -- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
-	variable tPath as Path
-	put path mPath into tPath
-
-	variable tBounds
-	if mFlipVertically then
-		scale tPath by [1,-1]
-		translate tPath by [0, the height of the bounding box of tPath]
-	end if
-
-	if mAngle > 0 then
-		rotate tPath by mAngle
-	end if
-
-	// scale to fit within widget and maintain aspect ratio
-	if mMaintainAspectRatio then
-		constrainPathToRect(my bounds, tPath)
-	else
-		scale tPath by [my width / the width of the bounding box of tPath, \
-				my height / the height of the bounding box of tPath]
-		put the bounding box of tPath into tBounds
-		translate tPath by [the left of tBounds * -1, the top of tBounds * -1]
-	end if
-
 	if mHilited is false then
 		set the paint of this canvas to my foreground paint
 	else
@@ -427,25 +439,88 @@ public handler OnPaint()
 	end if
 
 	set the fill rule of this canvas to mFillRule
-
-	fill tPath on this canvas
+	
+	transform this canvas by GetPathTransform()
+	fill GetPath() on this canvas
 end handler
 ----------
 
 ----------
--- used in various places to calculate the scaledWidth & scaledHeight variables
-private handler CalculateScaledSizes()
-	//recalculate the bounding box for the path
-	variable tPath as Path
-	put path mPath into tPath
-	if mMaintainAspectRatio then
-		constrainPathToRect(my bounds, tPath)
-		put the width of the bounding box of tPath into mScaledWidth
-		put the height of the bounding box of tPath into mScaledHeight
-	else
-		put my width into mScaledWidth
-		put my height into mScaledHeight
+private handler ClearPath()
+	ClearTransform()
+	put nothing into mPath
+end handler
+
+private handler ClearTransform()
+	put nothing into mPathTransform
+	put nothing into mScaledRect
+end handler
+----------
+
+----------
+private handler GetPath() returns Path
+	if mPath is nothing then
+		put path mPathString into mPath
 	end if
+	
+	return mPath
+end handler
+
+private handler GetScaledRect() returns Rectangle
+	if mScaledRect is nothing then
+		CalculateScaledRect()
+	end if
+	
+	return mScaledRect
+end handler
+
+private handler GetPathTransform() returns Transform
+	if mPathTransform is nothing then
+		CalculatePathTransform()
+	end if
+	
+	return mPathTransform
+end handler
+----------
+
+----------
+private handler CalculateScaledRect()
+	if mMaintainAspectRatio then
+		put constrainRectToRect(the bounding box of GetPath(), my bounds) into mScaledRect
+	else
+		put my bounds into mScaledRect
+	end if
+end handler
+
+private handler CalculatePathTransform()
+	variable tPath as Path
+	put GetPath() into tPath
+	
+	variable tIntermediateTransform as Transform
+	put the identity transform into tIntermediateTransform
+	if mAngle > 0 then
+		rotate tIntermediateTransform by mAngle
+	end if
+	if mFlipVertically then
+		scale tIntermediateTransform by [1, -1]
+	end if
+	
+	transform tPath by tIntermediateTransform
+	
+	variable tPathBounds as Rectangle
+	put the bounding box of tPath into tPathBounds
+	
+	variable tDestRect as Rectangle
+	if mMaintainAspectRatio then
+		put constrainRectToRect(tPathBounds, my bounds) into tDestRect
+	else
+		put my bounds into tDestRect
+	end if
+
+	variable tConstrainTransform as Transform
+	put transformFromRectToRect(tPathBounds, tDestRect) into tConstrainTransform
+	
+	put tConstrainTransform * tIntermediateTransform into mPathTransform
 end handler
 ----------
 
