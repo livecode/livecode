@@ -2,11 +2,11 @@ Name: is not strictly
 
 Type: operator
 
-Syntax: <value> is not strictly { nothing | a boolean | an integer | a real | a string | a binary string | an array }
+Syntax: <value> is not strictly { nothing | a boolean | an integer | a real | a string | a binary string | an array | <otherValue> }
 
 Summary:
-Evaluates to true if the actual type of <value> is not the specified
-type. 
+Evaluates to true if the actual <value> is not the specified
+type or value. 
 
 Introduced: 8.0
 
@@ -24,15 +24,27 @@ Example:
 (100 is 100) is not strictly a boolean -- evaluates to false
 
 Example:
+"test" is not strictly "TEST" -- evaluates to true
+
+Example:
+1 is not strictly 1.0 -- evaluates to true
+
+Example:
+1 + 0 is not strictly 1.0 + 0 -- evaluates to false
+
+Example:
 the compress of "Hello World!" is not strictly a binary string -- evaluates to false
 
 Parameters:
 value:
 The expression which will be tested for its type.
 
+otherValue:
+The expression which will be compared for its value.
+
 Description:
-Use the <is not strictly> operator to determine what the true type of
-a value is not.  The true type of a value is the representation which
+Use the <is not strictly> operator to determine what the true value is not. 
+The true type of a value is the representation which
 the engine is currently holding for it, without performing any
 implicit type coercion. The true type of a value can be one of the
 following:
@@ -52,6 +64,17 @@ not perform any type coercion. For example, `x not is an integer`
 would return false only when `x` is neither an integer nor a string
 which parses as an integer; whereas `x is not strictly an integer`
 only returns false if `x` is not currently an integer.
+
+When comparing to another value the values are considered to be equal if they
+are the same type and have exactly the same value:
+
+* strings and binary strings must have the same byte values
+* unicode strings are not normalized prior to the comparison
+* numeric strings are compared as strings
+
+Changes:
+Comparison to another value to determine strict value are not equivalent was
+added in LiveCode 9.5
 
 References: is strictly (operator), is a (operator), is not a (operator)
 
