@@ -21,6 +21,26 @@ merge("1+1 equals [[1+1]]") -- returns "1+1 equals 2"
 Example:
 merge("The current folder is [[the defaultFolder]]")
 
+Example:
+put 3 into x[1]
+merge("The value of x[1] is [[x[1]]]")
+-- puts "The value of x[1] is 3"
+
+Example:
+put random(10) into x
+merge("The random number is <?if x mod 2 = 0 then return even else return odd?>")
+-- returns a statement about whether the number is odd or even.
+
+Example:
+put random(10) into x
+put merge("The sum of the numbers from 1 to [[x]] is <?repeat with i = 1 to x;add i to t;end repeat;return t?>")
+-- returns a statement about the sum of the numbers from 1 to the number.
+
+Example:
+put 3 into x
+get merge("<?add 1 to x;return empty?>")
+put x -- puts 4
+
 Parameters:
 stringToEvaluate (string):
 A string of any length, which may include expressions enclosed in double
@@ -41,6 +61,15 @@ in double square brackets, and replaces them with the
 
 It also executes any <return> <statement|statements> enclosed in "&lt;?"
 and "?&gt;", and replaces them by the value returned.
+
+Any variable names in expressions or return statements will be evaluated
+in the context of the script containing the merge function. Any changes 
+made to those variables will exist after the merge function returns.
+
+Variables created/referenced solely within a return statement can cause 
+errors if referenced after the statement. Following the sum example above
+with "put t" will cause execution to fail silently. Putting a value into t 
+will not fail.
 
 References: return (control structure), function (control structure),
 value (function), statement (glossary), evaluate (glossary),
