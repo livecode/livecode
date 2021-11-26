@@ -64,13 +64,13 @@ borders.
 
 The expression
 
-    <point> is within the rect of <object(glossary)> 
+    point is within the rect of object 
 
 is equivalent to
 
-    within(<object(glossary)>, <point>)
+    within(object, point)
 
-unless the <object(glossary)> <a/> is a graphic or image, or a tabbed
+unless the <object(glossary)> is a graphic or image, or a tabbed
 button. 
 
 References: function (control structure), intersect (function),

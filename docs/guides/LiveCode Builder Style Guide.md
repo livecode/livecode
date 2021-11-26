@@ -185,17 +185,17 @@ per tab.
 
 ### Wrapping
 
-Avoid lines longer than 80 characters.  Break long lines using a `\`
+Avoid lines longer than 80 characters.  Break long lines using a \\
 continuation character.  Indent continuation lines by two levels. For
 example:
 
-    constant kWordList is ["a", "very", "long", "list", "that", "is", "much",\
+    constant kWordList is ["a", "very", "long", "list", "that", "is", "much",\\
           "more", "readable", "when", "wrapped", "nicely"]
 
 When breaking a handler definition or handler type definition, break
 long lines at commas:
 
-    handler processStringAndArray(in pStringArg as String, \
+    handler processStringAndArray(in pStringArg as String, \\
           in pArrayArg as Array) returns Boolean
 
 ### Handler declarations, definitions and calls

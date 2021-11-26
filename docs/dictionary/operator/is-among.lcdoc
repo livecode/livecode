@@ -44,7 +44,7 @@ contains the given bytes.
 
 References: wordOffset (function), contains (operator),
 is among the keys of (operator), is not among (operator),
-is in (operator), wholeMatches (property)
+is in (operator), caseSensitive (property), wholeMatches (property)
 
 Tags: text processing
 
