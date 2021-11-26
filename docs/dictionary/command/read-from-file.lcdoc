@@ -55,10 +55,11 @@ amount:
 A positive integer and specifies how much data to read.
 
 chunkType:
-One of chars, characters, words, items, lines, int1, uInt1, int2, uint2,
-int4, or uint4. The read from file command reads amount of the specified
-chunkType. If you don't specify a chunkType, amount characters are read
-from the file.
+One of bytes, chars, characters, words, items, lines, int1, uInt1, int2, uint2,
+int4, or uint4. Alternatively, one of codepoints or codeunits if <open file>
+was used in the for text read form. The read from file command reads amount 
+of the specified chunkType. If you don't specify a chunkType, amount 
+characters are read from the file.
 
 time:
 The time to wait for the read to be completed, in milliseconds, seconds,
