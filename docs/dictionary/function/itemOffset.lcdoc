@@ -5,8 +5,8 @@ Type: function
 Syntax: itemOffset(<itemToFind>, <stringToSearch> [, <itemsToSkip>])
 
 Summary:
-<return|Returns> the number of <items> between the beginning of a
-<value> and an occurrence of a specified <string>.
+<return|Returns> the index of the <item> where <itemToFind> 
+first appears in <stringToSearch>.
 
 Introduced: 1.0
 
@@ -23,12 +23,21 @@ itemOffset("C","A,B,C,D,E",2) -- returns 1
 Example:
 itemOffset("D,E","A,B,C,D,E") -- returns 4
 
+Example:
+itemOffset("B","A,B,C,D,E,D,C,B,A",5) -- returns 3
+
+Example:
+itemOffset("B","AA,BB,CC,A,B,C") -- returns 2
+set the wholeMatches to true
+itemOffset("B","AA,BB,CC,A,B,C") -- returns 5
+
+
 Parameters:
 itemToFind (string):
-
+Any expression that evaluates to a string.
 
 stringToSearch (string):
-
+Any expression that evaluates to a string.
 
 itemsToSkip:
 A non-negative integer. If you don't specify how many itemsToSkip, the
@@ -52,7 +61,7 @@ If the <itemToFind> contains more than one <item>, and the entire
 starts. 
 
 If you specify how many <itemsToSkip>, the <itemOffset> <function> skips
-the specified number of <items> in the <stringToSearch>. The <value>
+the specified number of <items> in the <stringToSearch>. The value
 <return|returned> is relative to this starting point instead of the
 beginning of the <stringToSearch>.
 
