@@ -46,11 +46,14 @@ public type JDouble is Float64
 public foreign type JObject binds to "MCJavaObjectTypeInfo"
 public type JString is JObject
 public type JByteArray is JObject
+public type JObjectArray is JObject
 
 foreign handler MCJavaStringFromJString(in pString as JObject, out rString as String) returns nothing binds to "<builtin>"
 foreign handler MCJavaStringToJString(in pString as String, out rString as JObject) returns nothing binds to "<builtin>"
 foreign handler MCJavaDataFromJByteArray(in pByteArray as JObject, out rData as Data) returns nothing binds to "<builtin>"
 foreign handler MCJavaDataToJByteArray(in pData as Data, out rByteArray as JObject) returns nothing binds to "<builtin>"
+foreign handler MCJavaListToJObjectArray(in pList as List, in pClassName as String, out rObjectArray as JObjectArray) returns nothing binds to "<builtin>"
+foreign handler MCJavaListFromJObjectArray(in pObjectArray as JObjectArray, out rList as List) returns nothing binds to "<builtin>"
 
 foreign handler MCJavaGetClassName(in pObject as JObject, out rName as String) returns nothing binds to "<builtin>"
 foreign handler MCJavaUnwrapJObject(in pObject as JObject, out rPointer as Pointer) returns nothing binds to "<builtin>"
@@ -243,6 +246,82 @@ public handler PointerToJObject(in pPointer as Pointer) returns JObject
 		MCJavaWrapJObject(pPointer, tObj)
     end unsafe
 	return tObj
+end handler
+
+/**
+Summary: Convert a java object array into a List of java objects
+
+Parameters:
+pObj: The JObjectArray to convert
+
+Example:
+    __safe foreign handler _JNI_IntentGetStringArrayExtra(in pIntent as JObject, \
+        in pType as JString) \
+        returns JObjectArray \
+        binds to "java:android.content.Intent>getStringArrayExtra(Ljava/lang/String;)[Ljava/lang/String;"
+
+    handler OnActivityResultListener(\
+            in pRequestCode as JObject, \
+            in pResultCode as JObject, \
+            in pIntent as optional JObject) returns nothing
+
+        if pResultCode is -1 then
+            variable tArray as JObjectArray
+            put _JNI_IntentGetStringArrayExtra(pIntent, \
+                StringToJString("android.intent.extra.MIME_TYPES")) into tArray
+            variable tList as List
+            put ListFromJObjectArray(tArray) into tList
+
+            variable tStringList as List
+            variable tString as JObject
+            repeat for each element tString in tList
+                push StringFromJObject(tString) onto back of tStringList
+            end repeat
+
+            post "mimeTypes" with [tStringList]
+        end if
+
+    end handler
+
+Description:
+Use <ListFromJObjectArray> to convert <pObj> into a List of JObjects.
+
+*/
+public handler ListFromJObjectArray(in pObj as JObjectArray) returns optional List
+    variable tList as optional List
+    unsafe
+        MCJavaListFromJObjectArray(pObj, tList)
+    end unsafe
+    return tList
+end handler
+
+/**
+Summary:    Convert a List of JObjects into a JObjectArray
+
+Parameters:
+pList: The List to convert
+pClass: The class name of the JObjects in the List
+
+Returns:
+A JObjectArray where each element is a JObject of class pClass
+
+Example:
+    variable tArray as JObjectArray
+    put ListToJObjectArray(\
+            [StringToJString("foo"), StringToJString("bar")], \
+            "java/lang/String") into tArray
+
+Description:
+Use <ListToJObjectArray> to convert <pList> where each element is a JObject
+into a JObjectArray. Note all elements of <pList> must conform
+to the class <pClass>.
+*/
+public handler ListToJObjectArray(in pList as List, in pClass as String) returns optional JObjectArray
+    variable tArray as optional JObjectArray
+    unsafe
+        MCJavaListToJObjectArray(pList, pClass, tArray)
+    end unsafe
+    return tArray
 end handler
 
 end module

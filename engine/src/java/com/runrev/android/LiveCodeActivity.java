@@ -25,6 +25,7 @@ import android.widget.*;
 import android.util.*;
 import android.content.pm.PackageManager;
 import android.graphics.*;
+import java.util.*;
 
 // This is the main activity exported by the application. This is
 // split into two parts, a customizable sub-class that gets dynamically
@@ -37,6 +38,8 @@ public class LiveCodeActivity extends Activity
 	public static FrameLayout s_main_layout;
 	public static Engine s_main_view;
 
+    private HashMap<Integer, OnActivityResultListener> m_activity_result_listeners;
+    
 	//////////
 
 	public LiveCodeActivity()
@@ -86,6 +89,9 @@ public class LiveCodeActivity extends Activity
                 s_main_view.updateKeyboardVisible();
             }
         });
+        
+        m_activity_result_listeners = new HashMap<Integer, OnActivityResultListener>();
+        
 	}
 
 	@Override
@@ -203,11 +209,38 @@ public class LiveCodeActivity extends Activity
 
 ////////////////////////////////////////////////////////////////////////////////
 
+    public interface OnActivityResultListener
+    {
+        public void onActivityResult (int p_request_code, int p_result_code, Intent p_data);
+    }
+    
+    public void setOnActivityResultListener(OnActivityResultListener p_listener, int p_request_code)
+    {
+        Integer t_request_code = Integer.valueOf(p_request_code);
+        m_activity_result_listeners.put(t_request_code, p_listener);
+    }
+    
+    public void removeOnActivityResultListener(int p_request_code)
+    {
+        Integer t_request_code = Integer.valueOf(p_request_code);
+        m_activity_result_listeners.remove(t_request_code);
+    }
+    
 	// 
 	@Override
 	protected void onActivityResult (int requestCode, int resultCode, Intent data)
 	{
-		s_main_view.onActivityResult(requestCode, resultCode, data);
+        // activity resuult listeners override any engine request code handlers
+        Integer t_request_code = Integer.valueOf(requestCode);
+        OnActivityResultListener t_listener = m_activity_result_listeners.get(t_request_code);
+        if (t_listener != null)
+        {
+            t_listener.onActivityResult(requestCode, resultCode, data);
+        }
+        else
+        {
+            s_main_view.onActivityResult(requestCode, resultCode, data);
+        }
 	}
     
     // Callback sent when the app requests permissions on runtime (Android API 23+)

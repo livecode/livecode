@@ -42,6 +42,8 @@ MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertStringToJStringErrorTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertJStringToStringErrorTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertDataToJByteArrayErrorTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertJByteArrayToDataErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertListToJObjectArrayErrorTypeInfo;
+MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotConvertJObjectArrayToListErrorTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotGetObjectClassNameErrorTypeInfo;
 MC_DLLEXPORT MCTypeInfoRef kMCJavaCouldNotCreateJObjectErrorTypeInfo;
 
@@ -83,6 +85,24 @@ extern "C" MC_DLLEXPORT_DEF void MCJavaDataToJByteArray(MCDataRef p_data, MCJava
         MCJavaErrorThrow(kMCJavaCouldNotConvertDataToJByteArrayErrorTypeInfo);
 }
 
+extern "C" MC_DLLEXPORT_DEF void MCJavaListFromJObjectArray(MCJavaObjectRef p_object, MCProperListRef &r_list)
+{
+    if (!TryToInitializeJava())
+        return;
+    
+    if (!MCJavaConvertJObjectArrayToProperListRef(p_object, r_list))
+        MCJavaErrorThrow(kMCJavaCouldNotConvertJObjectArrayToListErrorTypeInfo);
+}
+
+extern "C" MC_DLLEXPORT_DEF void MCJavaListToJObjectArray(MCProperListRef p_list, MCStringRef p_class_name, MCJavaObjectRef &r_object)
+{
+    if (!TryToInitializeJava())
+        return;
+    
+    if (!MCJavaConvertProperListRefToJObjectArray(p_list, p_class_name, r_object))
+        MCJavaErrorThrow(kMCJavaCouldNotConvertListToJObjectArrayErrorTypeInfo);
+}
+
 extern "C" MC_DLLEXPORT_DEF void MCJavaGetClassName(MCJavaObjectRef p_obj, MCStringRef &r_string)
 {
     if (!TryToInitializeJava())
@@ -119,6 +139,12 @@ bool MCJavaErrorsInitialize()
     if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.ConvertToDataError"), MCNAME("java"), MCSTR("Could not convert Java byte array to Data"), kMCJavaCouldNotConvertJByteArrayToDataErrorTypeInfo))
         return false;
         
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.ConvertFromListError"), MCNAME("java"), MCSTR("Could not convert Java object array to List"), kMCJavaCouldNotConvertListToJObjectArrayErrorTypeInfo))
+        return false;
+    
+    if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.ConvertToListError"), MCNAME("java"), MCSTR("Could not convert Java object array to List"), kMCJavaCouldNotConvertJObjectArrayToListErrorTypeInfo))
+        return false;
+    
     if (!MCNamedErrorTypeInfoCreate(MCNAME("com.livecode.java.FetchJavaClassNameError"), MCNAME("java"), MCSTR("Could not get Java object class name"), kMCJavaCouldNotGetObjectClassNameErrorTypeInfo))
         return false;
 
@@ -134,6 +160,8 @@ void MCJavaErrorsFinalize()
     MCValueRelease(kMCJavaCouldNotConvertJStringToStringErrorTypeInfo);
     MCValueRelease(kMCJavaCouldNotConvertDataToJByteArrayErrorTypeInfo);
     MCValueRelease(kMCJavaCouldNotConvertJByteArrayToDataErrorTypeInfo);
+    MCValueRelease(kMCJavaCouldNotConvertListToJObjectArrayErrorTypeInfo);
+    MCValueRelease(kMCJavaCouldNotConvertJObjectArrayToListErrorTypeInfo);
     MCValueRelease(kMCJavaCouldNotGetObjectClassNameErrorTypeInfo);
     MCValueRelease(kMCJavaCouldNotCreateJObjectErrorTypeInfo);
 }

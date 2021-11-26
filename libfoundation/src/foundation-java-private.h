@@ -69,6 +69,9 @@ void MCJavaPrivateDestroyObject(MCJavaObjectRef p_object);
 bool MCJavaPrivateCheckSignature(MCTypeInfoRef p_signature, MCStringRef p_args, MCStringRef p_return, int p_call_type);
 bool MCJavaPrivateGetJObjectClassName(MCJavaObjectRef p_object, MCStringRef &r_name);
 
+bool MCJavaPrivateProperListFromJObjectArray(MCJavaObjectRef p_obj_array, MCProperListRef& r_list);
+bool MCJavaPrivateProperListToJObjectArray(MCProperListRef p_list, MCNameRef p_class_name, MCJavaObjectRef &r_obj_array);
+
 void* MCJavaPrivateGlobalRef(void *p_object);
 
 bool MCJavaPrivateErrorThrow(MCTypeInfoRef p_error);

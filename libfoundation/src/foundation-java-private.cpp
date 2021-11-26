@@ -536,6 +536,46 @@ static bool __MCJavaProperListFromJObjectArray(jobjectArray p_obj_array, MCPrope
     return MCProperListCopy(*t_list, r_list);
 }
 
+bool MCJavaPrivateProperListFromJObjectArray(MCJavaObjectRef p_obj_array, MCProperListRef& r_list)
+{
+    jobjectArray t_obj_array = static_cast<jobjectArray>(MCJavaObjectGetObject(static_cast<MCJavaObjectRef>(p_obj_array)));
+    if (t_obj_array == nullptr)
+    {
+        return false;
+    }
+    
+    return __MCJavaProperListFromJObjectArray(t_obj_array, r_list);
+}
+
+static jclass MCJavaPrivateFindClass(MCNameRef p_class_name);
+
+bool MCJavaPrivateProperListToJObjectArray(MCProperListRef p_list, MCNameRef p_class_name, MCJavaObjectRef &r_obj_array)
+{
+    MCJavaDoAttachCurrentThread();
+    
+    jclass t_class = MCJavaPrivateFindClass(p_class_name);
+    
+    uindex_t t_size = MCProperListGetLength(p_list);
+    jobjectArray t_obj_array = s_env -> NewObjectArray(t_size, t_class, nullptr);
+    
+    if (t_obj_array == nullptr)
+        return false;
+    
+    for (uint32_t i = 0; i < t_size; i++)
+    {
+        MCValueRef t_value;
+        t_value = MCProperListFetchElementAtIndex(p_list, i);
+        if (MCValueGetTypeInfo(t_value) == MCJavaGetObjectTypeInfo())
+        {
+            jobject t_object = static_cast<jobject>(MCJavaObjectGetObject(static_cast<MCJavaObjectRef>(t_value)));
+            
+            s_env -> SetObjectArrayElement(t_obj_array, i, t_object);
+        }
+    }
+    
+    return MCJavaObjectCreate(t_obj_array, r_obj_array);
+}
+
 void* MCJavaPrivateGlobalRef(void *p_object)
 {
     MCJavaDoAttachCurrentThread();
@@ -2058,4 +2098,15 @@ void* MCJavaPrivateGlobalRef(void *p_object)
 {
     return p_object;
 }
+
+bool MCJavaPrivateProperListFromJObjectArray(MCJavaObjectRef p_obj_array, MCProperListRef& r_list)
+{
+    return false;
+}
+
+bool MCJavaPrivateProperListToJObjectArray(MCProperListRef p_list, MCNameRef p_class_name, MCJavaObjectRef &r_obj_array)
+{
+    return false;
+}
+
 #endif
