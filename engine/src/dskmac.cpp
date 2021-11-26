@@ -3979,6 +3979,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     fptr = fopen(*t_path_utf, IO_APPEND_MODE);
                     break;
                 case kMCOpenFileModeWrite:
+				case kMCOpenFileModeBufferedWrite:
                     fptr = fopen(*t_path_utf, IO_WRITE_MODE);
                     break;
                 default:
@@ -4015,6 +4016,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 t_stream = fdopen(p_fd, IO_UPDATE_MODE);
                 break;
             case kMCOpenFileModeWrite:
+			case kMCOpenFileModeBufferedWrite:
                 t_stream = fdopen(p_fd, IO_WRITE_MODE);
                 break;
             default:
@@ -4025,7 +4027,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 			return NULL;
 		
 		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-        if (p_mode == kMCOpenFileModeWrite)
+        if (p_mode == kMCOpenFileModeWrite || p_mode == kMCOpenFileModeBufferedWrite)
 			setvbuf(t_stream, NULL, _IONBF, 0);
 		
 		IO_handle t_handle;
@@ -4060,6 +4062,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
                 break;
             case kMCOpenFileModeWrite:
+			case kMCOpenFileModeBufferedWrite:
                 fptr = fopen(*t_path_utf, IO_WRITE_MODE);
                 break;
             default:

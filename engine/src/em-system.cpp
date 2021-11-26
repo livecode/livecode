@@ -759,6 +759,7 @@ MCEmscriptenSystem::OpenFile(MCStringRef p_path,
 		t_open_flags = O_RDONLY;
 		break;
 	case kMCOpenFileModeWrite:
+	case kMCOpenFileModeBufferedWrite:
 		t_open_flags = O_WRONLY | O_TRUNC | O_CREAT;
 		break;
 	case kMCOpenFileModeUpdate:

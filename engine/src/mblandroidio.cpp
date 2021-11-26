@@ -258,6 +258,7 @@ IO_handle MCAndroidSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolea
         t_mode = 0;
         break;
     case kMCOpenFileModeWrite:
+	case kMCOpenFileModeBufferedWrite:
         t_mode = 1;
         break;
     case kMCOpenFileModeUpdate:

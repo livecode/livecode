@@ -600,6 +600,7 @@ IO_handle MCIPhoneSystem::OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean
         t_mode = 0;
         break;
     case kMCOpenFileModeWrite:
+	case kMCOpenFileModeBufferedWrite:
         t_mode = 1;
         break;
     case kMCOpenFileModeUpdate:
