@@ -191,7 +191,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MACROMAN__ 1
 
 // Native line endings
-#define __CR__ 1
+#define __LF__ 1
 
 // Presence of CoreFoundation
 #define __HAS_CORE_FOUNDATION__ (1)
@@ -296,7 +296,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __MACROMAN__ 1
 
 // Native line endings
-#define __CR__ 1
+#define __LF__ 1
 
 // Presence of CoreFoundation
 #define __HAS_CORE_FOUNDATION__ (1)
