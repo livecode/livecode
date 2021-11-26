@@ -649,38 +649,298 @@ private function __SatisfiesRange pVersion, pRange
    return tResult
 end __SatisfiesRange
 
-private command __SemverSplitRange @xRange
-   replace "||" with " || " in xRange
-   repeat while xRange contains "  "
-      replace "  " with " " in xRange
-   end repeat
-   split xRange by space
-end __SemverSplitRange
+private function __IsX pVal
+   return pVal is empty or pVal is "x" or pVal is "*"
+end __IsX
 
-command semverParseRange @xRange
-   __SemverSplitRange xRange
+private function __ExpandCaret pRangeComparator
+   local tExpandedRange
    
-   local tHyphen = false
-   repeat with tIndex = 1 to the number of elements of xRange
-      if xRange[tIndex] is "||" then
+   if __IsX(pRangeComparator["major"]) then
+      -- ^ --> *
+      put empty into tExpandedRange
+   else if __IsX(pRangeComparator["minor"]) then
+      -- ^1 --> >=1.0.0 <2.0.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put 0 into tExpandedRange[1]["minor"]
+      put 0 into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] + 1 into tExpandedRange[2]["major"]
+      put 0 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   else if __IsX(pRangeComparator["patch"]) then
+      if pRangeComparator["major"] is 0 then
+         -- ^0.1 --> >=0.1.0 <0.2.0
+         put pRangeComparator["major"] into tExpandedRange[1]["major"]
+         put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+         put 0 into tExpandedRange[1]["patch"]
+         put ">=" into tExpandedRange[1]["operator"]
+         
+         put pRangeComparator["major"] into tExpandedRange[2]["major"]
+         put pRangeComparator["minor"] + 1 into tExpandedRange[2]["minor"]
+         put 0 into tExpandedRange[2]["patch"]
+         put "<" into tExpandedRange[2]["operator"]
+      else
+         -- ^1.2 --> >=1.2.0 <2.0.0
+         put pRangeComparator["major"] into tExpandedRange[1]["major"]
+         put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+         put 0 into tExpandedRange[1]["patch"]
+         put ">=" into tExpandedRange[1]["operator"]
+         
+         put pRangeComparator["major"] + 1 into tExpandedRange[2]["major"]
+         put 0 into tExpandedRange[2]["minor"]
+         put 0 into tExpandedRange[2]["patch"]
+         put "<" into tExpandedRange[2]["operator"]
+      end if
+   else
+      if pRangeComparator["major"] is 0 then
+         if pRangeComparator["minor"] is 0 then
+            -- ^0.0.1 --> >=0.0.1 <0.0.2
+            put pRangeComparator["major"] into tExpandedRange[1]["major"]
+            put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+            put pRangeComparator["patch"] into tExpandedRange[1]["patch"]
+            put ">=" into tExpandedRange[1]["operator"]
+            
+            put pRangeComparator["major"] into tExpandedRange[2]["major"]
+            put pRangeComparator["minor"] into tExpandedRange[2]["minor"]
+            put pRangeComparator["patch"] + 1 into tExpandedRange[2]["patch"]
+            put "<" into tExpandedRange[2]["operator"]
+         else
+            -- ^0.1.1 --> >=0.1.1 <0.2.0
+            put pRangeComparator["major"] into tExpandedRange[1]["major"]
+            put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+            put pRangeComparator["patch"] into tExpandedRange[1]["patch"]
+            put ">=" into tExpandedRange[1]["operator"]
+            
+            put pRangeComparator["major"] into tExpandedRange[2]["major"]
+            put pRangeComparator["minor"] + 1 into tExpandedRange[2]["minor"]
+            put 0 into tExpandedRange[2]["patch"]
+            put "<" into tExpandedRange[2]["operator"]
+         end if
+      else
+         -- ^1.2.3 --> >=1.2.3 <2.0.0
+         put pRangeComparator["major"] into tExpandedRange[1]["major"]
+         put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+         put pRangeComparator["patch"] into tExpandedRange[1]["patch"]
+         put ">=" into tExpandedRange[1]["operator"]
+         
+         put pRangeComparator["major"] + 1 into tExpandedRange[2]["major"]
+         put 0 into tExpandedRange[2]["minor"]
+         put 0 into tExpandedRange[2]["patch"]
+         put "<" into tExpandedRange[2]["operator"]
+      end if
+   end if
+   
+   return tExpandedRange
+end __ExpandCaret
+
+private function __ExpandTilde pRangeComparator
+   local tExpandedRange
+   
+   if __IsX(pRangeComparator["major"]) then
+      -- ~ --> *
+      put empty into tExpandedRange
+   else if __IsX(pRangeComparator["minor"]) then
+      -- ~1 --> >=1.0.0 <2.0.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put 0 into tExpandedRange[1]["minor"]
+      put 0 into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] + 1 into tExpandedRange[2]["major"]
+      put 0 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   else if __IsX(pRangeComparator["patch"]) then
+      -- ~1.2 --> >=1.2.0 <1.3.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+      put 0 into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] into tExpandedRange[2]["major"]
+      put pRangeComparator["minor"] + 1 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   else
+      -- ~1.2.3 --> >=1.2.3 <1.3.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+      put pRangeComparator["patch"] into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] into tExpandedRange[2]["major"]
+      put pRangeComparator["minor"] + 1 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   end if
+   
+   return tExpandedRange
+end __ExpandTilde
+
+private function __ExpandXRanges pRangeComparator
+   local tExpandedRange
+   
+   local tMajorIsX, tMinorIsX, tPatchIsX,
+   put __IsX(pRangeComparator["major"]) into tMajorIsX
+   put __IsX(pRangeComparator["minor"]) into tMinorIsX
+   put __IsX(pRangeComparator["patch"]) into tPatchIsX
+      
+   if not (tMajorIsX or tMinorIsX or tPatchIsX) then
+      -- No Xs --> leave as is
+      put pRangeComparator into tExpandedRange[1]
+   else if tMajorIsX then
+      if pRangeComparator["operator"] is among the chars of "><" then
+         -- >X -> <0.0.0 (nothing matches)
+         -- <X -> <0.0.0
+         put 0 into tExpandedRange[1]["major"]
+         put 0 into tExpandedRange[1]["minor"]
+         put 0 into tExpandedRange[1]["patch"]
+         put "<" into tExpandedRange[1]["operator"]
+      else
+         -- X --> * (everything matches)
+         -- >=X --> *
+         -- <=X --> *
+      end if
+   else if pRangeComparator["operator"] is not empty then
+      switch pRangeComparator["operator"]
+         case ">"
+            if tMinorIsX then
+               -- >1 --> >=2.0.0
+               put pRangeComparator["major"] + 1 into tExpandedRange[1]["major"]
+               put 0 into tExpandedRange[1]["minor"]
+               put 0 into tExpandedRange[1]["patch"]
+               put ">=" into tExpandedRange[1]["operator"]
+            else
+               -- >1.2 --> >=1.3.0
+               put pRangeComparator["major"] into tExpandedRange[1]["major"]
+               put pRangeComparator["minor"] + 1 into tExpandedRange[1]["minor"]
+               put 0 into tExpandedRange[1]["patch"]
+               put ">=" into tExpandedRange[1]["operator"]
+            end if
+            break
+            
+         case "<="
+            if tMinorIsX then
+               -- <=1 --> <2.0.0
+               put pRangeComparator["major"] + 1 into tExpandedRange[1]["major"]
+               put 0 into tExpandedRange[1]["minor"]
+               put 0 into tExpandedRange[1]["patch"]
+               put "<" into tExpandedRange[1]["operator"]
+            else
+               -- <=0.5 --> <0.6.0
+               put pRangeComparator["major"] into tExpandedRange[1]["major"]
+               put pRangeComparator["minor"] + 1 into tExpandedRange[1]["minor"]
+               put 0 into tExpandedRange[1]["patch"]
+               put "<" into tExpandedRange[1]["operator"]
+            end if
+            break
+            
+         default
+            put pRangeComparator into tExpandedRange[1]
+            if tMinorIsX then
+               put 0 into tExpandedRange[1]["minor"]
+            end if
+            if tPatchIsX then
+               put 0 into tExpandedRange[1]["patch"]
+            end if 
+            break
+      end switch
+   else if tMinorIsX then
+      -- 1 --> >=1.0.0 <2.0.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put 0 into tExpandedRange[1]["minor"]
+      put 0 into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] + 1 into tExpandedRange[2]["major"]
+      put 0 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   else -- tPatchIsX
+      -- 1.2 --> >=1.2.0 <1.3.0
+      put pRangeComparator["major"] into tExpandedRange[1]["major"]
+      put pRangeComparator["minor"] into tExpandedRange[1]["minor"]
+      put 0 into tExpandedRange[1]["patch"]
+      put ">=" into tExpandedRange[1]["operator"]
+      
+      put pRangeComparator["major"] into tExpandedRange[2]["major"]
+      put pRangeComparator["minor"] + 1 into tExpandedRange[2]["minor"]
+      put 0 into tExpandedRange[2]["patch"]
+      put "<" into tExpandedRange[2]["operator"]
+   end if
+   
+   return tExpandedRange
+end __ExpandXRanges
+
+command semverParseRange @xRange, pExpand
+   local tRange
+   put xRange into tRange
+   
+   replace "||" with " || " in tRange
+   repeat while tRange contains "  "
+      replace "  " with " " in tRange
+   end repeat
+   
+   local tRangeA, tRangeComparatorCount, tHyphen
+   put 1 into tRangeComparatorCount
+   put false into tHyphen
+   
+   local tRangeComparator
+   repeat for each word tRangeComparator in tRange
+      if tRangeComparator is "||" then
+         put tRangeComparator into tRangeA[tRangeComparatorCount]
+         add 1 to tRangeComparatorCount
          next repeat
       end if
-      if xRange[tIndex] is "-" then
-         put ">=" into xRange[tIndex-1]["operator"]
+      
+      if tRangeComparator is "-" then
+         put ">=" into tRangeA[tRangeComparatorCount - 1]["operator"]
          put true into tHyphen
          next repeat
       end if
       
-      __SemverParse xRange[tIndex], true
+      __SemverParse tRangeComparator, true
       if the result is not empty then
          return the result for error
       end if
       
       if tHyphen then
-         put "<=" into xRange[tIndex]["operator"]
+         put "<=" into tRangeComparator["operator"]
          put false into tHyphen
       end if
+      
+      if not pExpand then
+         put tRangeComparator into tRangeA[tRangeComparatorCount]
+         add 1 to tRangeComparatorCount
+      else
+         local tExpandedRangeComparatorsA
+         switch tRangeComparator["operator"]
+            case "^"
+               put __ExpandCaret(tRangeComparator) into tExpandedRangeComparatorsA
+               break
+               
+            case "~"
+               put __ExpandTilde(tRangeComparator)  into tExpandedRangeComparatorsA
+               break
+               
+            default
+               put __ExpandXRanges(tRangeComparator) into tExpandedRangeComparatorsA
+               break
+         end switch
+         
+         local tExpandedRangeComparator
+         repeat for each element tExpandedRangeComparator in tExpandedRangeComparatorsA
+            put tExpandedRangeComparator into tRangeA[tRangeComparatorCount]
+            add 1 to tRangeComparatorCount
+         end repeat
+      end if
    end repeat
+   
+   put tRangeA into xRange
+   return empty for value
 end semverParseRange
 
 /**
@@ -759,3 +1019,601 @@ function semverMaxSatisfying pVersions, pRange
    -- will return empty if tFoundIndex is empty
    return pVersions[tFoundIndex]
 end semverMaxSatisfying
+
+/**
+
+Determine the minimum version that satisfies a range
+
+Parameters:
+pVersions (string): A return delimited list of valid version strings
+pRange (string): A valid version range string
+
+Returns:
+The lowest version satisfying the range
+
+*/
+
+function semverMinSatisfying pVersions, pRange
+   split pVersions by return
+   
+   if pRange is not empty then
+      semverParseRange pRange
+      if the result is not empty then
+         return the result for error
+      end if
+   end if
+   
+   local tVersions
+   put pVersions into tVersions
+   local tIndex, tFoundIndex
+   repeat with tIndex = 1 to the number of elements of pVersions
+      semverParse tVersions[tIndex], false
+      if the result is not empty then
+         return the result for error
+      end if
+      
+      if pRange is not empty and not __SatisfiesRange(tVersions[tIndex], pRange) then
+         next repeat
+      end if
+      
+      if tFoundIndex is empty or __GreaterThan(tVersions[tFoundIndex], tVersions[tIndex]) then
+         put tIndex into tFoundIndex
+      end if
+      
+   end repeat
+   
+   -- will return empty if tFoundIndex is empty
+   return pVersions[tFoundIndex]
+end semverMinSatisfying
+
+---------------------------------------------------
+-- RANGE INTERSCTION
+
+private function __RangeComparatorsIntersect pLeftRangeComparator pRightRangeComparator
+   -- If there is no operator for a range comparator we can treat it like a
+   -- version string and simply check if it satifies the other range comparator.
+   local tRange
+   if pLeftRangeComparator["operator"] is empty then
+      put pRightRangeComparator into tRange[1]
+      return __SatisfiesRange(pLeftRangeComparator, tRange)
+   else if pRightRangeComparator["operator"] is empty then
+      put pLeftRangeComparator into tRange[1]
+      return __SatisfiesRange(pRightRangeComparator, tRange)
+   end if
+   
+   -- Intersect if range comparator operators are same direction and increasing.
+   -- e.g. >=1.2.3 intersects with >4.5.6
+   if char 1 of pLeftRangeComparator["operator"] is ">" and \
+         char 1 of pRightRangeComparator["operator"] is ">" \
+         then
+      return true
+   end if
+   
+   -- Intersect if range comparator operators are same direction and decreasing.
+   -- e.g. <1.2.3 intersects with <=4.5.6
+   if char 1 of pLeftRangeComparator["operator"] is "<" and \
+         char 1 of pRightRangeComparator["operator"] is "<" \
+         then
+      return true
+   end if
+   
+   local tSameSemVer
+   put __Equal(pLeftRangeComparator, pRightRangeComparator) into tSameSemVer
+   
+   local tDifferentDirectionsInclusive
+   put (pLeftRangeComparator["operator"] is ">=" or pLeftRangeComparator["operator"] is "<=") and \
+         (pRightRangeComparator["operator"] is ">=" or pRightRangeComparator["operator"] is "<=") \
+         into tDifferentDirectionsInclusive
+   
+   -- Intersect if range comparators have the same version and operators are >= or <=.
+   -- e.g. >=1.2.3 intersects with <=1.2.3
+   if tSameSemVer and tDifferentDirectionsInclusive then
+      return true
+   end if
+   
+   -- Intersect if range comparator operators are converging with the left less than right.
+   -- e.g. >=1.2.3 intersects with <4.5.6
+   if __CompareWithOp(pLeftRangeComparator, pRightRangeComparator, "<") and \
+         char 1 of pLeftRangeComparator["operator"] is ">" and \
+         char 1 of pRightRangeComparator["operator"] is "<" \
+         then
+      return true
+   end if
+   
+   -- Intersect if range comparator operators are diverging with the left greater than right.
+   -- e.g. <4.5.6 intersects with >1.2.3
+   if __CompareWithOp(pLeftRangeComparator, pRightRangeComparator, ">") and \
+         char 1 of pLeftRangeComparator["operator"] is "<" and \
+         char 1 of pRightRangeComparator["operator"] is ">" \
+         then
+      return true
+   end if
+   
+   return false
+end __RangeComparatorsIntersect
+
+-- Return the set of comparators that intersect with every element from two comparator sets.
+--
+-- Left =
+--   [1] = >=1.2.3
+--   [2] = <=4.5.6
+-- Right =
+--   [1] = >=1.2.3
+--   [2] = <=7.8.9
+-- Return =
+--   [1] = >=1.2.3
+--   [2] = <=4.5.6
+--   [3] = <=7.8.9
+--
+-- If there is no intersection between the comparator sets, empty is returned.
+--
+-- Left =
+--   [1] = >=1.2.3
+--   [2] = <=4.5.6
+-- Right =
+--   [1] = >=7.8.9
+-- Return = empty
+private function __GetComparatorsIntersetingTwoComparatorSets pLeftComparatorsA, pRightComparatorsA
+   local tIntersectingComparatorsA, tIntersectingComparatorsIndex
+   put 1 into tIntersectingComparatorsIndex
+   
+   local tLeftComparator
+   repeat for each element tLeftComparator in pLeftComparatorsA
+      local tRightComparator
+      repeat for each element tRightComparator in pRightComparatorsA
+         if __RangeComparatorsIntersect(tLeftComparator, tRightComparator) then
+            put tLeftComparator into tIntersectingComparatorsA[tIntersectingComparatorsIndex]
+            add 1 to tIntersectingComparatorsIndex
+            put tRightComparator into tIntersectingComparatorsA[tIntersectingComparatorsIndex]
+            add 1 to tIntersectingComparatorsIndex
+         else
+            return empty
+         end if
+         
+      end repeat
+   end repeat
+   
+   return tIntersectingComparatorsA
+end __GetComparatorsIntersetingTwoComparatorSets
+
+-- Return the (formatted) range that intersects two ranges.
+--
+-- Note, the returned range will be verbose (i.e. it will just
+-- contain the intersecting comparators and will need futher parsing
+-- to convert into a valid range).
+--
+-- Left   = 1.2.3 || 4.5.6
+-- Right  = 4.5.6 || 1.0.0 - 1.2.3
+-- Return = 1.2.3 >=1.0.0 <=1.2.3 || 4.5.6
+--
+-- If the two ranges don't intersect, empty will be returned.
+private function __GetRangeIntersectingTwoRanges pLeftRange, pRightRange
+   local tLeftRangeConditionsA, tRightRangeConditionsA
+   put __RangeToConditionSet(pLeftRange) into tLeftRangeConditionsA
+   put __RangeToConditionSet(pRightRange) into tRightRangeConditionsA
+   
+   local tIntersectingConditionsA, tIntersectingConditionsIndex
+   put 1 into tIntersectingConditionsIndex
+   
+   -- Compare each individual conditions with each other in the left and
+   -- right condition sets, fidning the interrsecting comparators (if any).
+   local tLeftComparatorsA
+   repeat for each element tLeftComparatorsA in tLeftRangeConditionsA
+      local tRightComparatorsA
+      repeat for each element tRightComparatorsA in tRightRangeConditionsA
+         put __GetComparatorsIntersetingTwoComparatorSets(tLeftComparatorsA, tRightComparatorsA) \
+               into tIntersectingConditionsA[tIntersectingConditionsIndex]
+         add 1 to tIntersectingConditionsIndex
+      end repeat
+   end repeat
+   
+   -- We should now have a set of intersecting comparators for each of the
+   -- conditions compared. Format this into a range by adding ||s between
+   -- conditions. If the comparator set for a condition is empty, then that
+   -- condition did not intersect, so ignore.
+   --
+   -- For two ranges to intersect, at least one of the individual conditions
+   -- compared must intersect (i.e. tResult will be true).
+   local tResult, tIntersectingRange
+   put true into tResult
+   repeat with tIntersectingConditionsIndex = 1 to the number of elements in tIntersectingConditionsA
+      put tResult or tIntersectingConditionsA[tIntersectingConditionsIndex] is not empty into tResult
+      
+      if tIntersectingConditionsA[tIntersectingConditionsIndex] is not empty then
+         local tIntersectingRangeIndex
+         __AppendToRange tIntersectingRange, tIntersectingConditionsA[tIntersectingConditionsIndex]
+         put the result into tIntersectingRangeIndex
+         put "||" into tIntersectingRange[tIntersectingRangeIndex]
+      end if
+   end repeat
+   
+   -- Clean up any trailing ||.
+   if the number of elements in tIntersectingRange > 1 and \
+         tIntersectingRange[the number of elements in tIntersectingRange] is "||" \
+         then
+      delete variable tIntersectingRange[the number of elements in tIntersectingRange]
+   end if
+   
+   if tResult then
+      return tIntersectingRange
+   end if
+   
+   return empty
+end __GetRangeIntersectingTwoRanges
+
+private function __RangesIntersect pLeftRange, pRightRange
+   return __GetRangeIntersectingTwoRanges(pLeftRange, pRightRange) is not empty
+end __RangesIntersect
+
+function __GetIntersectionOfRangeSet pRangesA
+   local tIntersectingRange, tRangeIndex
+   put pRangesA[1] into tIntersectingRange
+   repeat with tRangeIndex = 2 to the number of elements in pRangesA
+      put __GetRangeIntersectingTwoRanges(tIntersectingRange, pRangesA[tRangeIndex]) \
+            into tIntersectingRange
+      if tIntersectingRange is empty then
+         return empty
+      end if
+   end repeat
+   
+   return tIntersectingRange
+end __GetIntersectionOfRangeSet
+
+/**
+
+Determine if a set of ranges intersect
+
+Description:
+The function semverRangesIntersect returns true if all the given ranges
+intersect. Any number of ranges can be checked, passing each range as a
+parameter.
+
+Parameters:
+pRange (string): A valid version range string
+
+Returns:
+True if all the given ranges intersect
+
+The result:
+An error string if any range failed to parse.
+
+*/
+
+function semverRangesIntersect pRange...
+   -- Any number of ranges can be passed for checking.
+   -- Parse each param as a ranges into a single array.
+   local tParamIndex, tRangesIndex, tRangesA
+   put 1 into tRangesIndex
+   repeat with tParamIndex = 1 to the paramCount
+      local tRange
+      put param(tParamIndex) into tRange
+      semverParseRange tRange, true
+      if the result is not empty then
+         return the result for error
+      end if
+      
+      if tRange is not empty then
+         put tRange into tRangesA[tRangesIndex]
+         add 1 to tRangesIndex
+      end if
+   end repeat
+   
+   return __GetIntersectionOfRangeSet(tRangesA) is not empty for value
+end semverRangesIntersect
+
+private function __FormatBoundsIntoShorthandString pLowerBound, pUpperBound
+   if pLowerBound is empty and pUpperBound is empty then
+      return empty
+   end if
+   
+   if __Equal(pLowerBound, pUpperBound) then
+      -- >=1.2.3 <=1.2.3 --> 1.2.3
+      if pLowerBound["operator"] is ">=" and pUpperBound["operator"] is "<=" then
+         return __ParsedSemverToString(pLowerBound)
+      end if
+      
+      -- 1.2.3 1.2.3 --> 1.2.3
+      -- >1.2.3 >1.2.3 --> >1.2.3
+      if pLowerBound["operator"] is pUpperBound["operator"] then
+         return pLowerBound["operator"] & __ParsedSemverToString(pLowerBound)
+      end if
+   end if
+   
+   -- >=1.2.3 <=4.5.6 --> 1.2.3 - 4.5.6
+   if pLowerBound["operator"] is ">=" and pUpperBound["operator"] is "<=" then
+      return __ParsedSemverToString(pLowerBound) && "-" && __ParsedSemverToString(pUpperBound)
+   end if
+   
+   if pLowerBound["major"] is 0 and pUpperBound["major"] is 0 then
+      -- >=0.0.1 <0.0.2 --> ^0.0.1
+      if  pLowerBound["minor"] is 0 and pUpperBound["minor"] is 0 and \
+            pUpperBound["patch"] is pLowerBound["patch"] + 1 and \
+            pLowerBound["operator"] is ">=" and pUpperBound["operator"] is "<" \
+            then
+         return "^" & __ParsedSemverToString(pLowerBound)
+      end if
+      
+      -- >=0.1.1 <0.2.0 --> ^0.1.1
+      if  pUpperBound["minor"] is pLowerBound["minor"] + 1 and \
+            pUpperBound["patch"] is 0 and \
+            pLowerBound["operator"] is ">=" and pUpperBound["operator"] is "<" \
+            then
+         return "^" & __ParsedSemverToString(pLowerBound)
+      end if
+   end if
+   
+   -- >=1.2.3 <1.3.0 --> ~1.2.3
+   if pLowerBound["major"] is pUpperBound["major"] and \
+         pUpperBound["minor"] is pLowerBound["minor"] + 1 and \
+         pUpperBound["patch"] is 0 and \
+         pLowerBound["operator"] is ">=" and pUpperBound["operator"] is "<" \
+         then
+      return "~" & __ParsedSemverToString(pLowerBound)
+   end if
+   
+   -- >=1.2.3 <2.0.0 --> ^1.2.3
+   if pUpperBound["major"] is pLowerBound["major"] + 1 and \
+         pUpperBound["minor"] is 0 and pUpperBound["patch"] is 0 and \
+         pLowerBound["operator"] is ">=" and pUpperBound["operator"] is "<" \
+         then
+      return "^" & __ParsedSemverToString(pLowerBound)
+   end if
+   
+   local tFormatted
+   if pLowerBound is not empty then
+      put pLowerBound["operator"] & __ParsedSemverToString(pLowerBound) into tFormatted
+      if pUpperBound is not empty then
+         put space after tFormatted
+      end if
+   end if
+   if pUpperBound is not empty then
+      put pUpperBound["operator"] & __ParsedSemverToString(pUpperBound) after tFormatted
+   end if
+   return tFormatted
+end __FormatBoundsIntoShorthandString
+
+private function __RangeComparatorIsCompatibleWithBound pRangeComparator, pBound
+   if pBound is empty then
+      return true
+   end if
+   
+   local tRange
+   put pRangeComparator into tRange[1]
+   if __SatisfiesRange(tRange, pBound) and __RangeComparatorsIntersect(pRangeComparator, pBound) then
+      return true
+   end if
+   
+   return false
+end __RangeComparatorIsCompatibleWithBound
+
+private function __GetBoundsOfComparatorSet pComparatorsA
+   -- Attempt to find the upper and lower bounds in the array of range comparators.
+   local tLowerBound, tUpperBound
+   repeat for each element tRangeComparator in pComparatorsA
+      -- Since we've fully expanded the ranges, the only operators will be =,>,>=,<,<=.
+      switch tRangeComparator["operator"]
+         case "="
+         case empty
+            if not __RangeComparatorIsCompatibleWithBound(tRangeComparator, tLowerBound) or \
+                  not __RangeComparatorIsCompatibleWithBound(tRangeComparator, tUpperBound) then
+               next repeat
+            end if
+            
+            -- A range comparator with the equals operator limits the upper and lower bounds
+            -- to its value.
+            put tRangeComparator into tLowerBound
+            put ">=" into tLowerBound["operator"]
+            put tRangeComparator into tUpperBound
+            put "<=" into tUpperBound["operator"]
+            break
+            
+         case ">"
+         case ">="
+            if not __RangeComparatorIsCompatibleWithBound(tRangeComparator, tUpperBound) then
+               next repeat
+            end if
+            
+            -- A range comparator with a greater than or greater than or equals operator could
+            -- potentially be a new lower bound. Check to see if it is less than the current
+            -- lower bound.
+            if tLowerBound is empty or __GreaterThan(tRangeComparator, tLowerBound) or \
+                  (tRangeComparator["operator"] is ">=" and __Equal(tRangeComparator, tLowerBound)) then
+               put tRangeComparator into tLowerBound
+            end if
+            break
+            
+         case "<"
+         case "<="
+            if not __RangeComparatorIsCompatibleWithBound(tRangeComparator, tLowerBound) then
+               next repeat
+            end if
+            
+            -- A range comparator with a less than or less than or equals operator could
+            -- potentially be a new upper bound. Check to see if it is greater than the current
+            -- upper bound.
+            if tUpperBound is empty or __GreaterThan(tUpperBound, tRangeComparator) or \
+                  (tRangeComparator["operator"] is "<=" and __Equal(tRangeComparator, tUpperBound)) then
+               put tRangeComparator into tUpperBound
+            end if
+            break
+      end switch
+   end repeat
+   
+   local tBoundsA
+   put tLowerBound into tBoundsA["lower"]
+   put tUpperBound into tBoundsA["upper"]
+   return tBoundsA
+end __GetBoundsOfComparatorSet
+
+/**
+
+Determine the range that intersects the given ranges
+
+Description:
+The function semverRangesIntersection returns a string that defines the
+semver range that intersects all the given ranges. Any number of ranges
+can be checked, passing each range as a parameter.
+
+Parameters:
+pRange (string): A valid version range string
+
+Returns:
+The range that intersects all the given ranges. Empty if the ranges do
+not intersect.
+
+The result:
+An error string if any range failed to parse.
+
+*/
+
+function semverRangesIntersection pRange1, pRange2...
+   -- Any number of ranges can be passed for checking.
+   -- Parse each param as a ranges into a single array.
+   local tParamIndex, tRangesIndex, tRangesA
+   put 1 into tRangesIndex
+   repeat with tParamIndex = 1 to the paramCount
+      local tRange
+      put param(tParamIndex) into tRange
+      semverParseRange tRange, true
+      if the result is not empty then
+         return the result for error
+      end if
+      
+      if tRange is not empty then
+         put tRange into tRangesA[tRangesIndex]
+         add 1 to tRangesIndex
+      end if
+   end repeat
+   
+   local tIntersectingRange
+   put __GetIntersectionOfRangeSet(tRangesA) into tIntersectingRange
+   if tIntersectingRange is empty then
+      return empty for value
+   end if
+   
+   local tIntersectingConditionsA
+   put __RangeToConditionSet(tIntersectingRange) into tIntersectingConditionsA
+   
+   -- We now have a set of conditions that intersect the ranges.
+   -- Get the lower and upper bounding comparators for each condition in the set.
+   local tRangeBoundsA, tConditionsIndex
+   repeat with tConditionsIndex = 1 to the number of elements in tIntersectingConditionsA
+      put __GetBoundsOfComparatorSet(tIntersectingConditionsA[tConditionsIndex]) \
+            into tRangeBoundsA[tConditionsIndex]
+   end repeat
+   
+   -- We've found the bounds, now format them into a shorthand range string.
+   local tFormattedBoundsString, tBound
+   repeat for each element tBound in tRangeBoundsA
+      local tFormattedBound
+      put __FormatBoundsIntoShorthandString(tBound["lower"],\
+            tBound["upper"]) into tFormattedBound
+      
+      if tFormattedBound is not among the lines of tFormattedBoundsString then
+         if tFormattedBoundsString is not empty then
+            put return after tFormattedBoundsString
+         end if
+         put tFormattedBound after tFormattedBoundsString
+      end if
+   end repeat
+   
+   replace return with " || " in tFormattedBoundsString
+   return tFormattedBoundsString for value
+end semverRangesIntersection
+
+---------------------------------------------------
+-- UTILITY
+
+private command __AppendToRange @xRange, pRangeToAppend
+   local tRangeIndex
+   put the number of elements in xRange + 1 into tRangeIndex
+   
+   repeat for each element tComparator in pRangeToAppend
+      put tComparator into xRange[tRangeIndex]
+      add 1 to tRangeIndex
+   end repeat
+   
+   return tRangeIndex
+end __AppendToRange
+
+private function __CompareWithOp pLeft, pRight, pOperator
+   switch pOperator
+      case "="
+         return __Equal(pLeft, pRight)
+      case ">"
+         return __GreaterThan(pLeft, pRight)
+      case "<"
+         return __GreaterThan(pRight, pLeft)
+      case ">="
+         return __Equal(pLeft, pRight) or __GreaterThan(pLeft, pRight)
+      case "<="
+         return __Equal(pLeft, pRight) or __GreaterThan(pRight, pLeft)
+      default
+         return false
+   end switch
+end __CompareWithOp
+
+private function __RangeToConditionSet pRange
+   -- Split a parsed range into an set of conditions by splitting on "or".
+   -- Condition sets are a little cleaner to work with.
+   --
+   -- A range is an array of comparators split into conditions by "||" elements.
+   --
+   -- Range =
+   --   [1] = comparator 1
+   --   [2] = comparator 2
+   --   [3] = "||"
+   --   [4] = comparator 3
+   --
+   -- A condition set splits the individual conditions into sub arrays
+   -- containing the comprators for that condition.
+   --
+   -- Condition Set =
+   --   [1] =
+   --     [1] = comparator 1
+   --     [2] = comparator 2
+   --   [2] =
+   --     [1] comparator 3
+   local tConditionsA, tConditionsIndex, tRangeIndex
+   put 1 into tConditionsIndex
+   repeat with tRangeIndex = 1 to the number of elements in pRange
+      if pRange[tRangeIndex] is "||" then
+         add 1 to tConditionsIndex
+      else
+         local tRange
+         put pRange[tRangeIndex] into tRange[1]
+         __AppendToRange tConditionsA[tConditionsIndex], tRange
+      end if
+   end repeat
+   
+   return tConditionsA
+end __RangeToConditionSet
+
+private function __RangeFromConditionSet pConditionsA
+   local tRange, pConditionsIndex
+   repeat with pConditionsIndex = 1 to the number of elements in pConditionsA
+      local tRangeIndex
+      __AppendToRange tRange, pConditionsA[pConditionsIndex]
+      put the result into tRangeIndex
+      put "||" into tRange[tRangeIndex]
+   end repeat
+   
+   if tRange[the number of elements in tRange] is "||" then
+      delete variable tRange[the number of elements in tRange]
+   end if
+   return tRange
+end __RangeFromConditionSet
+
+private function __ParsedSemverToString pSemVer
+   local tString
+   if not __IsX(pSemVer["major"]) then
+      put pSemVer["major"] into tString
+      if not __IsX(pSemVer["minor"]) then
+         put "." & pSemVer["minor"] after tString
+         if not __IsX(pSemVer["patch"]) then
+            put "." & pSemVer["patch"] after tString
+         end if
+      end if
+   end if
+   return tString
+end __ParsedSemverToString
