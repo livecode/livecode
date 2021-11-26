@@ -970,7 +970,7 @@ void MCWidget::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 		}
 		
 		if (m_bitmap_effects == nil)
-			dc -> begin(true);
+			dc -> begin(false);
 		else
 		{
 			if (!dc -> begin_with_effects(m_bitmap_effects, MCU_reduce_rect(rect, -gettransient())))
