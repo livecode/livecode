@@ -37,10 +37,10 @@ public handler TestNot()
 end handler
 
 handler TestShift_OverflowPositive()
-	return 5 shifted left by 29 bitwise
+	return 5 shifted left by 61 bitwise
 end handler
 handler TestShift_OverflowNegative()
-	return -5 shifted left by 29 bitwise
+	return -5 shifted left by 61 bitwise
 end handler
 public handler TestShift()
 	-- 0…00101 → 0…01010

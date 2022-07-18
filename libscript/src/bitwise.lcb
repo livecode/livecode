@@ -22,13 +22,13 @@ module com.livecode.bitwise
 
 use com.livecode.foreign
 
-public foreign handler MCBitwiseEvalBitwiseAnd(in Left as LCInt, in Right as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseOr(in Left as LCInt, in Right as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseNot(in Operand as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseXor(in Left as LCInt, in Right as LCInt, out Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseAnd(in Left as SInt64, in Right as SInt64, out Value as SInt64) returns nothing binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseOr(in Left as SInt64, in Right as SInt64, out Value as SInt64) returns nothing binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseNot(in Operand as SInt64, out Value as SInt64) returns nothing binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseXor(in Left as SInt64, in Right as SInt64, out Value as SInt64) returns nothing binds to "<builtin>"
 
-public foreign handler MCBitwiseEvalBitwiseShiftLeft(in Target as LCInt, in Shift as LCUInt, out Value as LCInt) returns nothing binds to "<builtin>"
-public foreign handler MCBitwiseEvalBitwiseShiftRight(in Target as LCInt, in Shift as LCUInt, out Value as LCInt) returns nothing binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseShiftLeft(in Target as SInt64, in Shift as LCUInt, out Value as SInt64) returns nothing binds to "<builtin>"
+public foreign handler MCBitwiseEvalBitwiseShiftRight(in Target as SInt64, in Shift as LCUInt, out Value as SInt64) returns nothing binds to "<builtin>"
 
 --
 
