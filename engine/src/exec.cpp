@@ -778,7 +778,7 @@ bool MCExecContext::EvaluateExpression(MCExpression *p_expr, Exec_errors p_error
 	return false;
 }
 
-bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, MCValueRef& r_result)
+bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, Exec_errors p_error, MCValueRef& r_result)
 {
     MCAssert(p_expr != nil);
 	
@@ -791,7 +791,7 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
     while (t_can_debug && (t_failure = HasError()) &&
            (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, p_expr->getline(), p_expr->getpos(), p_error);
         IgnoreLastError();
         
         if (t_can_debug)
@@ -805,7 +805,7 @@ bool MCExecContext::TryToEvaluateExpression(MCExpression *p_expr, uint2 line, ui
 	return false;
 }
 
-bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 line, uint2 pos, Exec_errors p_error, double& r_result)
+bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, Exec_errors p_error, double& r_result)
 {
     MCAssert(p_expr != nil);
 	
@@ -824,7 +824,7 @@ bool MCExecContext::TryToEvaluateExpressionAsDouble(MCExpression *p_expr, uint2 
     while (t_can_debug && (t_failure = HasError()) &&
            (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, p_expr->getline(), p_expr->getpos(), p_error);
         IgnoreLastError();
         
         if (t_can_debug)
@@ -879,7 +879,7 @@ bool MCExecContext::TryToEvaluateParameter(MCParameter *p_param, uint2 line, uin
 	return false;
 }
 
-bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, uint2 line, uint2 pos, Exec_errors p_error, bool& r_value)
+bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr, Exec_errors p_error, bool& r_value)
 {
     MCAssert(p_expr != nil);
     
@@ -890,7 +890,7 @@ bool MCExecContext::TryToEvaluateExpressionAsNonStrictBool(MCExpression * p_expr
     while (t_can_debug && (t_failure = !EvalExprAsNonStrictBool(p_expr, p_error, r_value)) &&
            (MCtrace || MCnbreakpoints) && !MCtrylock && !MClockerrors)
     {
-        t_can_debug = MCB_error(*this, line, pos, p_error);
+        t_can_debug = MCB_error(*this, p_expr->getline(), p_expr->getpos(), p_error);
         IgnoreLastError();
     }
     

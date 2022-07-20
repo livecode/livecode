@@ -1,4 +1,4 @@
-﻿script "CoreEngineDebugger"
+script "CoreEngineDebugger"
 /*
 Copyright (C) 2016 LiveCode Ltd.
 
@@ -35,3 +35,130 @@ on TestWatchedVariables
    set the watchedVariables to tWatches
    TestAssert "watchedVariables handler local round trips", the watchedVariables is tWatches
 end TestWatchedVariables
+
+command _SwitchChoice
+    switch error() 
+		case 1
+	end switch
+end _SwitchChoice
+
+command _SwitchChoiceSplit
+	switch \ 
+		error()
+		case 1
+	end switch
+end _SwitchChoiceSplit
+
+command _SwitchCase
+	switch 1 
+		case error()
+	end switch
+end _SwitchCase
+
+command _SwitchCaseSplit
+	switch 1 
+		case \
+			error()
+	end switch
+end _SwitchCaseSplit
+
+command _IfCondition
+	if error() then 
+	end if
+end _IfCondition
+
+command _IfConditionSplit
+	if \  
+		error() then
+	end if
+end _IfConditionSplit
+
+command _ElseIfCondition
+	if 0 then 
+	else if error() then
+	end if
+end _ElseIfCondition
+
+command _ElseIfConditionSplit
+	if 0 then 
+	else if \
+		error() then
+	end if
+end _ElseIfConditionSplit
+
+command _RepeatCounted
+	repeat error() times 
+	end repeat
+end _RepeatCounted
+
+command _RepeatCountedSplit
+	repeat \ 
+		error() times
+	end repeat
+end _RepeatCountedSplit
+
+command _RepeatForFrom
+	repeat for x = error() to 10 by 20 
+	end repeat
+end _RepeatForFrom
+
+command _RepeatForFromSplit
+	repeat for x = \ 
+		error() to 10 by 20
+	end repeat
+end _RepeatForFromSplit
+
+command _RepeatForTo
+	repeat for x = 1 to error() by 20 
+	end repeat
+end _RepeatForTo
+
+command _RepeatForToSplit
+	repeat for x = 1 to \ 
+		error() by 20
+	end repeat
+end _RepeatForToSplit
+
+command _RepeatForBy
+	repeat x = 1 to 10 by error() 
+	end repeat
+end _RepeatForBy
+
+command _RepeatForBySplit
+	repeat x = 1 to 10 by \ 
+		error()
+	end repeat
+end _RepeatForBySplit
+
+command _RepeatForEachTarget
+	repeat for each x in error() 
+	end repeat
+end _RepeatForEachTarget
+
+command _RepeatForEachTargetSplit
+	repeat for each x in \ 
+		error()
+	end repeat
+end _RepeatForEachTargetSplit
+
+command _RepeatUntilCondition
+	repeat until error() 
+	end repeat
+end _RepeatUntilCondition
+
+command _RepeatUntilConditionSplit
+	repeat until \ 
+		error()
+	end repeat
+end _RepeatUntilConditionSplit
+
+command _RepeatWhileCondition
+	repeat while error() 
+	end repeat
+end _RepeatWhileCondition
+
+command _RepeatWhileConditionSplit
+	repeat while \ 
+		error()
+	end repeat
+end _RepeatWhileConditionSplit

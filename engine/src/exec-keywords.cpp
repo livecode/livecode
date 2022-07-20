@@ -317,7 +317,7 @@ void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpres
     MCAutoStringRef t_cond;
 	if (condition != NULL)
 	{
-        if (!ctxt . TryToEvaluateExpression(condition, line, pos, EE_SWITCH_BADCOND, &t_value))
+        if (!ctxt . TryToEvaluateExpression(condition, EE_SWITCH_BADCOND, &t_value))
             return;
         
         if (!ctxt . ConvertToString(*t_value, &t_cond))
@@ -336,7 +336,7 @@ void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpres
         MCAutoValueRef t_case;
         MCAutoStringRef t_case_string;
         
-        if (!ctxt . TryToEvaluateExpression(cases[i], line, pos, EE_SWITCH_BADCASE, &t_case))
+        if (!ctxt . TryToEvaluateExpression(cases[i], EE_SWITCH_BADCASE, &t_case))
             return;
         
         if (!ctxt . ConvertToString(*t_case, &t_case_string))
@@ -371,7 +371,7 @@ void MCKeywordsExecSwitch(MCExecContext& ctxt, MCExpression *condition, MCExpres
 void MCKeywordsExecIf(MCExecContext& ctxt, MCExpression *condition, MCStatement *thenstatements, MCStatement *elsestatements, uint2 line, uint2 pos)
 {
     bool then;
-    if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(condition, line, pos, EE_IF_BADCOND, then))
+    if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(condition, EE_IF_BADCOND, then))
         return;
     
 	MCStatement *tspr;
@@ -413,7 +413,7 @@ void MCKeywordsExecRepeatCount(MCExecContext& ctxt, MCStatement *statements, MCE
 {
     MCAutoValueRef t_condition;
     
-    if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADFORCOND, &t_condition))
+    if (!ctxt . TryToEvaluateExpression(endcond, EE_REPEAT_BADFORCOND, &t_condition))
         return;
     
     // SN-2015-01-14: [[ Bug 14377 ]] Throw an error as it used to be done
@@ -454,7 +454,7 @@ void MCKeywordsExecRepeatFor(MCExecContext& ctxt, MCStatement *statements, MCExp
     
     MCAutoPointer<MCTextChunkIterator> tci;
     
-    if (!ctxt . TryToEvaluateExpression(endcond, line, pos, EE_REPEAT_BADFORCOND, &t_condition))
+    if (!ctxt . TryToEvaluateExpression(endcond, EE_REPEAT_BADFORCOND, &t_condition))
         return;
     
     bool t_sequence_array;
@@ -641,7 +641,7 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
     
     if (step != NULL)
     {
-        if (!ctxt . TryToEvaluateExpressionAsDouble(step, line, pos, EE_REPEAT_BADWITHSTEP, stepval) || stepval == 0)
+        if (!ctxt . TryToEvaluateExpressionAsDouble(step, EE_REPEAT_BADWITHSTEP, stepval) || stepval == 0)
         {
             ctxt . LegacyThrow(EE_REPEAT_BADWITHSTEP);
             return;
@@ -650,7 +650,7 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
     }
     
     real8 t_loop;
-    if (!ctxt . TryToEvaluateExpressionAsDouble(startcond, line, pos, EE_REPEAT_BADWITHSTART, t_loop))
+    if (!ctxt . TryToEvaluateExpressionAsDouble(startcond, EE_REPEAT_BADWITHSTART, t_loop))
     {
         ctxt . LegacyThrow(EE_REPEAT_BADWITHSTART);
         return;
@@ -664,7 +664,7 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
     if (!ctxt . TryToSetVariable(loopvar, line, pos, EE_REPEAT_BADWITHVAR, t_loop_var))
         return;
     
-    if (!ctxt . TryToEvaluateExpressionAsDouble(endcond, line, pos, EE_REPEAT_BADWITHSTART, endn))
+    if (!ctxt . TryToEvaluateExpressionAsDouble(endcond, EE_REPEAT_BADWITHSTART, endn))
         return;
     
     bool done;
@@ -673,7 +673,7 @@ void MCKeywordsExecRepeatWith(MCExecContext& ctxt, MCStatement *statements, MCEx
     while (!done)
     {
         real8 t_cur_value;
-        if (!ctxt . TryToEvaluateExpressionAsDouble(loopvar, line, pos, EE_REPEAT_BADWITHVAR, t_cur_value))
+        if (!ctxt . TryToEvaluateExpressionAsDouble(loopvar, EE_REPEAT_BADWITHVAR, t_cur_value))
             return;
         
         if (stepval < 0)
@@ -715,7 +715,7 @@ void MCKeywordsExecRepeatUntil(MCExecContext& ctxt, MCStatement *statements, MCE
     
     while (!done)
     {
-        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, done))
+        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, EE_REPEAT_BADUNTILCOND, done))
             return;
         if (!done)
             MCKeywordsExecuteRepeatStatements(ctxt, statements, line, pos, done);
@@ -731,7 +731,7 @@ void MCKeywordsExecRepeatWhile(MCExecContext& ctxt, MCStatement *statements, MCE
     {
         MCAutoValueRef t_value;
         bool not_done;
-        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, line, pos, EE_REPEAT_BADUNTILCOND, not_done))
+        if (!ctxt . TryToEvaluateExpressionAsNonStrictBool(endcond, EE_REPEAT_BADUNTILCOND, not_done))
             return;
         
         done = !not_done;
