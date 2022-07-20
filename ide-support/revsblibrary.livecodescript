@@ -2836,7 +2836,7 @@ private command revSmartChecking pStackFilesList, @xSettings
       
       revStandaloneProgress "Auto detecting library inclusions..."
       
-      put empty into tNewSettings["scriptLibraries"]
+      put xSettings["scriptLibraries"] into tNewSettings["scriptLibraries"]
       put true into tNewSettings["cursors"]
       put false into tNewSettings["answerDialog"]
       put false into tNewSettings["askDialog"]
@@ -2847,8 +2847,8 @@ private command revSmartChecking pStackFilesList, @xSettings
       # OK-2007-11-13 : Support for LiveCode print dialogs
       put false into tNewSettings["revolutionPrintDialogs"]
       
-      put empty into tNewSettings["databaseDrivers"]
-      put empty into tNewSettings["externals"]
+      put xSettings["databaseDrivers"] into tNewSettings["databaseDrivers"]
+      put xSettings["externals"] into tNewSettings["externals"]
       
       put revAbsoluteFolderListing(revEnvironmentResourcesPath("Script Libraries")) into tEnvironmentIcons
       put revAbsoluteFolderListing(revEnvironmentUserResourcesPath("Script Libraries")) into tUserIcons
