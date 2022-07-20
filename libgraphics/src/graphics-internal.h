@@ -62,12 +62,12 @@ protected:
     }
 
 private:
-    virtual void Retain(void)
+    void Retain(void)
     {
         m_references += 1;
     }
     
-    virtual void Release(void)
+    void Release(void)
     {
         m_references -= 1;
         if (m_references == 0)
@@ -101,6 +101,20 @@ private:
     }
     
     template<typename T>
+    friend void MCGAssign(T& x_target, T p_source)
+    {
+        if (x_target == p_source)
+        {
+            return;
+        }
+        
+        MCGRetain(p_source);
+        MCGRelease(x_target);
+        
+        x_target = p_source;
+    }
+    
+    template<typename T>
     friend void MCGAssignAndRelease(T& x_target, T p_source)
     {
         if (x_target != nullptr)
@@ -112,6 +126,35 @@ private:
     }
     
     uint32_t m_references;
+};
+
+template<typename T>
+class MCGAuto
+{
+public:
+    MCGAuto(T p_ptr)
+    {
+        m_ptr = MCGRetain(p_ptr);
+    }
+    
+    ~MCGAuto(void)
+    {
+        MCGRelease(m_ptr);
+    }
+    
+    T& operator & (void)
+    {
+        MCAssert(m_ptr == nullptr);
+        return m_ptr;
+    }
+    
+    T operator * (void)
+    {
+        return m_ptr;
+    }
+    
+private:
+    T m_ptr = nullptr;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
