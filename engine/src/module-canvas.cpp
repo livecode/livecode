@@ -626,7 +626,7 @@ static bool __MCCanvasRectangleDescribe(MCValueRef p_value, MCStringRef &r_desc)
 	MCGRectangle t_rectangle;
 	MCCanvasRectangleGetMCGRectangle (static_cast<MCCanvasRectangleRef>(p_value), t_rectangle);
 
-	return MCStringFormat (r_desc, "<rectangle (%g, %g) - (%g, %g)>",
+	return MCStringFormat (r_desc, "<rectangle: %g, %g, %g, %g>",
 	                       double(t_rectangle.origin.x),
 	                       double(t_rectangle.origin.y),
 	                       double(t_rectangle.origin.x + t_rectangle.size.width),
@@ -859,7 +859,7 @@ static bool __MCCanvasPointDescribe(MCValueRef p_value, MCStringRef &r_desc)
 	MCGPoint t_point;
 	MCCanvasPointGetMCGPoint (static_cast<MCCanvasPointRef>(p_value), t_point);
 
-	return MCStringFormat (r_desc, "(%g, %g)",
+	return MCStringFormat (r_desc, "<point: %g, %g>",
 	                       double(t_point.x), double(t_point.y));
 }
 
@@ -1275,8 +1275,12 @@ static hash_t __MCCanvasTransformHash(MCValueRef p_value)
 
 static bool __MCCanvasTransformDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe
-	return false;
+    __MCCanvasTransformImpl *self = MCCanvasTransformGet((MCCanvasTransformRef)p_value);
+	return MCStringFormat(r_desc,
+                          "<transform: %g, %g, %g, %g, %g, %g>",
+                          self->a, self->b,
+                          self->c, self->d,
+                          self->tx, self->ty);
 }
 
 //////////
@@ -2072,7 +2076,13 @@ static hash_t __MCCanvasSolidPaintHash(MCValueRef p_value)
 
 static bool __MCCanvasSolidPaintDescribe(MCValueRef p_value, MCStringRef &r_string)
 {
-	return false;
+    __MCCanvasSolidPaintImpl *self = MCCanvasSolidPaintGet((MCCanvasSolidPaintRef)p_value);
+    MCAutoStringRef t_color_desc;
+    if (!MCValueCopyDescription(self->color, &t_color_desc))
+    {
+        return false;
+    }
+	return MCStringFormat(r_string, "<solid paint: %@>", *t_color_desc);
 }
 
 bool MCCanvasSolidPaintCreateWithColor(MCCanvasColorRef p_color, MCCanvasSolidPaintRef &r_paint)
@@ -2178,7 +2188,20 @@ static hash_t __MCCanvasPatternHash(MCValueRef p_value)
 
 static bool __MCCanvasPatternDescribe(MCValueRef p_value, MCStringRef &r_string)
 {
-	return false;
+    __MCCanvasPatternImpl *t_impl =
+            MCCanvasPatternGet((MCCanvasPatternRef)p_value);
+    
+    MCAutoStringRef t_image_desc, t_transform_desc;
+    if (!MCValueCopyDescription(t_impl->transform, &t_transform_desc) ||
+        !MCValueCopyDescription(t_impl->image, &t_image_desc))
+    {
+        return false;
+    }
+    
+	return MCStringFormat(r_string,
+                          "<pattern paint: %@ %@>",
+                          *t_transform_desc,
+                          *t_image_desc);
 }
 
 bool MCCanvasPatternCreateWithImage(MCCanvasImageRef p_image, MCCanvasTransformRef p_transform, MCCanvasPatternRef &r_paint)
@@ -2417,8 +2440,14 @@ static hash_t __MCCanvasGradientStopHash(MCValueRef p_value)
 
 static bool __MCCanvasGradientStopDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe
-	return false;
+    __MCCanvasGradientStopImpl *t_impl =
+            MCCanvasGradientStopGet((MCCanvasGradientStopRef)p_value);
+    MCAutoStringRef t_color_desc;
+    if (!MCValueCopyDescription(t_impl->color, &t_color_desc))
+    {
+        return false;
+    }
+	return MCStringFormat(r_desc, "<gradient stop: %@ @ %g>", *t_color_desc, t_impl->offset);
 }
 
 bool MCCanvasGradientStopCreate(MCCanvasFloat p_offset, MCCanvasColorRef p_color, MCCanvasGradientStopRef &r_stop)
@@ -2549,7 +2578,7 @@ static hash_t __MCCanvasGradientHash(MCValueRef p_value)
 
 static bool __MCCanvasGradientDescribe(MCValueRef p_value, MCStringRef &r_string)
 {
-	return false;
+	return MCStringFormat(r_string, "<gradient paint>");
 }
 
 bool MCCanvasGradientCreate(const __MCCanvasGradientImpl &p_gradient, MCCanvasGradientRef &r_paint)
@@ -3089,8 +3118,7 @@ static hash_t __MCCanvasPathHash(MCValueRef p_value)
 
 static bool __MCCanvasPathDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe
-	return false;
+	return MCStringFormat(r_desc, "<path>");
 }
 
 bool MCCanvasPathCreateWithMCGPath(MCGPathRef p_path, MCCanvasPathRef &r_path)
@@ -4105,8 +4133,7 @@ static hash_t __MCCanvasEffectHash(MCValueRef p_value)
 
 static bool __MCCanvasEffectDescribe(MCValueRef p_value, MCStringRef &r_desc)
 {
-	// TODO - implement describe
-	return false;
+	return MCStringFormat(r_desc, "<effect>");
 }
 
 bool MCCanvasEffectCreate(const __MCCanvasEffectImpl &p_effect, MCCanvasEffectRef &r_effect)
@@ -4628,7 +4655,7 @@ static hash_t __MCCanvasFontHash(MCValueRef p_value)
 
 static bool __MCCanvasFontDescribe(MCValueRef p_value, MCStringRef &r_string)
 {
-	return false;
+    return MCStringFormat(r_string, "<font>");
 }
 
 bool MCCanvasFontCreateWithMCFont(MCFontRef p_font, MCCanvasFontRef &r_font)
@@ -5118,8 +5145,7 @@ static hash_t __MCCanvasHash(MCValueRef p_canvas)
 
 static bool __MCCanvasDescribe(MCValueRef p_canvas, MCStringRef &r_description)
 {
-	// TODO - provide canvas description?
-	return false;
+    return MCStringFormat(r_description, "<canvas>");
 }
 
 // Properties
