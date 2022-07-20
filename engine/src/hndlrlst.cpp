@@ -473,7 +473,13 @@ Parse_stat MCHandlerlist::parse(MCObject *objptr, MCDataRef script_utf8)
 		{
 		case PS_NORMAL:
 			if (sp.lookup(SP_HANDLER, te) != PS_NORMAL)
-				sp.skip_eol();
+                if (MCexplicitvariables)
+                {
+                    MCperror->add(PE_HANDLERLIST_BADCHAR, sp);
+                    status = PS_ERROR;
+                }
+                else
+                    sp.skip_eol();
 			else
 			{
 				MCHandler *newhandler;
