@@ -745,9 +745,15 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
 {
 	Try_state state = TS_TRY;
 	MCStatement *tspr = trystatements;
+    if (tspr == NULL)
+        tspr = finallystatements;
+    
 	Exec_stat stat;
 	Exec_stat retcode = ES_NORMAL;
 	MCtrylock++;
+    
+    MCAutoStringRef t_error;
+    
 	while (tspr != NULL)
 	{
 		if (MCtrace || MCnbreakpoints)
@@ -809,15 +815,15 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                         if (state != TS_TRY)
                         {
                             MCtrylock--;
+                            ctxt.SetExecStat(stat);
                             return;
                         }
                         else
                         {
+                            MCeerror -> copyasstringref(&t_error);
                             if (errorvar != NULL)
                             {
-                                MCAutoStringRef t_error;
-                                MCeerror -> copyasstringref(&t_error);
-                                errorvar->set(ctxt, *t_error);
+                                errorvar->set(ctxt,*t_error);
                             }
                             
                             // MW-2007-09-04: At this point we need to clear the execution error
@@ -835,7 +841,6 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                             //   before a state transition is made, thus we force it here.
                             if (catchstatements == NULL)
                             {
-                                MCeerror -> clear();
                                 tspr = finallystatements;
                                 state = TS_FINALLY;
                             }
@@ -845,24 +850,15 @@ void MCKeywordsExecTry(MCExecContext& ctxt, MCStatement *trystatements, MCStatem
                     tspr = tspr->getnext();
                 break;
             case ES_PASS:
-                if (state == TS_CATCH)
-                {
-                    MCAutoValueRef t_value;
-                    MCAutoStringRef t_string;
-                    if ((errorvar->eval(ctxt, &t_value), !ctxt.HasError()) &&
-                        ctxt . ConvertToString(*t_value, &t_string))
-                    {
-                        MCeerror->copystringref(*t_string, False);
-                    }
-                    
-                    MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
-                    stat = ES_ERROR;
-                }
+            case ES_PASS_ERROR:
+                if (t_error.IsSet())
+                    MCeerror->copystringref(*t_error, False);
+                MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
+                stat = ES_ERROR;
             default:
                 if (state == TS_FINALLY)
                 {
-                    MCeerror->clear();
-                    retcode = ES_NORMAL;
+                    retcode = stat;
                     tspr = NULL;
                 }
                 else
@@ -909,6 +905,11 @@ void MCKeywordsExecPassAll(MCExecContext& ctxt)
 void MCKeywordsExecPass(MCExecContext& ctxt)
 {
 	ctxt . SetExecStat(ES_PASS);
+}
+
+void MCKeywordsExecPassError(MCExecContext& ctxt)
+{
+    ctxt . SetExecStat(ES_PASS_ERROR);
 }
 
 void MCKeywordsExecThrow(MCExecContext& ctxt, MCStringRef p_error)

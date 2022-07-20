@@ -2465,7 +2465,8 @@ static MCExternalError MCExternalObjectDispatch(MCExternalObjectRef p_object, MC
 			case ES_EXIT_ALL:
 			case ES_RETURN_HANDLER:
 			case ES_PASS_ALL:
-			case ES_NOT_FOUND:
+            case ES_PASS_ERROR:
+            case ES_NOT_FOUND:
 				MCUnreachable();
 				break;
  			}

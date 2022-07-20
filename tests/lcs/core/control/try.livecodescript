@@ -46,7 +46,7 @@ on TestTryFinallyNoStatements
   finally
      put true into tTest
   end try
-  TestAssertBroken "Finally executes regardless of try statements", tTest, "Bug 19811"
+  TestAssert "Finally executes regardless of try statements", tTest, "Bug 19811"
 end TestTryFinallyNoStatements
 
 on TestTryNoCatchWithError
@@ -82,13 +82,12 @@ on TestTryMultipleEvents
 end TestTryMultipleEvents
 
 on TestTryErrorInCatch
-   TestAssertBroken "Error in catch is thrown", false, "Bug 19812"
-   /*TestAssertThrow "Error in catch is thrown", "__TestTryErrorInCatch", the long id of me, "EE_STATEMENT_BADCOMMAND"
+   TestAssertThrow "Error in catch is thrown", "__TestTryErrorInCatch", the long id of me, "EE_STATEMENT_BADCOMMAND"
    try
       NonExistantHandler3
    catch tError
       TestAssert "Unthrown errors in catch are cleared", line 1 of tError contains "NonExistantHandler3"
-   end try*/
+   end try
 end TestTryErrorInCatch
 
 on __TestTryErrorInCatch
@@ -100,14 +99,13 @@ on __TestTryErrorInCatch
 end __TestTryErrorInCatch
 
 on TestTryErrorInFinally
-   TestAssertBroken "Error in finally is thrown", false, "Bug 19812"
-   /*TestAssertThrow "Error in finally is thrown", "__TestTryErrorInFinally", the long id of me, "EE_STATEMENT_BADCOMMAND"
+   TestAssertThrow "Error in finally is thrown", "__TestTryErrorInFinally", the long id of me, "EE_STATEMENT_BADCOMMAND"
    try
       NonExistantHandler3
    catch tError
       TestAssert "Unthrown errors in finally are cleared", line 1 of tError contains "NonExistantHandler3"
    end try
-   TestAssertThrow "Error in finally is thrown", "__TestTryErrorInFinallyNoTryStatements", the long id of me, "EE_STATEMENT_BADCOMMAND"*/
+   TestAssertThrow "Error in finally is thrown", "__TestTryErrorInFinallyNoTryStatements", the long id of me, "EE_STATEMENT_BADCOMMAND"
 end TestTryErrorInFinally
 
 on __TestTryErrorInFinally
@@ -124,6 +122,53 @@ on __TestTryErrorInFinallyNoTryStatements
       NonExistantHandler2
    end try
 end __TestTryErrorInFinallyNoTryStatements
+
+on TestTryThrowInCatch
+   local tUUID
+   put uuid() into tUUID
+   TestAssertThrow "Throw in finally is thrown", "__TestTryThrowInCatch", the long id of me, tUUID, tUUID
+   TestAssertThrow "Error in finally is thrown", "__TestTryThrowInCatchWithFinally", the long id of me, tUUID, tUUID
+end TestTryThrowInCatch
+
+on __TestTryThrowInCatch pUUID
+   try
+      NonExistantHandler1
+   catch tError
+      throw pUUID
+   end try
+end __TestTryThrowInCatch
+
+on __TestTryThrowInCatchWithFinally pUUID
+   try
+      NonExistantHandler1
+   catch tError
+      throw pUUID
+   finally
+      TestAssert "Finally executed after throw in catch", true
+   end try
+end __TestTryThrowInCatchWithFinally
+
+on TestTryThrowInFinally
+   local tUUID
+   put uuid() into tUUID
+   TestAssertThrow "Throw in finally is thrown", "__TestTryThrowInFinally", the long id of me, tUUID, tUUID
+   TestAssertThrow "Error in finally is thrown", "__TestTryThrowInFinallyNoTryStatements", the long id of me, tUUID, tUUID
+end TestTryThrowInFinally
+
+on __TestTryThrowInFinally pUUID
+   try
+      NonExistantHandler1
+   finally
+      throw pUUID
+   end try
+end __TestTryThrowInFinally
+
+on __TestTryThrowInFinallyNoTryStatements pUUID
+   try
+   finally
+      throw pUUID
+   end try
+end __TestTryThrowInFinallyNoTryStatements
 
 on TestTryErrorNoCatch
    try
@@ -190,7 +235,7 @@ on TestTryFinallyPassHandlerToTop
    finally
       pass TestTryFinallyPassHandlerToTop to top
    end try
-   TestAssertBroken "Handler passed to top from finally", false, "Bug 11773"
+   TestAssert "Handler passed to top from finally", false
 end TestTryFinallyPassHandlerToTop
 
 on TestTryExitHandler
@@ -219,7 +264,7 @@ on TestTryFinallyExitHandler
    finally
       exit TestTryFinallyExitHandler
    end try
-   TestAssertBroken "Handler exit from finally", false, "Bug 11773"
+   TestAssert "Handler exit from finally", false
 end TestTryFinallyExitHandler
 
 on TestTryReturn
@@ -248,5 +293,41 @@ on TestTryFinallyReturn
    finally
       return empty
    end try
-   TestAssertBroken "Return from finally", false, "Bug 11773"
+   TestAssert "Return from finally", false
 end TestTryFinallyReturn
+
+on TestTryPassError
+   try
+      try
+         NonExistantHandler
+      catch tError1
+         pass error
+      end try
+   catch tError2
+      TestAssert "Error passed from catch", line 1 of tError2 contains "NonExistantHandler"
+   end try
+   
+   try
+      try
+         NonExistantHandler
+      finally
+         pass error
+      end try
+   catch tError3
+      TestAssert "Error passed from finally", line 1 of tError3 contains "NonExistantHandler"
+   end try
+end TestTryPassError
+
+
+on TestTryPassMutatedError
+   try
+      try
+         NonExistantHandler
+      catch tError
+         put "foobar" into tError
+         pass error
+      end try
+   catch tError1
+      TestAssert "Mutated error variable content not passed", line 1 of tError1 contains "NonExistantHandler"
+   end try
+end TestTryPassMutatedError
